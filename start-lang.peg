@@ -1,0 +1,199 @@
+{
+  util = require('util');
+
+  G = {};
+
+  function construct(constructor, args) {
+      function F() {
+          return constructor.apply(this, args);
+      }
+      F.prototype = constructor.prototype;
+      return new F();
+  }
+
+  function StmtsNode(stmts) {
+    this.stmts = stmts;
+  }
+
+  StmtsNode.prototype.run = function() {
+    var i = 0;
+    for (i = 0; i < this.stmts.length; ++i) {
+      this.stmts[i].run();
+    }
+  };
+
+  function IfNode(test, tstmts, fstmts) {
+    this.test = test.run();
+    this.tstmts = tstmts;
+    this.fstmts = fstmts;
+  }
+
+  IfNode.prototype.run = function() {
+    console.log('if: ' + this.test);
+    if (this.test) {
+      this.tstmts.run();
+    } else {
+      this.fstmts.run();
+    }
+  };
+
+  function ForNode(symbol, start, end, by, stmts) {
+    this.name = symbol.run();
+    this.start = start.run();
+    this.end = end.run();
+    this.by = by ? by.run() : 1;
+    this.stmts = stmts;
+  }
+
+  ForNode.prototype.run = function() {
+    console.log('for: ' + this.name + ' = ' + this.start + ' to ' + this.end + ' by ' + this.by);
+    for (var i = this.start; i < this.end; i += this.by) {
+      console.log(this.name + ' = ' + i);
+      G[this.name] = i;
+      this.stmts.run();
+    }
+  };
+
+  function BeginNode(symbol, stmts) {
+    this.name = symbol.run();
+    this.stmts = stmts;
+  }
+
+  BeginNode.prototype.run = function() {
+    console.log('begin: ' + this.name);
+    this.stmts.run();
+  };
+
+  function SymbolNode(name) {
+    this.name = name;
+  }
+
+  function CallNode(symbol) {
+    this.name = symbol.run();
+  }
+
+  CallNode.prototype.run = function() {
+    console.log('call: ' + this.name);
+  };
+
+  function LetNode(symbol, value) {
+    this.name = symbol.run();
+    this.value = value.run();
+  }
+
+  LetNode.prototype.run = function() {
+    console.log('let: ' + this.name + ' = ' + this.value);
+    G[this.name] = this.value;
+  };
+
+  SymbolNode.prototype.run = function() {
+    return this.name;
+  };
+
+  function NumberNode(value) {
+    this.value = value;
+  }
+
+  NumberNode.prototype.run = function() {
+    return this.value;
+  };
+}
+
+start = Stmts
+
+Stmts
+  = statements:Stmt* {
+      return construct(StmtsNode, arguments);
+    }
+
+Stmt
+  = If
+  / For
+  / Begin
+  / Call
+  / Let
+
+If
+  = __ 'if' __ test:Expr EOL
+    tstmts:Stmts
+    __ 'else' EOL
+    fstmts:Stmts
+    __ 'end' EOL {
+      return construct(IfNode, arguments);
+    }
+
+For
+  = __ 'for' __ sym:Symbol __ '=' __ start:Expr __ 'to' __ end:Expr
+          by:(__ 'by' __ by:Expr { return by; })?
+          EOL
+    stmts:Stmts
+    __ 'end' EOL {
+      return construct(ForNode, arguments);
+    }
+
+Begin
+  = __ 'begin' __ sym:Symbol EOL
+    stmts:Stmts
+    __ 'end' EOL {
+      return construct(BeginNode, arguments);
+    }
+
+Call
+  = __ 'call' __ sym:Symbol EOL {
+      return construct(CallNode, arguments);
+    }
+
+Let
+  = __ 'let' __ sym:Symbol __ '=' __ value:Expr EOL {
+      return construct(LetNode, arguments);
+    }
+
+Symbol
+  = first:[a-z_] rest:[a-z0-9_]* {
+      return new SymbolNode(first + rest.join(''));
+    }
+
+Expr
+  // for now
+  = Number
+  / Symbol
+
+Number
+  = digits:[0-9]+ {
+      return new NumberNode(parseInt(digits.join(''), 10));
+    }
+
+__ = [ \t]*
+
+EOL = (__ [\r\n])+
+
+/*
+// Expressions
+
+additive
+  = left:multiplicative ws "+" ws right:additive { return left + right; }
+  / left:multiplicative ws "-" ws right:additive { return left - right; }
+  / multiplicative
+
+multiplicative
+  = left:primary ws "*" ws right:multiplicative { return left * right; }
+  / left:primary ws "/" ws right:multiplicative { return left / right; }
+  / primary
+
+primary
+  = integer
+  / string
+  / '(' ws a:additive ws ')' { return a; }
+
+// Literals
+
+__ = [ \t]+
+nl = [\r\n]+
+
+integer
+  = digits:[0-9]+ { return parseInt(digits.join(''), 10); }
+
+string
+  = '"' chars:[^"]+ '"' { return chars.join(''); }
+
+*/
