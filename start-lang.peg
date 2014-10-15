@@ -17,7 +17,8 @@
     var delegate = options.constructor,
         ctor = function() {
           // grab the info about where we are in the source
-          this._text   = text();
+          //this._text   = text();
+          this._node   = this.node; // from proto
           this._offset = offset();
           this._line   = line();
           this._column = column();
@@ -30,6 +31,7 @@
   }
 
   var StmtsNode = Node.extend({
+    node: 'stmts',
     constructor: function(stmts) {
       this.stmts = stmts;
     },
@@ -41,6 +43,7 @@
   });
 
   var IfNode = Node.extend({
+    node: 'if',
     constructor: function(test, tstmts, fstmts) {
       this.test   = test;
       this.tstmts = tstmts;
@@ -56,6 +59,7 @@
   });
 
   var ForNode = Node.extend({
+    node: 'for',
     constructor: function(name, start, end, by, stmts) {
       this.name  = name;
       this.start = start;
@@ -72,6 +76,7 @@
   });
 
   var BeginNode = Node.extend({
+    node: 'begin',
     constructor: function(name, stmts) {
       this.name  = name;
       this.stmts = stmts;
@@ -82,6 +87,7 @@
   });
 
   var CallNode = Node.extend({
+    node: 'call',
     constructor: function(name) {
       this.name = name;
     },
@@ -91,6 +97,7 @@
   });
 
   var CmdNode = Node.extend({
+    node: 'cmd',
     constructor: function(name, exprs) {
       this.name = name;
       this.exprs = exprs;
@@ -110,6 +117,7 @@
   });
 
   var LetNode = Node.extend({
+    node: 'let',
     constructor: function(name, value) {
       this.name = name;
       this.value = value;
@@ -119,7 +127,72 @@
     }
   });
 
+  var BinaryOpNode = Node.extend({
+    node: 'binary_op',
+    constructor: function(op, left, right) {
+      this.op    = op;
+      this.left  = left;
+      this.right = right;
+    },
+    run: function() {
+      if (this.op == '+') {
+        return this.left.run() + this.right.run();
+      } else if (this.op == '-') {
+        return this.left.run() - this.right.run();
+      } else if (this.op == '*') {
+        return this.left.run() * this.right.run();
+      } else if (this.op == '/') {
+        return this.left.run() / this.right.run();
+      } else if (this.op == '%') {
+        return this.left.run() % this.right.run();
+      }
+    }
+  });
+
+  var UnaryOpNode = Node.extend({
+    node: 'unary_op',
+    constructor: function(op, right) {
+      this.op    = op;
+      this.right = right;
+    },
+    run: function() {
+      if (this.op == '+') {
+        return + this.right.run();
+      } else if (this.op == '-') {
+        return - this.right.run();
+      }
+    }
+  });
+
+  var XNode = Node.extend({
+    constructor: function() {
+
+    },
+    run: function() {
+
+    }
+  });
+
+  var XNode = Node.extend({
+    constructor: function() {
+
+    },
+    run: function() {
+
+    }
+  });
+
+  var XNode = Node.extend({
+    constructor: function() {
+
+    },
+    run: function() {
+
+    }
+  });
+
   var SymbolNode = Node.extend({
+    node: 'symbol',
     constructor: function(name) {
       this.name = name;
     },
@@ -129,6 +202,7 @@
   });
 
   var VarNode = Node.extend({
+    node: 'var',
     constructor: function(name) {
       this.name = name;
     },
@@ -138,6 +212,7 @@
   });
 
   var ConstantNode = Node.extend({
+    node: 'const',
     constructor: function(value) {
       this.value = value;
     },
@@ -150,6 +225,8 @@
 // Grammar
 
 start = Stmts
+
+// Statements
 
 Stmts
   = stmts:Stmt* {
@@ -193,7 +270,7 @@ Call
     }
 
 Cmd
-  = __ name:CmdName exprs:Exprs? EOL {
+  = __ name:CmdName __ exprs:Exprs? EOL {
       return new CmdNode(name, exprs);
     }
 
@@ -206,17 +283,6 @@ Let
       return new LetNode(sym, value);
     }
 
-Exprs
-  = __ first:Expr rest:( __ ',' __ expr:Expr { return expr; } )* {
-      return [first].concat(rest);
-    }
-
-Expr
-  // for now
-  = num:Number  { return new ConstantNode(num); }
-  / str:String  { return new ConstantNode(str); }
-  / sym:Symbol  { return new VarNode(sym); }
-
 Symbol
   = first:[a-z_] rest:[a-z0-9_]* {
       return first + rest.join('');
@@ -227,7 +293,7 @@ Constant
   / String
 
 Number
-  = digits:[0-9]+ {
+  = digits:([0-9])+ {
       return parseInt(digits.join(''), 10);
     }
 
@@ -240,37 +306,67 @@ Char
   = '""' { return '"'; }
   / [^"]
 
+// Expressions
+
+Exprs
+  = first:Expr rest:( __ ',' __ expr:Expr { return expr; } )* {
+      return [first].concat(rest);
+    }
+
+PrimaryExpr
+  = num:Number  { return new ConstantNode(num); }
+  / str:String  { return new ConstantNode(str); }
+  / sym:Symbol  { return new VarNode(sym); }
+  / '(' __ expr:Expr __ ')' {
+      return expr;
+    }
+
+Expr
+  = AddExpr
+
+RelExpr
+  = left:AddExpr __ op:RelOp __ right:AddExpr {
+      return new BinaryOpNode(op, left, right);
+    }
+
+RelOp
+  = '='
+  / '!='
+  / '<='
+  / '<'
+  / '>='
+  / '>'
+
+AddExpr
+  = left:MultExpr __ op:AddOp __ right:MultExpr {
+      return new BinaryOpNode(op, left, right);
+    }
+  / MultExpr
+
+AddOp
+  = '+'
+  / '-'
+
+MultExpr
+  = left:UnaryExpr __ op:MultOp __ right:UnaryExpr {
+      return new BinaryOpNode(op, left, right);
+    }
+  / UnaryExpr
+
+MultOp
+  = '*'
+  / '/'
+  / '%'
+
+UnaryExpr
+  = op:AddOp __ right:PrimaryExpr {
+      return new UnaryOpNode(op, right);
+    }
+  / PrimaryExpr
+
+// Whitespace
+
 __ = [ \t]*
 
 EOL = (__ [\r\n])+
 
-/*
-// Expressions
-
-additive
-  = left:multiplicative ws "+" ws right:additive { return left + right; }
-  / left:multiplicative ws "-" ws right:additive { return left - right; }
-  / multiplicative
-
-multiplicative
-  = left:primary ws "*" ws right:multiplicative { return left * right; }
-  / left:primary ws "/" ws right:multiplicative { return left / right; }
-  / primary
-
-primary
-  = integer
-  / string
-  / '(' ws a:additive ws ')' { return a; }
-
-// Literals
-
-__ = [ \t]+
-nl = [\r\n]+
-
-integer
-  = digits:[0-9]+ { return parseInt(digits.join(''), 10); }
-
-string
-  = '"' chars:[^"]+ '"' { return chars.join(''); }
-
-*/
