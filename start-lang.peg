@@ -17,7 +17,7 @@
     var delegate = options.constructor,
         ctor = function() {
           // grab the info about where we are in the source
-          //this._text   = text();
+          this._text   = text();
           this._node   = this.node; // from proto
           this._offset = offset();
           this._line   = line();
@@ -181,6 +181,14 @@
       return this.ops[this.op](this.right.run());
     },
 
+    reduce: function() {
+      if (this.right.node == 'literal') {
+        return new LiteralNode(this.run());
+      }
+
+      return this;
+    },
+
     ops: {
       '+' : function(right) { return + right; },
       '-' : function(right) { return - right; }
@@ -224,8 +232,8 @@
     }
   });
 
-  var ConstantNode = Node.extend({
-    node: 'const',
+  var LiteralNode = Node.extend({
+    node: 'literal',
 
     constructor: function(value) {
       this.value = value;
@@ -316,13 +324,18 @@ Symbol
       return first + rest.join('');
     }
 
-Constant
+Literal
   = Number
   / String
 
 Number
+  = whole:Digits frac:( '.' Digits )? exp:( [eE] [-+]? Digits )? {
+      return parseFloat(whole + (frac ? frac.join('') : '') + (exp ? exp.join('') : ''));
+    }
+
+Digits
   = digits:([0-9])+ {
-      return parseInt(digits.join(''), 10);
+      return digits.join('');
     }
 
 String
@@ -339,14 +352,6 @@ Char
 Exprs
   = first:Expr rest:( __ ',' __ expr:Expr { return expr; } )* {
       return [first].concat(rest);
-    }
-
-PrimaryExpr
-  = num:Number  { return new ConstantNode(num); }
-  / str:String  { return new ConstantNode(str); }
-  / sym:Symbol  { return new VarNode(sym); }
-  / '(' __ expr:Expr __ ')' {
-      return expr;
     }
 
 Expr
@@ -386,9 +391,17 @@ MultOp
 
 UnaryExpr
   = op:AddOp __ right:PrimaryExpr {
-      return new UnaryOpNode(op, right);
+      return new UnaryOpNode(op, right).reduce();
     }
   / PrimaryExpr
+
+PrimaryExpr
+  = num:Number  { return new LiteralNode(num); }
+  / str:String  { return new LiteralNode(str); }
+  / sym:Symbol  { return new VarNode(sym); }
+  / '(' __ expr:Expr __ ')' {
+      return expr;
+    }
 
 // Whitespace
 
