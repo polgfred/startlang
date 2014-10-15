@@ -235,6 +235,16 @@
       return this.value;
     }
   });
+
+  function buildBinaryExpr(first, rest) {
+    if (!rest || !rest.length) {
+      return first;
+    }
+
+    var next = rest.shift();
+
+    return new BinaryOpNode(next.op, first, buildBinaryExpr(next.expr, rest));
+  }
 }
 
 // Grammar
@@ -356,20 +366,18 @@ RelOp
   / '>'
 
 AddExpr
-  = left:MultExpr __ op:AddOp __ right:MultExpr {
-      return new BinaryOpNode(op, left, right);
+  = first:MultExpr rest:( __ op:AddOp __ next:MultExpr { return { op: op, expr: next }; } )* {
+      return buildBinaryExpr(first, rest);
     }
-  / MultExpr
 
 AddOp
   = '+'
   / '-'
 
 MultExpr
-  = left:UnaryExpr __ op:MultOp __ right:UnaryExpr {
-      return new BinaryOpNode(op, left, right);
+  = first:UnaryExpr rest:( __ op:MultOp __ next:UnaryExpr { return { op: op, expr: next }; } )* {
+      return buildBinaryExpr(first, rest);
     }
-  / UnaryExpr
 
 MultOp
   = '*'
