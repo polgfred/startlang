@@ -151,23 +151,23 @@
     },
 
     run: function() {
-      return this.ops[this.op](this.left.run(), this.right.run());
-    },
-
-    ops: {
-      '+' : function(left, right) { return left +  right; },
-      '-' : function(left, right) { return left -  right; },
-      '*' : function(left, right) { return left *  right; },
-      '/' : function(left, right) { return left /  right; },
-      '%' : function(left, right) { return left %  right; },
-      '=' : function(left, right) { return left == right; },
-      '!=': function(left, right) { return left != right; },
-      '<' : function(left, right) { return left <  right; },
-      '<=': function(left, right) { return left <= right; },
-      '>' : function(left, right) { return left >  right; },
-      '>=': function(left, right) { return left >= right; }
+      return binaryOps[this.op](this.left.run(), this.right.run());
     }
   });
+
+  var binaryOps = {
+    '+' : function(left, right) { return left +  right; },
+    '-' : function(left, right) { return left -  right; },
+    '*' : function(left, right) { return left *  right; },
+    '/' : function(left, right) { return left /  right; },
+    '%' : function(left, right) { return left %  right; },
+    '=' : function(left, right) { return left == right; },
+    '!=': function(left, right) { return left != right; },
+    '<' : function(left, right) { return left <  right; },
+    '<=': function(left, right) { return left <= right; },
+    '>' : function(left, right) { return left >  right; },
+    '>=': function(left, right) { return left >= right; }
+  };
 
   var UnaryOpNode = Node.extend({
     node: 'unary_op',
@@ -178,22 +178,14 @@
     },
 
     run: function() {
-      return this.ops[this.op](this.right.run());
-    },
-
-    reduce: function() {
-      if (this.right.node == 'literal') {
-        return new LiteralNode(this.run());
-      }
-
-      return this;
-    },
-
-    ops: {
-      '+' : function(right) { return + right; },
-      '-' : function(right) { return - right; }
+      return unaryOps[this.op](this.right.run());
     }
   });
+
+  var unaryOps = {
+    '+' : function(right) { return + right; },
+    '-' : function(right) { return - right; }
+  };
 
   /*
   var XNode = Node.extend({
@@ -275,12 +267,8 @@ Stmt
   / Let
 
 If
-  = __ 'if' __ test:RelExpr EOL
-    tstmts:Stmts
-    fstmts:(
-      __ 'else' EOL
-      fstmts:Stmts { return fstmts; }
-    )?
+  = __ 'if' __ test:RelExpr EOL tstmts:Stmts
+    fstmts:( __ 'else' EOL fstmts:Stmts { return fstmts; } )?
     __ 'end' EOL {
       return new IfNode(test, tstmts, fstmts);
     }
@@ -329,7 +317,9 @@ Literal
   / String
 
 Number
-  = whole:Digits frac:( '.' Digits )? exp:( [eE] [-+]? Digits )? {
+  = 'NaN' { return NaN; }
+  / 'Infinity' { return Infinity; }
+  / whole:Digits frac:( '.' Digits )? exp:( [eE] [-+]? Digits )? {
       return parseFloat(whole + (frac ? frac.join('') : '') + (exp ? exp.join('') : ''));
     }
 
@@ -371,7 +361,8 @@ RelOp
   / '>'
 
 AddExpr
-  = first:MultExpr rest:( __ op:AddOp __ next:MultExpr { return { op: op, expr: next }; } )* {
+  = first:MultExpr
+    rest:( __ op:AddOp __ next:MultExpr { return { op: op, expr: next }; } )* {
       return buildBinaryExpr(first, rest);
     }
 
@@ -380,7 +371,8 @@ AddOp
   / '-'
 
 MultExpr
-  = first:UnaryExpr rest:( __ op:MultOp __ next:UnaryExpr { return { op: op, expr: next }; } )* {
+  = first:UnaryExpr
+    rest:( __ op:MultOp __ next:UnaryExpr { return { op: op, expr: next }; } )* {
       return buildBinaryExpr(first, rest);
     }
 
@@ -390,21 +382,29 @@ MultOp
   / '%'
 
 UnaryExpr
-  = op:AddOp __ right:PrimaryExpr {
-      return new UnaryOpNode(op, right).reduce();
+  // handle unary literals
+  = op:AddOp __ right:Literal {
+      return new LiteralNode(unaryOps[op](right));
+    }
+  / op:AddOp __ right:PrimaryExpr {
+      return new UnaryOpNode(op, right);
     }
   / PrimaryExpr
 
 PrimaryExpr
-  = num:Number  { return new LiteralNode(num); }
-  / str:String  { return new LiteralNode(str); }
-  / sym:Symbol  { return new VarNode(sym); }
+  = literal:( Number / String ) {
+      return new LiteralNode(literal);
+    }
+  / sym:Symbol {
+      return new VarNode(sym);
+    }
   / '(' __ expr:Expr __ ')' {
       return expr;
     }
 
 // Whitespace
+__
+  = [ \t]*
 
-__ = [ \t]*
-
-EOL = (__ [\r\n])+
+EOL
+  = (__ [\r\n])+
