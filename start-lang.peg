@@ -254,7 +254,7 @@ start = Stmts
 // Statements
 
 Stmts
-  = stmts:Stmt* {
+  = EOL* stmts:Stmt* {
       return new StmtsNode(stmts);
     }
 
