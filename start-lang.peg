@@ -1,109 +1,153 @@
+// Language Nodes
+
 {
-  util = require('util');
+  var util = require('util');
 
-  G = {};
+  var variables = {},
+      procs = {},
+      slice = [].slice;
 
-  function construct(constructor, args) {
-      function F() {
-          return constructor.apply(this, args);
+  function Node() {}
+
+  Node.extend = function(options) {
+    var ctor = function() {
+      // grab the info about where we are in the source
+      this._text   = text();
+      this._offset = offset();
+      this._line   = line();
+      this._column = column();
+      options.construct.apply(this, arguments);
+    };
+    util.inherits(ctor, Node);
+    util._extend(ctor.prototype, options);
+    return ctor;
+  }
+
+   var StmtsNode = Node.extend({
+    construct: function(stmts) {
+      this.stmts = stmts;
+    },
+    run: function() {
+      for (var i = 0; i < this.stmts.length; ++i) {
+        this.stmts[i].run();
       }
-      F.prototype = constructor.prototype;
-      return new F();
-  }
-
-  function StmtsNode(stmts) {
-    this.stmts = stmts;
-  }
-
-  StmtsNode.prototype.run = function() {
-    var i = 0;
-    for (i = 0; i < this.stmts.length; ++i) {
-      this.stmts[i].run();
     }
-  };
+  });
 
-  function IfNode(test, tstmts, fstmts) {
-    this.test = test.run();
-    this.tstmts = tstmts;
-    this.fstmts = fstmts;
-  }
-
-  IfNode.prototype.run = function() {
-    console.log('if: ' + this.test);
-    if (this.test) {
-      this.tstmts.run();
-    } else {
-      this.fstmts.run();
+  var IfNode = Node.extend({
+    construct: function(test, tstmts, fstmts) {
+      this.test   = test;
+      this.tstmts = tstmts;
+      this.fstmts = fstmts;
+    },
+    run: function() {
+      if (this.test.run()) {
+        this.tstmts.run();
+      } else {
+        this.fstmts.run();
+      }
     }
-  };
+  });
 
-  function ForNode(symbol, start, end, by, stmts) {
-    this.name = symbol.run();
-    this.start = start.run();
-    this.end = end.run();
-    this.by = by ? by.run() : 1;
-    this.stmts = stmts;
-  }
-
-  ForNode.prototype.run = function() {
-    console.log('for: ' + this.name + ' = ' + this.start + ' to ' + this.end + ' by ' + this.by);
-    for (var i = this.start; i < this.end; i += this.by) {
-      console.log(this.name + ' = ' + i);
-      G[this.name] = i;
-      this.stmts.run();
+  var ForNode = Node.extend({
+    construct: function(name, start, end, by, stmts) {
+      this.name  = name;
+      this.start = start;
+      this.end   = end;
+      this.by    = by;
+      this.stmts = stmts;
+    },
+    run: function() {
+      for (var i = this.start.run(); i < this.end.run(); i += (this.by ? this.by.run() : 1)) {
+        variables[this.name] = i;
+        this.stmts.run();
+      }
     }
-  };
+  });
 
-  function BeginNode(symbol, stmts) {
-    this.name = symbol.run();
-    this.stmts = stmts;
-  }
+  var BeginNode = Node.extend({
+    construct: function(name, stmts) {
+      this.name  = name;
+      this.stmts = stmts;
+    },
+    run: function() {
+      procs[this.name] = this.stmts;
+    }
+  });
 
-  BeginNode.prototype.run = function() {
-    console.log('begin: ' + this.name);
-    this.stmts.run();
-  };
+  var CallNode = Node.extend({
+    construct: function(name) {
+      this.name = name;
+    },
+    run: function() {
+      procs[this.name].run();
+    }
+  });
 
-  function SymbolNode(name) {
-    this.name = name;
-  }
+  var CmdNode = Node.extend({
+    construct: function(name, exprs) {
+      this.name = name;
+      this.exprs = exprs;
+    },
+    run: function() {
+      // we'll eventually make this polymorphic
+      if (this.name == 'print') {
+        if (this.exprs) {
+          for (var i = 0; i < this.exprs.length; ++i) {
+            console.log(this.exprs[i].run());
+          }
+        } else {
+          console.log();
+        }
+      }
+    }
+  });
 
-  function CallNode(symbol) {
-    this.name = symbol.run();
-  }
+  var LetNode = Node.extend({
+    construct: function(name, value) {
+      this.name = name;
+      this.value = value;
+    },
+    run: function() {
+      variables[this.name] = this.value.run();
+    }
+  });
 
-  CallNode.prototype.run = function() {
-    console.log('call: ' + this.name);
-  };
+  var SymbolNode = Node.extend({
+    construct: function(name) {
+      this.name = name;
+    },
+    run: function() {
+      return this.name;
+    }
+  });
 
-  function LetNode(symbol, value) {
-    this.name = symbol.run();
-    this.value = value.run();
-  }
+  var VarNode = Node.extend({
+    construct: function(name) {
+      this.name = name;
+    },
+    run: function() {
+      return variables[this.name];
+    }
+  });
 
-  LetNode.prototype.run = function() {
-    console.log('let: ' + this.name + ' = ' + this.value);
-    G[this.name] = this.value;
-  };
-
-  SymbolNode.prototype.run = function() {
-    return this.name;
-  };
-
-  function NumberNode(value) {
-    this.value = value;
-  }
-
-  NumberNode.prototype.run = function() {
-    return this.value;
-  };
+  var ConstantNode = Node.extend({
+    construct: function(value) {
+      this.value = value;
+    },
+    run: function() {
+      return this.value;
+    }
+  });
 }
+
+// Grammar
 
 start = Stmts
 
 Stmts
-  = statements:Stmt* {
-      return construct(StmtsNode, arguments);
+  = stmts:Stmt* {
+      return new StmtsNode(stmts);
     }
 
 Stmt
@@ -111,6 +155,7 @@ Stmt
   / For
   / Begin
   / Call
+  / Cmd
   / Let
 
 If
@@ -119,49 +164,75 @@ If
     __ 'else' EOL
     fstmts:Stmts
     __ 'end' EOL {
-      return construct(IfNode, arguments);
+      return new IfNode(test, tstmts, fstmts);
     }
 
 For
-  = __ 'for' __ sym:Symbol __ '=' __ start:Expr __ 'to' __ end:Expr
-          by:(__ 'by' __ by:Expr { return by; })?
-          EOL
+  = __ 'for' __ sym:Symbol __ '=' __ start:Expr __ 'to' __ end:Expr by:( __ 'by' __ by:Expr { return by; } )? EOL
     stmts:Stmts
     __ 'end' EOL {
-      return construct(ForNode, arguments);
+      return new ForNode(sym, start, end, by, stmts);
     }
 
 Begin
   = __ 'begin' __ sym:Symbol EOL
     stmts:Stmts
     __ 'end' EOL {
-      return construct(BeginNode, arguments);
+      return new BeginNode(sym, stmts);
     }
 
 Call
   = __ 'call' __ sym:Symbol EOL {
-      return construct(CallNode, arguments);
+      return new CallNode(sym);
     }
+
+Cmd
+  = __ name:CmdName exprs:Exprs? EOL {
+      return new CmdNode(name, exprs);
+    }
+
+CmdName
+  = 'print'
+  / 'input'
 
 Let
   = __ 'let' __ sym:Symbol __ '=' __ value:Expr EOL {
-      return construct(LetNode, arguments);
+      return new LetNode(sym, value);
     }
 
-Symbol
-  = first:[a-z_] rest:[a-z0-9_]* {
-      return new SymbolNode(first + rest.join(''));
+Exprs
+  = __ first:Expr rest:( __ ',' __ expr:Expr { return expr; } )* {
+      return [first].concat(rest);
     }
 
 Expr
   // for now
+  = num:Number  { return new ConstantNode(num); }
+  / str:String  { return new ConstantNode(str); }
+  / sym:Symbol  { return new VarNode(sym); }
+
+Symbol
+  = first:[a-z_] rest:[a-z0-9_]* {
+      return first + rest.join('');
+    }
+
+Constant
   = Number
-  / Symbol
+  / String
 
 Number
   = digits:[0-9]+ {
-      return new NumberNode(parseInt(digits.join(''), 10));
+      return parseInt(digits.join(''), 10);
     }
+
+String
+  = '"' chars:Char* '"' {
+      return chars.join('');
+    }
+
+Char
+  = '""' { return '"'; }
+  / [^"]
 
 __ = [ \t]*
 
