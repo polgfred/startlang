@@ -1,30 +1,36 @@
 // Language Nodes
 
 {
-  var util = require('util');
-
   var variables = {},
       procs = {},
-      slice = [].slice;
+      slice = [].slice,
+      extend = function(object, properties) {
+        var keys = Object.keys(properties);
+        for (var i = 0; i < keys.length; ++i) {
+          object[keys[i]] = properties[keys[i]];
+        }
+      };
 
   function Node() {}
 
   Node.extend = function(options) {
-    var ctor = function() {
-      // grab the info about where we are in the source
-      this._text   = text();
-      this._offset = offset();
-      this._line   = line();
-      this._column = column();
-      options.construct.apply(this, arguments);
-    };
-    util.inherits(ctor, Node);
-    util._extend(ctor.prototype, options);
+    var delegate = options.constructor,
+        ctor = function() {
+          // grab the info about where we are in the source
+          this._text   = text();
+          this._offset = offset();
+          this._line   = line();
+          this._column = column();
+          delegate.apply(this, arguments);
+        };
+    ctor.prototype = Object.create(Node.prototype);
+    options.constructor = ctor;
+    extend(ctor.prototype, options);
     return ctor;
   }
 
-   var StmtsNode = Node.extend({
-    construct: function(stmts) {
+  var StmtsNode = Node.extend({
+    constructor: function(stmts) {
       this.stmts = stmts;
     },
     run: function() {
@@ -35,7 +41,7 @@
   });
 
   var IfNode = Node.extend({
-    construct: function(test, tstmts, fstmts) {
+    constructor: function(test, tstmts, fstmts) {
       this.test   = test;
       this.tstmts = tstmts;
       this.fstmts = fstmts;
@@ -50,7 +56,7 @@
   });
 
   var ForNode = Node.extend({
-    construct: function(name, start, end, by, stmts) {
+    constructor: function(name, start, end, by, stmts) {
       this.name  = name;
       this.start = start;
       this.end   = end;
@@ -66,7 +72,7 @@
   });
 
   var BeginNode = Node.extend({
-    construct: function(name, stmts) {
+    constructor: function(name, stmts) {
       this.name  = name;
       this.stmts = stmts;
     },
@@ -76,7 +82,7 @@
   });
 
   var CallNode = Node.extend({
-    construct: function(name) {
+    constructor: function(name) {
       this.name = name;
     },
     run: function() {
@@ -85,7 +91,7 @@
   });
 
   var CmdNode = Node.extend({
-    construct: function(name, exprs) {
+    constructor: function(name, exprs) {
       this.name = name;
       this.exprs = exprs;
     },
@@ -104,7 +110,7 @@
   });
 
   var LetNode = Node.extend({
-    construct: function(name, value) {
+    constructor: function(name, value) {
       this.name = name;
       this.value = value;
     },
@@ -114,7 +120,7 @@
   });
 
   var SymbolNode = Node.extend({
-    construct: function(name) {
+    constructor: function(name) {
       this.name = name;
     },
     run: function() {
@@ -123,7 +129,7 @@
   });
 
   var VarNode = Node.extend({
-    construct: function(name) {
+    constructor: function(name) {
       this.name = name;
     },
     run: function() {
@@ -132,7 +138,7 @@
   });
 
   var ConstantNode = Node.extend({
-    construct: function(value) {
+    constructor: function(value) {
       this.value = value;
     },
     run: function() {
