@@ -28,13 +28,15 @@
     options.constructor = ctor;
     extend(ctor.prototype, options);
     return ctor;
-  }
+  };
 
   var StmtsNode = Node.extend({
     node: 'stmts',
+
     constructor: function(stmts) {
       this.stmts = stmts;
     },
+
     run: function() {
       for (var i = 0; i < this.stmts.length; ++i) {
         this.stmts[i].run();
@@ -44,15 +46,17 @@
 
   var IfNode = Node.extend({
     node: 'if',
+
     constructor: function(test, tstmts, fstmts) {
       this.test   = test;
       this.tstmts = tstmts;
       this.fstmts = fstmts;
     },
+
     run: function() {
       if (this.test.run()) {
         this.tstmts.run();
-      } else {
+      } else if (this.fstmts) {
         this.fstmts.run();
       }
     }
@@ -60,6 +64,7 @@
 
   var ForNode = Node.extend({
     node: 'for',
+
     constructor: function(name, start, end, by, stmts) {
       this.name  = name;
       this.start = start;
@@ -67,6 +72,7 @@
       this.by    = by;
       this.stmts = stmts;
     },
+
     run: function() {
       for (var i = this.start.run(); i < this.end.run(); i += (this.by ? this.by.run() : 1)) {
         variables[this.name] = i;
@@ -77,10 +83,12 @@
 
   var BeginNode = Node.extend({
     node: 'begin',
+
     constructor: function(name, stmts) {
       this.name  = name;
       this.stmts = stmts;
     },
+
     run: function() {
       procs[this.name] = this.stmts;
     }
@@ -88,9 +96,11 @@
 
   var CallNode = Node.extend({
     node: 'call',
+
     constructor: function(name) {
       this.name = name;
     },
+
     run: function() {
       procs[this.name].run();
     }
@@ -98,10 +108,12 @@
 
   var CmdNode = Node.extend({
     node: 'cmd',
+
     constructor: function(name, exprs) {
       this.name = name;
       this.exprs = exprs;
     },
+
     run: function() {
       // we'll eventually make this polymorphic
       if (this.name == 'print') {
@@ -118,10 +130,12 @@
 
   var LetNode = Node.extend({
     node: 'let',
+
     constructor: function(name, value) {
       this.name = name;
       this.value = value;
     },
+
     run: function() {
       variables[this.name] = this.value.run();
     }
@@ -129,73 +143,70 @@
 
   var BinaryOpNode = Node.extend({
     node: 'binary_op',
+
     constructor: function(op, left, right) {
       this.op    = op;
       this.left  = left;
       this.right = right;
     },
+
     run: function() {
-      if (this.op == '+') {
-        return this.left.run() + this.right.run();
-      } else if (this.op == '-') {
-        return this.left.run() - this.right.run();
-      } else if (this.op == '*') {
-        return this.left.run() * this.right.run();
-      } else if (this.op == '/') {
-        return this.left.run() / this.right.run();
-      } else if (this.op == '%') {
-        return this.left.run() % this.right.run();
-      }
+      return this.ops[this.op](this.left.run(), this.right.run());
+    },
+
+    ops: {
+      '+' : function(left, right) { return left +  right; },
+      '-' : function(left, right) { return left -  right; },
+      '*' : function(left, right) { return left *  right; },
+      '/' : function(left, right) { return left /  right; },
+      '%' : function(left, right) { return left %  right; },
+      '=' : function(left, right) { return left == right; },
+      '!=': function(left, right) { return left != right; },
+      '<' : function(left, right) { return left <  right; },
+      '<=': function(left, right) { return left <= right; },
+      '>' : function(left, right) { return left >  right; },
+      '>=': function(left, right) { return left >= right; }
     }
   });
 
   var UnaryOpNode = Node.extend({
     node: 'unary_op',
+
     constructor: function(op, right) {
       this.op    = op;
       this.right = right;
     },
+
     run: function() {
-      if (this.op == '+') {
-        return + this.right.run();
-      } else if (this.op == '-') {
-        return - this.right.run();
-      }
+      return this.ops[this.op](this.right.run());
+    },
+
+    ops: {
+      '+' : function(right) { return + right; },
+      '-' : function(right) { return - right; }
     }
   });
 
+  /*
   var XNode = Node.extend({
+
     constructor: function() {
 
     },
+
     run: function() {
 
     }
   });
-
-  var XNode = Node.extend({
-    constructor: function() {
-
-    },
-    run: function() {
-
-    }
-  });
-
-  var XNode = Node.extend({
-    constructor: function() {
-
-    },
-    run: function() {
-
-    }
-  });
+  */
 
   var SymbolNode = Node.extend({
     node: 'symbol',
+
     constructor: function(name) {
       this.name = name;
     },
+
     run: function() {
       return this.name;
     }
@@ -203,9 +214,11 @@
 
   var VarNode = Node.extend({
     node: 'var',
+
     constructor: function(name) {
       this.name = name;
     },
+
     run: function() {
       return variables[this.name];
     }
@@ -213,9 +226,11 @@
 
   var ConstantNode = Node.extend({
     node: 'const',
+
     constructor: function(value) {
       this.value = value;
     },
+
     run: function() {
       return this.value;
     }
@@ -242,16 +257,19 @@ Stmt
   / Let
 
 If
-  = __ 'if' __ test:Expr EOL
+  = __ 'if' __ test:RelExpr EOL
     tstmts:Stmts
-    __ 'else' EOL
-    fstmts:Stmts
+    fstmts:(
+      __ 'else' EOL
+      fstmts:Stmts { return fstmts; }
+    )?
     __ 'end' EOL {
       return new IfNode(test, tstmts, fstmts);
     }
 
 For
-  = __ 'for' __ sym:Symbol __ '=' __ start:Expr __ 'to' __ end:Expr by:( __ 'by' __ by:Expr { return by; } )? EOL
+  = __ 'for' __ sym:Symbol __ '=' __ start:Expr __ 'to' __ end:Expr
+    by:( __ 'by' __ by:Expr { return by; } )? EOL
     stmts:Stmts
     __ 'end' EOL {
       return new ForNode(sym, start, end, by, stmts);
@@ -369,4 +387,3 @@ UnaryExpr
 __ = [ \t]*
 
 EOL = (__ [\r\n])+
-
