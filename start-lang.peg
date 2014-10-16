@@ -1,7 +1,8 @@
 // Language Nodes
 
 {
-  var variables = {},
+  var start = require('./start-lib'),
+      variables = {},
       procs = {},
       slice = [].slice,
       extend = function(object, properties) {
@@ -109,13 +110,37 @@
   var LetNode = Node.extend({
     node: 'let',
 
-    constructor: function(name, value) {
+    constructor: function(name, indexes, value) {
       this.name = name;
+      this.indexes = indexes;
       this.value = value;
     },
 
     run: function() {
-      variables[this.name] = this.value.run();
+      var val = this.value.run();
+
+      if (this.indexes == null) {
+        variables[this.name] = val;
+      } else {
+        var current = variables[this.name], index, i;
+
+        if (current._dimensions != this.indexes.length) {
+          throw new Error('wrong dimensions');
+        }
+
+        for (i = 0; i < this.indexes.length - 1; ++i) {
+          index = this.indexes[i].run();
+
+          if (index < 0 || index >= current.length) {
+            throw new Error('out of bounds');
+          } else {
+            current = current[index];
+          }
+        }
+
+        index = this.indexes[i].run();
+        current[index] = val;
+      }
     }
   });
 
@@ -146,11 +171,40 @@
 
     constructor: function(name, args) {
       this.name = name;
-      this.args = args;
+      this.args = args || [];
     },
 
     run: function() {
-      return 0;
+      if (start[this.name]) {
+        return start[this.name].apply(null, this.args.map(function(arg) {
+          return arg.run();
+        }));
+      }
+    }
+  });
+
+  var IndexNode = Node.extend({
+    node: 'index',
+
+    constructor: function(name, indexes) {
+      this.name = name;
+      this.indexes = indexes;
+    },
+
+    run: function() {
+      var current = variables[this.name], index, i;
+
+      for (i = 0; i < this.indexes.length; ++i) {
+        index = this.indexes[i].run();
+
+        if (index < 0 || index >= current.length) {
+          throw new Error('out of bounds');
+        } else {
+          current = current[index];
+        }
+      }
+
+      return current;
     }
   });
 
@@ -321,8 +375,14 @@ CallStatement
     }
 
 LetStatement
-  = __ 'let' __ sym:Symbol __ '=' __ value:Expr EOL {
-      return new LetNode(sym, value);
+  = __ 'let' __ sym:Symbol
+    indexes:(
+      __ '[' __ i:Exprs __ ']' {
+        return i;
+      }
+    )?
+    __ '=' __ value:Expr EOL {
+      return new LetNode(sym, indexes, value);
     }
 
 Command
@@ -389,6 +449,9 @@ UnaryExpr
 CallExpr
   = sym:Symbol __ '(' __ args:Exprs? __ ')' {
       return new CallNode(sym, args);
+    }
+  / sym:Symbol __ '[' __ indexes:Exprs __ ']' {
+      return new IndexNode(sym, indexes);
     }
   / PrimaryExpr
 
