@@ -48,14 +48,14 @@
   var IfNode = Node.extend({
     node: 'if',
 
-    constructor: function(test, tstmts, fstmts) {
-      this.test   = test;
+    constructor: function(cond, tstmts, fstmts) {
+      this.cond   = cond;
       this.tstmts = tstmts;
       this.fstmts = fstmts;
     },
 
     run: function() {
-      if (this.test.run()) {
+      if (this.cond.run()) {
         this.tstmts.run();
       } else if (this.fstmts) {
         this.fstmts.run();
@@ -333,7 +333,7 @@ Statement
   / Command
 
 IfBlock
-  = __ 'if' __ test:LogicalExpr EOL
+  = __ 'if' __ cond:Condition EOL
     tstmts:Statements
     fstmts:(
       __ 'else' EOL
@@ -342,7 +342,7 @@ IfBlock
       }
     )?
     __ 'end' EOL {
-      return new IfNode(test, tstmts, fstmts);
+      return new IfNode(cond, tstmts, fstmts);
     }
 
 ForBlock
@@ -390,23 +390,23 @@ CommandName
   = 'print'
   / 'input'
 
-// Expressions
+// Conditions
 
-LogicalExpr
-  = first:RelExpr rest:( __ op:LogicalOp __ e:RelExpr { return [op, e]; } )* {
+Condition
+  = first:Comparison rest:( __ op:BoolOp __ comp:Comparison { return [op, comp]; } )* {
       return buildLogicalOp(first, rest);
     }
 
-LogicalOp
+BoolOp
   = 'and'
   / 'or'
 
-RelExpr
-  = left:AddExpr __ op:RelOp __ right:AddExpr {
+Comparison
+  = left:Value __ op:RelOp __ right:Value {
       return new BinaryOpNode(op, left, right);
     }
-  / '(' __ log:LogicalExpr __ ')' {
-      return log;
+  / '(' __ cond:Condition __ ')' {
+      return cond;
     }
 
 RelOp
@@ -416,6 +416,8 @@ RelOp
   / '<'
   / '>='
   / '>'
+
+// Values
 
 Values
   = first:Value rest:( __ ',' __ val:Value { return val; } )* {
