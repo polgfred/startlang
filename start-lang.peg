@@ -287,31 +287,6 @@
     '-' : function(right) { return - right; }
   };
 
-  /*
-  var XNode = Node.extend({
-
-    constructor: function() {
-
-    },
-
-    run: function() {
-
-    }
-  });
-  */
-
-  var SymbolNode = Node.extend({
-    node: 'symbol',
-
-    constructor: function(name) {
-      this.name = name;
-    },
-
-    run: function() {
-      return this.name;
-    }
-  });
-
   var VarNode = Node.extend({
     node: 'var',
 
