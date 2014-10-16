@@ -155,6 +155,17 @@
     }
   });
 
+  var CommentNode = Node.extend({
+    node: 'rem',
+
+    constructor: function(text) {
+      this.text = text;
+    },
+
+    run: function() {
+    }
+  });
+
   var CallNode = Node.extend({
     node: 'call',
 
@@ -331,6 +342,7 @@ Statement
   / CallStatement
   / LetStatement
   / Command
+  / Comment
 
 IfBlock
   = __ 'if' __ cond:Condition EOL
@@ -389,6 +401,11 @@ Command
 CommandName
   = 'print'
   / 'input'
+
+Comment
+  = __ '//' __ text:$[^\n]* EOL {
+    return new CommentNode(text);
+  }
 
 // Conditions
 
@@ -507,4 +524,4 @@ __
   = [ \t]*
 
 EOL
-  = ( __ [\r\n] )+
+  = ( __ [\n] )+
