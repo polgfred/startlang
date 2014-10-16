@@ -371,9 +371,9 @@ IfBlock
     }
 
 ForBlock
-  = __ 'for' __ sym:Symbol __ '=' __ start:Expr __ 'to' __ end:Expr
+  = __ 'for' __ sym:Symbol __ '=' __ start:Value __ 'to' __ end:Value
     by:(
-      __ 'by' __ e:Expr {
+      __ 'by' __ val:Value {
         return e;
       }
     )?
@@ -398,16 +398,16 @@ CallStatement
 LetStatement
   = __ 'let' __ sym:Symbol
     indexes:(
-      __ '[' __ i:Exprs __ ']' {
+      __ '[' __ i:Values __ ']' {
         return i;
       }
     )?
-    __ '=' __ value:Expr EOL {
+    __ '=' __ value:Value EOL {
       return new LetNode(sym, indexes, value);
     }
 
 Command
-  = __ name:CommandName __ exprs:Exprs? EOL {
+  = __ name:CommandName __ exprs:Values? EOL {
       return new CommandNode(name, exprs);
     }
 
@@ -442,12 +442,12 @@ RelOp
   / '>='
   / '>'
 
-Exprs
-  = first:Expr rest:( __ ',' __ e:Expr { return e; } )* {
+Values
+  = first:Value rest:( __ ',' __ val:Value { return val; } )* {
       return [first].concat(rest);
     }
 
-Expr
+Value
   = AddExpr
 
 AddExpr
@@ -480,10 +480,10 @@ UnaryExpr
   / CallExpr
 
 CallExpr
-  = sym:Symbol __ '(' __ args:Exprs? __ ')' {
+  = sym:Symbol __ '(' __ args:Values? __ ')' {
       return new CallNode(sym, args);
     }
-  / sym:Symbol __ '[' __ indexes:Exprs __ ']' {
+  / sym:Symbol __ '[' __ indexes:Values __ ']' {
       return new IndexNode(sym, indexes);
     }
   / PrimaryExpr
@@ -495,8 +495,8 @@ PrimaryExpr
   / sym:Symbol {
       return new VarNode(sym);
     }
-  / '(' __ expr:Expr __ ')' {
-      return expr;
+  / '(' __ val:Value __ ')' {
+      return val;
     }
 
 // Data
