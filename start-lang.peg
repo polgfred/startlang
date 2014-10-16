@@ -141,6 +141,19 @@
     }
   });
 
+  var CallNode = Node.extend({
+    node: 'call',
+
+    constructor: function(name, args) {
+      this.name = name;
+      this.args = args;
+    },
+
+    run: function() {
+      return 0;
+    }
+  });
+
   var BinaryOpNode = Node.extend({
     node: 'binary_op',
 
@@ -321,30 +334,6 @@ CommandName
   = 'print'
   / 'input'
 
-Literal
-  = Number
-  / String
-
-Number
-  = 'NaN' { return NaN; }
-  / 'Infinity' { return Infinity; }
-  / num:$( Digits ( '.' Digits )? ( [eE] [-+]? Digits )? ) {
-      return parseFloat(num);
-    }
-
-Symbol
-  = $( [a-z_] [a-z0-9_]* )
-
-Digits
-  = $[0-9]+
-
-String
-  = '"' chars:Char* '"' { return chars.join(''); }
-
-Char
-  = '""' { return '"'; }
-  / [^"]
-
 // Expressions
 
 Exprs
@@ -392,8 +381,14 @@ UnaryExpr
   = op:AddOp __ right:Literal {
       return new LiteralNode(unaryOps[op](right));
     }
-  / op:AddOp __ right:PrimaryExpr {
+  / op:AddOp __ right:CallExpr {
       return new UnaryOpNode(op, right);
+    }
+  / CallExpr
+
+CallExpr
+  = sym:Symbol __ '(' __ args:Exprs? __ ')' {
+      return new CallNode(sym, args);
     }
   / PrimaryExpr
 
@@ -407,6 +402,32 @@ PrimaryExpr
   / '(' __ expr:Expr __ ')' {
       return expr;
     }
+
+// Data
+
+Literal
+  = Number
+  / String
+
+Number
+  = 'NaN' { return NaN; }
+  / 'Infinity' { return Infinity; }
+  / num:$( Digits ( '.' Digits )? ( [eE] [-+]? Digits )? ) {
+      return parseFloat(num);
+    }
+
+Symbol
+  = $( [a-z_] [a-z0-9_]* )
+
+Digits
+  = $[0-9]+
+
+String
+  = '"' chars:Char* '"' { return chars.join(''); }
+
+Char
+  = '""' { return '"'; }
+  / [^"]
 
 // Whitespace
 __
