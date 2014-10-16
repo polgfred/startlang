@@ -236,14 +236,16 @@
     }
   });
 
+  // take a chain of equal-precedence exprs and construct a left-folding tree
   function buildBinaryExpr(first, rest) {
-    if (!rest || !rest.length) {
-      return first;
+    rest || (rest = []);
+
+    var next;
+    while (next = rest.shift()) {
+      first = new BinaryOpNode(next[0], first, next[1]);
     }
 
-    var next = rest.shift();
-
-    return new BinaryOpNode(next[0], first, buildBinaryExpr(next[1], rest));
+    return first;
   }
 }
 
