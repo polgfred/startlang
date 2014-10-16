@@ -270,27 +270,27 @@ Statement
 IfBlock
   = __ 'if' __ test:RelExpr EOL
     tstmts:Statements
-    __ 'else' EOL
-    fstmts:Statements
+    fstmts:(
+      __ 'else' EOL
+      s:Statements {
+        return s;
+      }
+    )?
     __ 'end' EOL {
       return new IfNode(test, tstmts, fstmts);
     }
-  / __ 'if' __ test:RelExpr EOL
-    tstmts:Statements
-    __ 'end' EOL {
-      return new IfNode(test, tstmts);
-    }
 
 ForBlock
-  = __ 'for' __ sym:Symbol __ '=' __ start:Expr __ 'to' __ end:Expr __ 'by' __ by:Expr EOL
+  = __ 'for' __ sym:Symbol __ '=' __ start:Expr __ 'to' __ end:Expr
+    by:(
+      __ 'by' __ e:Expr {
+        return e;
+      }
+    )?
+    EOL
     stmts:Statements
     __ 'end' EOL {
       return new ForNode(sym, start, end, by, stmts);
-    }
-  / __ 'for' __ sym:Symbol __ '=' __ start:Expr __ 'to' __ end:Expr EOL
-    stmts:Statements
-    __ 'end' EOL {
-      return new ForNode(sym, start, end, null, stmts);
     }
 
 BeginBlock
@@ -331,13 +331,13 @@ Number
     }
 
 Symbol
-  = [a-z_] [a-z0-9_]*
+  = $( [a-z_] [a-z0-9_]* )
 
 Digits
-  = [0-9]+
+  = $[0-9]+
 
 String
-  = $( '"' Char* '"' )
+  = '"' chars:Char* '"' { return chars.join(''); }
 
 Char
   = '""' { return '"'; }
