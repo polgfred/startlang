@@ -221,6 +221,54 @@
     '>=': function(left, right) { return left >= right; }
   };
 
+  // take a chain of equal-precedence binary exprs and construct a left-folding tree
+  function buildBinaryOp(first, rest) {
+    rest || (rest = []);
+
+    var next;
+    while (next = rest.shift()) {
+      first = new BinaryOpNode(next[0], first, next[1]);
+    }
+
+    return first;
+  }
+
+  var LogicalOpNode = Node.extend({
+    node: 'logical_op',
+
+    constructor: function(op, left, right) {
+      this.op    = op;
+      this.left  = left;
+      this.right = right;
+    },
+
+    run: function() {
+      // logical ops short-circuit
+      return logicalOps[this.op](this.left, this.right);
+    }
+  });
+
+  var logicalOps = {
+    'and': function(left, right) {
+      return left.run() && right.run();
+    },
+    'or': function(left, right) {
+      return left.run() || right.run();
+    }
+  };
+
+  // take a chain of equal-precedence logical exprs and construct a left-folding tree
+  function buildLogicalOp(first, rest) {
+    rest || (rest = []);
+
+    var next;
+    while (next = rest.shift()) {
+      first = new LogicalOpNode(next[0], first, next[1]);
+    }
+
+    return first;
+  }
+
   var UnaryOpNode = Node.extend({
     node: 'unary_op',
 
@@ -287,18 +335,6 @@
       return this.value;
     }
   });
-
-  // take a chain of equal-precedence exprs and construct a left-folding tree
-  function buildBinaryExpr(first, rest) {
-    rest || (rest = []);
-
-    var next;
-    while (next = rest.shift()) {
-      first = new BinaryOpNode(next[0], first, next[1]);
-    }
-
-    return first;
-  }
 }
 
 // Grammar
@@ -322,7 +358,7 @@ Statement
   / Command
 
 IfBlock
-  = __ 'if' __ test:RelExpr EOL
+  = __ 'if' __ test:LogicalExpr EOL
     tstmts:Statements
     fstmts:(
       __ 'else' EOL
@@ -381,17 +417,21 @@ CommandName
 
 // Expressions
 
-Exprs
-  = first:Expr rest:( __ ',' __ e:Expr { return e; } )* {
-      return [first].concat(rest);
+LogicalExpr
+  = first:RelExpr rest:( __ op:LogicalOp __ e:RelExpr { return [op, e]; } )* {
+      return buildLogicalOp(first, rest);
     }
 
-Expr
-  = AddExpr
+LogicalOp
+  = 'and'
+  / 'or'
 
 RelExpr
   = left:AddExpr __ op:RelOp __ right:AddExpr {
       return new BinaryOpNode(op, left, right);
+    }
+  / '(' __ log:LogicalExpr __ ')' {
+      return log;
     }
 
 RelOp
@@ -402,9 +442,17 @@ RelOp
   / '>='
   / '>'
 
+Exprs
+  = first:Expr rest:( __ ',' __ e:Expr { return e; } )* {
+      return [first].concat(rest);
+    }
+
+Expr
+  = AddExpr
+
 AddExpr
   = first:MultExpr rest:( __ op:AddOp __ e:MultExpr { return [op, e]; } )* {
-      return buildBinaryExpr(first, rest);
+      return buildBinaryOp(first, rest);
     }
 
 AddOp
@@ -413,7 +461,7 @@ AddOp
 
 MultExpr
   = first:UnaryExpr rest:( __ op:MultOp __ e:UnaryExpr { return [op, e]; } )* {
-      return buildBinaryExpr(first, rest);
+      return buildBinaryOp(first, rest);
     }
 
 MultOp
