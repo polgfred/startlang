@@ -117,29 +117,18 @@
     },
 
     run: function() {
-      var val = this.value.run();
+      var value = this.value.run();
 
       if (this.indexes == null) {
-        variables[this.name] = val;
+        variables[this.name] = value;
       } else {
-        var current = variables[this.name], index, i;
+        if (variables[this.name]) {
+          var indexes = this.indexes.map(function(index) {
+            return index.run();
+          });
 
-        if (current._dimensions != this.indexes.length) {
-          throw new Error('wrong dimensions');
+          variables[this.name].set(indexes, value);
         }
-
-        for (i = 0; i < this.indexes.length - 1; ++i) {
-          index = this.indexes[i].run();
-
-          if (index < 0 || index >= current.length) {
-            throw new Error('out of bounds');
-          } else {
-            current = current[index];
-          }
-        }
-
-        index = this.indexes[i].run();
-        current[index] = val;
       }
     }
   });
@@ -176,9 +165,11 @@
 
     run: function() {
       if (start[this.name]) {
-        return start[this.name].apply(null, this.args.map(function(arg) {
+        var args = this.args.map(function(arg) {
           return arg.run();
-        }));
+        });
+
+        return start[this.name].apply(null, args);
       }
     }
   });
@@ -192,19 +183,13 @@
     },
 
     run: function() {
-      var current = variables[this.name], index, i;
+      if (variables[this.name]) {
+        var indexes = this.indexes.map(function(index) {
+          return index.run();
+        });
 
-      for (i = 0; i < this.indexes.length; ++i) {
-        index = this.indexes[i].run();
-
-        if (index < 0 || index >= current.length) {
-          throw new Error('out of bounds');
-        } else {
-          current = current[index];
-        }
+        return variables[this.name].get(indexes);
       }
-
-      return current;
     }
   });
 
