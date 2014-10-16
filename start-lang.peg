@@ -30,7 +30,7 @@
     return ctor;
   };
 
-  var StmtsNode = Node.extend({
+  var StatementsNode = Node.extend({
     node: 'stmts',
 
     constructor: function(stmts) {
@@ -106,7 +106,20 @@
     }
   });
 
-  var CmdNode = Node.extend({
+  var LetNode = Node.extend({
+    node: 'let',
+
+    constructor: function(name, value) {
+      this.name = name;
+      this.value = value;
+    },
+
+    run: function() {
+      variables[this.name] = this.value.run();
+    }
+  });
+
+  var CommandNode = Node.extend({
     node: 'cmd',
 
     constructor: function(name, exprs) {
@@ -125,19 +138,6 @@
           console.log();
         }
       }
-    }
-  });
-
-  var LetNode = Node.extend({
-    node: 'let',
-
-    constructor: function(name, value) {
-      this.name = name;
-      this.value = value;
-    },
-
-    run: function() {
-      variables[this.name] = this.value.run();
     }
   });
 
@@ -243,74 +243,81 @@
 
     var next = rest.shift();
 
-    return new BinaryOpNode(next.op, first, buildBinaryExpr(next.expr, rest));
+    return new BinaryOpNode(next[0], first, buildBinaryExpr(next[1], rest));
   }
 }
 
 // Grammar
 
-start = Stmts
+start
+  = Statements
 
 // Statements
 
-Stmts
-  = EOL* stmts:Stmt* {
-      return new StmtsNode(stmts);
+Statements
+  = EOL* stmts:Statement* {
+      return new StatementsNode(stmts);
     }
 
-Stmt
-  = If
-  / For
-  / Begin
-  / Call
-  / Cmd
-  / Let
+Statement
+  = IfBlock
+  / ForBlock
+  / BeginBlock
+  / CallStatement
+  / LetStatement
+  / Command
 
-If
-  = __ 'if' __ test:RelExpr EOL tstmts:Stmts
-    fstmts:( __ 'else' EOL fstmts:Stmts { return fstmts; } )?
+IfBlock
+  = __ 'if' __ test:RelExpr EOL
+    tstmts:Statements
+    __ 'else' EOL
+    fstmts:Statements
     __ 'end' EOL {
       return new IfNode(test, tstmts, fstmts);
     }
+  / __ 'if' __ test:RelExpr EOL
+    tstmts:Statements
+    __ 'end' EOL {
+      return new IfNode(test, tstmts);
+    }
 
-For
-  = __ 'for' __ sym:Symbol __ '=' __ start:Expr __ 'to' __ end:Expr
-    by:( __ 'by' __ by:Expr { return by; } )? EOL
-    stmts:Stmts
+ForBlock
+  = __ 'for' __ sym:Symbol __ '=' __ start:Expr __ 'to' __ end:Expr __ 'by' __ by:Expr EOL
+    stmts:Statements
     __ 'end' EOL {
       return new ForNode(sym, start, end, by, stmts);
     }
+  / __ 'for' __ sym:Symbol __ '=' __ start:Expr __ 'to' __ end:Expr EOL
+    stmts:Statements
+    __ 'end' EOL {
+      return new ForNode(sym, start, end, null, stmts);
+    }
 
-Begin
+BeginBlock
   = __ 'begin' __ sym:Symbol EOL
-    stmts:Stmts
+    stmts:Statements
     __ 'end' EOL {
       return new BeginNode(sym, stmts);
     }
 
-Call
+CallStatement
   = __ 'call' __ sym:Symbol EOL {
       return new CallNode(sym);
     }
 
-Cmd
-  = __ name:CmdName __ exprs:Exprs? EOL {
-      return new CmdNode(name, exprs);
-    }
-
-CmdName
-  = 'print'
-  / 'input'
-
-Let
+LetStatement
   = __ 'let' __ sym:Symbol __ '=' __ value:Expr EOL {
       return new LetNode(sym, value);
     }
 
-Symbol
-  = first:[a-z_] rest:[a-z0-9_]* {
-      return first + rest.join('');
+Command
+  = __ name:CommandName __ exprs:Exprs? EOL {
+      return new CommandNode(name, exprs);
     }
+
+CommandName
+  = 'print'
+  / 'input'
 
 Literal
   = Number
@@ -319,19 +326,18 @@ Literal
 Number
   = 'NaN' { return NaN; }
   / 'Infinity' { return Infinity; }
-  / whole:Digits frac:( '.' Digits )? exp:( [eE] [-+]? Digits )? {
-      return parseFloat(whole + (frac ? frac.join('') : '') + (exp ? exp.join('') : ''));
+  / num:$( Digits ( '.' Digits )? ( [eE] [-+]? Digits )? ) {
+      return parseFloat(num);
     }
+
+Symbol
+  = [a-z_] [a-z0-9_]*
 
 Digits
-  = digits:([0-9])+ {
-      return digits.join('');
-    }
+  = [0-9]+
 
 String
-  = '"' chars:Char* '"' {
-      return chars.join('');
-    }
+  = $( '"' Char* '"' )
 
 Char
   = '""' { return '"'; }
@@ -340,7 +346,7 @@ Char
 // Expressions
 
 Exprs
-  = first:Expr rest:( __ ',' __ expr:Expr { return expr; } )* {
+  = first:Expr rest:( __ ',' __ e:Expr { return e; } )* {
       return [first].concat(rest);
     }
 
@@ -361,8 +367,7 @@ RelOp
   / '>'
 
 AddExpr
-  = first:MultExpr
-    rest:( __ op:AddOp __ next:MultExpr { return { op: op, expr: next }; } )* {
+  = first:MultExpr rest:( __ op:AddOp __ e:MultExpr { return [op, e]; } )* {
       return buildBinaryExpr(first, rest);
     }
 
@@ -371,8 +376,7 @@ AddOp
   / '-'
 
 MultExpr
-  = first:UnaryExpr
-    rest:( __ op:MultOp __ next:UnaryExpr { return { op: op, expr: next }; } )* {
+  = first:UnaryExpr rest:( __ op:MultOp __ e:UnaryExpr { return [op, e]; } )* {
       return buildBinaryExpr(first, rest);
     }
 
@@ -392,8 +396,8 @@ UnaryExpr
   / PrimaryExpr
 
 PrimaryExpr
-  = literal:( Number / String ) {
-      return new LiteralNode(literal);
+  = lit:Literal {
+      return new LiteralNode(lit);
     }
   / sym:Symbol {
       return new VarNode(sym);
@@ -407,4 +411,4 @@ __
   = [ \t]*
 
 EOL
-  = (__ [\r\n])+
+  = ( __ [\r\n] )+
