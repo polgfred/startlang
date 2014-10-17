@@ -1,7 +1,7 @@
 // Language Nodes
 
 {
-  var start = require('./start-lib'),
+  var startlib = require('./start-lib'),
       variables = {},
       procs = {},
       slice = [].slice,
@@ -18,13 +18,17 @@
     var delegate = options.constructor,
         ctor = function() {
           // grab the info about where we are in the source
-          this._text   = text();
-          this._node   = this.node; // from proto
+          this._text = text();
           this._offset = offset();
-          this._line   = line();
+          this._line = line();
           this._column = column();
+
+          // copy from proto so we can inspect it
+          this._node = this.node;
+
           delegate.apply(this, arguments);
         };
+
     ctor.prototype = Object.create(Node.prototype);
     options.constructor = ctor;
     extend(ctor.prototype, options);
@@ -49,7 +53,7 @@
     node: 'if',
 
     constructor: function(cond, tstmts, fstmts) {
-      this.cond   = cond;
+      this.cond = cond;
       this.tstmts = tstmts;
       this.fstmts = fstmts;
     },
@@ -67,10 +71,10 @@
     node: 'for',
 
     constructor: function(name, start, end, by, stmts) {
-      this.name  = name;
+      this.name = name;
       this.start = start;
-      this.end   = end;
-      this.by    = by;
+      this.end = end;
+      this.by = by;
       this.stmts = stmts;
     },
 
@@ -86,24 +90,31 @@
     node: 'begin',
 
     constructor: function(name, stmts) {
-      this.name  = name;
+      this.name = name;
       this.stmts = stmts;
     },
 
     run: function() {
-      procs[this.name] = this.stmts;
+      // needs to be some sort of vm callable object
+      variables[this.name] = this.stmts;
     }
   });
 
   var CallNode = Node.extend({
     node: 'call',
 
-    constructor: function(name) {
-      this.name = name;
+    constructor: function(vrb, args) {
+      this.vrb = vrb;
+      this.args = args || [];
     },
 
     run: function() {
-      procs[this.name].run();
+      var vrb = this.vrb.run(),
+          args = this.args.map(function(arg) {
+            return arg.run();
+          });
+
+      return vrb.run(args);
     }
   });
 
@@ -166,41 +177,21 @@
     }
   });
 
-  var CallNode = Node.extend({
-    node: 'call',
-
-    constructor: function(name, args) {
-      this.name = name;
-      this.args = args || [];
-    },
-
-    run: function() {
-      if (start[this.name]) {
-        var args = this.args.map(function(arg) {
-          return arg.run();
-        });
-
-        return start[this.name].apply(null, args);
-      }
-    }
-  });
-
   var IndexNode = Node.extend({
     node: 'index',
 
-    constructor: function(name, indexes) {
-      this.name = name;
+    constructor: function(vrb, indexes) {
+      this.vrb = vrb;
       this.indexes = indexes;
     },
 
     run: function() {
-      if (variables[this.name]) {
-        var indexes = this.indexes.map(function(index) {
-          return index.run();
-        });
+      var vrb = this.vrb.run(),
+          indexes = this.indexes.map(function(index) {
+            return index.run();
+          });
 
-        return variables[this.name].get(indexes);
-      }
+      return vrb.get(indexes);
     }
   });
 
@@ -208,8 +199,8 @@
     node: 'binary_op',
 
     constructor: function(op, left, right) {
-      this.op    = op;
-      this.left  = left;
+      this.op = op;
+      this.left = left;
       this.right = right;
     },
 
@@ -248,8 +239,8 @@
     node: 'logical_op',
 
     constructor: function(op, left, right) {
-      this.op    = op;
-      this.left  = left;
+      this.op = op;
+      this.left = left;
       this.right = right;
     },
 
@@ -284,7 +275,7 @@
     node: 'unary_op',
 
     constructor: function(op, right) {
-      this.op    = op;
+      this.op = op;
       this.right = right;
     },
 
@@ -306,7 +297,7 @@
     },
 
     run: function() {
-      return variables[this.name];
+      return startlib[this.name] || variables[this.name];
     }
   });
 
@@ -378,8 +369,8 @@ BeginBlock
     }
 
 CallStatement
-  = __ 'call' __ sym:Symbol EOL {
-      return new CallNode(sym);
+  = __ 'call' __ vrb:Variable EOL {
+      return new CallNode(vrb);
     }
 
 LetStatement
@@ -464,9 +455,10 @@ MultOp
   / '%'
 
 UnaryExpr
-  // handle unary literals
+  // handle unary literals inline
   = op:AddOp __ right:Literal {
-      return new LiteralNode(unaryOps[op](right));
+      right.value = unaryOps[op](right.value);
+      return right;
     }
   / op:AddOp __ right:CallExpr {
       return new UnaryOpNode(op, right);
@@ -474,30 +466,31 @@ UnaryExpr
   / CallExpr
 
 CallExpr
-  = sym:Symbol __ '(' __ args:Values? __ ')' {
-      return new CallNode(sym, args);
+  = vrb:Variable __ '(' __ args:Values? __ ')' {
+      return new CallNode(vrb, args);
     }
-  / sym:Symbol __ '[' __ indexes:Values __ ']' {
-      return new IndexNode(sym, indexes);
+  / vrb:Variable __ '[' __ indexes:Values __ ']' {
+      return new IndexNode(vrb, indexes);
     }
   / PrimaryExpr
 
 PrimaryExpr
-  = lit:Literal {
-      return new LiteralNode(lit);
-    }
-  / sym:Symbol {
-      return new VarNode(sym);
-    }
+  = Literal
+  / Variable
   / '(' __ val:Value __ ')' {
       return val;
     }
 
 // Data
 
+Variable
+  = sym:Symbol { return new VarNode(sym); }
+
+Symbol
+  = $( [a-z_] [a-z0-9_]* )
+
 Literal
-  = Number
-  / String
+  = lit:( Number / String ) { return new LiteralNode(lit); }
 
 Number
   = 'NaN' { return NaN; }
@@ -505,9 +498,6 @@ Number
   / num:$( Digits ( '.' Digits )? ( [eE] [-+]? Digits )? ) {
       return parseFloat(num);
     }
-
-Symbol
-  = $( [a-z_] [a-z0-9_]* )
 
 Digits
   = $[0-9]+

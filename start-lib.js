@@ -70,8 +70,10 @@ module.exports = (function() {
   };
 
   return {
-    array: function() {
-      return new SArray(slice.apply(arguments));
+    array: {
+      run: function(args) {
+        return new SArray(args);
+      }
     }
   };
 })();
