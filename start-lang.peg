@@ -1,8 +1,7 @@
 // Language Nodes
 
 {
-  var startlib = require('./start-lib'),
-      slice = [].slice;
+  var startlib = require('./start-lib');
 
   function mixin(object, properties) {
     Object.keys(properties).forEach(function(prop) {

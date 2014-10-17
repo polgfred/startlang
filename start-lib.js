@@ -1,8 +1,5 @@
 module.exports = (function() {
 
-  var startlib,
-      slice = [].slice;
-
   function mixin(object, properties) {
     Object.keys(properties).forEach(function(prop) {
       object[prop] = properties[prop];
@@ -113,7 +110,7 @@ module.exports = (function() {
     }
   });
 
-  return startlib = {
+  var startlib = {
     createEnv: function() {
       return new SEnvironment();
     },
@@ -128,4 +125,6 @@ module.exports = (function() {
       }
     }
   };
+
+  return startlib;
 })();
