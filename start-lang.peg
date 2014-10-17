@@ -130,18 +130,18 @@
   var Assignment = Node.extend({
     node: 'assignment',
 
-    constructor: function(name, indexes, value) {
+    constructor: function(name, index, value) {
       this.name = name;
-      this.indexes = indexes;
+      this.index = index;
       this.value = value;
     },
 
     run: function(ctx) {
-      if (this.indexes == null) {
+      if (this.index == null) {
         ctx.set(this.name, this.value.evaluate(ctx));
       } else {
-        ctx.setIndex(this.name, this.indexes.map(function(index) {
-          return index.evaluate(ctx);
+        ctx.setIndex(this.name, this.index.map(function(dim) {
+          return dim.evaluate(ctx);
         }), this.value.evaluate(ctx));
       }
     }
@@ -183,17 +183,17 @@
   var Lookup = Node.extend({
     node: 'lookup',
 
-    constructor: function(name, indexes) {
+    constructor: function(name, index) {
       this.name = name;
-      this.indexes = indexes;
+      this.index = index;
     },
 
     evaluate: function(ctx) {
-      if (this.indexes == null) {
+      if (this.index == null) {
         return ctx.get(this.name);
       } else {
-        return ctx.getIndex(this.name, this.indexes.map(function(index) {
-          return index.evaluate(ctx);
+        return ctx.getIndex(this.name, this.index.map(function(dim) {
+          return dim.evaluate(ctx);
         }));
       }
     }
@@ -362,13 +362,13 @@ BeginBlock
 
 Assignment
   = __ 'let' __ sym:Symbol
-    indexes:(
+    index:(
       __ '[' __ i:Values __ ']' {
         return i;
       }
     )?
     __ '=' __ value:Value EOL {
-      return new Assignment(sym, indexes, value);
+      return new Assignment(sym, index, value);
     }
 
 CallStatement
@@ -460,8 +460,8 @@ CallExpr
   = sym:Symbol __ '(' __ args:Values? __ ')' {
       return new Call(sym, args);
     }
-  / sym:Symbol __ '[' __ indexes:Values __ ']' {
-      return new Lookup(sym, indexes);
+  / sym:Symbol __ '[' __ index:Values __ ']' {
+      return new Lookup(sym, index);
     }
   / PrimaryExpr
 

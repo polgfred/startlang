@@ -29,16 +29,16 @@ module.exports = (function() {
       return startlib[name] || this.namespace[name];
     },
 
-    getIndex: function(name, indexes) {
-      return this.get(name).get(indexes);
+    getIndex: function(name, index) {
+      return this.get(name).get(index);
     },
 
     set: function(name, value) {
       this.namespace[name] = value;
     },
 
-    setIndex: function(name, indexes, value) {
-      this.get(name).set(indexes, value);
+    setIndex: function(name, index, value) {
+      this.get(name).set(index, value);
     }
   });
 
@@ -70,43 +70,43 @@ module.exports = (function() {
   }
 
   mixin(SArray.prototype, {
-    get: function(indexes) {
-      if (this._dimensions.length != indexes.length) {
+    get: function(index) {
+      if (this._dimensions.length != index.length) {
         throw new Error('array index has wrong number of dimensions');
       }
 
-      var current = this._array, index, i;
+      var current = this._array, index, dim, i;
 
-      for (i = 0; i < indexes.length; ++i) {
-        index = indexes[i];
+      for (i = 0; i < index.length; ++i) {
+        dim = index[i];
 
-        if (index < 0 || index >= current.length) {
+        if (dim < 0 || dim >= current.length) {
           throw new Error('array index out of bounds');
         } else {
-          current = current[index];
+          current = current[dim];
         }
       }
 
       return current;
     },
 
-    set: function(indexes, value) {
-      if (this._dimensions.length != indexes.length) {
+    set: function(index, value) {
+      if (this._dimensions.length != index.length) {
         throw new Error('array index has wrong number of dimensions');
       }
 
-      var current = this._array, index, i;
+      var current = this._array, index, dim, i;
 
-      for (i = 0; i < indexes.length; ++i) {
-        index = indexes[i];
+      for (i = 0; i < index.length; ++i) {
+        dim = index[i];
 
-        if (index < 0 || index >= current.length) {
+        if (dim < 0 || dim >= current.length) {
           throw new Error('array index out of bounds');
         } else {
-          if (i < indexes.length - 1) {
-            current = current[index];
+          if (i < index.length - 1) {
+            current = current[dim];
           } else {
-            current[index] = value;
+            current[dim] = value;
           }
         }
       }
