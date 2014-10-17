@@ -35,7 +35,7 @@
     return ctor;
   };
 
-  var StatementsNode = Node.extend({
+  var Statements = Node.extend({
     node: 'stmts',
 
     constructor: function(stmts) {
@@ -43,13 +43,13 @@
     },
 
     run: function() {
-      for (var i = 0; i < this.stmts.length; ++i) {
-        this.stmts[i].run();
-      }
+      this.stmts.forEach(function(stmt) {
+        stmt.run();
+      });
     }
   });
 
-  var IfNode = Node.extend({
+  var IfBlock = Node.extend({
     node: 'if',
 
     constructor: function(cond, tstmts, fstmts) {
@@ -67,7 +67,7 @@
     }
   });
 
-  var ForNode = Node.extend({
+  var ForBlock = Node.extend({
     node: 'for',
 
     constructor: function(name, start, end, by, stmts) {
@@ -86,7 +86,7 @@
     }
   });
 
-  var BeginNode = Node.extend({
+  var BeginBlock = Node.extend({
     node: 'begin',
 
     constructor: function(name, stmts) {
@@ -100,7 +100,7 @@
     }
   });
 
-  var CallNode = Node.extend({
+  var FunctionCall = Node.extend({
     node: 'call',
 
     constructor: function(vrb, args) {
@@ -118,7 +118,7 @@
     }
   });
 
-  var LetNode = Node.extend({
+  var Assignment = Node.extend({
     node: 'let',
 
     constructor: function(name, indexes, value) {
@@ -144,7 +144,7 @@
     }
   });
 
-  var CommandNode = Node.extend({
+  var Command = Node.extend({
     node: 'cmd',
 
     constructor: function(name, exprs) {
@@ -166,7 +166,7 @@
     }
   });
 
-  var CommentNode = Node.extend({
+  var Comment = Node.extend({
     node: 'rem',
 
     constructor: function(text) {
@@ -177,7 +177,7 @@
     }
   });
 
-  var IndexNode = Node.extend({
+  var Lookup = Node.extend({
     node: 'index',
 
     constructor: function(vrb, indexes) {
@@ -195,7 +195,43 @@
     }
   });
 
-  var BinaryOpNode = Node.extend({
+  var LogicalOp = Node.extend({
+    node: 'logical_op',
+
+    constructor: function(op, left, right) {
+      this.op = op;
+      this.left = left;
+      this.right = right;
+    },
+
+    run: function() {
+      // logical ops short-circuit
+      return logicalOps[this.op](this.left, this.right);
+    }
+  });
+
+  var logicalOps = {
+    'and': function(left, right) {
+      return left.run() && right.run();
+    },
+    'or': function(left, right) {
+      return left.run() || right.run();
+    }
+  };
+
+  // take a chain of equal-precedence logical exprs and construct a left-folding tree
+  function buildLogicalOp(first, rest) {
+    rest || (rest = []);
+
+    var next;
+    while (next = rest.shift()) {
+      first = new LogicalOp(next[0], first, next[1]);
+    }
+
+    return first;
+  }
+
+  var BinaryOp = Node.extend({
     node: 'binary_op',
 
     constructor: function(op, left, right) {
@@ -229,49 +265,13 @@
 
     var next;
     while (next = rest.shift()) {
-      first = new BinaryOpNode(next[0], first, next[1]);
+      first = new BinaryOp(next[0], first, next[1]);
     }
 
     return first;
   }
 
-  var LogicalOpNode = Node.extend({
-    node: 'logical_op',
-
-    constructor: function(op, left, right) {
-      this.op = op;
-      this.left = left;
-      this.right = right;
-    },
-
-    run: function() {
-      // logical ops short-circuit
-      return logicalOps[this.op](this.left, this.right);
-    }
-  });
-
-  var logicalOps = {
-    'and': function(left, right) {
-      return left.run() && right.run();
-    },
-    'or': function(left, right) {
-      return left.run() || right.run();
-    }
-  };
-
-  // take a chain of equal-precedence logical exprs and construct a left-folding tree
-  function buildLogicalOp(first, rest) {
-    rest || (rest = []);
-
-    var next;
-    while (next = rest.shift()) {
-      first = new LogicalOpNode(next[0], first, next[1]);
-    }
-
-    return first;
-  }
-
-  var UnaryOpNode = Node.extend({
+  var UnaryOp = Node.extend({
     node: 'unary_op',
 
     constructor: function(op, right) {
@@ -289,7 +289,7 @@
     '-' : function(right) { return - right; }
   };
 
-  var VarNode = Node.extend({
+  var Variable = Node.extend({
     node: 'var',
 
     constructor: function(name) {
@@ -301,7 +301,7 @@
     }
   });
 
-  var LiteralNode = Node.extend({
+  var Literal = Node.extend({
     node: 'literal',
 
     constructor: function(value) {
@@ -323,15 +323,15 @@ start
 
 Statements
   = EOL* stmts:Statement* {
-      return new StatementsNode(stmts);
+      return new Statements(stmts);
     }
 
 Statement
   = IfBlock
   / ForBlock
   / BeginBlock
+  / Assignment
   / CallStatement
-  / LetStatement
   / Command
   / Comment
 
@@ -345,7 +345,7 @@ IfBlock
       }
     )?
     __ 'end' EOL {
-      return new IfNode(cond, tstmts, fstmts);
+      return new IfBlock(cond, tstmts, fstmts);
     }
 
 ForBlock
@@ -358,22 +358,17 @@ ForBlock
     EOL
     stmts:Statements
     __ 'end' EOL {
-      return new ForNode(sym, start, end, by, stmts);
+      return new ForBlock(sym, start, end, by, stmts);
     }
 
 BeginBlock
   = __ 'begin' __ sym:Symbol EOL
     stmts:Statements
     __ 'end' EOL {
-      return new BeginNode(sym, stmts);
+      return new BeginBlock(sym, stmts);
     }
 
-CallStatement
-  = __ 'call' __ vrb:Variable EOL {
-      return new CallNode(vrb);
-    }
-
-LetStatement
+Assignment
   = __ 'let' __ sym:Symbol
     indexes:(
       __ '[' __ i:Values __ ']' {
@@ -381,12 +376,17 @@ LetStatement
       }
     )?
     __ '=' __ value:Value EOL {
-      return new LetNode(sym, indexes, value);
+      return new Assignment(sym, indexes, value);
+    }
+
+CallStatement
+  = __ 'call' __ vrb:Variable args:( __ '(' __ v:Values? __ ')' { return v; } )? EOL {
+      return new FunctionCall(vrb, args);
     }
 
 Command
   = __ name:CommandName __ exprs:Values? EOL {
-      return new CommandNode(name, exprs);
+      return new Command(name, exprs);
     }
 
 CommandName
@@ -395,7 +395,7 @@ CommandName
 
 Comment
   = __ '//' __ text:$[^\n]* EOL {
-    return new CommentNode(text);
+    return new Comment(text);
   }
 
 // Conditions
@@ -411,7 +411,7 @@ BoolOp
 
 Comparison
   = left:Value __ op:RelOp __ right:Value {
-      return new BinaryOpNode(op, left, right);
+      return new BinaryOp(op, left, right);
     }
   / '(' __ cond:Condition __ ')' {
       return cond;
@@ -461,16 +461,16 @@ UnaryExpr
       return right;
     }
   / op:AddOp __ right:CallExpr {
-      return new UnaryOpNode(op, right);
+      return new UnaryOp(op, right);
     }
   / CallExpr
 
 CallExpr
   = vrb:Variable __ '(' __ args:Values? __ ')' {
-      return new CallNode(vrb, args);
+      return new FunctionCall(vrb, args);
     }
   / vrb:Variable __ '[' __ indexes:Values __ ']' {
-      return new IndexNode(vrb, indexes);
+      return new Lookup(vrb, indexes);
     }
   / PrimaryExpr
 
@@ -484,13 +484,13 @@ PrimaryExpr
 // Data
 
 Variable
-  = sym:Symbol { return new VarNode(sym); }
+  = sym:Symbol { return new Variable(sym); }
 
 Symbol
   = $( [a-z_] [a-z0-9_]* )
 
 Literal
-  = lit:( Number / String ) { return new LiteralNode(lit); }
+  = lit:( Number / String ) { return new Literal(lit); }
 
 Number
   = 'NaN' { return NaN; }
