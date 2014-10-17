@@ -34,7 +34,7 @@
   };
 
   var Statements = Node.extend({
-    node: 'stmts',
+    node: 'statements',
 
     constructor: function(stmts) {
       this.stmts = stmts;
@@ -48,7 +48,7 @@
   });
 
   var IfBlock = Node.extend({
-    node: 'if',
+    node: 'if_block',
 
     constructor: function(cond, tstmts, fstmts) {
       this.cond = cond;
@@ -66,7 +66,7 @@
   });
 
   var ForBlock = Node.extend({
-    node: 'for',
+    node: 'for_block',
 
     constructor: function(name, start, end, by, stmts) {
       this.name = name;
@@ -87,7 +87,7 @@
   });
 
   var BeginBlock = Node.extend({
-    node: 'begin',
+    node: 'begin_block',
 
     constructor: function(name, stmts) {
       this.name = name;
@@ -108,11 +108,11 @@
     }
   });
 
-  var FunctionCall = Node.extend({
+  var Call = Node.extend({
     node: 'call',
 
-    constructor: function(vrb, args) {
-      this.vrb = vrb;
+    constructor: function(name, args) {
+      this.name = name;
       this.args = args || [];
     },
 
@@ -121,14 +121,14 @@
     },
 
     evaluate: function(ctx) {
-      return this.vrb.evaluate(ctx).call(ctx, this.args.map(function(arg) {
+      return ctx.get(this.name).call(ctx, this.args.map(function(arg) {
         return arg.evaluate(ctx);
       }));
     }
   });
 
   var Assignment = Node.extend({
-    node: 'let',
+    node: 'assignment',
 
     constructor: function(name, indexes, value) {
       this.name = name;
@@ -148,7 +148,7 @@
   });
 
   var Command = Node.extend({
-    node: 'cmd',
+    node: 'command',
 
     constructor: function(name, exprs) {
       this.name = name;
@@ -170,7 +170,7 @@
   });
 
   var Comment = Node.extend({
-    node: 'rem',
+    node: 'comment',
 
     constructor: function(text) {
       this.text = text;
@@ -181,17 +181,21 @@
   });
 
   var Lookup = Node.extend({
-    node: 'index',
+    node: 'lookup',
 
-    constructor: function(vrb, indexes) {
-      this.vrb = vrb;
+    constructor: function(name, indexes) {
+      this.name = name;
       this.indexes = indexes;
     },
 
     evaluate: function(ctx) {
-      return ctx.getIndex(this.vrb.name, this.indexes.map(function(index) {
-        return index.evaluate(ctx);
-      }));
+      if (this.indexes == null) {
+        return ctx.get(this.name);
+      } else {
+        return ctx.getIndex(this.name, this.indexes.map(function(index) {
+          return index.evaluate(ctx);
+        }));
+      }
     }
   });
 
@@ -289,18 +293,6 @@
     '-' : function(right) { return - right; }
   };
 
-  var Variable = Node.extend({
-    node: 'var',
-
-    constructor: function(name) {
-      this.name = name;
-    },
-
-    evaluate: function(ctx) {
-      return ctx.get(this.name);
-    }
-  });
-
   var Literal = Node.extend({
     node: 'literal',
 
@@ -380,8 +372,8 @@ Assignment
     }
 
 CallStatement
-  = __ 'call' __ vrb:Variable args:( __ '(' __ v:Values? __ ')' { return v; } )? EOL {
-      return new FunctionCall(vrb, args);
+  = __ 'call' __ sym:Symbol args:( __ '(' __ v:Values? __ ')' { return v; } )? EOL {
+      return new Call(sym, args);
     }
 
 Command
@@ -455,10 +447,9 @@ MultOp
   / '%'
 
 UnaryExpr
-  // handle unary literals inline
-  = op:AddOp __ right:Literal {
-      right.value = unaryOps[op](right.value);
-      return right;
+  // handle negative numbers
+  = op:AddOp __ num:Number {
+      return new Literal(unaryOps[op](num));
     }
   / op:AddOp __ right:CallExpr {
       return new UnaryOp(op, right);
@@ -466,31 +457,30 @@ UnaryExpr
   / CallExpr
 
 CallExpr
-  = vrb:Variable __ '(' __ args:Values? __ ')' {
-      return new FunctionCall(vrb, args);
+  = sym:Symbol __ '(' __ args:Values? __ ')' {
+      return new Call(sym, args);
     }
-  / vrb:Variable __ '[' __ indexes:Values __ ']' {
-      return new Lookup(vrb, indexes);
+  / sym:Symbol __ '[' __ indexes:Values __ ']' {
+      return new Lookup(sym, indexes);
     }
   / PrimaryExpr
 
 PrimaryExpr
-  = Literal
-  / Variable
+  = lit:Literal {
+      return new Literal(lit);
+    }
+  / sym:Symbol {
+      return new Lookup(sym);
+    }
   / '(' __ val:Value __ ')' {
       return val;
     }
 
 // Data
 
-Variable
-  = sym:Symbol { return new Variable(sym); }
-
-Symbol
-  = $( [a-z_] [a-z0-9_]* )
-
 Literal
-  = lit:( Number / String ) { return new Literal(lit); }
+  = Number
+  / String
 
 Number
   = 'NaN' { return NaN; }
@@ -508,6 +498,9 @@ String
 Char
   = '""' { return '"'; }
   / [^"]
+
+Symbol
+  = $( [a-z_] [a-z0-9_]* )
 
 // Whitespace
 __
