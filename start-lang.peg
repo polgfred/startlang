@@ -1,8 +1,6 @@
 // Language Nodes
 
 {
-  var startlib = require('./start-lib');
-
   function mixin(object, properties) {
     Object.keys(properties).forEach(function(prop) {
       object[prop] = properties[prop];
@@ -94,7 +92,7 @@
     },
 
     run: function(ctx) {
-      ctx.set(this.name, startlib.createCallable(this.call.bind(this)));
+      ctx.set(this.name, ctx.createCallable(this.call.bind(this)));
     },
 
     call: function(ctx) {
@@ -139,7 +137,7 @@
       if (this.index == null) {
         ctx.set(this.name, this.value.evaluate(ctx));
       } else {
-        ctx.setIndex(this.name, this.index.map(function(dim) {
+        ctx.seti(this.name, this.index.map(function(dim) {
           return dim.evaluate(ctx);
         }), this.value.evaluate(ctx));
       }
@@ -191,7 +189,7 @@
       if (this.index == null) {
         return ctx.get(this.name);
       } else {
-        return ctx.getIndex(this.name, this.index.map(function(dim) {
+        return ctx.geti(this.name, this.index.map(function(dim) {
           return dim.evaluate(ctx);
         }));
       }

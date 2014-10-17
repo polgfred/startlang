@@ -12,8 +12,12 @@ module.exports = (function() {
     this.namespace = {};
   }
 
-  // push and pop new objects onto the prototype chain to implement fast scopes
   mixin(SEnvironment.prototype, {
+    createCallable: function(func) {
+      return { call: func };
+    },
+
+    // push and pop new objects onto the prototype chain to implement fast scopes
     push: function() {
       this.namespace = Object.create(this.namespace);
     },
@@ -26,7 +30,7 @@ module.exports = (function() {
       return startlib[name] || this.namespace[name];
     },
 
-    getIndex: function(name, index) {
+    geti: function(name, index) {
       return this.get(name).get(index);
     },
 
@@ -34,7 +38,7 @@ module.exports = (function() {
       this.namespace[name] = value;
     },
 
-    setIndex: function(name, index, value) {
+    seti: function(name, index, value) {
       this.get(name).set(index, value);
     }
   });
@@ -113,10 +117,6 @@ module.exports = (function() {
   var startlib = {
     createEnv: function() {
       return new SEnvironment();
-    },
-
-    createCallable: function(func) {
-      return { call: func };
     },
 
     array: {
