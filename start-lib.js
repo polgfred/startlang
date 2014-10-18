@@ -114,6 +114,30 @@ module.exports = (function() {
     }
   });
 
+  // Tables (Hashes)
+
+  function STable() {
+    this._table = {};
+  }
+
+  mixin(STable.prototype, {
+    getIndex: function(index) {
+      if (index.length != 1) {
+        throw new Error('table index can only have a single dimension');
+      }
+
+      return this._table[index[0]];
+    },
+
+    setIndex: function(index, value) {
+      if (index.length != 1) {
+        throw new Error('table index can only have a single dimension');
+      }
+
+      this._table[index[0]] = value;
+    }
+  });
+
   var startlib = {
     createEnv: function() {
       return new SEnvironment();
@@ -122,6 +146,12 @@ module.exports = (function() {
     array: {
       call: function(ctx, args) {
         return new SArray(args);
+      }
+    },
+
+    table: {
+      call: function(ctx, args) {
+        return new STable(args);
       }
     }
   };
