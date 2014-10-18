@@ -124,26 +124,6 @@
     }
   });
 
-  var Assignment = Node.extend({
-    node: 'assignment',
-
-    constructor: function(name, index, value) {
-      this.name = name;
-      this.index = index;
-      this.value = value;
-    },
-
-    run: function(ctx) {
-      if (this.index == null) {
-        ctx.set(this.name, this.value.evaluate(ctx));
-      } else {
-        ctx.seti(this.name, this.index.map(function(dim) {
-          return dim.evaluate(ctx);
-        }), this.value.evaluate(ctx));
-      }
-    }
-  });
-
   var Command = Node.extend({
     node: 'command',
 
@@ -166,14 +146,23 @@
     }
   });
 
-  var Comment = Node.extend({
-    node: 'comment',
+  var Assignment = Node.extend({
+    node: 'assignment',
 
-    constructor: function(text) {
-      this.text = text;
+    constructor: function(name, index, value) {
+      this.name = name;
+      this.index = index;
+      this.value = value;
     },
 
-    run: function() {
+    run: function(ctx) {
+      if (this.index == null) {
+        ctx.set(this.name, this.value.evaluate(ctx));
+      } else {
+        ctx.seti(this.name, this.index.map(function(dim) {
+          return dim.evaluate(ctx);
+        }), this.value.evaluate(ctx));
+      }
     }
   });
 
@@ -193,6 +182,29 @@
           return dim.evaluate(ctx);
         }));
       }
+    }
+  });
+
+  var Comment = Node.extend({
+    node: 'comment',
+
+    constructor: function(text) {
+      this.text = text;
+    },
+
+    run: function() {
+    }
+  });
+
+  var Literal = Node.extend({
+    node: 'literal',
+
+    constructor: function(value) {
+      this.value = value;
+    },
+
+    evaluate: function() {
+      return this.value;
     }
   });
 
@@ -319,18 +331,6 @@
     '+' : function(right) { return + right; },
     '-' : function(right) { return - right; }
   };
-
-  var Literal = Node.extend({
-    node: 'literal',
-
-    constructor: function(value) {
-      this.value = value;
-    },
-
-    evaluate: function() {
-      return this.value;
-    }
-  });
 }
 
 // Grammar
