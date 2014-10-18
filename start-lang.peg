@@ -159,7 +159,7 @@
       if (this.index == null) {
         ctx.set(this.name, this.value.evaluate(ctx));
       } else {
-        ctx.seti(this.name, this.index.map(function(dim) {
+        ctx.setIndex(this.name, this.index.map(function(dim) {
           return dim.evaluate(ctx);
         }), this.value.evaluate(ctx));
       }
@@ -178,7 +178,7 @@
       if (this.index == null) {
         return ctx.get(this.name);
       } else {
-        return ctx.geti(this.name, this.index.map(function(dim) {
+        return ctx.getIndex(this.name, this.index.map(function(dim) {
           return dim.evaluate(ctx);
         }));
       }

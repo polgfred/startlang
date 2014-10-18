@@ -30,16 +30,16 @@ module.exports = (function() {
       return startlib[name] || this.namespace[name];
     },
 
-    geti: function(name, index) {
-      return this.get(name).get(index);
+    getIndex: function(name, index) {
+      return this.get(name).getIndex(index);
     },
 
     set: function(name, value) {
       this.namespace[name] = value;
     },
 
-    seti: function(name, index, value) {
-      this.get(name).set(index, value);
+    setIndex: function(name, index, value) {
+      this.get(name).setIndex(index, value);
     }
   });
 
@@ -71,7 +71,7 @@ module.exports = (function() {
   }
 
   mixin(SArray.prototype, {
-    get: function(index) {
+    getIndex: function(index) {
       if (this._dimensions.length != index.length) {
         throw new Error('array index has wrong number of dimensions');
       }
@@ -91,7 +91,7 @@ module.exports = (function() {
       return current;
     },
 
-    set: function(index, value) {
+    setIndex: function(index, value) {
       if (this._dimensions.length != index.length) {
         throw new Error('array index has wrong number of dimensions');
       }
