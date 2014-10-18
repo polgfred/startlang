@@ -9,7 +9,7 @@ module.exports = (function() {
   // Environment
 
   function SEnvironment() {
-    this.namespace = {};
+    this._ns = {};
   }
 
   mixin(SEnvironment.prototype, {
@@ -17,126 +17,147 @@ module.exports = (function() {
       return { call: func };
     },
 
+    // find a protocol handler for this object
+    handle: function(obj) {
+      return obj._handler;
+    },
+
     // push and pop new objects onto the prototype chain to implement fast scopes
     push: function() {
-      this.namespace = Object.create(this.namespace);
+      this._ns = Object.create(this._ns);
     },
 
     pop: function() {
-      this.namespace = Object.getPrototypeOf(this.namespace);
+      this._ns = Object.getPrototypeOf(this._ns);
     },
 
     get: function(name) {
-      return startlib[name] || this.namespace[name];
+      return startlib[name] || this._ns[name];
     },
 
     getIndex: function(name, index) {
-      return this.get(name).getIndex(index);
+      var obj = this.get(name), handler = this.handle(obj);
+
+      if (!handler || !handler.getIndex) {
+        throw new Error('object does not support getting by index');
+      }
+
+      return handler.getIndex(obj, index);
     },
 
     set: function(name, value) {
-      this.namespace[name] = value;
+      this._ns[name] = value;
     },
 
     setIndex: function(name, index, value) {
-      this.get(name).setIndex(index, value);
+      var obj = this.get(name), handler = this.handle(obj);
+
+      if (!handler || !handler.setIndex) {
+        throw new Error('object does not support setting by index');
+      }
+
+      handler.setIndex(obj, index, value);
     }
   });
 
   // Multi-dimensional arrays
 
-  function SArray(dimensions) {
-    if (dimensions.length == 0) {
-      throw new Error('array must have at least one dimension');
-    }
-
-    this._array = buildSubArray(dimensions);
-    this._dimensions = dimensions;
-  }
-
-  function buildSubArray(dimensions) {
-    var sub = new Array(dimensions[0]), i;
-
-    if (dimensions[0] == 0) {
-      throw new Error('array cannot have a zero-length dimension');
-    }
-
-    if (dimensions.length > 1) {
-      for (i = 0; i < dimensions[0]; ++i) {
-        sub[i] = buildSubArray(dimensions.slice(1));
-      }
-    }
-
-    return sub;
-  }
-
-  mixin(SArray.prototype, {
-    getIndex: function(index) {
-      if (this._dimensions.length != index.length) {
-        throw new Error('array index has wrong number of dimensions');
+  var _sarray = {
+    create: function(dims) {
+      if (dims.length == 0) {
+        throw new Error('array must have at least one dimension');
       }
 
-      var current = this._array, index, dim, i;
+      var a = this._buildSubArray(dims);
+      a._handler = _sarray;
+      a._dims = dims;
+      return a;
+    },
 
-      for (i = 0; i < index.length; ++i) {
-        dim = index[i];
+    _buildSubArray: function(dims) {
+      var sub = new Array(dims[0]), i;
 
-        if (dim < 0 || dim >= current.length) {
-          throw new Error('array index out of bounds');
-        } else {
-          current = current[dim];
+      if (dims[0] == 0) {
+        throw new Error('array cannot have a zero-length dimension');
+      }
+
+      if (dims.length > 1) {
+        for (i = 0; i < dims[0]; ++i) {
+          sub[i] = this._buildSubArray(dims.slice(1));
         }
       }
 
-      return current;
+      return sub;
     },
 
-    setIndex: function(index, value) {
-      if (this._dimensions.length != index.length) {
+    getIndex: function(a, index) {
+      if (a._dims.length != index.length) {
         throw new Error('array index has wrong number of dimensions');
       }
 
-      var current = this._array, index, dim, i;
+      var cur = a, index, dim, i;
 
       for (i = 0; i < index.length; ++i) {
         dim = index[i];
 
-        if (dim < 0 || dim >= current.length) {
+        if (dim < 0 || dim >= cur.length) {
+          throw new Error('array index out of bounds');
+        } else {
+          cur = cur[dim];
+        }
+      }
+
+      return cur;
+    },
+
+    setIndex: function(a, index, value) {
+      if (a._dims.length != index.length) {
+        throw new Error('array index has wrong number of dimensions');
+      }
+
+      var cur = a, index, dim, i;
+
+      for (i = 0; i < index.length; ++i) {
+        dim = index[i];
+
+        if (dim < 0 || dim >= cur.length) {
           throw new Error('array index out of bounds');
         } else {
           if (i < index.length - 1) {
-            current = current[dim];
+            cur = cur[dim];
           } else {
-            current[dim] = value;
+            cur[dim] = value;
           }
         }
       }
     }
-  });
+  };
 
   // Tables (Hashes)
 
-  function STable() {
-    this._table = {};
-  }
-
-  mixin(STable.prototype, {
-    getIndex: function(index) {
-      if (index.length != 1) {
-        throw new Error('table index can only have a single dimension');
-      }
-
-      return this._table[index[0]];
+  var _stable = {
+    create: function() {
+      var t = {};
+      t._handler = _stable;
+      return t;
     },
 
-    setIndex: function(index, value) {
+    getIndex: function(t, index) {
       if (index.length != 1) {
         throw new Error('table index can only have a single dimension');
       }
 
-      this._table[index[0]] = value;
+      return t[index[0]];
+    },
+
+    setIndex: function(t, index, value) {
+      if (index.length != 1) {
+        throw new Error('table index can only have a single dimension');
+      }
+
+      t[index[0]] = value;
     }
-  });
+  };
 
   var startlib = {
     createEnv: function() {
@@ -145,13 +166,13 @@ module.exports = (function() {
 
     array: {
       call: function(ctx, args) {
-        return new SArray(args);
+        return _sarray.create(args);
       }
     },
 
     table: {
       call: function(ctx, args) {
-        return new STable(args);
+        return _stable.create(args);
       }
     }
   };
