@@ -19,7 +19,7 @@ module.exports = (function() {
 
     // find a protocol handler for this object
     handle: function(obj) {
-      return obj._handler;
+      return obj._handler || _snumber.handle(obj) || _sstring.handle(obj);
     },
 
     // push and pop new objects onto the prototype chain to implement fast scopes
@@ -59,6 +59,32 @@ module.exports = (function() {
       handler.setIndex(obj, index, value);
     }
   });
+
+  var _snumber = {
+    handle: function(n) {
+      if (typeof n == 'number') {
+        return _snumber;
+      }
+    }
+  };
+
+  var _sstring = {
+    handle: function(s) {
+      if (typeof s == 'string') {
+        return _sstring;
+      }
+    },
+
+    getIndex: function(s, index) {
+      if (index.length == 1) {
+        return s.charAt(index[0]);
+      } else if (index.length == 2) {
+        return s.substr(index[0], index[1] + 1);
+      } else {
+        throw new Error('string index has too many dimensions');
+      }
+    }
+  };
 
   // Multi-dimensional arrays
 
