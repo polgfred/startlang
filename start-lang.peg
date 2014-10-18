@@ -212,12 +212,8 @@
   });
 
   var logicalOps = {
-    'and': function(ctx, left, right) {
-      return left.evaluate(ctx) && right.evaluate(ctx);
-    },
-    'or': function(ctx, left, right) {
-      return left.evaluate(ctx) || right.evaluate(ctx);
-    }
+    'and': function(ctx, left, right) { return left.evaluate(ctx) && right.evaluate(ctx); },
+    'or':  function(ctx, left, right) { return left.evaluate(ctx) || right.evaluate(ctx); }
   };
 
   // take a chain of equal-precedence logical exprs and construct a left-folding tree
@@ -242,7 +238,30 @@
     },
 
     evaluate: function(ctx) {
-      return binaryOps[this.op](this.left.evaluate(ctx), this.right.evaluate(ctx));
+      var left = this.left.evaluate(ctx),
+          right = this.right.evaluate(ctx);
+
+      this.validate(left, right);
+
+      return binaryOps[this.op](left, right);
+    },
+
+    validate: function(left, right) {
+      var op = this.op,
+          lt = typeof left,
+          rt = typeof right;
+
+      if (lt != rt) {
+        throw new Error('operands must be the same type');
+      }
+
+      if (lt != 'number') {
+        if (op == '-' || op == '*' || op == '/' || op == '%') {
+          throw new Error('operands must be numbers');
+        } else if (lt != 'string') {
+          throw new Error('operands must be numbers or strings');
+        }
+      }
     }
   });
 
@@ -281,7 +300,17 @@
     },
 
     evaluate: function(ctx) {
-      return unaryOps[this.op](this.right.evaluate(ctx));
+      var right = this.right.evaluate(ctx);
+
+      this.validate(right);
+
+      return unaryOps[this.op](right);
+    },
+
+    validate: function(right) {
+      if (typeof right != 'number') {
+        throw new Error('operand must be a number');
+      }
     }
   });
 
