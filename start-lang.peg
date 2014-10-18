@@ -213,7 +213,8 @@
 
   var logicalOps = {
     'and': function(ctx, left, right) { return left.evaluate(ctx) && right.evaluate(ctx); },
-    'or':  function(ctx, left, right) { return left.evaluate(ctx) || right.evaluate(ctx); }
+    'or':  function(ctx, left, right) { return left.evaluate(ctx) || right.evaluate(ctx); },
+    'not': function(ctx, left, right) { return ! right.evaluate(ctx); }
   };
 
   // take a chain of equal-precedence logical exprs and construct a left-folding tree
@@ -419,13 +420,22 @@ Comment
 // Conditions
 
 Condition
-  = first:Comparison rest:( __ op:BoolOp __ comp:Comparison { return [op, comp]; } )* {
+  = ConjExpr
+
+ConjExpr
+  = first:NotExpr rest:( __ op:ConjOp __ e:NotExpr { return [op, e]; } )* {
       return buildLogicalOp(first, rest);
     }
 
-BoolOp
+ConjOp
   = 'and'
   / 'or'
+
+NotExpr
+  = 'not' __ comp:Comparison {
+      return new LogicalOp('not', null, comp);
+    }
+  / Comparison
 
 Comparison
   = left:Value __ op:RelOp __ right:Value {
