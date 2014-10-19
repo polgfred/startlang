@@ -35,28 +35,28 @@ module.exports = (function() {
       return startlib[name] || this._ns[name];
     },
 
-    getIndex: function(name, index) {
-      var obj = this.get(name), handler = this.handle(obj);
+    set: function(name, value) {
+      this._ns[name] = value;
+    },
+
+    getIndex: function(base, index) {
+      var handler = this.handle(base);
 
       if (!handler || !handler.getIndex) {
         throw new Error('object does not support getting by index');
       }
 
-      return handler.getIndex(obj, index);
+      return handler.getIndex(base, index);
     },
 
-    set: function(name, value) {
-      this._ns[name] = value;
-    },
-
-    setIndex: function(name, index, value) {
-      var obj = this.get(name), handler = this.handle(obj);
+    setIndex: function(base, index, value) {
+      var handler = this.handle(base);
 
       if (!handler || !handler.setIndex) {
         throw new Error('object does not support setting by index');
       }
 
-      handler.setIndex(obj, index, value);
+      handler.setIndex(base, index, value);
     }
   });
 
@@ -76,39 +76,28 @@ module.exports = (function() {
     },
 
     getIndex: function(s, index) {
-      if (index.length == 1) {
-        return s.charAt(index[0]);
-      } else if (index.length == 2) {
-        return s.substr(index[0], index[1] + 1);
-      } else {
-        throw new Error('string index has too many dimensions');
-      }
+      return s.charAt(index);
     }
   };
 
-  // Multi-dimensional arrays
+  // Arrays
 
   var _sarray = {
     create: function(dims) {
       if (dims.length == 0) {
-        throw new Error('array must have at least one dimension');
+        dims.push(0);
       }
 
       var a = this._buildSubArray(dims);
-      a._handler = _sarray;
-      a._dims = dims;
       return a;
     },
 
     _buildSubArray: function(dims) {
-      var sub = new Array(dims[0]), i;
-
-      if (dims[0] == 0) {
-        throw new Error('array cannot have a zero-length dimension');
-      }
+      var sub = new Array(dims[0]);
+      sub._handler = _sarray;
 
       if (dims.length > 1) {
-        for (i = 0; i < dims[0]; ++i) {
+        for (var i = 0; i < dims[0]; ++i) {
           sub[i] = this._buildSubArray(dims.slice(1));
         }
       }
@@ -117,45 +106,11 @@ module.exports = (function() {
     },
 
     getIndex: function(a, index) {
-      if (a._dims.length != index.length) {
-        throw new Error('array index has wrong number of dimensions');
-      }
-
-      var cur = a, index, dim, i;
-
-      for (i = 0; i < index.length; ++i) {
-        dim = index[i];
-
-        if (dim < 0 || dim >= cur.length) {
-          throw new Error('array index out of bounds');
-        } else {
-          cur = cur[dim];
-        }
-      }
-
-      return cur;
+      return a[index];
     },
 
     setIndex: function(a, index, value) {
-      if (a._dims.length != index.length) {
-        throw new Error('array index has wrong number of dimensions');
-      }
-
-      var cur = a, index, dim, i;
-
-      for (i = 0; i < index.length; ++i) {
-        dim = index[i];
-
-        if (dim < 0 || dim >= cur.length) {
-          throw new Error('array index out of bounds');
-        } else {
-          if (i < index.length - 1) {
-            cur = cur[dim];
-          } else {
-            cur[dim] = value;
-          }
-        }
-      }
+      a[index] = value;
     }
   };
 
@@ -169,19 +124,11 @@ module.exports = (function() {
     },
 
     getIndex: function(t, index) {
-      if (index.length != 1) {
-        throw new Error('table index can only have a single dimension');
-      }
-
-      return t[index[0]];
+      return t[index];
     },
 
     setIndex: function(t, index, value) {
-      if (index.length != 1) {
-        throw new Error('table index can only have a single dimension');
-      }
-
-      t[index[0]] = value;
+      t[index] = value;
     }
   };
 

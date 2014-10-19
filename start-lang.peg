@@ -146,42 +146,83 @@
     }
   });
 
+  var Variable = Node.extend({
+    node: 'variable',
+
+    constructor: function(name, index) {
+      this.name = name;
+    },
+
+    evaluate: function(ctx) {
+      return ctx.get(this.name);
+    }
+  });
+
   var Assignment = Node.extend({
     node: 'assignment',
 
-    constructor: function(name, index, value) {
+    constructor: function(name, value) {
       this.name = name;
+      this.value = value;
+    },
+
+    run: function(ctx) {
+      ctx.set(this.name, this.value.evaluate(ctx));
+    }
+  });
+
+  var Index = Node.extend({
+    node: 'index',
+
+    constructor: function(base, index) {
+      this.base = base;
+      this.index = index;
+    },
+
+    evaluate: function(ctx) {
+      return ctx.getIndex(this.base.evaluate(ctx), this.index.evaluate(ctx));
+    }
+  });
+
+  var IndexAssignment = Node.extend({
+    node: 'index_assignment',
+
+    constructor: function(base, index, value) {
+      this.base = base;
       this.index = index;
       this.value = value;
     },
 
     run: function(ctx) {
-      if (this.index == null) {
-        ctx.set(this.name, this.value.evaluate(ctx));
-      } else {
-        ctx.setIndex(this.name, this.index.map(function(dim) {
-          return dim.evaluate(ctx);
-        }), this.value.evaluate(ctx));
-      }
+      ctx.setIndex(this.base.evaluate(ctx), this.index.evaluate(ctx), this.value.evaluate(ctx));
     }
   });
 
-  var Lookup = Node.extend({
-    node: 'lookup',
+  function buildIndex(base, indexes, value) {
+    indexes || (indexes = []);
 
-    constructor: function(name, index) {
-      this.name = name;
-      this.index = index;
+    var next, last = indexes.pop();
+
+    while (next = indexes.shift()) {
+      base = new Index(base, next);
+    }
+
+    if (value == null) {
+      return new Index(base, last);
+    } else {
+      return new IndexAssignment(base, last, value);
+    }
+  }
+
+  var Literal = Node.extend({
+    node: 'literal',
+
+    constructor: function(value) {
+      this.value = value;
     },
 
-    evaluate: function(ctx) {
-      if (this.index == null) {
-        return ctx.get(this.name);
-      } else {
-        return ctx.getIndex(this.name, this.index.map(function(dim) {
-          return dim.evaluate(ctx);
-        }));
-      }
+    evaluate: function() {
+      return this.value;
     }
   });
 
@@ -193,18 +234,6 @@
     },
 
     run: function() {
-    }
-  });
-
-  var Literal = Node.extend({
-    node: 'literal',
-
-    constructor: function(value) {
-      this.value = value;
-    },
-
-    evaluate: function() {
-      return this.value;
     }
   });
 
@@ -234,6 +263,7 @@
     rest || (rest = []);
 
     var next;
+
     while (next = rest.shift()) {
       first = new LogicalOp(next[0], first, next[1]);
     }
@@ -349,8 +379,8 @@ Statement
   = IfBlock
   / ForBlock
   / BeginBlock
-  / Assignment
   / CallStatement
+  / Assignment
   / Command
   / Comment
 
@@ -387,20 +417,29 @@ BeginBlock
       return new BeginBlock(sym, stmts);
     }
 
-Assignment
-  = __ 'let' __ sym:Symbol
-    index:(
-      __ '[' __ i:Values __ ']' {
-        return i;
+CallStatement
+  = __ 'call' __ sym:Symbol
+    args:(
+      __ '(' __ v:Values? __ ')' {
+        return v;
       }
-    )?
-    __ '=' __ value:Value EOL {
-      return new Assignment(sym, index, value);
+    )? EOL {
+      return new Call(sym, args);
     }
 
-CallStatement
-  = __ 'call' __ sym:Symbol args:( __ '(' __ v:Values? __ ')' { return v; } )? EOL {
-      return new Call(sym, args);
+Assignment
+  = __ 'let' __ sym:Symbol
+    indexes:(
+      __ '[' __ v:Value ']' {
+        return v;
+      }
+    )*
+    __ '=' __ value:Value EOL {
+      if (indexes.length == 0) {
+        return new Assignment(sym, value);
+      } else {
+        return buildIndex(new Variable(sym), indexes, value);
+      }
     }
 
 Command
@@ -496,17 +535,21 @@ CallExpr
   = sym:Symbol __ '(' __ args:Values? __ ')' {
       return new Call(sym, args);
     }
-  / sym:Symbol __ '[' __ index:Values __ ']' {
-      return new Lookup(sym, index);
+  / IndexExpr
+
+IndexExpr
+  = sym:Symbol indexes:( __ '[' __ v:Value ']' { return v; } )* {
+      if (indexes.length == 0) {
+        return new Variable(sym);
+      } else {
+        return new buildIndex(new Variable(sym), indexes);
+      }
     }
   / PrimaryExpr
 
 PrimaryExpr
   = lit:Literal {
       return new Literal(lit);
-    }
-  / sym:Symbol {
-      return new Lookup(sym);
     }
   / '(' __ val:Value __ ')' {
       return val;
