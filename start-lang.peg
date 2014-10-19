@@ -1,6 +1,9 @@
 // Language Nodes
 
 {
+  var startlib = require('./start-lib'),
+      handle = startlib['$$handle$$'];
+
   function mixin(object, properties) {
     Object.keys(properties).forEach(function(prop) {
       object[prop] = properties[prop];
@@ -281,46 +284,9 @@
     },
 
     evaluate: function(ctx) {
-      var left = this.left.evaluate(ctx),
-          right = this.right.evaluate(ctx);
-
-      this.validate(left, right);
-
-      return binaryOps[this.op](left, right);
-    },
-
-    validate: function(left, right) {
-      var op = this.op,
-          lt = typeof left,
-          rt = typeof right;
-
-      if (lt != rt) {
-        throw new Error('operands must be the same type');
-      }
-
-      if (lt != 'number') {
-        if (op == '-' || op == '*' || op == '/' || op == '%') {
-          throw new Error('operands must be numbers');
-        } else if (lt != 'string') {
-          throw new Error('operands must be numbers or strings');
-        }
-      }
+      return ctx.binaryOp(this.op, this.left.evaluate(ctx), this.right.evaluate(ctx));
     }
   });
-
-  var binaryOps = {
-    '+' : function(left, right) { return left +  right; },
-    '-' : function(left, right) { return left -  right; },
-    '*' : function(left, right) { return left *  right; },
-    '/' : function(left, right) { return left /  right; },
-    '%' : function(left, right) { return left %  right; },
-    '=' : function(left, right) { return left == right; },
-    '!=': function(left, right) { return left != right; },
-    '<' : function(left, right) { return left <  right; },
-    '<=': function(left, right) { return left <= right; },
-    '>' : function(left, right) { return left >  right; },
-    '>=': function(left, right) { return left >= right; }
-  };
 
   // take a chain of equal-precedence binary exprs and construct a left-folding tree
   function buildBinaryOp(first, rest) {
@@ -343,24 +309,9 @@
     },
 
     evaluate: function(ctx) {
-      var right = this.right.evaluate(ctx);
-
-      this.validate(right);
-
-      return unaryOps[this.op](right);
-    },
-
-    validate: function(right) {
-      if (typeof right != 'number') {
-        throw new Error('operand must be a number');
-      }
+      return ctx.unaryOp(this.op, this.right.evaluate(ctx));
     }
   });
-
-  var unaryOps = {
-    '+' : function(right) { return + right; },
-    '-' : function(right) { return - right; }
-  };
 }
 
 // Grammar
@@ -524,7 +475,7 @@ MultOp
 UnaryExpr
   // handle negative numbers
   = op:AddOp __ num:Number {
-      return new Literal(unaryOps[op](num));
+      return new Literal(handle(num).unaryOp(op, num));
     }
   / op:AddOp __ right:CallExpr {
       return new UnaryOp(op, right);
