@@ -77,6 +77,10 @@ module.exports = (function() {
       throw new Error('object does not support [] assignment');
     },
 
+    enumerate: function(n) {
+      return [n];
+    },
+
     methods: [
       'abs',
       'acos',
@@ -100,6 +104,16 @@ module.exports = (function() {
     }, {
       random: function(num) {
         return Math.random() * num;
+      },
+
+      range: function(from, to, by) {
+        var a = [];
+
+        for (var i = from; i < to; i += by || 1) {
+          a.push(i);
+        }
+
+        return a;
       }
     }),
 
@@ -143,6 +157,10 @@ module.exports = (function() {
       throw new Error('object does not support [] assignment');
     },
 
+    enumerate: function(s) {
+      return s.split('');
+    },
+
     methods: {
       length: function(s) {
         return s.length;
@@ -164,8 +182,8 @@ module.exports = (function() {
         return s.replace(substr, to);
       },
 
-      range: function(s, start, len) {
-        return s.substring(start, len);
+      range: function(s, from, to) {
+        return s.substring(from, to);
       },
 
       split: function(s, delim) {
@@ -231,6 +249,10 @@ module.exports = (function() {
       a[index] = value;
     },
 
+    enumerate: function(a) {
+      return a;
+    },
+
     methods: {
       length: function(a) {
         return a.length;
@@ -260,8 +282,8 @@ module.exports = (function() {
         return a.reverse();
       },
 
-      range: function(a, start, len) {
-        return a.slice(start, start + len);
+      range: function(a, from, to) {
+        return a.slice(from, to);
       }
     },
 
@@ -305,6 +327,10 @@ module.exports = (function() {
 
     setindex: function(t, index, value) {
       t[index] = value;
+    },
+
+    enumerate: function(t) {
+      return Object.keys(t);
     },
 
     methods: {

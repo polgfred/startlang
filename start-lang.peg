@@ -68,21 +68,19 @@
   var ForBlock = Node.extend({
     node: 'for_block',
 
-    constructor: function(name, start, end, by, stmts) {
+    constructor: function(name, range, stmts) {
       this.name = name;
-      this.start = start;
-      this.end = end;
-      this.by = by;
+      this.range = range;
       this.stmts = stmts;
     },
 
     run: function(ctx) {
-      for (var i = this.start.evaluate(ctx);
-            i <= this.end.evaluate(ctx);
-            i += (this.by ? this.by.evaluate(ctx) : 1)) {
+      var range = this.range.evaluate(ctx);
+
+      handle(range).enumerate(range).forEach(function(i) {
         ctx.set(this.name, i);
         this.stmts.run(ctx);
-      }
+      }, this);
     }
   });
 
@@ -335,16 +333,10 @@ IfBlock
     }
 
 ForBlock
-  = __ 'for' __ sym:Symbol __ '=' __ start:Value __ 'to' __ end:Value
-    by:(
-      __ 'by' __ val:Value {
-        return e;
-      }
-    )?
-    EOL
+  = __ 'for' __ sym:Symbol __ 'in' __ range:Value EOL
     stmts:Statements
     __ 'end' EOL {
-      return new ForBlock(sym, start, end, by, stmts);
+      return new ForBlock(sym, range, stmts);
     }
 
 BeginBlock
