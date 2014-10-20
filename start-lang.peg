@@ -127,28 +127,6 @@
     }
   });
 
-  var Command = Node.extend({
-    node: 'command',
-
-    constructor: function(name, exprs) {
-      this.name = name;
-      this.exprs = exprs;
-    },
-
-    run: function(ctx) {
-      // we'll eventually make this polymorphic
-      if (this.name == 'print') {
-        if (this.exprs) {
-          this.exprs.forEach(function(expr) {
-            console.log(expr.evaluate(ctx));
-          });
-        } else {
-          console.log();
-        }
-      }
-    }
-  });
-
   var Variable = Node.extend({
     node: 'variable',
 
@@ -330,9 +308,8 @@ Statement
   = IfBlock
   / ForBlock
   / BeginBlock
-  / CallStatement
   / Assignment
-  / Command
+  / CallStatement
   / Comment
 
 IfBlock
@@ -368,16 +345,6 @@ BeginBlock
       return new BeginBlock(sym, stmts);
     }
 
-CallStatement
-  = __ 'call' __ target:IndexExpr
-    args:(
-      __ '(' __ v:Values? __ ')' {
-        return v;
-      }
-    )? EOL {
-      return new Call(target, args);
-    }
-
 Assignment
   = __ 'let' __ sym:Symbol
     indexes:(
@@ -393,14 +360,27 @@ Assignment
       }
     }
 
-Command
-  = __ name:CommandName __ exprs:Values? EOL {
-      return new Command(name, exprs);
+CallStatement
+  = __ 'call' __ target:IndexExpr
+    args:(
+      __ v:Values? __ {
+        return v;
+      }
+    )? EOL {
+      return new Call(target, args);
     }
-
-CommandName
-  = 'print'
-  / 'input'
+  / __ sym:Symbol
+    // handle a symbol as a call statement
+    ! {
+      return sym == 'else' || sym == 'end';
+    }
+    args:(
+      __ v:Values? __ {
+        return v;
+      }
+    )? EOL {
+      return new Call(new Variable(sym), args);
+    }
 
 Comment
   = __ '//' __ text:$[^\n]* EOL {

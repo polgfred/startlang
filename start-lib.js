@@ -240,6 +240,16 @@ module.exports = (function() {
       return _stable.create(args);
     },
 
+    print: function(ctx, args) {
+      if (args.length > 0) {
+        args.forEach(function(arg) {
+          console.log(arg);
+        });
+      } else {
+        console.log();
+      }
+    },
+
     '$$handle$$': _handle
   };
 
