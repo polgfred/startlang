@@ -95,10 +95,10 @@
     },
 
     run: function(ctx) {
-      ctx.set(this.name, this.invoke.bind(this));
+      ctx.set(this.name, this.invoke.bind(this, ctx));
     },
 
-    invoke: function(ctx) {
+    invoke: function(ctx, args) {
       ctx.push();
       try {
         this.stmts.run(ctx);
@@ -121,9 +121,18 @@
     },
 
     evaluate: function(ctx) {
-      return this.target.evaluate(ctx)(ctx, this.args.map(function(arg) {
-        return arg.evaluate(ctx);
-      }));
+      var func = this.target.evaluate(ctx),
+          args = this.args.map(function(arg) {
+            return arg.evaluate(ctx);
+          });
+
+      if (func) {
+        return func(args);
+      }
+
+      if (this.target.node == 'variable' && args.length > 0) {
+        ctx.syscall(this.target.name, args);
+      }
     }
   });
 

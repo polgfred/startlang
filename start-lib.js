@@ -44,6 +44,16 @@ module.exports = (function() {
 
     setIndex: function(base, index, value) {
       _handle(base).setIndex(base, index, value);
+    },
+
+    syscall: function(name, args) {
+      var func = _handle(args[0]).methods[name];
+
+      if (!func) {
+        throw new Error('object not found or not a function');
+      }
+
+      return func.apply(null, args);
     }
   });
 
@@ -67,13 +77,15 @@ module.exports = (function() {
       return this.binaryImpl[op](left, right);
     },
 
-    getIndex: function(s, index) {
+    getIndex: function(n, index) {
       throw new Error('object does not support []');
     },
 
-    setIndex: function(a, index, value) {
+    setIndex: function(n, index, value) {
       throw new Error('object does not support [] assignment');
     },
+
+    methods: {},
 
     unaryImpl: {
       '+' : function(right) { return + right; },
@@ -114,8 +126,34 @@ module.exports = (function() {
       return s.charAt(index);
     },
 
-    setIndex: function(a, index, value) {
+    setIndex: function(s, index, value) {
       throw new Error('object does not support [] assignment');
+    },
+
+    methods: {
+      length: function(s) {
+        return s.length;
+      },
+
+      contains: function(s, search) {
+        return s.indexOf(search) != -1;
+      },
+
+      find: function(s, substr) {
+        return s.indexOf(substr);
+      },
+
+      replace: function(s, substr, to) {
+        return s.replace(substr, to);
+      },
+
+      range: function(s, start, end) {
+        return s.substring(start, end + 1);
+      },
+
+      split: function(s, delim) {
+        return _sarray.wrap(s.split(delim || ' '));
+      }
     },
 
     binaryImpl: {
@@ -144,18 +182,22 @@ module.exports = (function() {
       var sub = new Array(dims[0]),
           next = dims.slice(1);
 
-      Object.defineProperty(sub, '$$handler$$', {
-        value: _sarray,
-        enumerable: false
-      });
-
       if (dims.length > 1) {
         for (var i = 0; i < dims[0]; ++i) {
           sub[i] = this._buildSubArray(next);
         }
       }
 
-      return sub;
+      return _sarray.wrap(sub);
+    },
+
+    wrap: function(a) {
+      Object.defineProperty(a, '$$handler$$', {
+        value: _sarray,
+        enumerable: false
+      });
+
+      return a;
     },
 
     unaryOp: function(op, right) {
@@ -172,6 +214,41 @@ module.exports = (function() {
 
     setIndex: function(a, index, value) {
       a[index] = value;
+    },
+
+    methods: {
+      length: function(a) {
+        return a.length;
+      },
+
+      contains: function(a, search) {
+        return a.indexOf(search) != -1;
+      },
+
+      find: function(a, substr) {
+        return a.indexOf(substr);
+      },
+
+      join: function(a, delim) {
+        return a.join(delim || ' ');
+      },
+
+      push: function(a, item) {
+        a.push(item);
+        return a;
+      },
+
+      pop: function(a) {
+        return a.pop();
+      },
+
+      reverse: function(a) {
+        return a.reverse();
+      },
+
+      range: function(a, start, end) {
+        return a.slice(start, end + 1);
+      }
     },
 
     binaryImpl: {
@@ -197,8 +274,10 @@ module.exports = (function() {
 
   var _stable = {
     create: function() {
-      var t = {};
+      return _stable.wrap({});
+    },
 
+    wrap: function(t) {
       Object.defineProperty(t, '$$handler$$', {
         value: _stable,
         enumerable: false
@@ -223,6 +302,20 @@ module.exports = (function() {
       t[index] = value;
     },
 
+    methods: {
+      length: function(t) {
+        return t.length;
+      },
+
+      contains: function(t, search) {
+        return search in t;
+      },
+
+      keys: function(t) {
+        return Object.keys(t);
+      }
+    },
+
     binaryImpl: {
     }
   };
@@ -232,15 +325,15 @@ module.exports = (function() {
       return new SEnvironment();
     },
 
-    array: function(ctx, args) {
+    array: function(args) {
       return _sarray.create(args);
     },
 
-    table: function(ctx, args) {
+    table: function(args) {
       return _stable.create(args);
     },
 
-    print: function(ctx, args) {
+    print: function(args) {
       if (args.length > 0) {
         args.forEach(function(arg) {
           console.log(arg);
