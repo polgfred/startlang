@@ -78,7 +78,7 @@
 
     run: function(ctx) {
       for (var i = this.start.evaluate(ctx);
-            i < this.end.evaluate(ctx);
+            i <= this.end.evaluate(ctx);
             i += (this.by ? this.by.evaluate(ctx) : 1)) {
         ctx.set(this.name, i);
         this.stmts.run(ctx);
@@ -95,10 +95,10 @@
     },
 
     run: function(ctx) {
-      ctx.set(this.name, ctx.createCallable(this.call.bind(this)));
+      ctx.set(this.name, this.invoke.bind(this));
     },
 
-    call: function(ctx) {
+    invoke: function(ctx) {
       ctx.push();
       try {
         this.stmts.run(ctx);
@@ -111,8 +111,8 @@
   var Call = Node.extend({
     node: 'call',
 
-    constructor: function(name, args) {
-      this.name = name;
+    constructor: function(target, args) {
+      this.target = target;
       this.args = args || [];
     },
 
@@ -121,7 +121,7 @@
     },
 
     evaluate: function(ctx) {
-      return ctx.get(this.name).call(ctx, this.args.map(function(arg) {
+      return this.target.evaluate(ctx)(ctx, this.args.map(function(arg) {
         return arg.evaluate(ctx);
       }));
     }
@@ -369,13 +369,13 @@ BeginBlock
     }
 
 CallStatement
-  = __ 'call' __ sym:Symbol
+  = __ 'call' __ target:IndexExpr
     args:(
       __ '(' __ v:Values? __ ')' {
         return v;
       }
     )? EOL {
-      return new Call(sym, args);
+      return new Call(target, args);
     }
 
 Assignment
@@ -483,8 +483,8 @@ UnaryExpr
   / CallExpr
 
 CallExpr
-  = sym:Symbol __ '(' __ args:Values? __ ')' {
-      return new Call(sym, args);
+  = target:IndexExpr __ '(' __ args:Values? __ ')' {
+      return new Call(target, args);
     }
   / IndexExpr
 

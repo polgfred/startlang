@@ -13,10 +13,6 @@ module.exports = (function() {
   }
 
   mixin(SEnvironment.prototype, {
-    createCallable: function(func) {
-      return { call: func };
-    },
-
     // push and pop new objects onto the prototype chain to implement fast scopes
     push: function() {
       this._ns = Object.create(this._ns);
@@ -148,7 +144,10 @@ module.exports = (function() {
       var sub = new Array(dims[0]),
           next = dims.slice(1);
 
-      sub['$$handler$$'] = _sarray;
+      Object.defineProperty(sub, '$$handler$$', {
+        value: _sarray,
+        enumerable: false
+      });
 
       if (dims.length > 1) {
         for (var i = 0; i < dims[0]; ++i) {
@@ -198,9 +197,15 @@ module.exports = (function() {
 
   var _stable = {
     create: function() {
-      return { '$$handler$$': _stable };
-    },
+      var t = {};
 
+      Object.defineProperty(t, '$$handler$$', {
+        value: _stable,
+        enumerable: false
+      });
+
+      return t;
+    },
 
     unaryOp: function(op, right) {
       throw new Error('object does not support unary ' + op);
@@ -227,16 +232,12 @@ module.exports = (function() {
       return new SEnvironment();
     },
 
-    array: {
-      call: function(ctx, args) {
-        return _sarray.create(args);
-      }
+    array: function(ctx, args) {
+      return _sarray.create(args);
     },
 
-    table: {
-      call: function(ctx, args) {
-        return _stable.create(args);
-      }
+    table: function(ctx, args) {
+      return _stable.create(args);
     },
 
     '$$handle$$': _handle
