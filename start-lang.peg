@@ -2,7 +2,7 @@
 
 {
   var startlib = require('./start-lib'),
-      handle = startlib['$$handle$$'];
+      handle = startlib.handle;
 
   function mixin(object, properties) {
     Object.keys(properties).forEach(function(prop) {

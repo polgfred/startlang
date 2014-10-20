@@ -85,7 +85,31 @@ module.exports = (function() {
       throw new Error('object does not support [] assignment');
     },
 
-    methods: {},
+    methods: [
+      'abs',
+      'acos',
+      'asin',
+      'atan',
+      'ceil',
+      'cos',
+      'exp',
+      'floor',
+      'log',
+      'round',
+      'sin',
+      'sqrt',
+      'tan',
+      'pow',
+      'max',
+      'min'
+    ].reduce(function(ns, method) {
+      ns[method] = Math[method];
+      return ns;
+    }, {
+      random: function(num) {
+        return Math.random() * num;
+      }
+    }),
 
     unaryImpl: {
       '+' : function(right) { return + right; },
@@ -236,7 +260,6 @@ module.exports = (function() {
 
       push: function(a, item) {
         a.push(item);
-        return a;
       },
 
       pop: function(a) {
@@ -348,7 +371,7 @@ module.exports = (function() {
       }
     },
 
-    '$$handle$$': handle
+    handle: handle
   };
 
   return startlib;
