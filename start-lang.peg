@@ -464,7 +464,7 @@ MultOp
 UnaryExpr
   // handle negative numbers
   = op:AddOp __ num:Number {
-      return new Literal(handle(num).unaryop(op, num));
+      return new Literal(handle(num).unaryops[op](num));
     }
   / op:AddOp __ right:CallExpr {
       return new UnaryOp(op, right);

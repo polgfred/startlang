@@ -31,11 +31,11 @@ module.exports = (function() {
     },
 
     unaryop: function(op, right) {
-      return handle(right).unaryop(op, right);
+      return handle(right).unaryops[op](right);
     },
 
     binaryop: function(op, left, right) {
-      return handle(left).binaryop(op, left, right);
+      return handle(left).binaryops[op](left, right);
     },
 
     getindex: function(base, index) {
@@ -67,14 +67,6 @@ module.exports = (function() {
       if (typeof n == 'number') {
         return snumber;
       }
-    },
-
-    unaryop: function(op, right) {
-      return this.unaryImpl[op](right);
-    },
-
-    binaryop: function(op, left, right) {
-      return this.binaryImpl[op](left, right);
     },
 
     getindex: function(n, index) {
@@ -111,12 +103,12 @@ module.exports = (function() {
       }
     }),
 
-    unaryImpl: {
+    unaryops: {
       '+' : function(right) { return + right; },
       '-' : function(right) { return - right; }
     },
 
-    binaryImpl: {
+    binaryops: {
       '+' : function(left, right) { return left +  right; },
       '-' : function(left, right) { return left -  right; },
       '*' : function(left, right) { return left *  right; },
@@ -141,14 +133,6 @@ module.exports = (function() {
       if (typeof s == 'string') {
         return sstring;
       }
-    },
-
-    unaryop: function(op, right) {
-      throw new Error('object does not support unary ' + op);
-    },
-
-    binaryop: function(op, left, right) {
-      return this.binaryImpl[op](left, right);
     },
 
     getindex: function(s, index) {
@@ -197,7 +181,9 @@ module.exports = (function() {
       }
     },
 
-    binaryImpl: {
+    unaryops: {},
+
+    binaryops: {
       '+' : function(left, right) { return left +  right; },
       '=' : function(left, right) { return left == right; },
       '!=': function(left, right) { return left != right; },
@@ -235,14 +221,6 @@ module.exports = (function() {
       }
 
       return sub;
-    },
-
-    unaryop: function(op, right) {
-      throw new Error('object does not support unary ' + op);
-    },
-
-    binaryop: function(op, left, right) {
-      return this.binaryImpl[op](left, right);
     },
 
     getindex: function(a, index) {
@@ -287,11 +265,13 @@ module.exports = (function() {
       }
     },
 
-    binaryImpl: {
+    unaryops: {},
+
+    binaryops: {
       '=' : function(left, right) {
         // arrays have the same length and all their items are equal
         return (left.length == right.length) && left.every(function(litem, i) {
-          return handle(litem).binaryop('=', litem, right[i]);
+          return handle(litem).binaryops['='](litem, right[i]);
         });
       },
 
@@ -319,14 +299,6 @@ module.exports = (function() {
       return {};
     },
 
-    unaryop: function(op, right) {
-      throw new Error('object does not support unary ' + op);
-    },
-
-    binaryop: function(op, left, right) {
-      return this.binaryImpl[op](left, right);
-    },
-
     getindex: function(t, index) {
       return t[index];
     },
@@ -349,8 +321,9 @@ module.exports = (function() {
       }
     },
 
-    binaryImpl: {
-    }
+    unaryops: {},
+
+    binaryops: {}
   };
 
   Object.defineProperty(Object.prototype, '$$start$$handler$$', {
