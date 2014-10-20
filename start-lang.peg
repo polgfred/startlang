@@ -130,7 +130,7 @@
         return func(args);
       }
 
-      if (this.target.node == 'variable' && args.length > 0) {
+      if (this.target.node == 'variable') {
         return ctx.syscall(this.target.name, args);
       }
     }

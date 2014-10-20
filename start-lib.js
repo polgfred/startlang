@@ -59,7 +59,7 @@ module.exports = (function() {
 
   // find a protocol handler for this object
   function handle(obj) {
-    return obj['$$handler$$'] || snumber.handle(obj) || sstring.handle(obj);
+    return obj['$$start$$handler$$'];
   }
 
   var snumber = {
@@ -107,6 +107,11 @@ module.exports = (function() {
     }
   };
 
+  Object.defineProperty(Number.prototype, '$$start$$handler$$', {
+    value: snumber,
+    enumerable: false
+  });
+
   var sstring = {
     handle: function(s) {
       if (typeof s == 'string') {
@@ -152,7 +157,7 @@ module.exports = (function() {
       },
 
       split: function(s, delim) {
-        return sarray.wrap(s.split(delim || ' '));
+        return s.split(delim || ' ');
       }
     },
 
@@ -166,6 +171,11 @@ module.exports = (function() {
       '>=': function(left, right) { return left >= right; }
     }
   };
+
+  Object.defineProperty(String.prototype, '$$start$$handler$$', {
+    value: sstring,
+    enumerable: false
+  });
 
   // Arrays
 
@@ -188,16 +198,7 @@ module.exports = (function() {
         }
       }
 
-      return sarray.wrap(sub);
-    },
-
-    wrap: function(a) {
-      Object.defineProperty(a, '$$handler$$', {
-        value: sarray,
-        enumerable: false
-      });
-
-      return a;
+      return sub;
     },
 
     unaryOp: function(op, right) {
@@ -270,20 +271,16 @@ module.exports = (function() {
     }
   };
 
+  Object.defineProperty(Array.prototype, '$$start$$handler$$', {
+    value: sarray,
+    enumerable: false
+  });
+
   // Tables (Hashes)
 
   var stable = {
     create: function() {
-      return stable.wrap({});
-    },
-
-    wrap: function(t) {
-      Object.defineProperty(t, '$$handler$$', {
-        value: stable,
-        enumerable: false
-      });
-
-      return t;
+      return {};
     },
 
     unaryOp: function(op, right) {
@@ -319,6 +316,11 @@ module.exports = (function() {
     binaryImpl: {
     }
   };
+
+  Object.defineProperty(Object.prototype, '$$start$$handler$$', {
+    value: stable,
+    enumerable: false
+  });
 
   var objectProto = Object.prototype,
       arrayProto = Array.prototype;
