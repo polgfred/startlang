@@ -131,7 +131,7 @@
       }
 
       if (this.target.node == 'variable' && args.length > 0) {
-        ctx.syscall(this.target.name, args);
+        return ctx.syscall(this.target.name, args);
       }
     }
   });

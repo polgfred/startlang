@@ -23,7 +23,7 @@ module.exports = (function() {
     },
 
     get: function(name) {
-      return startlib[name] || this._ns[name];
+      return this._ns[name];
     },
 
     set: function(name, value) {
@@ -31,41 +31,41 @@ module.exports = (function() {
     },
 
     unaryOp: function(op, right) {
-      return _handle(right).unaryOp(op, right);
+      return handle(right).unaryOp(op, right);
     },
 
     binaryOp: function(op, left, right) {
-      return _handle(left).binaryOp(op, left, right);
+      return handle(left).binaryOp(op, left, right);
     },
 
     getIndex: function(base, index) {
-      return _handle(base).getIndex(base, index);
+      return handle(base).getIndex(base, index);
     },
 
     setIndex: function(base, index, value) {
-      _handle(base).setIndex(base, index, value);
+      handle(base).setIndex(base, index, value);
     },
 
     syscall: function(name, args) {
-      var func = _handle(args[0]).methods[name];
+      var func = (args.length > 0 && handle(args[0]).methods[name]) || startlib[name];
 
-      if (!func) {
-        throw new Error('object not found or not a function');
+      if (func) {
+        return func.apply(null, args);
       }
 
-      return func.apply(null, args);
+      throw new Error('object not found or not a function');
     }
   });
 
   // find a protocol handler for this object
-  function _handle(obj) {
-    return obj['$$handler$$'] || _snumber.handle(obj) || _sstring.handle(obj);
+  function handle(obj) {
+    return obj['$$handler$$'] || snumber.handle(obj) || sstring.handle(obj);
   }
 
-  var _snumber = {
+  var snumber = {
     handle: function(n) {
       if (typeof n == 'number') {
-        return _snumber;
+        return snumber;
       }
     },
 
@@ -107,10 +107,10 @@ module.exports = (function() {
     }
   };
 
-  var _sstring = {
+  var sstring = {
     handle: function(s) {
       if (typeof s == 'string') {
-        return _sstring;
+        return sstring;
       }
     },
 
@@ -152,7 +152,7 @@ module.exports = (function() {
       },
 
       split: function(s, delim) {
-        return _sarray.wrap(s.split(delim || ' '));
+        return sarray.wrap(s.split(delim || ' '));
       }
     },
 
@@ -169,7 +169,7 @@ module.exports = (function() {
 
   // Arrays
 
-  var _sarray = {
+  var sarray = {
     create: function(dims) {
       if (dims.length == 0) {
         dims.push(0);
@@ -188,12 +188,12 @@ module.exports = (function() {
         }
       }
 
-      return _sarray.wrap(sub);
+      return sarray.wrap(sub);
     },
 
     wrap: function(a) {
       Object.defineProperty(a, '$$handler$$', {
-        value: _sarray,
+        value: sarray,
         enumerable: false
       });
 
@@ -255,7 +255,7 @@ module.exports = (function() {
       '=' : function(left, right) {
         // arrays have the same length and all their items are equal
         return (left.length == right.length) && left.every(function(litem, i) {
-          return _handle(litem).binaryOp('=', litem, right[i]);
+          return handle(litem).binaryOp('=', litem, right[i]);
         });
       },
 
@@ -272,14 +272,14 @@ module.exports = (function() {
 
   // Tables (Hashes)
 
-  var _stable = {
+  var stable = {
     create: function() {
-      return _stable.wrap({});
+      return stable.wrap({});
     },
 
     wrap: function(t) {
       Object.defineProperty(t, '$$handler$$', {
-        value: _stable,
+        value: stable,
         enumerable: false
       });
 
@@ -320,22 +320,25 @@ module.exports = (function() {
     }
   };
 
+  var objectProto = Object.prototype,
+      arrayProto = Array.prototype;
+
   var startlib = {
     createEnv: function() {
       return new SEnvironment();
     },
 
-    array: function(args) {
-      return _sarray.create(args);
+    array: function() {
+      return sarray.create(arrayProto.slice.call(arguments));
     },
 
-    table: function(args) {
-      return _stable.create(args);
+    table: function() {
+      return stable.create();
     },
 
-    print: function(args) {
-      if (args.length > 0) {
-        args.forEach(function(arg) {
+    print: function() {
+      if (arguments.length > 0) {
+        arrayProto.forEach.call(arguments, function(arg) {
           console.log(arg);
         });
       } else {
@@ -343,7 +346,7 @@ module.exports = (function() {
       }
     },
 
-    '$$handle$$': _handle
+    '$$handle$$': handle
   };
 
   return startlib;
