@@ -162,24 +162,20 @@ module.exports = (function() {
     },
 
     methods: {
-      length: function(s) {
+      len: function(s) {
         return s.length;
       },
 
-      contains: function(s, search) {
-        return s.indexOf(search) != -1;
+      find: function(s, search) {
+        return s.indexOf(search);
       },
 
-      find: function(s, substr) {
-        return s.indexOf(substr);
+      findlast: function(s, search) {
+        return s.lastIndexOf(search);
       },
 
-      findlast: function(s, substr) {
-        return s.lastIndexOf(substr);
-      },
-
-      replace: function(s, substr, to) {
-        return s.replace(substr, to);
+      replace: function(s, search, to) {
+        return s.replace(search, to);
       },
 
       range: function(s, from, to) {
@@ -254,16 +250,16 @@ module.exports = (function() {
     },
 
     methods: {
-      length: function(a) {
+      len: function(a) {
         return a.length;
       },
 
-      contains: function(a, search) {
-        return a.indexOf(search) != -1;
+      find: function(a, search) {
+        return a.indexOf(search);
       },
 
-      find: function(a, substr) {
-        return a.indexOf(substr);
+      findlast: function(a, search) {
+        return a.lastIndexOf(search);
       },
 
       join: function(a, delim) {
@@ -334,12 +330,8 @@ module.exports = (function() {
     },
 
     methods: {
-      length: function(t) {
-        return t.length;
-      },
-
-      contains: function(t, search) {
-        return search in t;
+      len: function(t) {
+        return Object.keys(t).length;
       },
 
       keys: function(t) {
