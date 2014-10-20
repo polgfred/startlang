@@ -180,8 +180,8 @@ module.exports = (function() {
         return s.replace(substr, to);
       },
 
-      range: function(s, start, end) {
-        return s.substring(start, end + 1);
+      range: function(s, start, len) {
+        return s.substring(start, len);
       },
 
       split: function(s, delim) {
@@ -282,8 +282,8 @@ module.exports = (function() {
         return a.reverse();
       },
 
-      range: function(a, start, end) {
-        return a.slice(start, end + 1);
+      range: function(a, start, len) {
+        return a.slice(start, start + len);
       }
     },
 
@@ -299,6 +299,7 @@ module.exports = (function() {
         return ! this['='](left, right);
       },
 
+      // TODO
       '<' : function(left, right) { return left <  right; },
       '<=': function(left, right) { return left <= right; },
       '>' : function(left, right) { return left >  right; },
