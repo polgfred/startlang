@@ -172,6 +172,10 @@ module.exports = (function() {
         return s.indexOf(substr);
       },
 
+      findlast: function(s, substr) {
+        return s.lastIndexOf(substr);
+      },
+
       replace: function(s, substr, to) {
         return s.replace(substr, to);
       },
@@ -182,6 +186,14 @@ module.exports = (function() {
 
       split: function(s, delim) {
         return s.split(delim || ' ');
+      },
+
+      upper: function(s) {
+        return s.toUpperCase();
+      },
+
+      lower: function(s) {
+        return s.toLowerCase();
       }
     },
 
