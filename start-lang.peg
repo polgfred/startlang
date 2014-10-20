@@ -170,7 +170,7 @@
     },
 
     evaluate: function(ctx) {
-      return ctx.getIndex(this.base.evaluate(ctx), this.index.evaluate(ctx));
+      return ctx.getindex(this.base.evaluate(ctx), this.index.evaluate(ctx));
     }
   });
 
@@ -184,7 +184,7 @@
     },
 
     run: function(ctx) {
-      ctx.setIndex(this.base.evaluate(ctx), this.index.evaluate(ctx), this.value.evaluate(ctx));
+      ctx.setindex(this.base.evaluate(ctx), this.index.evaluate(ctx), this.value.evaluate(ctx));
     }
   });
 
@@ -271,7 +271,7 @@
     },
 
     evaluate: function(ctx) {
-      return ctx.binaryOp(this.op, this.left.evaluate(ctx), this.right.evaluate(ctx));
+      return ctx.binaryop(this.op, this.left.evaluate(ctx), this.right.evaluate(ctx));
     }
   });
 
@@ -296,7 +296,7 @@
     },
 
     evaluate: function(ctx) {
-      return ctx.unaryOp(this.op, this.right.evaluate(ctx));
+      return ctx.unaryop(this.op, this.right.evaluate(ctx));
     }
   });
 }
@@ -464,7 +464,7 @@ MultOp
 UnaryExpr
   // handle negative numbers
   = op:AddOp __ num:Number {
-      return new Literal(handle(num).unaryOp(op, num));
+      return new Literal(handle(num).unaryop(op, num));
     }
   / op:AddOp __ right:CallExpr {
       return new UnaryOp(op, right);

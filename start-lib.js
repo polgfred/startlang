@@ -30,20 +30,20 @@ module.exports = (function() {
       this._ns[name] = value;
     },
 
-    unaryOp: function(op, right) {
-      return handle(right).unaryOp(op, right);
+    unaryop: function(op, right) {
+      return handle(right).unaryop(op, right);
     },
 
-    binaryOp: function(op, left, right) {
-      return handle(left).binaryOp(op, left, right);
+    binaryop: function(op, left, right) {
+      return handle(left).binaryop(op, left, right);
     },
 
-    getIndex: function(base, index) {
-      return handle(base).getIndex(base, index);
+    getindex: function(base, index) {
+      return handle(base).getindex(base, index);
     },
 
-    setIndex: function(base, index, value) {
-      handle(base).setIndex(base, index, value);
+    setindex: function(base, index, value) {
+      handle(base).setindex(base, index, value);
     },
 
     syscall: function(name, args) {
@@ -69,19 +69,19 @@ module.exports = (function() {
       }
     },
 
-    unaryOp: function(op, right) {
+    unaryop: function(op, right) {
       return this.unaryImpl[op](right);
     },
 
-    binaryOp: function(op, left, right) {
+    binaryop: function(op, left, right) {
       return this.binaryImpl[op](left, right);
     },
 
-    getIndex: function(n, index) {
+    getindex: function(n, index) {
       throw new Error('object does not support []');
     },
 
-    setIndex: function(n, index, value) {
+    setindex: function(n, index, value) {
       throw new Error('object does not support [] assignment');
     },
 
@@ -143,19 +143,19 @@ module.exports = (function() {
       }
     },
 
-    unaryOp: function(op, right) {
+    unaryop: function(op, right) {
       throw new Error('object does not support unary ' + op);
     },
 
-    binaryOp: function(op, left, right) {
+    binaryop: function(op, left, right) {
       return this.binaryImpl[op](left, right);
     },
 
-    getIndex: function(s, index) {
+    getindex: function(s, index) {
       return s.charAt(index);
     },
 
-    setIndex: function(s, index, value) {
+    setindex: function(s, index, value) {
       throw new Error('object does not support [] assignment');
     },
 
@@ -237,19 +237,19 @@ module.exports = (function() {
       return sub;
     },
 
-    unaryOp: function(op, right) {
+    unaryop: function(op, right) {
       throw new Error('object does not support unary ' + op);
     },
 
-    binaryOp: function(op, left, right) {
+    binaryop: function(op, left, right) {
       return this.binaryImpl[op](left, right);
     },
 
-    getIndex: function(a, index) {
+    getindex: function(a, index) {
       return a[index];
     },
 
-    setIndex: function(a, index, value) {
+    setindex: function(a, index, value) {
       a[index] = value;
     },
 
@@ -291,7 +291,7 @@ module.exports = (function() {
       '=' : function(left, right) {
         // arrays have the same length and all their items are equal
         return (left.length == right.length) && left.every(function(litem, i) {
-          return handle(litem).binaryOp('=', litem, right[i]);
+          return handle(litem).binaryop('=', litem, right[i]);
         });
       },
 
@@ -319,19 +319,19 @@ module.exports = (function() {
       return {};
     },
 
-    unaryOp: function(op, right) {
+    unaryop: function(op, right) {
       throw new Error('object does not support unary ' + op);
     },
 
-    binaryOp: function(op, left, right) {
+    binaryop: function(op, left, right) {
       return this.binaryImpl[op](left, right);
     },
 
-    getIndex: function(t, index) {
+    getindex: function(t, index) {
       return t[index];
     },
 
-    setIndex: function(t, index, value) {
+    setindex: function(t, index, value) {
       t[index] = value;
     },
 
