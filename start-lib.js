@@ -69,16 +69,20 @@ module.exports = (function() {
   }
 
   var snone = {
+    repr: function(n) {
+      return '*none*';
+    },
+
+    enumerate: function() {
+      return [];
+    },
+
     getindex: function(n, index) {
       throw new Error('object does not support []');
     },
 
     setindex: function(n, index, value) {
       throw new Error('object does not support [] assignment');
-    },
-
-    enumerate: function() {
-      return [];
     },
 
     methods: [],
@@ -92,16 +96,20 @@ module.exports = (function() {
   };
 
   var sboolean = {
+    repr: function(b) {
+      return b ? '*true*' : '*false*';
+    },
+
+    enumerate: function(b) {
+      return b ? [b] : [];
+    },
+
     getindex: function(b, index) {
       throw new Error('object does not support []');
     },
 
     setindex: function(b, index, value) {
       throw new Error('object does not support [] assignment');
-    },
-
-    enumerate: function(b) {
-      return b ? [b] : [];
     },
 
     methods: [],
@@ -120,16 +128,24 @@ module.exports = (function() {
   });
 
   var snumber = {
+    repr: function(n) {
+      if (isFinite(n)) {
+        return String(n);
+      } else {
+        return n > 0 ? '*infinity*' : '-*infinity*';
+      }
+    },
+
+    enumerate: function(n) {
+      return [n];
+    },
+
     getindex: function(n, index) {
       throw new Error('object does not support []');
     },
 
     setindex: function(n, index, value) {
       throw new Error('object does not support [] assignment');
-    },
-
-    enumerate: function(n) {
-      return [n];
     },
 
     methods: [
@@ -194,16 +210,20 @@ module.exports = (function() {
   });
 
   var sstring = {
+    repr: function(s) {
+      return s;
+    },
+
+    enumerate: function(s) {
+      return s.split('');
+    },
+
     getindex: function(s, index) {
       return s.charAt(index);
     },
 
     setindex: function(s, index, value) {
       throw new Error('object does not support [] assignment');
-    },
-
-    enumerate: function(s) {
-      return s.split('');
     },
 
     methods: {
@@ -273,13 +293,26 @@ module.exports = (function() {
       var sub = new Array(dims[0]),
           next = dims.slice(1);
 
-      if (dims.length > 1) {
-        for (var i = 0; i < dims[0]; ++i) {
-          sub[i] = this._buildSubArray(next);
-        }
+      for (var i = 0; i < dims[0]; ++i) {
+        sub[i] = dims.length > 1 ? this._buildSubArray(next) : null;
       }
 
       return sub;
+    },
+
+    repr: function(a) {
+      var i, j = [], k;
+
+      for (i = 0; i < a.length; ++i) {
+        k = a[i];
+        j.push(handle(k).repr(k));
+      }
+
+      return '[ ' + j.join(', ') + ' ]';
+    },
+
+    enumerate: function(a) {
+      return a;
     },
 
     getindex: function(a, index) {
@@ -288,10 +321,6 @@ module.exports = (function() {
 
     setindex: function(a, index, value) {
       a[index] = value;
-    },
-
-    enumerate: function(a) {
-      return a;
     },
 
     methods: {
@@ -362,16 +391,28 @@ module.exports = (function() {
       return {};
     },
 
+    repr: function(t) {
+      var i, j = [], k = Object.keys(t), l, m;
+
+      for (i = 0; i < k.length; ++i) {
+        l = k[i];
+        m = t[l];
+        j.push('"' + l + '": ' + handle(m).repr(m));
+      }
+
+      return '[ ' + j.join(', ') + ' ]';
+    },
+
+    enumerate: function(t) {
+      return Object.keys(t);
+    },
+
     getindex: function(t, index) {
       return t[index];
     },
 
     setindex: function(t, index, value) {
       t[index] = value;
-    },
-
-    enumerate: function(t) {
-      return Object.keys(t);
     },
 
     methods: {
@@ -409,7 +450,7 @@ module.exports = (function() {
     print: function() {
       if (arguments.length > 0) {
         arrayProto.forEach.call(arguments, function(arg) {
-          console.log(arg);
+          console.log(handle(arg).repr(arg));
         });
       } else {
         console.log();
