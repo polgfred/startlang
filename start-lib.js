@@ -69,7 +69,7 @@ module.exports = (function() {
   }
 
   var snone = {
-    repr: function(n) {
+    repr: function() {
       return '*none*';
     },
 
@@ -77,11 +77,11 @@ module.exports = (function() {
       return [];
     },
 
-    getindex: function(n, index) {
+    getindex: function() {
       throw new Error('object does not support []');
     },
 
-    setindex: function(n, index, value) {
+    setindex: function() {
       throw new Error('object does not support [] assignment');
     },
 
@@ -104,11 +104,11 @@ module.exports = (function() {
       return b ? [b] : [];
     },
 
-    getindex: function(b, index) {
+    getindex: function() {
       throw new Error('object does not support []');
     },
 
-    setindex: function(b, index, value) {
+    setindex: function() {
       throw new Error('object does not support [] assignment');
     },
 
@@ -140,11 +140,11 @@ module.exports = (function() {
       return [n];
     },
 
-    getindex: function(n, index) {
+    getindex: function() {
       throw new Error('object does not support []');
     },
 
-    setindex: function(n, index, value) {
+    setindex: function() {
       throw new Error('object does not support [] assignment');
     },
 
@@ -222,7 +222,7 @@ module.exports = (function() {
       return s.charAt(index);
     },
 
-    setindex: function(s, index, value) {
+    setindex: function() {
       throw new Error('object does not support [] assignment');
     },
 
