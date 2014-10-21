@@ -478,9 +478,13 @@ PrimaryExpr
 // Data
 
 Literal
-  = Boolean
+  = None
+  / Boolean
   / Number
   / String
+
+None
+  = 'none' { return null; }
 
 Boolean
   = 'true' { return true; }

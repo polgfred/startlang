@@ -65,16 +65,33 @@ module.exports = (function() {
 
   // find a protocol handler for this object
   function handle(obj) {
-    return obj['$$start$$handler$$'];
+    return obj == null ? snone : obj['$$start$$handler$$'];
   }
 
-  var sboolean = {
-    handle: function(b) {
-      if (typeof b == 'boolean') {
-        return sboolean;
-      }
+  var snone = {
+    getindex: function(n, index) {
+      throw new Error('object does not support []');
     },
 
+    setindex: function(n, index, value) {
+      throw new Error('object does not support [] assignment');
+    },
+
+    enumerate: function() {
+      return [];
+    },
+
+    methods: [],
+
+    unaryops: {},
+
+    binaryops: {
+      '=' : function(left, right) { return left == right; },
+      '!=': function(left, right) { return left != right; }
+    }
+  };
+
+  var sboolean = {
     getindex: function(b, index) {
       throw new Error('object does not support []');
     },
@@ -103,12 +120,6 @@ module.exports = (function() {
   });
 
   var snumber = {
-    handle: function(n) {
-      if (typeof n == 'number') {
-        return snumber;
-      }
-    },
-
     getindex: function(n, index) {
       throw new Error('object does not support []');
     },
@@ -183,12 +194,6 @@ module.exports = (function() {
   });
 
   var sstring = {
-    handle: function(s) {
-      if (typeof s == 'string') {
-        return sstring;
-      }
-    },
-
     getindex: function(s, index) {
       return s.charAt(index);
     },
@@ -392,11 +397,7 @@ module.exports = (function() {
   var objectProto = Object.prototype,
       arrayProto = Array.prototype;
 
-  var startlib = {
-    createEnv: function() {
-      return new SEnvironment();
-    },
-
+  var globals = {
     array: function() {
       return sarray.create(arrayProto.slice.call(arguments));
     },
@@ -413,9 +414,15 @@ module.exports = (function() {
       } else {
         console.log();
       }
-    },
+    }
+  };
 
-    handle: handle
+  var startlib = {
+    handle: handle,
+
+    createEnv: function() {
+      return new SEnvironment();
+    }
   };
 
   return startlib;
