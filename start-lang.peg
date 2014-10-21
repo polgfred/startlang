@@ -1,8 +1,7 @@
 // Language Nodes
 
 {
-  var startlib = require('./start-lib'),
-      handle = startlib.handle;
+  var handle = require('./start-lib').handle;
 
   function mixin(object, properties) {
     Object.keys(properties).forEach(function(prop) {
@@ -314,7 +313,7 @@ Statement
   / Comment
 
 IfBlock
-  = __ 'if' __ cond:Condition EOL
+  = __ 'if' __ cond:Value EOL
     tstmts:Statements
     fstmts:(
       __ 'else' EOL
@@ -356,7 +355,10 @@ Assignment
     }
 
 CallStatement
-  = __ 'call' __ target:IndexExpr
+  = __ target:(
+      'call' __ e:IndexExpr { return e; }
+      / sym:Symbol { return new Variable(sym); }
+    )
     args:(
       __ v:Values? __ {
         return v;
@@ -364,49 +366,45 @@ CallStatement
     )? EOL {
       return new Funcall(target, args);
     }
-  / __ sym:Symbol
-    // handle a symbol as a call statement
-    ! {
-      return sym == 'else' || sym == 'end';
-    }
-    args:(
-      __ v:Values? __ {
-        return v;
-      }
-    )? EOL {
-      return new Funcall(new Variable(sym), args);
-    }
 
 Comment
   = __ '//' __ text:$[^\n]* EOL {
     return new Comment(text);
   }
 
+// Values
+
+Values
+  = first:Value rest:( __ ',' __ val:Value { return val; } )* {
+      return [first].concat(rest);
+    }
+
+Value
+  = CondExpr
+  / AddExpr
+
 // Conditions
 
-Condition
-  = ConjExpr
-
-ConjExpr
-  = first:NotExpr rest:( __ op:ConjOp __ e:NotExpr { return [op, e]; } )* {
+CondExpr
+  = first:NotExpr rest:( __ op:CondOp __ e:NotExpr { return [op, e]; } )* {
       return buildLogicalOp(first, rest);
     }
 
-ConjOp
+CondOp
   = 'and'
   / 'or'
 
 NotExpr
-  = 'not' __ comp:Comparison {
+  = 'not' __ comp:RelExpr {
       return new LogicalOp('not', null, comp);
     }
-  / Comparison
+  / RelExpr
 
-Comparison
-  = left:Value __ op:RelOp __ right:Value {
+RelExpr
+  = left:AddExpr __ op:RelOp __ right:AddExpr {
       return new BinaryOp(op, left, right);
     }
-  / '(' __ cond:Condition __ ')' {
+  / '(' __ cond:CondExpr __ ')' {
       return cond;
     }
 
@@ -418,15 +416,7 @@ RelOp
   / '>='
   / '>'
 
-// Values
-
-Values
-  = first:Value rest:( __ ',' __ val:Value { return val; } )* {
-      return [first].concat(rest);
-    }
-
-Value
-  = AddExpr
+// Arithmetic
 
 AddExpr
   = first:MultExpr rest:( __ op:AddOp __ e:MultExpr { return [op, e]; } )* {
@@ -457,18 +447,22 @@ UnaryExpr
     }
   / CallExpr
 
+// Invocation
+
 CallExpr
   = target:IndexExpr __ '(' __ args:Values? __ ')' {
       return new Funcall(target, args);
     }
   / IndexExpr
 
+// Index
+
 IndexExpr
   = sym:Symbol indexes:( __ '[' __ v:Value ']' { return v; } )* {
       if (indexes.length == 0) {
         return new Variable(sym);
       } else {
-        return new buildIndex(new Variable(sym), indexes);
+        return buildIndex(new Variable(sym), indexes);
       }
     }
   / PrimaryExpr
@@ -484,12 +478,16 @@ PrimaryExpr
 // Data
 
 Literal
-  = Number
+  = Boolean
+  / Number
   / String
 
+Boolean
+  = 'true' { return true; }
+  / 'false' { return false; }
+
 Number
-  = 'NaN' { return NaN; }
-  / 'Infinity' { return Infinity; }
+  = 'infinity' { return Infinity; }
   / num:$( Digits ( '.' Digits )? ( [eE] [-+]? Digits )? ) {
       return parseFloat(num);
     }
@@ -505,7 +503,24 @@ Char
   / [^"]
 
 Symbol
-  = $( [a-z_] [a-z0-9_]* )
+  = $( !Reserved [a-z_] [a-z0-9_]* )
+
+Reserved
+  = 'none'
+  / 'true'
+  / 'false'
+  / 'infinity'
+  / 'if'
+  / 'else'
+  / 'end'
+  / 'for'
+  / 'in'
+  / 'begin'
+  / 'let'
+  / 'call'
+  / 'and'
+  / 'or'
+  / 'not'
 
 // Whitespace
 __

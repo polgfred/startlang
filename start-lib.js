@@ -68,6 +68,40 @@ module.exports = (function() {
     return obj['$$start$$handler$$'];
   }
 
+  var sboolean = {
+    handle: function(b) {
+      if (typeof b == 'boolean') {
+        return sboolean;
+      }
+    },
+
+    getindex: function(b, index) {
+      throw new Error('object does not support []');
+    },
+
+    setindex: function(b, index, value) {
+      throw new Error('object does not support [] assignment');
+    },
+
+    enumerate: function(b) {
+      return b ? [b] : [];
+    },
+
+    methods: [],
+
+    unaryops: {},
+
+    binaryops: {
+      '=' : function(left, right) { return left == right; },
+      '!=': function(left, right) { return left != right; }
+    }
+  };
+
+  Object.defineProperty(Boolean.prototype, '$$start$$handler$$', {
+    value: sboolean,
+    enumerable: false
+  });
+
   var snumber = {
     handle: function(n) {
       if (typeof n == 'number') {
