@@ -46,11 +46,17 @@ module.exports = (function() {
       handle(base).setindex(base, index, value);
     },
 
-    syscall: function(name, args) {
-      var func = (args.length > 0 && handle(args[0]).methods[name]) || startlib[name];
-
-      if (func) {
-        return func.apply(null, args);
+    funcall: function(target, name, args) {
+      if (target) {
+        return target(args);
+      } else if (name) {
+        // try to find a function defined on the first argument,
+        // or a global system function
+        target = (args.length > 0 && handle(args[0]).methods[name])
+                  || globals[name];
+        if (target) {
+          return target.apply(null, args);
+        }
       }
 
       throw new Error('object not found or not a function');

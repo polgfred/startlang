@@ -106,8 +106,8 @@
     }
   });
 
-  var Call = Node.extend({
-    node: 'call',
+  var Funcall = Node.extend({
+    node: 'funcall',
 
     constructor: function(target, args) {
       this.target = target;
@@ -119,18 +119,12 @@
     },
 
     evaluate: function(ctx) {
-      var func = this.target.evaluate(ctx),
-          args = this.args.map(function(arg) {
-            return arg.evaluate(ctx);
-          });
-
-      if (func) {
-        return func(args);
-      }
-
-      if (this.target.node == 'variable') {
-        return ctx.syscall(this.target.name, args);
-      }
+      return ctx.funcall(
+        this.target.evaluate(ctx),
+        this.target.node == 'variable' && this.target.name,
+        this.args.map(function(arg) {
+          return arg.evaluate(ctx);
+        }));
     }
   });
 
@@ -368,7 +362,7 @@ CallStatement
         return v;
       }
     )? EOL {
-      return new Call(target, args);
+      return new Funcall(target, args);
     }
   / __ sym:Symbol
     // handle a symbol as a call statement
@@ -380,7 +374,7 @@ CallStatement
         return v;
       }
     )? EOL {
-      return new Call(new Variable(sym), args);
+      return new Funcall(new Variable(sym), args);
     }
 
 Comment
@@ -454,8 +448,8 @@ MultOp
   / '%'
 
 UnaryExpr
-  // handle negative numbers
   = op:AddOp __ num:Number {
+    // handle +/- number in the parser
       return new Literal(handle(num).unaryops[op](num));
     }
   / op:AddOp __ right:CallExpr {
@@ -465,7 +459,7 @@ UnaryExpr
 
 CallExpr
   = target:IndexExpr __ '(' __ args:Values? __ ')' {
-      return new Call(target, args);
+      return new Funcall(target, args);
     }
   / IndexExpr
 
