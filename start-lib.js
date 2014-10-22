@@ -366,6 +366,13 @@ module.exports = (function() {
 
       replace: function(a, at, length) {
         return a.splice.apply(a, [at, length].concat(arrayProto.slice.call(arguments, 3)));
+      },
+
+      sort: function(a) {
+        a.sort(function(left, right) {
+          var h = handle(left);
+          return h.binaryops['<'](left, right) ? -1 : (h.binaryops['>'](left, right) ? 1 : 0);
+        });
       }
     },
 
@@ -442,7 +449,7 @@ module.exports = (function() {
       for (i = 0; i < k.length; ++i) {
         l = k[i];
         m = t[l];
-        j.push('"' + l + '": ' + handle(m).repr(m));
+        j.push(l + ': ' + handle(m).repr(m));
       }
 
       return '[ ' + j.join(', ') + ' ]';
