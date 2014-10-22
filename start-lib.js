@@ -354,6 +354,18 @@ module.exports = (function() {
 
       range: function(a, from, to) {
         return a.slice(from, to);
+      },
+
+      remove: function(a, at, howMany) {
+        a.splice(at, howMany);
+      },
+
+      insert: function(a, at) {
+        a.splice.apply(a, [at, 0].concat(arrayProto.slice.call(arguments, 2)));
+      },
+
+      replace: function(a, at, howMany) {
+        a.splice.apply(a, [at, howMany].concat(arrayProto.slice.call(arguments, 3)));
       }
     },
 
