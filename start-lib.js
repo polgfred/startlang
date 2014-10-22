@@ -373,21 +373,54 @@ module.exports = (function() {
 
     binaryops: {
       '=' : function(left, right) {
-        // arrays have the same length and all their items are equal
-        return (left.length == right.length) && left.every(function(litem, i) {
-          return handle(litem).binaryops['='](litem, right[i]);
-        });
+        var i, l, r;
+
+        if (left.length != right.length) {
+          return false;
+        }
+
+        for (i = 0; i < left.length; ++i) {
+          l = left[i];
+          r = right[i];
+          if (!handle(l).binaryops['='](l, r)) {
+            return false;
+          }
+        }
+
+        return true;
       },
 
-      '!=': function(left, right) {
-        return ! this['='](left, right);
+      '<' : function(left, right) {
+        var i, l, r, len = Math.min(left.length, right.length);
+
+        for (i = 0; i < len; ++i) {
+          l = left[i];
+          r = right[i];
+          if (handle(l).binaryops['<'](l, r)) {
+            return true;
+          }
+        }
+
+        return left.length < right.length;
       },
 
-      // TODO
-      '<' : function(left, right) { return left <  right; },
-      '<=': function(left, right) { return left <= right; },
-      '>' : function(left, right) { return left >  right; },
-      '>=': function(left, right) { return left >= right; }
+      '>' : function(left, right) {
+        var i, l, r, len = Math.min(left.length, right.length);
+
+        for (i = 0; i < len; ++i) {
+          l = left[i];
+          r = right[i];
+          if (handle(l).binaryops['>'](l, r)) {
+            return true;
+          }
+        }
+
+        return left.length > right.length;
+      },
+
+      '!=': function(left, right) { return ! this['='](left, right); },
+      '<=': function(left, right) { return ! this['>'](left, right); },
+      '>=': function(left, right) { return ! this['<'](left, right); }
     }
   };
 
@@ -434,12 +467,38 @@ module.exports = (function() {
 
       keys: function(t) {
         return Object.keys(t);
+      },
+
+      remove: function(t) {
+        for (var i = 1; i < arguments.length; ++i) {
+          delete t[arguments[i]];
+        }
       }
     },
 
     unaryops: {},
 
-    binaryops: {}
+    binaryops: {
+      '=': function(left, right) {
+        var i, l, r;
+
+        for (i in left) {
+          if (!(i in right)) {
+            return false;
+          }
+
+          l = left[i];
+          r = right[i];
+          if (!handle(l).binaryops['='](l, r)) {
+            return false;
+          }
+        }
+
+        return Object.keys(left).length == Object.keys(right).length;
+      },
+
+      '!=': function(left, right) { return ! this['='](left, right); }
+    }
   };
 
   Object.defineProperty(Object.prototype, '$$start$$handler$$', {
