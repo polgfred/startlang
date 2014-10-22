@@ -173,7 +173,7 @@ module.exports = (function() {
         return Math.random() * num;
       },
 
-      range: function(from, to, by) {
+      count: function(from, to, by) {
         var a = [];
 
         for (var i = from; i < to; i += by || 1) {
@@ -243,8 +243,8 @@ module.exports = (function() {
         return s.replace(search, to);
       },
 
-      range: function(s, from, to) {
-        return s.substring(from, to);
+      range: function(s, at, length) {
+        return s.substr(at, length);
       },
 
       split: function(s, delim) {
@@ -349,23 +349,23 @@ module.exports = (function() {
       },
 
       reverse: function(a) {
-        return a.reverse();
+        a.reverse();
       },
 
-      range: function(a, from, to) {
-        return a.slice(from, to);
+      range: function(a, at, length) {
+        return a.slice(at, at + length);
       },
 
-      remove: function(a, at, howMany) {
-        a.splice(at, howMany);
+      remove: function(a, at, length) {
+        return a.splice(at, length);
       },
 
       insert: function(a, at) {
         a.splice.apply(a, [at, 0].concat(arrayProto.slice.call(arguments, 2)));
       },
 
-      replace: function(a, at, howMany) {
-        a.splice.apply(a, [at, howMany].concat(arrayProto.slice.call(arguments, 3)));
+      replace: function(a, at, length) {
+        return a.splice.apply(a, [at, length].concat(arrayProto.slice.call(arguments, 3)));
       }
     },
 
