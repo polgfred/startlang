@@ -313,7 +313,7 @@ Statement
   / Comment
 
 IfBlock
-  = __ 'if' __ cond:Value EOL
+  = __ 'if' WB __ cond:Value EOL
     tstmts:Statements
     fstmts:(
       __ 'else' EOL
@@ -326,21 +326,21 @@ IfBlock
     }
 
 ForBlock
-  = __ 'for' __ sym:Symbol __ 'in' __ range:Value EOL
+  = __ 'for' WB __ sym:Symbol __ 'in' WB __ range:Value EOL
     stmts:Statements
     __ 'end' EOL {
       return new ForBlock(sym, range, stmts);
     }
 
 BeginBlock
-  = __ 'begin' __ sym:Symbol EOL
+  = __ 'begin' WB __ sym:Symbol EOL
     stmts:Statements
     __ 'end' EOL {
       return new BeginBlock(sym, stmts);
     }
 
 Assignment
-  = __ 'let' __ sym:Symbol
+  = __ 'let' WB __ sym:Symbol
     indexes:(
       __ '[' __ v:Value ']' {
         return v;
@@ -356,7 +356,7 @@ Assignment
 
 CallStatement
   = __ target:(
-      'call' __ e:IndexExpr { return e; }
+      'call' WB __ e:IndexExpr { return e; }
       / sym:Symbol { return new Variable(sym); }
     )
     args:(
@@ -391,11 +391,11 @@ CondExpr
     }
 
 CondOp
-  = 'and'
-  / 'or'
+  = 'and' WB { return 'and'; }
+  / 'or'  WB { return 'or';  }
 
 NotExpr
-  = 'not' __ comp:RelExpr {
+  = 'not' WB __ comp:RelExpr {
       return new LogicalOp('not', null, comp);
     }
   / RelExpr
@@ -484,14 +484,14 @@ Literal
   / String
 
 None
-  = 'none' { return null; }
+  = 'none' WB { return null; }
 
 Boolean
-  = 'true' { return true; }
-  / 'false' { return false; }
+  = 'true'  WB { return true; }
+  / 'false' WB { return false; }
 
 Number
-  = 'infinity' { return Infinity; }
+  = 'infinity' WB { return Infinity; }
   / num:$( Digits ( '.' Digits )? ( [eE] [-+]? Digits )? ) {
       return parseFloat(num);
     }
@@ -510,23 +510,27 @@ Symbol
   = $( !Reserved [a-z_] [a-z0-9_]* )
 
 Reserved
-  = 'none'
-  / 'true'
-  / 'false'
-  / 'infinity'
-  / 'if'
-  / 'else'
-  / 'end'
-  / 'for'
-  / 'in'
-  / 'begin'
-  / 'let'
-  / 'call'
-  / 'and'
-  / 'or'
-  / 'not'
+  = 'none'     WB
+  / 'true'     WB
+  / 'false'    WB
+  / 'infinity' WB
+  / 'if'       WB
+  / 'else'     WB
+  / 'end'      WB
+  / 'for'      WB
+  / 'in'       WB
+  / 'begin'    WB
+  / 'let'      WB
+  / 'call'     WB
+  / 'and'      WB
+  / 'or'       WB
+  / 'not'      WB
 
 // Whitespace
+
+WB
+  = ![a-z_]
+
 __
   = [ \t]*
 
