@@ -241,10 +241,9 @@
 
   // take a chain of equal-precedence logical exprs and construct a left-folding tree
   function buildLogicalOp(first, rest) {
-    rest || (rest = []);
-
     var next;
 
+    rest || (rest = []);
     while (next = rest.shift()) {
       first = new LogicalOp(next[0], first, next[1]);
     }
@@ -268,9 +267,9 @@
 
   // take a chain of equal-precedence binary exprs and construct a left-folding tree
   function buildBinaryOp(first, rest) {
-    rest || (rest = []);
-
     var next;
+
+    rest || (rest = []);
     while (next = rest.shift()) {
       first = new BinaryOp(next[0], first, next[1]);
     }
@@ -439,7 +438,7 @@ MultOp
 
 UnaryExpr
   = op:AddOp __ num:Number {
-    // handle +/- number in the parser
+      // handle +/- number in the parser
       return new Literal(handle(num).unaryops[op](num));
     }
   / op:AddOp __ right:CallExpr {

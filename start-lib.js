@@ -52,8 +52,7 @@ module.exports = (function() {
       } else if (name) {
         // try to find a function defined on the first argument,
         // or a global system function
-        target = (args.length > 0 && handle(args[0]).methods[name])
-                  || globals[name];
+        target = (args.length > 0 && handle(args[0]).methods[name]) || globals[name];
         if (target) {
           return target.apply(null, args);
         }
