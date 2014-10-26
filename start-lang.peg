@@ -367,7 +367,7 @@ CallStatement
     }
 
 Comment
-  = __ '//' __ text:$[^\n]* EOL {
+  = __ '--' __ text:$[^\n]* EOL {
     return new Comment(text);
   }
 
@@ -506,7 +506,7 @@ Char
   / [^"]
 
 Symbol
-  = $( !Reserved [a-z_] [a-z0-9_]* )
+  = $( !Reserved [a-z_]i [a-z0-9_]i* )
 
 Reserved
   = 'none'     WB
@@ -528,7 +528,7 @@ Reserved
 // Whitespace
 
 WB
-  = ![a-z_]
+  = ![a-z_]i
 
 __
   = [ \t]*
