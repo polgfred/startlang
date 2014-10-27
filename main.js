@@ -26,7 +26,7 @@ $(function() {
   startlib._globals.print = function() {
     if (arguments.length > 0) {
       Array.prototype.forEach.call(arguments, function(arg) {
-        terminal.echo('\u21fe ' + startlib._handle(arg).repr(arg));
+        terminal.echo('&#8702; ' + startlib._handle(arg).repr(arg));
       });
     } else {
       terminal.echo();
@@ -44,9 +44,11 @@ $(function() {
         var command = prompt.getValue().trim();
 
         if (command) {
-          terminal.echo('[[;#888;]\u21fd ' +
-            command.replace(/\n/g, '\n   ').replace(/\]/g, '\\]') +
-            ']');
+          terminal.echo('&#8701; ' + command.replace(/\n/g, '\n   '), {
+            finalize: function(div) {
+              div.css('color', '#888');
+            }
+          });
           startlang.parse(command + '\n').run(env);
           terminal.echo('');
           prompt.setValue('');
