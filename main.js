@@ -70,4 +70,7 @@ $(function() {
     },
     exec: runCommand
   });
+
+  prompt.focus();
+
 });

@@ -71,6 +71,9 @@ $(function() {
     },
     exec: runCommand
   });
+
+  prompt.focus();
+
 });
 
 },{"./start-lang":2,"./start-lib":3}],2:[function(require,module,exports){
