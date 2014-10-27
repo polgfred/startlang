@@ -175,7 +175,7 @@ module.exports = (function() {
       count: function(from, to, by) {
         var a = [];
 
-        for (var i = from; i < to; i += by || 1) {
+        for (var i = from; i <= to; i += by || 1) {
           a.push(i);
         }
 

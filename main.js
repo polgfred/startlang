@@ -16,6 +16,7 @@ $(function() {
     terminal.pause();
   }, {
     greetings: false,
+    outputLimit: 1000,
     prompt: '> '
   });
   terminal.pause();
@@ -25,7 +26,7 @@ $(function() {
   startlib._globals.print = function() {
     if (arguments.length > 0) {
       Array.prototype.forEach.call(arguments, function(arg) {
-        terminal.echo('-> ' + startlib._handle(arg).repr(arg));
+        terminal.echo('\u21fe ' + startlib._handle(arg).repr(arg));
       });
     } else {
       terminal.echo();
@@ -38,18 +39,29 @@ $(function() {
 
   // wire it up
 
-  var env = startlib.createEnv();
+  var env = startlib.createEnv(),
+      runCommand = function() {
+        var command = prompt.getValue().trim();
 
-  $('#runner').click(function() {
-    var command = prompt.getValue().trim();
+        if (command) {
+          terminal.echo('[[;#888;]\u21fd ' +
+            command.replace(/\n/g, '\n   ').replace(/\]/g, '\\]') +
+            ']');
+          startlang.parse(command + '\n').run(env);
+          terminal.echo('');
+          prompt.setValue('');
+          prompt.focus();
+        }
+      };
 
-    if (command) {
-      terminal.echo('[[;#888;]<- ' + command.replace(/\n/g, '\n   ').replace(/\]/g, '\\]') + ']');
-      startlang.parse(command + '\n').run(env);
-      terminal.echo('');
-      prompt.setValue('');
-      prompt.focus();
-    }
+  $('#runner').click(runCommand);
+
+  prompt.commands.addCommand({
+    name: "runSnippet",
+    bindKey: {
+      win: "Ctrl-Return",
+      mac: "Command-Return"
+    },
+    exec: runCommand
   });
-
 });
