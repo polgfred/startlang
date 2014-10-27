@@ -536,7 +536,8 @@ module.exports = (function() {
   };
 
   var startlib = {
-    handle: handle,
+    _handle: handle,
+    _globals: globals,
 
     createEnv: function() {
       return new SEnvironment();

@@ -1,28 +1,55 @@
 $(function() {
 
-  var counter = 0;
+  var startlang = require('./start-lang'),
+      startlib = require('./start-lib');
 
-  var ed = window.ed = ace.edit('console');
-  ed.setTheme('ace/theme/textmate');
-  ed.setShowFoldWidgets(false);
-  ed.getSession().setTabSize(2);
-  ed.getSession().setUseSoftTabs(true);
+  window.prompt = ace.edit('prompt');
+  prompt.setTheme('ace/theme/textmate');
+  prompt.setShowFoldWidgets(false);
+  prompt.getSession().setTabSize(2);
+  prompt.getSession().setUseSoftTabs(true);
+  prompt.getSession().setMode('ace/mode/pascal');
 
-  var c = window.can = $('<canvas>');
-  c.addClass('element');
-  c.css({ top: '20px', left: '50px', width: '400px', height: '350px' });
-  c.appendTo('#display');
-
-  var t = window.term = $('<div>');
-  t.addClass('element');
-  t.css({ top: '400px', left: '50px', width: '380px', height: '100px' });
-  t.appendTo('#display');
-  t.terminal(function(command, term) {
+  window.terminal = $('#terminal');
+  terminal.terminal(function(command) {
     console.log(command);
-    term.pause();
+    terminal.pause();
   }, {
     greetings: false,
     prompt: '> '
   });
-  t.pause();
+  terminal.pause();
+
+  // override print to output to the terminal
+
+  startlib._globals.print = function() {
+    if (arguments.length > 0) {
+      Array.prototype.forEach.call(arguments, function(arg) {
+        terminal.echo('-> ' + startlib._handle(arg).repr(arg));
+      });
+    } else {
+      terminal.echo();
+    }
+  };
+
+  startlib._globals.clear = function() {
+    terminal.clear();
+  };
+
+  // wire it up
+
+  var env = startlib.createEnv();
+
+  $('#runner').click(function() {
+    var command = prompt.getValue().trim();
+
+    if (command) {
+      terminal.echo('[[;#888;]<- ' + command.replace(/\n/g, '\n   ').replace(/\]/g, '\\]') + ']');
+      startlang.parse(command + '\n').run(env);
+      terminal.echo('');
+      prompt.setValue('');
+      prompt.focus();
+    }
+  });
+
 });
