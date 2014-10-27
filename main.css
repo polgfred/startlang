@@ -44,6 +44,25 @@ body {
   line-height: 16px;
 }
 
+#terminal .terminal-output .input {
+  color: #888;
+  margin-top: 10px;
+}
+
+#terminal .terminal-output .output {
+  margin-top: 2px;
+}
+
+#terminal .terminal-output .input span,
+#terminal .terminal-output .output span {
+  position: absolute;
+}
+
+#terminal .terminal-output .output div,
+#terminal .terminal-output .input div {
+  margin-left: 20px;
+}
+
 #prompt {
   font-size: 14px;
   height: 20vh;

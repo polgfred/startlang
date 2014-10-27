@@ -26,7 +26,11 @@ $(function() {
   startlib._globals.print = function() {
     if (arguments.length > 0) {
       Array.prototype.forEach.call(arguments, function(arg) {
-        terminal.echo('&#8702; ' + startlib._handle(arg).repr(arg));
+        terminal.echo(startlib._handle(arg).repr(arg), {
+          finalize: function(div) {
+            div.addClass('output').prepend('<span>&#8702;</span>');
+          }
+        });
       });
     } else {
       terminal.echo();
@@ -44,9 +48,9 @@ $(function() {
         var command = prompt.getValue().trim();
 
         if (command) {
-          terminal.echo('&#8701; ' + command.replace(/\n/g, '\n   '), {
+          terminal.echo(command, {
             finalize: function(div) {
-              div.css('color', '#888');
+              div.addClass('input').prepend('<span>&#8701;</span>');
             }
           });
           startlang.parse(command + '\n').run(env);
