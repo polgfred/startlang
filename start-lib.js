@@ -189,11 +189,15 @@ module.exports = (function() {
     },
 
     binaryops: {
+      // math
       '+' : function(left, right) { return left +  right; },
       '-' : function(left, right) { return left -  right; },
       '*' : function(left, right) { return left *  right; },
       '/' : function(left, right) { return left /  right; },
       '%' : function(left, right) { return left %  right; },
+      '^' : function(left, right) { return Math.pow(left, right); },
+
+      // comparison
       '=' : function(left, right) { return left == right; },
       '!=': function(left, right) { return left != right; },
       '<' : function(left, right) { return left <  right; },
@@ -262,7 +266,10 @@ module.exports = (function() {
     unaryops: {},
 
     binaryops: {
+      // concatenation
       '+' : function(left, right) { return left +  right; },
+
+      // comparison
       '=' : function(left, right) { return left == right; },
       '!=': function(left, right) { return left != right; },
       '<' : function(left, right) { return left <  right; },

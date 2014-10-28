@@ -241,14 +241,12 @@
 
   // take a chain of equal-precedence logical exprs and construct a left-folding tree
   function buildLogicalOp(first, rest) {
-    var next;
-
-    rest || (rest = []);
-    while (next = rest.shift()) {
-      first = new LogicalOp(next[0], first, next[1]);
+    if (rest.length == 0) {
+      return first;
+    } else {
+      var next = rest.shift();
+      return buildLogicalOp(new LogicalOp(next[0], first, next[1]), rest);
     }
-
-    return first;
   }
 
   var BinaryOp = Node.extend({
@@ -267,14 +265,23 @@
 
   // take a chain of equal-precedence binary exprs and construct a left-folding tree
   function buildBinaryOp(first, rest) {
-    var next;
-
-    rest || (rest = []);
-    while (next = rest.shift()) {
-      first = new BinaryOp(next[0], first, next[1]);
+    if (rest.length == 0) {
+      return first;
+    } else {
+      var next = rest.shift();
+      return buildBinaryOp(new BinaryOp(next[0], first, next[1]), rest);
     }
+  }
 
-    return first;
+  // same, but fold right
+  function buildBinaryOpRight(rest, last) {
+    console.log(rest, last);
+    if (rest.length == 0) {
+      return last;
+    } else {
+      var next = rest.pop();
+      return buildBinaryOpRight(rest, new BinaryOp(next[0], next[1], last));
+    }
   }
 
   var UnaryOp = Node.extend({
@@ -427,7 +434,7 @@ AddOp
   / '-'
 
 MultExpr
-  = first:UnaryExpr rest:( __ op:MultOp __ e:UnaryExpr { return [op, e]; } )* {
+  = first:PowExpr rest:( __ op:MultOp __ e:PowExpr { return [op, e]; } )* {
       return buildBinaryOp(first, rest);
     }
 
@@ -435,6 +442,14 @@ MultOp
   = '*'
   / '/'
   / '%'
+
+PowExpr
+  = rest:(e:UnaryExpr __ op:PowOp __ { return [op, e]; } )* last:UnaryExpr {
+      return buildBinaryOpRight(rest, last);
+    }
+
+PowOp
+  = '^'
 
 UnaryExpr
   = op:AddOp __ num:Number {
