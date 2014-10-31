@@ -3314,7 +3314,6 @@ define(function (require, exports, module) {module.exports = (function() {
 
       // same, but fold right
       function buildBinaryOpRight(rest, last) {
-        console.log(rest, last);
         if (rest.length == 0) {
           return last;
         } else {

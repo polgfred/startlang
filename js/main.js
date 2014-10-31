@@ -3,9 +3,10 @@ require([
   'jquery.terminal',
   'jquery.mousewheel',
   'ace/ace',
+  'ace/mode/pascal',
   'start-lang',
   'start-lib'
-], function($, _, _, ace, startlang, startlib) {
+], function($, _, _, ace, _, startlang, startlib) {
 
   window.prompt = ace.edit('prompt');
   prompt.setTheme('ace/theme/textmate');
