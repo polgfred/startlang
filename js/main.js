@@ -3,8 +3,8 @@ require([
   'jquery.terminal',
   'jquery.mousewheel',
   'ace/ace',
-  'cjs!start-lang',
-  'cjs!start-lib'
+  'start-lang',
+  'start-lib'
 ], function($, _, _, ace, startlang, startlib) {
 
   window.prompt = ace.edit('prompt');

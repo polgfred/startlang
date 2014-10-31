@@ -1,5 +1,4 @@
-module.exports = (function() {
-
+define(function() {
   function mixin(object, properties) {
     Object.keys(properties).forEach(function(prop) {
       object[prop] = properties[prop];
@@ -542,7 +541,7 @@ module.exports = (function() {
     }
   };
 
-  var startlib = {
+  return {
     _handle: handle,
     _globals: globals,
 
@@ -551,5 +550,4 @@ module.exports = (function() {
     }
   };
 
-  return startlib;
-})();
+});
