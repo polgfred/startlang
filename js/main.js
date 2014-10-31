@@ -1,7 +1,11 @@
-$(function() {
-
-  var startlang = require('./start-lang'),
-      startlib = require('./start-lib');
+require([
+  'jquery',
+  'jquery.terminal',
+  'jquery.mousewheel',
+  'ace/ace',
+  'cjs!start-lang',
+  'cjs!start-lib'
+], function($, _, _, ace, startlang, startlib) {
 
   window.prompt = ace.edit('prompt');
   prompt.setTheme('ace/theme/textmate');
