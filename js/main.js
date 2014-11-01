@@ -1,11 +1,10 @@
 require([
   'jquery',
   'jquery.terminal',
-  'jquery.mousewheel',
   'ace/ace',
   'start-lang',
   'start-lib'
-], function($, _, _, ace, startlang, startlib) {
+], function($, _, ace, startlang, startlib) {
 
   window.prompt = ace.edit('prompt');
   prompt.setTheme('ace/theme/textmate');
@@ -14,13 +13,13 @@ require([
   prompt.getSession().setUseSoftTabs(true);
   prompt.getSession().setMode('ace/mode/pascal');
 
-  window.terminal = $('#terminal');
+  window.terminal = $('#terminal-inner');
   terminal.terminal(function(command) {
     console.log(command);
     terminal.pause();
   }, {
     greetings: false,
-    outputLimit: 1000,
+    height: 400,
     prompt: '> '
   });
   terminal.pause();

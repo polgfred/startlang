@@ -32,6 +32,10 @@ body {
   padding: 10px;
 }
 
+#terminal-inner {
+  overflow: scroll;
+}
+
 #terminal, #terminal .cmd {
   background-color: #fff;
   color: #000;
@@ -47,10 +51,12 @@ body {
 #terminal .terminal-output .input {
   color: #888;
   margin-top: 10px;
+  position: relative;
 }
 
 #terminal .terminal-output .output {
   margin-top: 2px;
+  position: relative;
 }
 
 #terminal .terminal-output .input span,
