@@ -1,0 +1,26 @@
+begin loop
+  let y = x * 2
+  print y + 7
+
+  if y + 7 > 18
+    print "It's ""greater"" than 18"
+  end
+
+  let z = 5
+  print z
+end
+
+print "hi"
+
+for x in count(0, 10)
+  let z = 1
+  print "hi"
+  loop
+  print z
+
+  let a = array(2, 2)
+  let x = 0
+  let a[x][x + 1] = 42
+  print a[0][1]
+  print a
+end

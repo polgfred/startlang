@@ -1,0 +1,82 @@
+let a = 1
+let b = 2
+let c = 3
+
+if a = 1
+  print "0 should see this"
+end
+
+if not a = 1
+  print "0 should not see this"
+end
+
+if not (a = 1 and not b = 3)
+  print "0 should not see this"
+end
+
+if a = 1 and b = 2 and not c = 4
+  print "1 should see this"
+end
+
+let x = 0
+let y = 1
+let z = 3
+
+if (x = -2 * a + b and (y = 1 or z = 2)) or f = 2
+  print "2 should see this"
+end
+
+if (a + 2) = b
+  print "3 should not see this"
+end
+
+let g = array()
+insert g, 0, 1, 2, 3, 4, 5
+let h = array()
+insert h, 0, 1, 2, 3, 4, 5
+
+if g = h
+  print "4a should see this"
+end
+if g <= h
+  print "4b should see this"
+end
+
+let h[4] = 6
+if g < h
+  print "4c should see this"
+end
+if g <= h
+  print "4d should see this"
+end
+if g > h
+  print "4e should not see this"
+end
+if g >= h
+  print "4f should not see this"
+end
+
+let t = table()
+let t["name"] = "Fred"
+let t["age"] = 40
+
+let u = table()
+let u["name"] = "Fred"
+let u["age"] = 40
+
+if t = u
+  print "5a should see this"
+end
+
+let t["likes"] = "computers"
+
+if t != u
+  print "5b should see this"
+end
+
+remove t, "likes"
+let t["age"] = 41
+
+if t != u
+  print "5c should see this"
+end

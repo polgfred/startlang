@@ -1,0 +1,37 @@
+print len("fred")
+
+let a = array()
+let a[0] = 0
+let a[1] = 1
+let a[2] = 2
+let a[3] = 3
+
+print len(a)
+
+begin len
+  print "blargh"
+end
+
+call len
+
+begin func1
+  print 1
+end
+
+begin func2
+  print 2
+end
+
+let b = array()
+let b[0] = func1
+let b[1] = func2
+
+for i in count(0, len(b))
+  call b[i]
+end
+
+for f in b
+  call f
+end
+
+--this is comment
