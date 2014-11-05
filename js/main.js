@@ -56,7 +56,9 @@ require([
               div.addClass('input').prepend('<span>&#8701;</span>');
             }
           });
-          startlang.parse(command + '\n').run(env);
+          var prog = startlang.parse(command + '\n');
+          console.log(prog);
+          prog.run(env);
           terminal.echo('');
           prompt.setValue('');
           prompt.focus();
