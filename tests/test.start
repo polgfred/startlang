@@ -5,7 +5,7 @@ let x = 50
 let y = (x + 1)
 
 begin john
-  for i = 1 to 10 by 2
+  for i in count(1, 10, 2)
     print i, x, "hi, ""there"""
     if x
       call f1
