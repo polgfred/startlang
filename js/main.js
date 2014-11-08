@@ -46,7 +46,7 @@ require([
 
   // wire it up
 
-  var env = startlib.createEnv(),
+  var ctx = startlib.createEnv(),
       runCommand = function() {
         var command = prompt.getValue().trim();
 
@@ -58,10 +58,11 @@ require([
           });
           var prog = startlang.parse(command + '\n');
           console.log(prog);
-          prog.run(env);
-          terminal.echo('');
-          prompt.setValue('');
-          prompt.focus();
+          prog.run(ctx, function() {
+            terminal.echo('');
+            prompt.setValue('');
+            prompt.focus();
+          });
         }
       };
 

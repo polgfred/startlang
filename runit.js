@@ -19,11 +19,12 @@ requirejs(['start-lang', 'start-lib'], function(startlang, startlib) {
   try {
     prog = startlang.parse(code);
     util.puts(util.inspect(prog, false, null));
-    prog.run(ctx);
   } catch (e) {
     console.log(util.inspect(e, false, null));
     throw e;
-  } finally {
-    console.log(util.inspect(ctx, false, null));
   }
+
+  prog.run(ctx, function() {
+    console.log(util.inspect(ctx, false, null));
+  });
 });

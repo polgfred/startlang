@@ -3040,7 +3040,8 @@ define(function (require, exports, module) {module.exports = (function() {
     }
 
 
-      var handle = require('./start-lib')._handle;
+      var asap = require('asap'),
+          handle = require('start-lib')._handle;
 
       function mixin(object, properties) {
         Object.keys(properties).forEach(function(prop) {
@@ -3071,17 +3072,37 @@ define(function (require, exports, module) {module.exports = (function() {
         return ctor;
       };
 
+      // these are hooks where we can determine how to proceed:
+      //  - immediately with asap
+      //  - broadcast an update to the UI before proceeding
+      //  - stop at a breakpoint and resume
+      //  - etc.
+      Node.prototype.run_a = function(ctx, done) {
+        asap(this.run.bind(this, ctx, done));
+      };
+
+      Node.prototype.eval_a = function(ctx, done) {
+        asap(this.evaluate.bind(this, ctx, done));
+      };
+
       var Statements = Node.extend({
         node: 'statements',
 
         constructor: function(stmts) {
-          this.stmts = stmts;
+          this.stmts = stmts || [];
         },
 
-        run: function(ctx) {
-          this.stmts.forEach(function(stmt) {
-            stmt.run(ctx);
-          });
+        run: function(ctx, done) {
+          var _this = this;
+          (function loop(i) {
+            if (i < _this.stmts.length) {
+              _this.stmts[i].run_a(ctx, function() {
+                loop(i + 1);
+              });
+            } else {
+              done();
+            }
+          })(0);
         }
       });
 
@@ -3091,15 +3112,18 @@ define(function (require, exports, module) {module.exports = (function() {
         constructor: function(cond, tstmts, fstmts) {
           this.cond = cond;
           this.tstmts = tstmts;
-          this.fstmts = fstmts;
+          this.fstmts = fstmts || new Statements();
         },
 
-        run: function(ctx) {
-          if (this.cond.evaluate(ctx)) {
-            this.tstmts.run(ctx);
-          } else if (this.fstmts) {
-            this.fstmts.run(ctx);
-          }
+        run: function(ctx, done) {
+          var _this = this;
+          _this.cond.eval_a(ctx, function(cres) {
+            if (cres) {
+              _this.tstmts.run_a(ctx, done);
+            } else {
+              _this.fstmts.run_a(ctx, done);
+            }
+          });
         }
       });
 
@@ -3112,13 +3136,21 @@ define(function (require, exports, module) {module.exports = (function() {
           this.stmts = stmts;
         },
 
-        run: function(ctx) {
-          var range = this.range.evaluate(ctx);
-
-          handle(range).enumerate(range).forEach(function(i) {
-            ctx.set(this.name, i);
-            this.stmts.run(ctx);
-          }, this);
+        run: function(ctx, done) {
+          var _this = this;
+          _this.range.eval_a(ctx, function(rres) {
+            var iter = handle(rres).enumerate(rres);
+            (function loop(i) {
+              if (i < iter.length) {
+                ctx.set(_this.name, iter[i]);
+                _this.stmts.run(ctx, function() {
+                  loop(i + 1);
+                });
+              } else {
+                done();
+              }
+            })(0);
+          });
         }
       });
 
@@ -3130,14 +3162,15 @@ define(function (require, exports, module) {module.exports = (function() {
           this.stmts = stmts;
         },
 
-        run: function(ctx) {
-          ctx.set(this.name, this.invoke.bind(this, ctx));
+        run: function(ctx, done) {
+          ctx.set(this.name, this.invoke.bind(this));
+          done();
         },
 
-        invoke: function(ctx, args) {
+        invoke: function(ctx, args, done) {
           ctx.push();
           try {
-            this.stmts.run(ctx);
+            this.stmts.run(ctx, done);
           } finally {
             ctx.pop();
           }
@@ -3152,17 +3185,28 @@ define(function (require, exports, module) {module.exports = (function() {
           this.args = args || [];
         },
 
-        run: function(ctx) {
-          this.evaluate(ctx);
+        run: function(ctx, done) {
+          this.evaluate(ctx, done);
         },
 
-        evaluate: function(ctx) {
-          return ctx.funcall(
-            this.target.evaluate(ctx),
-            this.target.node == 'variable' && this.target.name,
-            this.args.map(function(arg) {
-              return arg.evaluate(ctx);
-            }));
+        evaluate: function(ctx, done) {
+          var _this = this, results = [];
+          _this.target.eval_a(ctx, function(tres) {
+            (function loop(i) {
+              if (i < _this.args.length) {
+                _this.args[i].eval_a(ctx, function(ares) {
+                  results[i] = ares;
+                  loop(i + 1);
+                });
+              } else {
+                if (tres) {
+                  tres(ctx, results, done);
+                } else if (_this.target.node == 'variable' && _this.target.name) {
+                  done(ctx.syscall(_this.target.name, results));
+                }
+              }
+            })(0);
+          });
         }
       });
 
@@ -3173,8 +3217,8 @@ define(function (require, exports, module) {module.exports = (function() {
           this.name = name;
         },
 
-        evaluate: function(ctx) {
-          return ctx.get(this.name);
+        evaluate: function(ctx, done) {
+          done(ctx.get(this.name));
         }
       });
 
@@ -3186,8 +3230,12 @@ define(function (require, exports, module) {module.exports = (function() {
           this.value = value;
         },
 
-        run: function(ctx) {
-          ctx.set(this.name, this.value.evaluate(ctx));
+        run: function(ctx, done) {
+          var _this = this;
+          _this.value.evaluate(ctx, function(val) {
+            ctx.set(_this.name, val);
+            done();
+          });
         }
       });
 
@@ -3199,8 +3247,13 @@ define(function (require, exports, module) {module.exports = (function() {
           this.index = index;
         },
 
-        evaluate: function(ctx) {
-          return ctx.getindex(this.base.evaluate(ctx), this.index.evaluate(ctx));
+        evaluate: function(ctx, done) {
+          var _this = this;
+          _this.base.evaluate(ctx, function(cres) {
+            _this.index.evaluate(ctx, function(ires) {
+              done(ctx.getindex(cres, ires));
+            });
+          });
         }
       });
 
@@ -3213,8 +3266,16 @@ define(function (require, exports, module) {module.exports = (function() {
           this.value = value;
         },
 
-        run: function(ctx) {
-          ctx.setindex(this.base.evaluate(ctx), this.index.evaluate(ctx), this.value.evaluate(ctx));
+        run: function(ctx, done) {
+          var _this = this;
+          _this.base.evaluate(ctx, function(cres) {
+            _this.index.evaluate(ctx, function(ires) {
+              _this.value.evaluate(ctx, function(vres) {
+                ctx.setindex(cres, ires, vres);
+                done();
+              });
+            });
+          });
         }
       });
 
@@ -3241,8 +3302,8 @@ define(function (require, exports, module) {module.exports = (function() {
           this.value = value;
         },
 
-        evaluate: function() {
-          return this.value;
+        evaluate: function(ctx, done) {
+          done(this.value);
         }
       });
 
@@ -3253,7 +3314,8 @@ define(function (require, exports, module) {module.exports = (function() {
           this.text = text;
         },
 
-        run: function() {
+        run: function(ctx, done) {
+          done();
         }
       });
 
@@ -3266,16 +3328,42 @@ define(function (require, exports, module) {module.exports = (function() {
           this.right = right;
         },
 
-        evaluate: function(ctx) {
+        evaluate: function(ctx, done) {
           // logical ops short-circuit
-          return logicalOps[this.op](ctx, this.left, this.right);
+          logicalOps[this.op](ctx, this.left, this.right, done);
         }
       });
 
       var logicalOps = {
-        'and': function(ctx, left, right) { return left.evaluate(ctx) && right.evaluate(ctx); },
-        'or':  function(ctx, left, right) { return left.evaluate(ctx) || right.evaluate(ctx); },
-        'not': function(ctx, left, right) { return ! right.evaluate(ctx); }
+        'and': function(ctx, left, right, done) {
+          left.evaluate(ctx, function(lres) {
+            if (!lres) {
+              done(false);
+            } else {
+              right.evaluate(ctx, function(rres) {
+                done(!!rres);
+              });
+            }
+          });
+        },
+
+        'or': function(ctx, left, right, done) {
+          left.evaluate(ctx, function(lres) {
+            if (lres) {
+              done(true);
+            } else {
+              right.evaluate(ctx, function(rres) {
+                done(!!rres);
+              });
+            }
+          });
+        },
+
+        'not': function(ctx, left, right, done) {
+          right.evaluate(ctx, function(rres) {
+            done(!rres);
+          });
+        }
       };
 
       // take a chain of equal-precedence logical exprs and construct a left-folding tree
@@ -3297,8 +3385,13 @@ define(function (require, exports, module) {module.exports = (function() {
           this.right = right;
         },
 
-        evaluate: function(ctx) {
-          return ctx.binaryop(this.op, this.left.evaluate(ctx), this.right.evaluate(ctx));
+        evaluate: function(ctx, done) {
+          var _this = this;
+          _this.left.evaluate(ctx, function(lres) {
+            _this.right.evaluate(ctx, function(rres) {
+              done(ctx.binaryop(_this.op, lres, rres));
+            });
+          });
         }
       });
 
@@ -3331,7 +3424,10 @@ define(function (require, exports, module) {module.exports = (function() {
         },
 
         evaluate: function(ctx) {
-          return ctx.unaryop(this.op, this.right.evaluate(ctx));
+          var _this = this;
+          _this.right.evaluate(ctx, function(rres) {
+            done(ctx.unaryop(_this.op, rres));
+          });
         }
       });
 

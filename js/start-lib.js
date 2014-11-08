@@ -45,16 +45,12 @@ define(function() {
       handle(base).setindex(base, index, value);
     },
 
-    funcall: function(target, name, args) {
+    syscall: function(name, args) {
+      // try to find a function defined on the first argument,
+      // or a global system function
+      var target = (args.length > 0 && handle(args[0]).methods[name]) || globals[name];
       if (target) {
-        return target(args);
-      } else if (name) {
-        // try to find a function defined on the first argument,
-        // or a global system function
-        target = (args.length > 0 && handle(args[0]).methods[name]) || globals[name];
-        if (target) {
-          return target.apply(null, args);
-        }
+        return target.apply(null, args);
       }
 
       throw new Error('object not found or not a function');
