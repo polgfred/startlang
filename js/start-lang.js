@@ -3040,7 +3040,8 @@ define(function (require, exports, module) {module.exports = (function() {
     }
 
 
-      var asap = require('asap'),
+      var async = require('async'),
+          asap = require('asap'),
           handle = require('start-lib')._handle;
 
       function mixin(object, properties) {
@@ -3093,16 +3094,9 @@ define(function (require, exports, module) {module.exports = (function() {
         },
 
         run: function(ctx, done) {
-          var _this = this;
-          (function loop(i) {
-            if (i < _this.stmts.length) {
-              _this.stmts[i].run_a(ctx, function() {
-                loop(i + 1);
-              });
-            } else {
-              done();
-            }
-          })(0);
+          async.eachSeries(this.stmts, function(stmt, next) {
+            stmt.run_a(ctx, next);
+          }, done);
         }
       });
 
@@ -3117,7 +3111,7 @@ define(function (require, exports, module) {module.exports = (function() {
 
         run: function(ctx, done) {
           var _this = this;
-          _this.cond.eval_a(ctx, function(cres) {
+          _this.cond.eval_a(ctx, function(err, cres) {
             if (cres) {
               _this.tstmts.run_a(ctx, done);
             } else {
@@ -3138,18 +3132,11 @@ define(function (require, exports, module) {module.exports = (function() {
 
         run: function(ctx, done) {
           var _this = this;
-          _this.range.eval_a(ctx, function(rres) {
-            var iter = handle(rres).enumerate(rres);
-            (function loop(i) {
-              if (i < iter.length) {
-                ctx.set(_this.name, iter[i]);
-                _this.stmts.run(ctx, function() {
-                  loop(i + 1);
-                });
-              } else {
-                done();
-              }
-            })(0);
+          _this.range.eval_a(ctx, function(err, rres) {
+            async.eachSeries(handle(rres).enumerate(rres), function(item, next) {
+              ctx.set(_this.name, item);
+              _this.stmts.run_a(ctx, next);
+            }, done);
           });
         }
       });
@@ -3170,7 +3157,7 @@ define(function (require, exports, module) {module.exports = (function() {
         invoke: function(ctx, args, done) {
           ctx.push();
           try {
-            this.stmts.run(ctx, done);
+            this.stmts.run_a(ctx, done);
           } finally {
             ctx.pop();
           }
@@ -3190,22 +3177,17 @@ define(function (require, exports, module) {module.exports = (function() {
         },
 
         evaluate: function(ctx, done) {
-          var _this = this, results = [];
-          _this.target.eval_a(ctx, function(tres) {
-            (function loop(i) {
-              if (i < _this.args.length) {
-                _this.args[i].eval_a(ctx, function(ares) {
-                  results[i] = ares;
-                  loop(i + 1);
-                });
+          var _this = this;
+          _this.target.eval_a(ctx, function(err, tres) {
+            async.mapSeries(_this.args, function(arg, next) {
+              arg.eval_a(ctx, next);
+            }, function(err, results) {
+              if (tres) {
+                tres(ctx, results, done);
               } else {
-                if (tres) {
-                  tres(ctx, results, done);
-                } else if (_this.target.node == 'variable' && _this.target.name) {
-                  done(ctx.syscall(_this.target.name, results));
-                }
+                done(null, ctx.syscall(_this.target.name, results));
               }
-            })(0);
+            });
           });
         }
       });
@@ -3218,7 +3200,7 @@ define(function (require, exports, module) {module.exports = (function() {
         },
 
         evaluate: function(ctx, done) {
-          done(ctx.get(this.name));
+          done(null, ctx.get(this.name));
         }
       });
 
@@ -3232,8 +3214,8 @@ define(function (require, exports, module) {module.exports = (function() {
 
         run: function(ctx, done) {
           var _this = this;
-          _this.value.evaluate(ctx, function(val) {
-            ctx.set(_this.name, val);
+          _this.value.evaluate(ctx, function(err, vres) {
+            ctx.set(_this.name, vres);
             done();
           });
         }
@@ -3249,9 +3231,9 @@ define(function (require, exports, module) {module.exports = (function() {
 
         evaluate: function(ctx, done) {
           var _this = this;
-          _this.base.evaluate(ctx, function(cres) {
-            _this.index.evaluate(ctx, function(ires) {
-              done(ctx.getindex(cres, ires));
+          _this.base.evaluate(ctx, function(err, cres) {
+            _this.index.evaluate(ctx, function(err, ires) {
+              done(null, ctx.getindex(cres, ires));
             });
           });
         }
@@ -3268,9 +3250,9 @@ define(function (require, exports, module) {module.exports = (function() {
 
         run: function(ctx, done) {
           var _this = this;
-          _this.base.evaluate(ctx, function(cres) {
-            _this.index.evaluate(ctx, function(ires) {
-              _this.value.evaluate(ctx, function(vres) {
+          _this.base.evaluate(ctx, function(err, cres) {
+            _this.index.evaluate(ctx, function(err, ires) {
+              _this.value.evaluate(ctx, function(err, vres) {
                 ctx.setindex(cres, ires, vres);
                 done();
               });
@@ -3303,7 +3285,7 @@ define(function (require, exports, module) {module.exports = (function() {
         },
 
         evaluate: function(ctx, done) {
-          done(this.value);
+          done(null, this.value);
         }
       });
 
@@ -3336,32 +3318,32 @@ define(function (require, exports, module) {module.exports = (function() {
 
       var logicalOps = {
         'and': function(ctx, left, right, done) {
-          left.evaluate(ctx, function(lres) {
+          left.evaluate(ctx, function(err, lres) {
             if (!lres) {
-              done(false);
+              done(null, false);
             } else {
-              right.evaluate(ctx, function(rres) {
-                done(!!rres);
+              right.evaluate(ctx, function(err, rres) {
+                done(null, rres ? true : false);
               });
             }
           });
         },
 
         'or': function(ctx, left, right, done) {
-          left.evaluate(ctx, function(lres) {
+          left.evaluate(ctx, function(err, lres) {
             if (lres) {
-              done(true);
+              done(null, true);
             } else {
-              right.evaluate(ctx, function(rres) {
-                done(!!rres);
+              right.evaluate(ctx, function(err, rres) {
+                done(null, rres ? true : false);
               });
             }
           });
         },
 
         'not': function(ctx, left, right, done) {
-          right.evaluate(ctx, function(rres) {
-            done(!rres);
+          right.evaluate(ctx, function(err, rres) {
+            done(null, rres ? false : true);
           });
         }
       };
@@ -3387,9 +3369,9 @@ define(function (require, exports, module) {module.exports = (function() {
 
         evaluate: function(ctx, done) {
           var _this = this;
-          _this.left.evaluate(ctx, function(lres) {
-            _this.right.evaluate(ctx, function(rres) {
-              done(ctx.binaryop(_this.op, lres, rres));
+          _this.left.evaluate(ctx, function(err, lres) {
+            _this.right.evaluate(ctx, function(err, rres) {
+              done(null, ctx.binaryop(_this.op, lres, rres));
             });
           });
         }
@@ -3425,8 +3407,8 @@ define(function (require, exports, module) {module.exports = (function() {
 
         evaluate: function(ctx) {
           var _this = this;
-          _this.right.evaluate(ctx, function(rres) {
-            done(ctx.unaryop(_this.op, rres));
+          _this.right.evaluate(ctx, function(err, rres) {
+            done(null, ctx.unaryop(_this.op, rres));
           });
         }
       });
