@@ -3096,6 +3096,7 @@ define(function (require, exports, module) {module.exports = (function() {
           try {
             _this.evaluate(ctx, done);
           } catch (err) {
+            err.node = _this;
             done(err);
           }
         });
@@ -3189,13 +3190,13 @@ define(function (require, exports, module) {module.exports = (function() {
           _this.target.eval_a(ctx, trap(done, function(tres) {
             async.mapSeries(_this.args, function(arg, next) {
               arg.eval_a(ctx, next);
-            }, function(err, results) {
+            }, trap(done, function(results) {
               if (tres) {
                 tres(ctx, results, done);
               } else {
                 done(null, ctx.syscall(_this.target.name, results));
               }
-            });
+            }));
           }));
         }
       });

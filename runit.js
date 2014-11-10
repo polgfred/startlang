@@ -24,7 +24,11 @@ requirejs(['start-lang', 'start-lib'], function(startlang, startlib) {
     throw e;
   }
 
-  prog.evaluate(ctx, function() {
+  prog.eval_a(ctx, function(err) {
+    if (err) {
+      console.log('an error occured:');
+      console.log(err);
+    }
     console.log(util.inspect(ctx, false, null));
   });
 });
