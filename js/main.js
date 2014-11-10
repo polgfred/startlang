@@ -58,7 +58,7 @@ require([
           });
           var prog = startlang.parse(command + '\n');
           console.log(prog);
-          prog.run(ctx, function() {
+          prog.evaluate(ctx, function() {
             terminal.echo('');
             prompt.setValue('');
             prompt.focus();

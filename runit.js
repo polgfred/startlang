@@ -24,7 +24,7 @@ requirejs(['start-lang', 'start-lib'], function(startlang, startlib) {
     throw e;
   }
 
-  prog.run(ctx, function() {
+  prog.evaluate(ctx, function() {
     console.log(util.inspect(ctx, false, null));
   });
 });

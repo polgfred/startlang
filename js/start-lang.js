@@ -3084,21 +3084,11 @@ define(function (require, exports, module) {module.exports = (function() {
         return ctor;
       };
 
-      // these are hooks where we can determine how to proceed:
+      // hook where we can determine how to proceed:
       //  - immediately with asap
       //  - broadcast an update to the UI before proceeding
       //  - stop at a breakpoint and resume
       //  - etc.
-      Node.prototype.run_a = function(ctx, done) {
-        var _this = this;
-        rawAsap(function() {
-          try {
-            _this.run(ctx, done);
-          } catch (err) {
-            done(err);
-          }
-        });
-      };
 
       Node.prototype.eval_a = function(ctx, done) {
         var _this = this;
@@ -3118,9 +3108,9 @@ define(function (require, exports, module) {module.exports = (function() {
           this.stmts = stmts || [];
         },
 
-        run: function(ctx, done) {
+        evaluate: function(ctx, done) {
           async.eachSeries(this.stmts, function(stmt, next) {
-            stmt.run_a(ctx, next);
+            stmt.eval_a(ctx, next);
           }, done);
         }
       });
@@ -3134,11 +3124,11 @@ define(function (require, exports, module) {module.exports = (function() {
           this.fstmts = fstmts || new Statements();
         },
 
-        run: function(ctx, done) {
+        evaluate: function(ctx, done) {
           var _this = this;
           _this.cond.eval_a(ctx, trap(done, function(cres) {
             var todo = cres ? _this.tstmts : _this.fstmts;
-            todo.run_a(ctx, done);
+            todo.eval_a(ctx, done);
           }));
         }
       });
@@ -3152,13 +3142,13 @@ define(function (require, exports, module) {module.exports = (function() {
           this.stmts = stmts;
         },
 
-        run: function(ctx, done) {
+        evaluate: function(ctx, done) {
           var _this = this;
           _this.range.eval_a(ctx, trap(done, function(rres) {
             var items = handle(rres).enumerate(rres);
             async.eachSeries(items, function(item, next) {
               ctx.set(_this.name, item);
-              _this.stmts.run_a(ctx, next);
+              _this.stmts.eval_a(ctx, next);
             }, done);
           }));
         }
@@ -3172,14 +3162,14 @@ define(function (require, exports, module) {module.exports = (function() {
           this.stmts = stmts;
         },
 
-        run: function(ctx, done) {
+        evaluate: function(ctx, done) {
           ctx.set(this.name, this.invoke.bind(this));
           done();
         },
 
         invoke: function(ctx, args, done) {
           ctx.push();
-          this.stmts.run_a(ctx, function(err) {
+          this.stmts.eval_a(ctx, function(err) {
             ctx.pop();
             done(err);
           });
@@ -3192,10 +3182,6 @@ define(function (require, exports, module) {module.exports = (function() {
         constructor: function(target, args) {
           this.target = target;
           this.args = args || [];
-        },
-
-        run: function(ctx, done) {
-          this.evaluate(ctx, done);
         },
 
         evaluate: function(ctx, done) {
@@ -3234,9 +3220,9 @@ define(function (require, exports, module) {module.exports = (function() {
           this.value = value;
         },
 
-        run: function(ctx, done) {
+        evaluate: function(ctx, done) {
           var _this = this;
-          _this.value.evaluate(ctx, trap(done, function(vres) {
+          _this.value.eval_a(ctx, trap(done, function(vres) {
             ctx.set(_this.name, vres);
             done();
           }));
@@ -3253,8 +3239,8 @@ define(function (require, exports, module) {module.exports = (function() {
 
         evaluate: function(ctx, done) {
           var _this = this;
-          _this.base.evaluate(ctx, trap(done, function(cres) {
-            _this.index.evaluate(ctx, trap(done, function(ires) {
+          _this.base.eval_a(ctx, trap(done, function(cres) {
+            _this.index.eval_a(ctx, trap(done, function(ires) {
               done(null, ctx.getindex(cres, ires));
             }));
           }));
@@ -3270,11 +3256,11 @@ define(function (require, exports, module) {module.exports = (function() {
           this.value = value;
         },
 
-        run: function(ctx, done) {
+        evaluate: function(ctx, done) {
           var _this = this;
-          _this.base.evaluate(ctx, trap(done, function(cres) {
-            _this.index.evaluate(ctx, trap(done, function(ires) {
-              _this.value.evaluate(ctx, trap(done, function(vres) {
+          _this.base.eval_a(ctx, trap(done, function(cres) {
+            _this.index.eval_a(ctx, trap(done, function(ires) {
+              _this.value.eval_a(ctx, trap(done, function(vres) {
                 ctx.setindex(cres, ires, vres);
                 done();
               }));
@@ -3318,7 +3304,7 @@ define(function (require, exports, module) {module.exports = (function() {
           this.text = text;
         },
 
-        run: function(ctx, done) {
+        evaluate: function(ctx, done) {
           done();
         }
       });
@@ -3427,7 +3413,7 @@ define(function (require, exports, module) {module.exports = (function() {
           this.right = right;
         },
 
-        evaluate: function(ctx) {
+        evaluate: function(ctx, done) {
           var _this = this;
           _this.right.eval_a(ctx, trap(done, function(rres) {
             done(null, ctx.unaryop(_this.op, rres));
