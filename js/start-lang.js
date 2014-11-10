@@ -3041,7 +3041,7 @@ define(function (require, exports, module) {module.exports = (function() {
 
 
       var async = require('async'),
-          asap = require('asap'),
+          rawAsap = require('raw'),
           handle = require('start-lib')._handle;
 
       function mixin(object, properties) {
@@ -3079,11 +3079,11 @@ define(function (require, exports, module) {module.exports = (function() {
       //  - stop at a breakpoint and resume
       //  - etc.
       Node.prototype.run_a = function(ctx, done) {
-        asap(this.run.bind(this, ctx, done));
+        rawAsap(this.run.bind(this, ctx, done));
       };
 
       Node.prototype.eval_a = function(ctx, done) {
-        asap(this.evaluate.bind(this, ctx, done));
+        rawAsap(this.evaluate.bind(this, ctx, done));
       };
 
       var Statements = Node.extend({
@@ -3112,11 +3112,8 @@ define(function (require, exports, module) {module.exports = (function() {
         run: function(ctx, done) {
           var _this = this;
           _this.cond.eval_a(ctx, function(err, cres) {
-            if (cres) {
-              _this.tstmts.run_a(ctx, done);
-            } else {
-              _this.fstmts.run_a(ctx, done);
-            }
+            var todo = cres ? _this.tstmts : _this.fstmts;
+            todo.run_a(ctx, done);
           });
         }
       });
@@ -3133,7 +3130,8 @@ define(function (require, exports, module) {module.exports = (function() {
         run: function(ctx, done) {
           var _this = this;
           _this.range.eval_a(ctx, function(err, rres) {
-            async.eachSeries(handle(rres).enumerate(rres), function(item, next) {
+            var items = handle(rres).enumerate(rres);
+            async.eachSeries(items, function(item, next) {
               ctx.set(_this.name, item);
               _this.stmts.run_a(ctx, next);
             }, done);
@@ -3156,11 +3154,10 @@ define(function (require, exports, module) {module.exports = (function() {
 
         invoke: function(ctx, args, done) {
           ctx.push();
-          try {
-            this.stmts.run_a(ctx, done);
-          } finally {
+          this.stmts.run_a(ctx, function(err) {
             ctx.pop();
-          }
+            done(err);
+          });
         }
       });
 
@@ -3318,11 +3315,11 @@ define(function (require, exports, module) {module.exports = (function() {
 
       var logicalOps = {
         'and': function(ctx, left, right, done) {
-          left.evaluate(ctx, function(err, lres) {
+          left.eval_a(ctx, function(err, lres) {
             if (!lres) {
               done(null, false);
             } else {
-              right.evaluate(ctx, function(err, rres) {
+              right.eval_a(ctx, function(err, rres) {
                 done(null, rres ? true : false);
               });
             }
@@ -3330,11 +3327,11 @@ define(function (require, exports, module) {module.exports = (function() {
         },
 
         'or': function(ctx, left, right, done) {
-          left.evaluate(ctx, function(err, lres) {
+          left.eval_a(ctx, function(err, lres) {
             if (lres) {
               done(null, true);
             } else {
-              right.evaluate(ctx, function(err, rres) {
+              right.eval_a(ctx, function(err, rres) {
                 done(null, rres ? true : false);
               });
             }
@@ -3342,7 +3339,7 @@ define(function (require, exports, module) {module.exports = (function() {
         },
 
         'not': function(ctx, left, right, done) {
-          right.evaluate(ctx, function(err, rres) {
+          right.eval_a(ctx, function(err, rres) {
             done(null, rres ? false : true);
           });
         }
@@ -3369,8 +3366,8 @@ define(function (require, exports, module) {module.exports = (function() {
 
         evaluate: function(ctx, done) {
           var _this = this;
-          _this.left.evaluate(ctx, function(err, lres) {
-            _this.right.evaluate(ctx, function(err, rres) {
+          _this.left.eval_a(ctx, function(err, lres) {
+            _this.right.eval_a(ctx, function(err, rres) {
               done(null, ctx.binaryop(_this.op, lres, rres));
             });
           });
@@ -3407,7 +3404,7 @@ define(function (require, exports, module) {module.exports = (function() {
 
         evaluate: function(ctx) {
           var _this = this;
-          _this.right.evaluate(ctx, function(err, rres) {
+          _this.right.eval_a(ctx, function(err, rres) {
             done(null, ctx.unaryop(_this.op, rres));
           });
         }
