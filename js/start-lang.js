@@ -3051,7 +3051,8 @@ define(function (require, exports, module) {module.exports = (function() {
         });
       }
 
-      function trap(stop, done) {
+      function trap(done, stop) {
+        // wrap a callback function (`done`) in an error-handler
         return function(err) {
           if (err) {
             stop(err);
@@ -3127,10 +3128,10 @@ define(function (require, exports, module) {module.exports = (function() {
 
         evaluate: function(ctx, done) {
           var _this = this;
-          _this.cond.eval_a(ctx, trap(done, function(cres) {
+          _this.cond.eval_a(ctx, trap(function(cres) {
             var todo = cres ? _this.tstmts : _this.fstmts;
             todo.eval_a(ctx, done);
-          }));
+          }, done));
         }
       });
 
@@ -3145,13 +3146,13 @@ define(function (require, exports, module) {module.exports = (function() {
 
         evaluate: function(ctx, done) {
           var _this = this;
-          _this.range.eval_a(ctx, trap(done, function(rres) {
+          _this.range.eval_a(ctx, trap(function(rres) {
             var items = handle(rres).enumerate(rres);
             async.eachSeries(items, function(item, next) {
               ctx.set(_this.name, item);
               _this.stmts.eval_a(ctx, next);
             }, done);
-          }));
+          }, done));
         }
       });
 
@@ -3187,17 +3188,17 @@ define(function (require, exports, module) {module.exports = (function() {
 
         evaluate: function(ctx, done) {
           var _this = this;
-          _this.target.eval_a(ctx, trap(done, function(tres) {
+          _this.target.eval_a(ctx, trap(function(tres) {
             async.mapSeries(_this.args, function(arg, next) {
               arg.eval_a(ctx, next);
-            }, trap(done, function(results) {
+            }, trap(function(results) {
               if (tres) {
                 tres(ctx, results, done);
               } else {
                 done(null, ctx.syscall(_this.target.name, results));
               }
-            }));
-          }));
+            }, done));
+          }, done));
         }
       });
 
@@ -3223,10 +3224,10 @@ define(function (require, exports, module) {module.exports = (function() {
 
         evaluate: function(ctx, done) {
           var _this = this;
-          _this.value.eval_a(ctx, trap(done, function(vres) {
+          _this.value.eval_a(ctx, trap(function(vres) {
             ctx.set(_this.name, vres);
             done();
-          }));
+          }, done));
         }
       });
 
@@ -3240,11 +3241,11 @@ define(function (require, exports, module) {module.exports = (function() {
 
         evaluate: function(ctx, done) {
           var _this = this;
-          _this.base.eval_a(ctx, trap(done, function(bres) {
-            _this.index.eval_a(ctx, trap(done, function(ires) {
+          _this.base.eval_a(ctx, trap(function(bres) {
+            _this.index.eval_a(ctx, trap(function(ires) {
               done(null, ctx.getindex(bres, ires));
-            }));
-          }));
+            }, done));
+          }, done));
         }
       });
 
@@ -3259,14 +3260,14 @@ define(function (require, exports, module) {module.exports = (function() {
 
         evaluate: function(ctx, done) {
           var _this = this;
-          _this.base.eval_a(ctx, trap(done, function(bres) {
-            _this.index.eval_a(ctx, trap(done, function(ires) {
-              _this.value.eval_a(ctx, trap(done, function(vres) {
+          _this.base.eval_a(ctx, trap(function(bres) {
+            _this.index.eval_a(ctx, trap(function(ires) {
+              _this.value.eval_a(ctx, trap(function(vres) {
                 ctx.setindex(bres, ires, vres);
                 done();
-              }));
-            }));
-          }));
+              }, done));
+            }, done));
+          }, done));
         }
       });
 
@@ -3327,33 +3328,33 @@ define(function (require, exports, module) {module.exports = (function() {
 
       var logicalOps = {
         'and': function(ctx, left, right, done) {
-          left.eval_a(ctx, trap(done, function(lres) {
+          left.eval_a(ctx, trap(function(lres) {
             if (!lres) {
               done(null, false);
             } else {
-              right.eval_a(ctx, trap(done, function(rres) {
+              right.eval_a(ctx, trap(function(rres) {
                 done(null, rres ? true : false);
-              }));
+              }, done));
             }
-          }));
+          }, done));
         },
 
         'or': function(ctx, left, right, done) {
-          left.eval_a(ctx, trap(done, function(lres) {
+          left.eval_a(ctx, trap(function(lres) {
             if (lres) {
               done(null, true);
             } else {
-              right.eval_a(ctx, trap(done, function(rres) {
+              right.eval_a(ctx, trap(function(rres) {
                 done(null, rres ? true : false);
-              }));
+              }, done));
             }
-          }));
+          }, done));
         },
 
         'not': function(ctx, left, right, done) {
-          right.eval_a(ctx, trap(done, function(rres) {
+          right.eval_a(ctx, trap(function(rres) {
             done(null, rres ? false : true);
-          }));
+          }, done));
         }
       };
 
@@ -3378,11 +3379,11 @@ define(function (require, exports, module) {module.exports = (function() {
 
         evaluate: function(ctx, done) {
           var _this = this;
-          _this.left.eval_a(ctx, trap(done, function(lres) {
-            _this.right.eval_a(ctx, trap(done, function(rres) {
+          _this.left.eval_a(ctx, trap(function(lres) {
+            _this.right.eval_a(ctx, trap(function(rres) {
               done(null, ctx.binaryop(_this.op, lres, rres));
-            }));
-          }));
+            }, done));
+          }, done));
         }
       });
 
@@ -3416,9 +3417,9 @@ define(function (require, exports, module) {module.exports = (function() {
 
         evaluate: function(ctx, done) {
           var _this = this;
-          _this.right.eval_a(ctx, trap(done, function(rres) {
+          _this.right.eval_a(ctx, trap(function(rres) {
             done(null, ctx.unaryop(_this.op, rres));
-          }));
+          }, done));
         }
       });
 

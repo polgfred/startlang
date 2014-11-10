@@ -26,7 +26,7 @@ requirejs(['start-lang', 'start-lib'], function(startlang, startlib) {
 
   prog.eval_a(ctx, function(err) {
     if (err) {
-      console.log('an error occured:');
+      console.log('an error occurred:');
       console.log(err);
     }
     console.log(util.inspect(ctx, false, null));
