@@ -3239,9 +3239,9 @@ define(function (require, exports, module) {module.exports = (function() {
 
         evaluate: function(ctx, done) {
           var _this = this;
-          _this.base.eval_a(ctx, trap(done, function(cres) {
+          _this.base.eval_a(ctx, trap(done, function(bres) {
             _this.index.eval_a(ctx, trap(done, function(ires) {
-              done(null, ctx.getindex(cres, ires));
+              done(null, ctx.getindex(bres, ires));
             }));
           }));
         }
@@ -3258,10 +3258,10 @@ define(function (require, exports, module) {module.exports = (function() {
 
         evaluate: function(ctx, done) {
           var _this = this;
-          _this.base.eval_a(ctx, trap(done, function(cres) {
+          _this.base.eval_a(ctx, trap(done, function(bres) {
             _this.index.eval_a(ctx, trap(done, function(ires) {
               _this.value.eval_a(ctx, trap(done, function(vres) {
-                ctx.setindex(cres, ires, vres);
+                ctx.setindex(bres, ires, vres);
                 done();
               }));
             }));
