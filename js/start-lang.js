@@ -3094,12 +3094,16 @@ define(function (require, exports, module) {module.exports = (function() {
       Node.prototype.eval_a = function(ctx, done) {
         var _this = this;
         rawAsap(function() {
-          try {
-            _this.evaluate(ctx, done);
-          } catch (err) {
-            err.node = _this;
-            done(err);
-          }
+          ctx.visit(_this, function retry() {
+            try {
+              _this.evaluate(ctx, done);
+            } catch (err) {
+              ctx.handleError(_this, err, retry, function() {
+                err.node = _this;
+                done(err);
+              });
+            }
+          });
         });
       };
 
