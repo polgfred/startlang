@@ -77,7 +77,13 @@
 
     evaluate: function(ctx, done) {
       async.eachSeries(this.stmts, function(stmt, next) {
-        stmt.eval_a(ctx, next);
+        stmt.eval_a(ctx, trap(function() {
+          if (ctx.flow) {
+            done();
+          } else {
+            next();
+          }
+        }, done));
       }, done);
     }
   });
@@ -110,12 +116,25 @@
     },
 
     evaluate: function(ctx, done) {
-      var _this = this;
+      var _this = this, flow;
       _this.range.eval_a(ctx, trap(function(rres) {
         var items = handle(rres).enumerate(rres);
         async.eachSeries(items, function(item, next) {
           ctx.set(_this.name, item);
-          _this.stmts.eval_a(ctx, next);
+          _this.stmts.eval_a(ctx, trap(function() {
+            if (flow = ctx.flow) {
+              if (flow.scope == 'loop') {
+                delete ctx.flow;
+              }
+              if (flow.terminate) {
+                done();
+              } else {
+                next();
+              }
+            } else {
+              next();
+            }
+          }, done));
         }, done);
       }, done));
     }
@@ -135,10 +154,22 @@
     },
 
     invoke: function(ctx, args, done) {
+      var flow;
       ctx.push();
       this.stmts.eval_a(ctx, function(err) {
         ctx.pop();
-        done(err);
+        if (err) {
+          done(err);
+          return;
+        }
+        if (flow = ctx.flow) {
+          if (flow.scope == 'function') {
+            delete ctx.flow;
+          }
+          done(null, flow.result);
+        } else {
+          done();
+        }
       });
     }
   });
@@ -164,6 +195,57 @@
           }
         }, done));
       }, done));
+    }
+  });
+
+  var Break = Node.extend({
+    node: 'break',
+
+    evaluate: function(ctx, done) {
+      ctx.flow = {
+        scope: 'loop',
+        terminate: true
+      };
+      done();
+    }
+  });
+
+  var Next = Node.extend({
+    node: 'next',
+
+    evaluate: function(ctx, done) {
+      ctx.flow = {
+        scope: 'loop',
+        terminate: false
+      };
+      done();
+    }
+  });
+
+  var Return = Node.extend({
+    node: 'return',
+
+    constructor: function(result) {
+      this.result = result;
+    },
+
+    evaluate: function(ctx, done) {
+      if (this.result) {
+        this.result.eval_a(ctx, trap(function(rres) {
+          ctx.flow = {
+            scope: 'function',
+            terminate: true,
+            result: rres
+          };
+          done();
+        }, done));
+      } else {
+        ctx.flow = {
+          scope: 'function',
+          terminate: true
+        };
+        done();
+      }
     }
   });
 
@@ -407,6 +489,7 @@ Statement
   / BeginBlock
   / Assignment
   / CallStatement
+  / FlowStatement
   / Comment
 
 IfBlock
@@ -464,10 +547,21 @@ CallStatement
       return new Funcall(target, args);
     }
 
+FlowStatement
+  = __ 'break' EOL {
+      return new Break;
+    }
+  / __ 'next' EOL {
+      return new Next;
+    }
+  / __ 'return' result:( WB __ val:Value { return val; } )? EOL {
+      return new Return(result);
+    }
+
 Comment
   = __ '--' __ text:$[^\n]* EOL {
-    return new Comment(text);
-  }
+      return new Comment(text);
+    }
 
 // Values
 
@@ -625,6 +719,9 @@ Reserved
   / 'for'      WB
   / 'in'       WB
   / 'begin'    WB
+  / 'break'    WB
+  / 'next'     WB
+  / 'return'   WB
   / 'let'      WB
   / 'call'     WB
   / 'and'      WB
