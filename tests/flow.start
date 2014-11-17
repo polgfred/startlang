@@ -1,0 +1,27 @@
+for i in count(1, 10)
+  print "hi"
+  print i
+  if i = 4
+    next
+  end
+  if i = 8
+    break
+  end
+  print "there"
+end
+
+print "done"
+
+begin fred
+  let x = 1
+  if y = 2
+    return 2 * x + y
+  else
+    return 42
+  end
+end
+
+let y = 2
+print fred()
+let y = 3
+print fred()
