@@ -1,8 +1,7 @@
 // Language Nodes
 
 {
-  var async = require('async'),
-      rawAsap = require('raw'),
+  var rawAsap = require('raw'),
       handle = require('start-lib')._handle,
       slice = Array.prototype.slice;
 
@@ -10,17 +9,6 @@
     Object.keys(properties).forEach(function(prop) {
       object[prop] = properties[prop];
     });
-  }
-
-  function trap(done, stop) {
-    // wrap a callback function (`done`) in an error-handler
-    return function(err) {
-      if (err) {
-        stop(err);
-      } else {
-        done.apply(null, slice.call(arguments, 1));
-      }
-    }
   }
 
   function Node() {}
@@ -46,27 +34,28 @@
     return ctor;
   };
 
-  // hook where we can determine how to proceed:
-  //  - immediately with asap
-  //  - broadcast an update to the UI before proceeding
-  //  - stop at a breakpoint and resume
-  //  - etc.
-
-  Node.prototype.eval_a = function(ctx, done) {
-    var _this = this;
-    rawAsap(function() {
-      ctx.visit(_this, function retry() {
-        try {
-          _this.evaluate(ctx, done);
-        } catch (err) {
-          ctx.handleError(_this, err, retry, function() {
-            err.node = _this;
-            done(err);
-          });
-        }
+  mixin(Node.prototype, {
+    // hook where we can determine how to proceed:
+    //  - immediately with asap
+    //  - broadcast an update to the UI before proceeding
+    //  - stop at a breakpoint and resume
+    //  - etc.
+    eval_a: function(ctx, done) {
+      var _this = this;
+      rawAsap(function() {
+        ctx.visit(_this, function retry() {
+          try {
+            _this.evaluate(ctx, done);
+          } catch (err) {
+            ctx.handleError(_this, err, retry, function() {
+              err.node = _this;
+              done(err);
+            });
+          }
+        });
       });
-    });
-  };
+    }
+  });
 
   var Statements = Node.extend({
     node: 'statements',
@@ -76,15 +65,20 @@
     },
 
     evaluate: function(ctx, done) {
-      async.eachSeries(this.stmts, function(stmt, next) {
-        stmt.eval_a(ctx, trap(function() {
-          if (ctx.flow) {
-            done();
-          } else {
-            next();
-          }
-        }, done));
-      }, done);
+      var _this = this, len = _this.stmts.length, count = -1;
+      (function loop() {
+        if (++count >= len) {
+          done();
+        } else {
+          _this.stmts[count].eval_a(ctx, function(err) {
+            if (err) {
+              done(err);
+            } else {
+              loop();
+            }
+          });
+        }
+      })();
     }
   });
 
@@ -99,10 +93,14 @@
 
     evaluate: function(ctx, done) {
       var _this = this;
-      _this.cond.eval_a(ctx, trap(function(cres) {
-        var todo = cres ? _this.tstmts : _this.fstmts;
-        todo.eval_a(ctx, done);
-      }, done));
+      _this.cond.eval_a(ctx, function(err, cres) {
+        if (err) {
+          done(err);
+        } else {
+          var todo = cres ? _this.tstmts : _this.fstmts;
+          todo.eval_a(ctx, done);
+        }
+      });
     }
   });
 
@@ -116,27 +114,68 @@
     },
 
     evaluate: function(ctx, done) {
-      var _this = this, flow;
-      _this.range.eval_a(ctx, trap(function(rres) {
-        var items = handle(rres).enumerate(rres);
-        async.eachSeries(items, function(item, next) {
-          ctx.set(_this.name, item);
-          _this.stmts.eval_a(ctx, trap(function() {
-            if (flow = ctx.flow) {
-              if (flow.scope == 'loop') {
-                delete ctx.flow;
-              }
-              if (flow.terminate) {
-                done();
-              } else {
-                next();
-              }
+      var _this = this, items, len, count;
+      _this.range.eval_a(ctx, function(err, rres) {
+        if (err) {
+          done(err);
+        } else {
+          items = handle(rres).enumerate(rres);
+          len = items.length;
+          count = -1;
+          (function loop() {
+            if (++count >= len) {
+              done();
             } else {
-              next();
+              ctx.set(_this.name, items[count]);
+              _this.stmts.eval_a(ctx, function(err) {
+                if (err) {
+                  if (err.flow && err.scope == 'loop') {
+                    (err.terminate ? done : loop)();
+                  } else {
+                    done(err);
+                  }
+                } else {
+                  loop();
+                }
+              });
             }
-          }, done));
-        }, done);
-      }, done));
+          })();
+        }
+      });
+    }
+  });
+
+  var WhileBlock = Node.extend({
+    node: 'while_block',
+
+    constructor: function(cond, stmts) {
+      this.cond = cond;
+      this.stmts = stmts;
+    },
+
+    evaluate: function(ctx, done) {
+      var _this = this;
+      (function loop() {
+        _this.cond.eval_a(ctx, function(err, cres) {
+          if (err) {
+            done(err);
+          } else if (cres) {
+            _this.stmts.eval_a(ctx, function(err) {
+              if (err) {
+                if (err.flow && err.scope == 'loop') {
+                  (err.terminate ? done : loop)();
+                } else {
+                  done(err);
+                }
+              } else {
+                loop();
+              }
+            });
+          } else {
+            done();
+          }
+        });
+      })();
     }
   });
 
@@ -154,19 +193,15 @@
     },
 
     invoke: function(ctx, args, done) {
-      var flow;
       ctx.push();
       this.stmts.eval_a(ctx, function(err) {
         ctx.pop();
         if (err) {
-          done(err);
-          return;
-        }
-        if (flow = ctx.flow) {
-          if (flow.scope == 'function') {
-            delete ctx.flow;
+          if (err.flow) {
+            done(null, err.result);
+          } else {
+            done(err);
           }
-          done(null, flow.result);
         } else {
           done();
         }
@@ -183,18 +218,31 @@
     },
 
     evaluate: function(ctx, done) {
-      var _this = this;
-      _this.target.eval_a(ctx, trap(function(tres) {
-        async.mapSeries(_this.args, function(arg, next) {
-          arg.eval_a(ctx, next);
-        }, trap(function(results) {
-          if (tres) {
-            tres(ctx, results, done);
-          } else {
-            done(null, ctx.syscall(_this.target.name, results));
-          }
-        }, done));
-      }, done));
+      var _this = this, len = _this.args.length, args = [], count = -1;
+      _this.target.eval_a(ctx, function(err, tres) {
+        if (err) {
+          done(err);
+        } else {
+          (function loop() {
+            if (++count < len) {
+              _this.args[count].eval_a(ctx, function(err, ares) {
+                if (err) {
+                  done(err);
+                } else {
+                  args[count] = ares;
+                  loop();
+                }
+              });
+            } else {
+              if (tres) {
+                tres(ctx, args, done);
+              } else {
+                done(null, ctx.syscall(_this.target.name, args));
+              }
+            }
+          })();
+        }
+      });
     }
   });
 
@@ -202,11 +250,11 @@
     node: 'break',
 
     evaluate: function(ctx, done) {
-      ctx.flow = {
-        scope: 'loop',
-        terminate: true
-      };
-      done();
+      done({
+        flow: true,
+        terminate: true,
+        scope: 'loop'
+      });
     }
   });
 
@@ -214,11 +262,11 @@
     node: 'next',
 
     evaluate: function(ctx, done) {
-      ctx.flow = {
-        scope: 'loop',
-        terminate: false
-      };
-      done();
+      done({
+        flow: true,
+        terminate: false,
+        scope: 'loop'
+      });
     }
   });
 
@@ -231,20 +279,24 @@
 
     evaluate: function(ctx, done) {
       if (this.result) {
-        this.result.eval_a(ctx, trap(function(rres) {
-          ctx.flow = {
-            scope: 'function',
-            terminate: true,
-            result: rres
-          };
-          done();
-        }, done));
+        this.result.eval_a(ctx, function(err, rres) {
+          if (err) {
+            done(err);
+          } else {
+            done({
+              flow: true,
+              terminate: true,
+              scope: 'function',
+              result: rres
+            });
+          }
+        });
       } else {
-        ctx.flow = {
-          scope: 'function',
-          terminate: true
-        };
-        done();
+        done({
+          flow: true,
+          terminate: true,
+          scope: 'function'
+        });
       }
     }
   });
@@ -271,10 +323,14 @@
 
     evaluate: function(ctx, done) {
       var _this = this;
-      _this.value.eval_a(ctx, trap(function(vres) {
-        ctx.set(_this.name, vres);
-        done();
-      }, done));
+      _this.value.eval_a(ctx, function(err, vres) {
+        if (err) {
+          done(err);
+        } else {
+          ctx.set(_this.name, vres);
+          done();
+        }
+      });
     }
   });
 
@@ -288,11 +344,20 @@
 
     evaluate: function(ctx, done) {
       var _this = this;
-      _this.base.eval_a(ctx, trap(function(bres) {
-        _this.index.eval_a(ctx, trap(function(ires) {
-          done(null, ctx.getindex(bres, ires));
-        }, done));
-      }, done));
+
+      _this.base.eval_a(ctx, function(err, bres) {
+        if (err) {
+          done(err);
+        } else {
+          _this.index.eval_a(ctx, function(err, ires) {
+            if (err) {
+              done(err);
+            } else {
+              done(null, ctx.getindex(bres, ires));
+            }
+          });
+        }
+      });
     }
   });
 
@@ -307,14 +372,27 @@
 
     evaluate: function(ctx, done) {
       var _this = this;
-      _this.base.eval_a(ctx, trap(function(bres) {
-        _this.index.eval_a(ctx, trap(function(ires) {
-          _this.value.eval_a(ctx, trap(function(vres) {
-            ctx.setindex(bres, ires, vres);
-            done();
-          }, done));
-        }, done));
-      }, done));
+
+      _this.base.eval_a(ctx, function(err, bres) {
+        if (err) {
+          done(err);
+        } else {
+          _this.index.eval_a(ctx, function(err, ires) {
+            if (err) {
+              done(err);
+            } else {
+              _this.value.eval_a(ctx, function(err, vres) {
+                if (err) {
+                  done(err);
+                } else {
+                  ctx.setindex(bres, ires, vres);
+                  done();
+                }
+              });
+            }
+          });
+        }
+      });
     }
   });
 
@@ -375,33 +453,49 @@
 
   var logicalOps = {
     'and': function(ctx, left, right, done) {
-      left.eval_a(ctx, trap(function(lres) {
-        if (!lres) {
+      left.eval_a(ctx, function(err, lres) {
+        if (err) {
+          done(err);
+        } else if (!lres) {
           done(null, false);
         } else {
-          right.eval_a(ctx, trap(function(rres) {
-            done(null, rres ? true : false);
-          }, done));
+          right.eval_a(ctx, function(err, rres) {
+            if (err) {
+              done(err);
+            } else {
+              done(null, !!rres);
+            }
+          });
         }
-      }, done));
+      });
     },
 
     'or': function(ctx, left, right, done) {
-      left.eval_a(ctx, trap(function(lres) {
-        if (lres) {
+      left.eval_a(ctx, function(err, lres) {
+        if (err) {
+          done(err);
+        } else if (lres) {
           done(null, true);
         } else {
-          right.eval_a(ctx, trap(function(rres) {
-            done(null, rres ? true : false);
-          }, done));
+          right.eval_a(ctx, function(err, rres) {
+            if (err) {
+              done(err);
+            } else {
+              done(null, !!rres);
+            }
+          });
         }
-      }, done));
+      });
     },
 
     'not': function(ctx, left, right, done) {
-      right.eval_a(ctx, trap(function(rres) {
-        done(null, rres ? false : true);
-      }, done));
+      right.eval_a(ctx, function(err, rres) {
+        if (err) {
+          done(err);
+        } else {
+          done(null, !rres);
+        }
+      });
     }
   };
 
@@ -426,11 +520,19 @@
 
     evaluate: function(ctx, done) {
       var _this = this;
-      _this.left.eval_a(ctx, trap(function(lres) {
-        _this.right.eval_a(ctx, trap(function(rres) {
-          done(null, ctx.binaryop(_this.op, lres, rres));
-        }, done));
-      }, done));
+      _this.left.eval_a(ctx, function(err, lres) {
+        if (err) {
+          done(err);
+        } else {
+          _this.right.eval_a(ctx, function(err, rres) {
+            if (err) {
+              done(err);
+            } else {
+              done(null, ctx.binaryop(_this.op, lres, rres));
+            }
+          });
+        }
+      });
     }
   });
 
@@ -464,9 +566,13 @@
 
     evaluate: function(ctx, done) {
       var _this = this;
-      _this.right.eval_a(ctx, trap(function(rres) {
-        done(null, ctx.unaryop(_this.op, rres));
-      }, done));
+      _this.right.eval_a(ctx, function(err, rres) {
+        if (err) {
+          done(err);
+        } else {
+          done(null, ctx.unaryop(_this.op, rres));
+        }
+      });
     }
   });
 }
@@ -486,6 +592,7 @@ Statements
 Statement
   = IfBlock
   / ForBlock
+  / WhileBlock
   / BeginBlock
   / Assignment
   / CallStatement
@@ -510,6 +617,13 @@ ForBlock
     stmts:Statements
     __ 'end' EOL {
       return new ForBlock(sym, range, stmts);
+    }
+
+WhileBlock
+  = __ 'while' WB __ cond:Value EOL
+    stmts:Statements
+    __ 'end' EOL {
+      return new WhileBlock(cond, stmts);
     }
 
 BeginBlock
@@ -718,6 +832,7 @@ Reserved
   / 'end'      WB
   / 'for'      WB
   / 'in'       WB
+  / 'while'    WB
   / 'begin'    WB
   / 'break'    WB
   / 'next'     WB

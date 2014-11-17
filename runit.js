@@ -28,6 +28,7 @@ requirejs(['start-lang', 'start-lib'], function(startlang, startlib) {
     if (err) {
       console.log('an error occurred:');
       console.log(err);
+      console.log(err.stack);
     }
     console.log(util.inspect(ctx, false, null));
   });

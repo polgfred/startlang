@@ -1,6 +1,11 @@
-for i in count(1, 10)
-  print "hi"
+for i in count(1, 5)
   print i
+end
+
+print "done0"
+
+for i in count(1, 10)
+  print "hi", i
   if i = 4
     next
   end
@@ -10,7 +15,15 @@ for i in count(1, 10)
   print "there"
 end
 
-print "done"
+print "done1"
+
+let i = 1
+while i < 50
+  print i
+  let i = i * 2
+end
+
+print "done2"
 
 begin fred
   let x = 1
