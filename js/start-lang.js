@@ -3432,9 +3432,7 @@ define(function (require, exports, module) {module.exports = (function() {
         evaluate: function(ctx, done) {
           var _this = this, len = _this.stmts.length, count = -1;
           (function loop() {
-            if (++count >= len) {
-              done();
-            } else {
+            if (++count < len) {
               _this.stmts[count].eval_a(ctx, function(err) {
                 if (err) {
                   done(err);
@@ -3442,6 +3440,8 @@ define(function (require, exports, module) {module.exports = (function() {
                   loop();
                 }
               });
+            } else {
+              done();
             }
           })();
         }
@@ -3488,9 +3488,7 @@ define(function (require, exports, module) {module.exports = (function() {
               len = items.length;
               count = -1;
               (function loop() {
-                if (++count >= len) {
-                  done();
-                } else {
+                if (++count < len) {
                   ctx.set(_this.name, items[count]);
                   _this.stmts.eval_a(ctx, function(err) {
                     if (err) {
@@ -3503,6 +3501,8 @@ define(function (require, exports, module) {module.exports = (function() {
                       loop();
                     }
                   });
+                } else {
+                  done();
                 }
               })();
             }
