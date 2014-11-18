@@ -3598,12 +3598,10 @@ define(function (require, exports, module) {module.exports = (function() {
                       loop();
                     }
                   });
+                } else if (tres) {
+                  tres(ctx, args, done);
                 } else {
-                  if (tres) {
-                    tres(ctx, args, done);
-                  } else {
-                    done(null, ctx.syscall(_this.target.name, args));
-                  }
+                  done(null, ctx.syscall(_this.target.name, args));
                 }
               })();
             }
@@ -3709,7 +3707,6 @@ define(function (require, exports, module) {module.exports = (function() {
 
         evaluate: function(ctx, done) {
           var _this = this;
-
           _this.base.eval_a(ctx, function(err, bres) {
             if (err) {
               done(err);
@@ -3737,7 +3734,6 @@ define(function (require, exports, module) {module.exports = (function() {
 
         evaluate: function(ctx, done) {
           var _this = this;
-
           _this.base.eval_a(ctx, function(err, bres) {
             if (err) {
               done(err);

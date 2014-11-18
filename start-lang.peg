@@ -233,12 +233,10 @@
                   loop();
                 }
               });
+            } else if (tres) {
+              tres(ctx, args, done);
             } else {
-              if (tres) {
-                tres(ctx, args, done);
-              } else {
-                done(null, ctx.syscall(_this.target.name, args));
-              }
+              done(null, ctx.syscall(_this.target.name, args));
             }
           })();
         }
@@ -344,7 +342,6 @@
 
     evaluate: function(ctx, done) {
       var _this = this;
-
       _this.base.eval_a(ctx, function(err, bres) {
         if (err) {
           done(err);
@@ -372,7 +369,6 @@
 
     evaluate: function(ctx, done) {
       var _this = this;
-
       _this.base.eval_a(ctx, function(err, bres) {
         if (err) {
           done(err);
