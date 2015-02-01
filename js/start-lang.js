@@ -3807,20 +3807,19 @@ define(function (require, exports, module) {module.exports = (function() {
         },
 
         evaluate: function(ctx, done) {
-          // logical ops short-circuit
-          logicalOps[this.op](ctx, this.left, this.right, done);
-        }
-      });
+          // handle logical ops at the AST level, so we can short-circuit branches
+          this[this.op](ctx, done);
+        },
 
-      var logicalOps = {
-        'and': function(ctx, left, right, done) {
-          left.eval_a(ctx, function(err, lres) {
+        and: function(ctx, done) {
+          var _this = this;
+          _this.left.eval_a(ctx, function(err, lres) {
             if (err) {
               done(err);
             } else if (!lres) {
               done(null, false);
             } else {
-              right.eval_a(ctx, function(err, rres) {
+              _this.right.eval_a(ctx, function(err, rres) {
                 if (err) {
                   done(err);
                 } else {
@@ -3831,14 +3830,15 @@ define(function (require, exports, module) {module.exports = (function() {
           });
         },
 
-        'or': function(ctx, left, right, done) {
-          left.eval_a(ctx, function(err, lres) {
+        or: function(ctx, done) {
+          var _this = this;
+          _this.left.eval_a(ctx, function(err, lres) {
             if (err) {
               done(err);
             } else if (lres) {
               done(null, true);
             } else {
-              right.eval_a(ctx, function(err, rres) {
+              _this.right.eval_a(ctx, function(err, rres) {
                 if (err) {
                   done(err);
                 } else {
@@ -3849,8 +3849,9 @@ define(function (require, exports, module) {module.exports = (function() {
           });
         },
 
-        'not': function(ctx, left, right, done) {
-          right.eval_a(ctx, function(err, rres) {
+        not: function(ctx, done) {
+          var _this = this;
+          _this.right.eval_a(ctx, function(err, rres) {
             if (err) {
               done(err);
             } else {
@@ -3858,7 +3859,7 @@ define(function (require, exports, module) {module.exports = (function() {
             }
           });
         }
-      };
+      });
 
       // take a chain of equal-precedence logical exprs and construct a left-folding tree
       function buildLogicalOp(first, rest) {
