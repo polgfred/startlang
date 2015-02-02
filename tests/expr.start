@@ -74,7 +74,7 @@ if t != u
   print "5b should see this"
 end
 
-remove t, "likes"
+delete t["likes"]
 let t["age"] = 41
 
 if t != u

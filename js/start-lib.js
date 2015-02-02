@@ -29,12 +29,8 @@ define(function() {
       this._ns[name] = value;
     },
 
-    unaryop: function(op, right) {
-      return handle(right).unaryops[op](right);
-    },
-
-    binaryop: function(op, left, right) {
-      return handle(left).binaryops[op](left, right);
+    del: function(name) {
+      delete this._ns[name];
     },
 
     getindex: function(base, index) {
@@ -43,6 +39,18 @@ define(function() {
 
     setindex: function(base, index, value) {
       handle(base).setindex(base, index, value);
+    },
+
+    delindex: function(base, index) {
+      handle(base).delindex(base, index);
+    },
+
+    unaryop: function(op, right) {
+      return handle(right).unaryops[op](right);
+    },
+
+    binaryop: function(op, left, right) {
+      return handle(left).binaryops[op](left, right);
     },
 
     syscall: function(name, args) {
@@ -152,7 +160,11 @@ define(function() {
     },
 
     setindex: function() {
-      throw new Error('object does not support [] assignment');
+      throw new Error('object does not support []');
+    },
+
+    delindex: function() {
+      throw new Error('object does not support []');
     },
 
     methods: [
@@ -234,7 +246,11 @@ define(function() {
     },
 
     setindex: function() {
-      throw new Error('object does not support [] assignment');
+      throw new Error('object cannot be modified with []');
+    },
+
+    delindex: function() {
+      throw new Error('object cannot be modified with []');
     },
 
     methods: {
@@ -335,6 +351,10 @@ define(function() {
 
     setindex: function(a, index, value) {
       a[index] = value;
+    },
+
+    delindex: function(a, index) {
+      delete a[index];
     },
 
     methods: {
@@ -479,6 +499,10 @@ define(function() {
 
     setindex: function(t, index, value) {
       t[index] = value;
+    },
+
+    delindex: function(t, index) {
+      delete t[index];
     },
 
     methods: {

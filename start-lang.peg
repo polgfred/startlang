@@ -311,8 +311,8 @@
     }
   });
 
-  var Assignment = Node.extend({
-    node: 'assignment',
+  var Assign = Node.extend({
+    node: 'assign',
 
     constructor: function(name, value) {
       this.name = name;
@@ -329,6 +329,19 @@
           done();
         }
       });
+    }
+  });
+
+  var Delete = Node.extend({
+    node: 'delete',
+
+    constructor: function(name ) {
+      this.name = name;
+    },
+
+    evaluate: function(ctx, done) {
+      ctx.del(this.name);
+      done();
     }
   });
 
@@ -358,8 +371,8 @@
     }
   });
 
-  var IndexAssignment = Node.extend({
-    node: 'index_assignment',
+  var AssignIndex = Node.extend({
+    node: 'assign_index',
 
     constructor: function(base, index, value) {
       this.base = base;
@@ -392,6 +405,35 @@
     }
   });
 
+  var DeleteIndex = Node.extend({
+    node: 'delete_index',
+
+    constructor: function(base, index) {
+      this.base = base;
+      this.index = index;
+    },
+
+    evaluate: function(ctx, done) {
+      var _this = this;
+      _this.base.eval_a(ctx, function(err, bres) {
+        if (err) {
+          done(err);
+        } else {
+          _this.index.eval_a(ctx, function(err, ires) {
+            if (err) {
+              done(err);
+            } else {
+              ctx.delindex(bres, ires);
+              done();
+            }
+          });
+        }
+      });
+    }
+  });
+
+  var $remove = {};
+
   function buildIndex(base, indexes, value) {
     indexes || (indexes = []);
 
@@ -401,10 +443,12 @@
       base = new Index(base, next);
     }
 
-    if (value == null) {
+    if (value === undefined) {
       return new Index(base, last);
+    } else if (value === $remove) {
+      return new DeleteIndex(base, last);
     } else {
-      return new IndexAssignment(base, last, value);
+      return new AssignIndex(base, last, value);
     }
   }
 
@@ -591,9 +635,10 @@ Statement
   / ForBlock
   / WhileBlock
   / BeginBlock
-  / Assignment
-  / CallStatement
-  / FlowStatement
+  / Assign
+  / Delete
+  / Call
+  / Flow
   / Comment
 
 IfBlock
@@ -630,7 +675,7 @@ BeginBlock
       return new BeginBlock(sym, stmts);
     }
 
-Assignment
+Assign
   = __ 'let' WB __ sym:Symbol
     indexes:(
       __ '[' __ v:Value ']' {
@@ -639,13 +684,27 @@ Assignment
     )*
     __ '=' __ value:Value EOL {
       if (indexes.length == 0) {
-        return new Assignment(sym, value);
+        return new Assign(sym, value);
       } else {
         return buildIndex(new Variable(sym), indexes, value);
       }
     }
 
-CallStatement
+Delete
+  = __ 'delete' WB __ sym:Symbol
+    indexes:(
+      __ '[' __ v:Value ']' {
+        return v;
+      }
+    )* EOL {
+      if (indexes.length == 0) {
+        return new Delete(sym);
+      } else {
+        return buildIndex(new Variable(sym), indexes, $remove);
+      }
+    }
+
+Call
   = __ target:(
       'call' WB __ e:IndexExpr { return e; }
       / sym:Symbol { return new Variable(sym); }
@@ -658,7 +717,7 @@ CallStatement
       return new Funcall(target, args);
     }
 
-FlowStatement
+Flow
   = __ 'break' EOL {
       return new Break;
     }
@@ -835,6 +894,7 @@ Reserved
   / 'next'     WB
   / 'return'   WB
   / 'let'      WB
+  / 'delete'   WB
   / 'call'     WB
   / 'and'      WB
   / 'or'       WB
