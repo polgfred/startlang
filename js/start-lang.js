@@ -3986,8 +3986,11 @@ define(function (require, exports, module) {module.exports = (function() {
         }
       });
 
+      // special token to signal buildIndex that we're building a delete_index call
       var $remove = {};
 
+      // take a base, indexes, and (optionally) a value, and construct a left-folding tree
+      // that terminates in an index lookup, assignment, or deletion
       function buildIndex(base, indexes, value) {
         indexes || (indexes = []);
 
