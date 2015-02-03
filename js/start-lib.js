@@ -562,8 +562,8 @@ define(function() {
   };
 
   return {
-    _handle: handle,
-    _globals: globals,
+    handle: handle,
+    globals: globals,
 
     createEnv: function() {
       return new SEnvironment();

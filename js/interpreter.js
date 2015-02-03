@@ -1,6 +1,6 @@
 define([ 'start-lang', 'start-lib' ], function(startlang, startlib) {
   var rawAsap = require('raw'),
-      handle = startlib._handle;
+      handle = startlib.handle;
 
   function mixin(object, properties) {
     Object.keys(properties).forEach(function(prop) {

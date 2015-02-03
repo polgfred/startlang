@@ -26,10 +26,10 @@ require([
 
   // override print to output to the terminal
 
-  startlib._globals.print = function() {
+  startlib.globals.print = function() {
     if (arguments.length > 0) {
       Array.prototype.forEach.call(arguments, function(arg) {
-        terminal.echo(startlib._handle(arg).repr(arg), {
+        terminal.echo(startlib.handle(arg).repr(arg), {
           finalize: function(div) {
             div.addClass('output').prepend('<span>&#8702;</span>');
           }
@@ -40,7 +40,7 @@ require([
     }
   };
 
-  startlib._globals.clear = function() {
+  startlib.globals.clear = function() {
     terminal.clear();
   };
 

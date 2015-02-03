@@ -3555,8 +3555,7 @@ define(function (require, exports, module) {module.exports = (function() {
     }
 
 
-      var rawAsap = require('raw'),
-          handle = require('start-lib')._handle;
+      var handle = require('start-lib').handle;
 
       function mixin(object, properties) {
         Object.keys(properties).forEach(function(prop) {
