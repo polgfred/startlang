@@ -278,29 +278,25 @@ Control
   / While
   / Begin
 
+// Control structures each have a single-line form and a block form
+
 IfElse
-  // single line
   = __ 'if' WB __ cond:Value __ tbody:Statement
     fbody:( __ 'else' WB __ s:Statement { return s; } )? {
       return new IfElseNode(cond, tbody, fbody);
     }
-  // block
   / __ 'if' WB __ cond:Value EOL
     tbody:Block
-    fbody:(
-      __ 'else' EOL
-      b:Block { return b; }
-    )?
+    fbody:( __ 'else' EOL
+            b:Block { return b; } )?
     __ 'end' {
       return new IfElseNode(cond, tbody, fbody);
     }
 
 ForIn
-  // single line
   = __ 'for' WB __ sym:Symbol __ 'in' WB __ range:Value __ body:Statement {
       return new ForInNode(sym, range, body);
     }
-  // block
   / __ 'for' WB __ sym:Symbol __ 'in' WB __ range:Value EOL
     body:Block
     __ 'end' {
@@ -308,11 +304,9 @@ ForIn
     }
 
 While
-  // single line
   = __ 'while' WB __ cond:Value __ body:Statement {
       return new WhileNode(cond, body);
     }
-  // block
   / __ 'while' WB __ cond:Value EOL
     body:Block
     __ 'end' {
@@ -320,11 +314,9 @@ While
     }
 
 Begin
-  // single line
   = __ 'begin' WB __ sym:Symbol __ body:Statement {
       return new BeginNode(sym, body);
     }
-  // block
   / __ 'begin' WB __ sym:Symbol EOL
     body:Block
     __ 'end' {
@@ -339,11 +331,7 @@ Statement
 
 Assign
   = __ 'let' WB __ sym:Symbol
-    indexes:(
-      __ '[' __ v:Value ']' {
-        return v;
-      }
-    )*
+    indexes:( __ '[' __ v:Value ']' { return v; } )*
     __ '=' __ value:Value {
       if (indexes.length == 0) {
         return new AssignNode(sym, value);
@@ -354,11 +342,7 @@ Assign
 
 Delete
   = __ 'delete' WB __ sym:Symbol
-    indexes:(
-      __ '[' __ v:Value ']' {
-        return v;
-      }
-    )* {
+    indexes:( __ '[' __ v:Value ']' { return v; } )* {
       if (indexes.length == 0) {
         return new DeleteNode(sym);
       } else {
@@ -367,15 +351,9 @@ Delete
     }
 
 Call
-  = __ target:(
-      'call' WB __ e:IndexExpr { return e; }
-      / sym:Symbol { return new VariableNode(sym); }
-    )
-    args:(
-      __ v:Values? __ {
-        return v;
-      }
-    )? {
+  = __ target:( 'call' WB __ e:IndexExpr { return e; }
+                / sym:Symbol { return new VariableNode(sym); } )
+    args:( __ v:Values? __ { return v; } )? {
       return new FuncallNode(target, args);
     }
 
