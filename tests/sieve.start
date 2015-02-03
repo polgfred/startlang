@@ -1,0 +1,30 @@
+let candidates = array(1000)
+
+let candidates[0] = 0
+let candidates[1] = 0
+for i in count(2, 1000)
+  let candidates[i] = 1
+end
+
+let i = 0
+while i <= 1000
+  while i <= 1000 and candidates[i] = 0
+    let i = i + 1
+  end
+  if i <= 1000
+    let j = 2
+    let k = j * i
+    while k <= 1000
+      let candidates[k] = 0
+      let j = j + 1
+      let k = j * i
+    end
+    let i = i + 1
+  end
+end
+
+for i in count(0, 1000)
+  if candidates[i] = 1
+    print i + " is prime"
+  end
+end
