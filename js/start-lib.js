@@ -62,19 +62,6 @@ define(function() {
       }
 
       throw new Error('object not found or not a function');
-    },
-
-    // trap will be called upon entry to every node,
-    // do anything you want and call cont()
-    visit: function(node, cont) {
-      cont();
-    },
-
-    // trap will be called for any exception while evaluating a node,
-    // do anything you want and call retry() or fail()
-    handleError: function(node, err, retry, fail) {
-      console.log('failing', node, err);
-      fail();
     }
   });
 
@@ -582,5 +569,4 @@ define(function() {
       return new SEnvironment();
     }
   };
-
 });

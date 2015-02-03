@@ -3556,8 +3556,7 @@ define(function (require, exports, module) {module.exports = (function() {
 
 
       var rawAsap = require('raw'),
-          handle = require('start-lib')._handle,
-          slice = Array.prototype.slice;
+          handle = require('start-lib')._handle;
 
       function mixin(object, properties) {
         Object.keys(properties).forEach(function(prop) {
@@ -3588,178 +3587,49 @@ define(function (require, exports, module) {module.exports = (function() {
         return ctor;
       };
 
-      mixin(Node.prototype, {
-        // hook where we can determine how to proceed:
-        //  - immediately with asap
-        //  - broadcast an update to the UI before proceeding
-        //  - stop at a breakpoint and resume
-        //  - etc.
-        eval_a: function(ctx, done) {
-          var _this = this;
-          rawAsap(function() {
-            ctx.visit(_this, function retry() {
-              try {
-                _this.evaluate(ctx, done);
-              } catch (err) {
-                ctx.handleError(_this, err, retry, function() {
-                  err.node = _this;
-                  done(err);
-                });
-              }
-            });
-          });
-        }
-      });
-
       var Statements = Node.extend({
         node: 'statements',
 
         constructor: function(stmts) {
           this.stmts = stmts || [];
-        },
-
-        evaluate: function(ctx, done) {
-          var _this = this, len = _this.stmts.length, count = -1;
-          (function loop() {
-            if (++count < len) {
-              _this.stmts[count].eval_a(ctx, function(err) {
-                if (err) {
-                  done(err);
-                } else {
-                  loop();
-                }
-              });
-            } else {
-              done();
-            }
-          })();
         }
       });
 
       var IfBlock = Node.extend({
-        node: 'if_block',
+        node: 'ifBlock',
 
         constructor: function(cond, tstmts, fstmts) {
           this.cond = cond;
           this.tstmts = tstmts;
           this.fstmts = fstmts || new Statements();
-        },
-
-        evaluate: function(ctx, done) {
-          var _this = this;
-          _this.cond.eval_a(ctx, function(err, cres) {
-            if (err) {
-              done(err);
-            } else {
-              var todo = cres ? _this.tstmts : _this.fstmts;
-              todo.eval_a(ctx, done);
-            }
-          });
         }
       });
 
       var ForBlock = Node.extend({
-        node: 'for_block',
+        node: 'forBlock',
 
         constructor: function(name, range, stmts) {
           this.name = name;
           this.range = range;
           this.stmts = stmts;
-        },
-
-        evaluate: function(ctx, done) {
-          var _this = this, items, len, count;
-          _this.range.eval_a(ctx, function(err, rres) {
-            if (err) {
-              done(err);
-            } else {
-              items = handle(rres).enumerate(rres);
-              len = items.length;
-              count = -1;
-              (function loop() {
-                if (++count < len) {
-                  ctx.set(_this.name, items[count]);
-                  _this.stmts.eval_a(ctx, function(err) {
-                    if (err) {
-                      if (err.flow && err.scope == 'loop') {
-                        (err.terminate ? done : loop)();
-                      } else {
-                        done(err);
-                      }
-                    } else {
-                      loop();
-                    }
-                  });
-                } else {
-                  done();
-                }
-              })();
-            }
-          });
         }
       });
 
       var WhileBlock = Node.extend({
-        node: 'while_block',
+        node: 'whileBlock',
 
         constructor: function(cond, stmts) {
           this.cond = cond;
           this.stmts = stmts;
-        },
-
-        evaluate: function(ctx, done) {
-          var _this = this;
-          (function loop() {
-            _this.cond.eval_a(ctx, function(err, cres) {
-              if (err) {
-                done(err);
-              } else if (cres) {
-                _this.stmts.eval_a(ctx, function(err) {
-                  if (err) {
-                    if (err.flow && err.scope == 'loop') {
-                      (err.terminate ? done : loop)();
-                    } else {
-                      done(err);
-                    }
-                  } else {
-                    loop();
-                  }
-                });
-              } else {
-                done();
-              }
-            });
-          })();
         }
       });
 
       var BeginBlock = Node.extend({
-        node: 'begin_block',
+        node: 'beginBlock',
 
         constructor: function(name, stmts) {
           this.name = name;
           this.stmts = stmts;
-        },
-
-        evaluate: function(ctx, done) {
-          ctx.set(this.name, this.invoke.bind(this));
-          done();
-        },
-
-        invoke: function(ctx, args, done) {
-          ctx.push();
-          this.stmts.eval_a(ctx, function(err) {
-            ctx.pop();
-            if (err) {
-              if (err.flow) {
-                done(null, err.result);
-              } else {
-                done(err);
-              }
-            } else {
-              done();
-            }
-          });
         }
       });
 
@@ -3769,57 +3639,15 @@ define(function (require, exports, module) {module.exports = (function() {
         constructor: function(target, args) {
           this.target = target;
           this.args = args || [];
-        },
-
-        evaluate: function(ctx, done) {
-          var _this = this, len = _this.args.length, args = [], count = -1;
-          _this.target.eval_a(ctx, function(err, tres) {
-            if (err) {
-              done(err);
-            } else {
-              (function loop() {
-                if (++count < len) {
-                  _this.args[count].eval_a(ctx, function(err, ares) {
-                    if (err) {
-                      done(err);
-                    } else {
-                      args[count] = ares;
-                      loop();
-                    }
-                  });
-                } else if (tres) {
-                  tres(ctx, args, done);
-                } else {
-                  done(null, ctx.syscall(_this.target.name, args));
-                }
-              })();
-            }
-          });
         }
       });
 
       var Break = Node.extend({
-        node: 'break',
-
-        evaluate: function(ctx, done) {
-          done({
-            flow: true,
-            terminate: true,
-            scope: 'loop'
-          });
-        }
+        node: 'break'
       });
 
       var Next = Node.extend({
-        node: 'next',
-
-        evaluate: function(ctx, done) {
-          done({
-            flow: true,
-            terminate: false,
-            scope: 'loop'
-          });
-        }
+        node: 'next'
       });
 
       var Return = Node.extend({
@@ -3827,29 +3655,6 @@ define(function (require, exports, module) {module.exports = (function() {
 
         constructor: function(result) {
           this.result = result;
-        },
-
-        evaluate: function(ctx, done) {
-          if (this.result) {
-            this.result.eval_a(ctx, function(err, rres) {
-              if (err) {
-                done(err);
-              } else {
-                done({
-                  flow: true,
-                  terminate: true,
-                  scope: 'function',
-                  result: rres
-                });
-              }
-            });
-          } else {
-            done({
-              flow: true,
-              terminate: true,
-              scope: 'function'
-            });
-          }
         }
       });
 
@@ -3858,10 +3663,6 @@ define(function (require, exports, module) {module.exports = (function() {
 
         constructor: function(name, index) {
           this.name = name;
-        },
-
-        evaluate: function(ctx, done) {
-          done(null, ctx.get(this.name));
         }
       });
 
@@ -3871,18 +3672,6 @@ define(function (require, exports, module) {module.exports = (function() {
         constructor: function(name, value) {
           this.name = name;
           this.value = value;
-        },
-
-        evaluate: function(ctx, done) {
-          var _this = this;
-          _this.value.eval_a(ctx, function(err, vres) {
-            if (err) {
-              done(err);
-            } else {
-              ctx.set(_this.name, vres);
-              done();
-            }
-          });
         }
       });
 
@@ -3891,11 +3680,6 @@ define(function (require, exports, module) {module.exports = (function() {
 
         constructor: function(name ) {
           this.name = name;
-        },
-
-        evaluate: function(ctx, done) {
-          ctx.del(this.name);
-          done();
         }
       });
 
@@ -3905,84 +3689,25 @@ define(function (require, exports, module) {module.exports = (function() {
         constructor: function(base, index) {
           this.base = base;
           this.index = index;
-        },
-
-        evaluate: function(ctx, done) {
-          var _this = this;
-          _this.base.eval_a(ctx, function(err, bres) {
-            if (err) {
-              done(err);
-            } else {
-              _this.index.eval_a(ctx, function(err, ires) {
-                if (err) {
-                  done(err);
-                } else {
-                  done(null, ctx.getindex(bres, ires));
-                }
-              });
-            }
-          });
         }
       });
 
       var AssignIndex = Node.extend({
-        node: 'assign_index',
+        node: 'assignIndex',
 
         constructor: function(base, index, value) {
           this.base = base;
           this.index = index;
           this.value = value;
-        },
-
-        evaluate: function(ctx, done) {
-          var _this = this;
-          _this.base.eval_a(ctx, function(err, bres) {
-            if (err) {
-              done(err);
-            } else {
-              _this.index.eval_a(ctx, function(err, ires) {
-                if (err) {
-                  done(err);
-                } else {
-                  _this.value.eval_a(ctx, function(err, vres) {
-                    if (err) {
-                      done(err);
-                    } else {
-                      ctx.setindex(bres, ires, vres);
-                      done();
-                    }
-                  });
-                }
-              });
-            }
-          });
         }
       });
 
       var DeleteIndex = Node.extend({
-        node: 'delete_index',
+        node: 'deleteIndex',
 
         constructor: function(base, index) {
           this.base = base;
           this.index = index;
-        },
-
-        evaluate: function(ctx, done) {
-          var _this = this;
-          _this.base.eval_a(ctx, function(err, bres) {
-            if (err) {
-              done(err);
-            } else {
-              _this.index.eval_a(ctx, function(err, ires) {
-                if (err) {
-                  done(err);
-                } else {
-                  ctx.delindex(bres, ires);
-                  done();
-                }
-              });
-            }
-          });
         }
       });
 
@@ -4014,10 +3739,6 @@ define(function (require, exports, module) {module.exports = (function() {
 
         constructor: function(value) {
           this.value = value;
-        },
-
-        evaluate: function(ctx, done) {
-          done(null, this.value);
         }
       });
 
@@ -4026,74 +3747,16 @@ define(function (require, exports, module) {module.exports = (function() {
 
         constructor: function(text) {
           this.text = text;
-        },
-
-        evaluate: function(ctx, done) {
-          done();
         }
       });
 
       var LogicalOp = Node.extend({
-        node: 'logical_op',
+        node: 'logicalOp',
 
         constructor: function(op, left, right) {
           this.op = op;
           this.left = left;
           this.right = right;
-        },
-
-        evaluate: function(ctx, done) {
-          // handle logical ops at the AST level, so we can short-circuit branches
-          this[this.op](ctx, done);
-        },
-
-        and: function(ctx, done) {
-          var _this = this;
-          _this.left.eval_a(ctx, function(err, lres) {
-            if (err) {
-              done(err);
-            } else if (!lres) {
-              done(null, false);
-            } else {
-              _this.right.eval_a(ctx, function(err, rres) {
-                if (err) {
-                  done(err);
-                } else {
-                  done(null, !!rres);
-                }
-              });
-            }
-          });
-        },
-
-        or: function(ctx, done) {
-          var _this = this;
-          _this.left.eval_a(ctx, function(err, lres) {
-            if (err) {
-              done(err);
-            } else if (lres) {
-              done(null, true);
-            } else {
-              _this.right.eval_a(ctx, function(err, rres) {
-                if (err) {
-                  done(err);
-                } else {
-                  done(null, !!rres);
-                }
-              });
-            }
-          });
-        },
-
-        not: function(ctx, done) {
-          var _this = this;
-          _this.right.eval_a(ctx, function(err, rres) {
-            if (err) {
-              done(err);
-            } else {
-              done(null, !rres);
-            }
-          });
         }
       });
 
@@ -4108,29 +3771,12 @@ define(function (require, exports, module) {module.exports = (function() {
       }
 
       var BinaryOp = Node.extend({
-        node: 'binary_op',
+        node: 'binaryOp',
 
         constructor: function(op, left, right) {
           this.op = op;
           this.left = left;
           this.right = right;
-        },
-
-        evaluate: function(ctx, done) {
-          var _this = this;
-          _this.left.eval_a(ctx, function(err, lres) {
-            if (err) {
-              done(err);
-            } else {
-              _this.right.eval_a(ctx, function(err, rres) {
-                if (err) {
-                  done(err);
-                } else {
-                  done(null, ctx.binaryop(_this.op, lres, rres));
-                }
-              });
-            }
-          });
         }
       });
 
@@ -4155,22 +3801,11 @@ define(function (require, exports, module) {module.exports = (function() {
       }
 
       var UnaryOp = Node.extend({
-        node: 'unary_op',
+        node: 'unaryOp',
 
         constructor: function(op, right) {
           this.op = op;
           this.right = right;
-        },
-
-        evaluate: function(ctx, done) {
-          var _this = this;
-          _this.right.eval_a(ctx, function(err, rres) {
-            if (err) {
-              done(err);
-            } else {
-              done(null, ctx.unaryop(_this.op, rres));
-            }
-          });
         }
       });
 
