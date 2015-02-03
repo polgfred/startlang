@@ -62,11 +62,11 @@ define([ 'start-lang', 'start-lib' ], function(startlang, startlib) {
 
     // ** implementations of AST nodes **
 
-    statements: function(node, done) {
-      var _this = this, len = node.stmts.length, count = -1;
+    BlockNode: function(node, done) {
+      var _this = this, len = node.elems.length, count = -1;
       (function loop() {
         if (++count < len) {
-          _this.visit(node.stmts[count], function(err) {
+          _this.visit(node.elems[count], function(err) {
             if (err) {
               done(err);
             } else {
@@ -79,19 +79,22 @@ define([ 'start-lang', 'start-lib' ], function(startlang, startlib) {
       })();
     },
 
-    ifBlock: function(node, done) {
+    IfNode: function(node, done) {
       var _this = this;
       _this.visit(node.cond, function(err, cres) {
         if (err) {
           done(err);
+        } else if (cres) {
+          _this.visit(node.tblock, done);
+        } else if (node.fblock) {
+          _this.visit(node.fblock, done);
         } else {
-          var todo = cres ? node.tstmts : node.fstmts;
-          _this.visit(todo, done);
+          done();
         }
       });
     },
 
-    forBlock: function(node, done) {
+    ForNode: function(node, done) {
       var _this = this, items, len, count;
       _this.visit(node.range, function(err, rres) {
         if (err) {
@@ -103,7 +106,7 @@ define([ 'start-lang', 'start-lib' ], function(startlang, startlib) {
           (function loop() {
             if (++count < len) {
               _this.ctx.set(node.name, items[count]);
-              _this.visit(node.stmts, function(err) {
+              _this.visit(node.block, function(err) {
                 if (err) {
                   if (err.flow && err.scope == 'loop') {
                     (err.terminate ? done : loop)();
@@ -122,14 +125,14 @@ define([ 'start-lang', 'start-lib' ], function(startlang, startlib) {
       });
     },
 
-    whileBlock: function(node, done) {
+    WhileNode: function(node, done) {
       var _this = this;
       (function loop() {
         _this.visit(node.cond, function(err, cres) {
           if (err) {
             done(err);
           } else if (cres) {
-            _this.visit(node.stmts, function(err) {
+            _this.visit(node.block, function(err) {
               if (err) {
                 if (err.flow && err.scope == 'loop') {
                   (err.terminate ? done : loop)();
@@ -147,11 +150,11 @@ define([ 'start-lang', 'start-lib' ], function(startlang, startlib) {
       })();
     },
 
-    beginBlock: function(node, done) {
+    BeginNode: function(node, done) {
       var _this = this;
       _this.ctx.set(node.name, function(args, done2) {
         _this.ctx.push();
-        _this.visit(node.stmts, function(err) {
+        _this.visit(node.block, function(err) {
           _this.ctx.pop();
           if (err) {
             if (err.flow) {
@@ -167,7 +170,7 @@ define([ 'start-lang', 'start-lib' ], function(startlang, startlib) {
       done();
     },
 
-    funcall: function(node, done) {
+    FuncallNode: function(node, done) {
       var _this = this, len = node.args.length, args = [], count = -1;
       _this.visit(node.target, function(err, tres) {
         if (err) {
@@ -193,7 +196,7 @@ define([ 'start-lang', 'start-lib' ], function(startlang, startlib) {
       });
     },
 
-    break: function(node, done) {
+    BreakNode: function(node, done) {
       done({
         flow: true,
         terminate: true,
@@ -201,7 +204,7 @@ define([ 'start-lang', 'start-lib' ], function(startlang, startlib) {
       });
     },
 
-    next: function(node, done) {
+    NextNode: function(node, done) {
       done({
         flow: true,
         terminate: false,
@@ -209,7 +212,7 @@ define([ 'start-lang', 'start-lib' ], function(startlang, startlib) {
       });
     },
 
-    return: function(node, done) {
+    ReturnNode: function(node, done) {
       var _this = this;
       if (node.result) {
         _this.visit(node.result, function(err, rres) {
@@ -233,11 +236,11 @@ define([ 'start-lang', 'start-lib' ], function(startlang, startlib) {
       }
     },
 
-    variable: function(node, done) {
+    VariableNode: function(node, done) {
       done(null, this.ctx.get(node.name));
     },
 
-    assign: function(node, done) {
+    AssignNode: function(node, done) {
       var _this = this;
       _this.visit(node.value, function(err, vres) {
         if (err) {
@@ -249,12 +252,12 @@ define([ 'start-lang', 'start-lib' ], function(startlang, startlib) {
       });
     },
 
-    delete: function(node, done) {
+    DeleteNode: function(node, done) {
       this.ctx.del(node.name);
       done();
     },
 
-    index: function(node, done) {
+    IndexNode: function(node, done) {
       var _this = this;
       _this.visit(node.base, function(err, bres) {
         if (err) {
@@ -271,7 +274,7 @@ define([ 'start-lang', 'start-lib' ], function(startlang, startlib) {
       });
     },
 
-    assignIndex: function(node, done) {
+    AssignIndexNode: function(node, done) {
       var _this = this;
       _this.visit(node.base, function(err, bres) {
         if (err) {
@@ -295,7 +298,7 @@ define([ 'start-lang', 'start-lib' ], function(startlang, startlib) {
       });
     },
 
-    deleteIndex: function(node, done) {
+    DeleteIndexNode: function(node, done) {
       var _this = this;
       _this.visit(node.base, function(err, bres) {
         if (err) {
@@ -313,12 +316,12 @@ define([ 'start-lang', 'start-lib' ], function(startlang, startlib) {
       });
     },
 
-    logicalOp: function(node, done) {
-      var method = 'logical' + node.op.charAt(0).toUpperCase() + node.op.slice(1);
+    LogicalOpNode: function(node, done) {
+      var method = 'LogicalOpNode_' + node.op;
       this[method](node, done);
     },
 
-    logicalAnd: function(node, done) {
+    LogicalOpNode_and: function(node, done) {
       var _this = this;
       _this.visit(node.left, function(err, lres) {
         if (err) {
@@ -337,7 +340,7 @@ define([ 'start-lang', 'start-lib' ], function(startlang, startlib) {
       });
     },
 
-    logicalOr: function(node, done) {
+    LogicalOpNode_or: function(node, done) {
       var _this = this;
       _this.visit(node.left, function(err, lres) {
         if (err) {
@@ -356,7 +359,7 @@ define([ 'start-lang', 'start-lib' ], function(startlang, startlib) {
       });
     },
 
-    logicalNot: function(node, done) {
+    LogicalOpNode_not: function(node, done) {
       var _this = this;
       _this.visit(node.right, function(err, rres) {
         if (err) {
@@ -367,7 +370,7 @@ define([ 'start-lang', 'start-lib' ], function(startlang, startlib) {
       });
     },
 
-    binaryOp: function(node, done) {
+    BinaryOpNode: function(node, done) {
       var _this = this;
       _this.visit(node.left, function(err, lres) {
         if (err) {
@@ -384,7 +387,7 @@ define([ 'start-lang', 'start-lib' ], function(startlang, startlib) {
       });
     },
 
-    unaryOp: function(node, done) {
+    UnaryOpNode: function(node, done) {
       var _this = this;
       _this.visit(node.right, function(err, rres) {
         if (err) {
@@ -395,11 +398,11 @@ define([ 'start-lang', 'start-lib' ], function(startlang, startlib) {
       });
     },
 
-    literal: function(node, done) {
+    LiteralNode: function(node, done) {
       done(null, node.value);
     },
 
-    comment: function(node, done) {
+    CommentNode: function(node, done) {
       done();
     }
   });

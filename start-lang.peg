@@ -32,54 +32,54 @@
     return ctor;
   };
 
-  var Statements = Node.extend({
-    node: 'statements',
+  var BlockNode = Node.extend({
+    node: 'BlockNode',
 
-    constructor: function(stmts) {
-      this.stmts = stmts || [];
+    constructor: function(elems) {
+      this.elems = elems || [];
     }
   });
 
-  var IfBlock = Node.extend({
-    node: 'ifBlock',
+  var IfNode = Node.extend({
+    node: 'IfNode',
 
-    constructor: function(cond, tstmts, fstmts) {
+    constructor: function(cond, tblock, fblock) {
       this.cond = cond;
-      this.tstmts = tstmts;
-      this.fstmts = fstmts || new Statements();
+      this.tblock = tblock;
+      this.fblock = fblock;
     }
   });
 
-  var ForBlock = Node.extend({
-    node: 'forBlock',
+  var ForNode = Node.extend({
+    node: 'ForNode',
 
-    constructor: function(name, range, stmts) {
+    constructor: function(name, range, block) {
       this.name = name;
       this.range = range;
-      this.stmts = stmts;
+      this.block = block;
     }
   });
 
-  var WhileBlock = Node.extend({
-    node: 'whileBlock',
+  var WhileNode = Node.extend({
+    node: 'WhileNode',
 
-    constructor: function(cond, stmts) {
+    constructor: function(cond, block) {
       this.cond = cond;
-      this.stmts = stmts;
+      this.block = block;
     }
   });
 
-  var BeginBlock = Node.extend({
-    node: 'beginBlock',
+  var BeginNode = Node.extend({
+    node: 'BeginNode',
 
-    constructor: function(name, stmts) {
+    constructor: function(name, block) {
       this.name = name;
-      this.stmts = stmts;
+      this.block = block;
     }
   });
 
-  var Funcall = Node.extend({
-    node: 'funcall',
+  var FuncallNode = Node.extend({
+    node: 'FuncallNode',
 
     constructor: function(target, args) {
       this.target = target;
@@ -87,32 +87,32 @@
     }
   });
 
-  var Break = Node.extend({
-    node: 'break'
+  var BreakNode = Node.extend({
+    node: 'BreakNode'
   });
 
-  var Next = Node.extend({
-    node: 'next'
+  var NextNode = Node.extend({
+    node: 'NextNode'
   });
 
-  var Return = Node.extend({
-    node: 'return',
+  var ReturnNode = Node.extend({
+    node: 'ReturnNode',
 
     constructor: function(result) {
       this.result = result;
     }
   });
 
-  var Variable = Node.extend({
-    node: 'variable',
+  var VariableNode = Node.extend({
+    node: 'VariableNode',
 
     constructor: function(name, index) {
       this.name = name;
     }
   });
 
-  var Assign = Node.extend({
-    node: 'assign',
+  var AssignNode = Node.extend({
+    node: 'AssignNode',
 
     constructor: function(name, value) {
       this.name = name;
@@ -120,16 +120,16 @@
     }
   });
 
-  var Delete = Node.extend({
-    node: 'delete',
+  var DeleteNode = Node.extend({
+    node: 'DeleteNode',
 
-    constructor: function(name ) {
+    constructor: function(name) {
       this.name = name;
     }
   });
 
-  var Index = Node.extend({
-    node: 'index',
+  var IndexNode = Node.extend({
+    node: 'IndexNode',
 
     constructor: function(base, index) {
       this.base = base;
@@ -137,8 +137,8 @@
     }
   });
 
-  var AssignIndex = Node.extend({
-    node: 'assignIndex',
+  var AssignIndexNode = Node.extend({
+    node: 'AssignIndexNode',
 
     constructor: function(base, index, value) {
       this.base = base;
@@ -147,8 +147,8 @@
     }
   });
 
-  var DeleteIndex = Node.extend({
-    node: 'deleteIndex',
+  var DeleteIndexNode = Node.extend({
+    node: 'DeleteIndexNode',
 
     constructor: function(base, index) {
       this.base = base;
@@ -167,36 +167,36 @@
     var next, last = indexes.pop();
 
     while (next = indexes.shift()) {
-      base = new Index(base, next);
+      base = new IndexNode(base, next);
     }
 
     if (value === undefined) {
-      return new Index(base, last);
+      return new IndexNode(base, last);
     } else if (value === $remove) {
-      return new DeleteIndex(base, last);
+      return new DeleteIndexNode(base, last);
     } else {
-      return new AssignIndex(base, last, value);
+      return new AssignIndexNode(base, last, value);
     }
   }
 
-  var Literal = Node.extend({
-    node: 'literal',
+  var LiteralNode = Node.extend({
+    node: 'LiteralNode',
 
     constructor: function(value) {
       this.value = value;
     }
   });
 
-  var Comment = Node.extend({
-    node: 'comment',
+  var CommentNode = Node.extend({
+    node: 'CommentNode',
 
     constructor: function(text) {
       this.text = text;
     }
   });
 
-  var LogicalOp = Node.extend({
-    node: 'logicalOp',
+  var LogicalOpNode = Node.extend({
+    node: 'LogicalOpNode',
 
     constructor: function(op, left, right) {
       this.op = op;
@@ -211,12 +211,12 @@
       return first;
     } else {
       var next = rest.shift();
-      return buildLogicalOp(new LogicalOp(next[0], first, next[1]), rest);
+      return buildLogicalOp(new LogicalOpNode(next[0], first, next[1]), rest);
     }
   }
 
-  var BinaryOp = Node.extend({
-    node: 'binaryOp',
+  var BinaryOpNode = Node.extend({
+    node: 'BinaryOpNode',
 
     constructor: function(op, left, right) {
       this.op = op;
@@ -231,7 +231,7 @@
       return first;
     } else {
       var next = rest.shift();
-      return buildBinaryOp(new BinaryOp(next[0], first, next[1]), rest);
+      return buildBinaryOp(new BinaryOpNode(next[0], first, next[1]), rest);
     }
   }
 
@@ -241,12 +241,12 @@
       return last;
     } else {
       var next = rest.pop();
-      return buildBinaryOpRight(rest, new BinaryOp(next[0], next[1], last));
+      return buildBinaryOpRight(rest, new BinaryOpNode(next[0], next[1], last));
     }
   }
 
-  var UnaryOp = Node.extend({
-    node: 'unaryOp',
+  var UnaryOpNode = Node.extend({
+    node: 'UnaryOpNode',
 
     constructor: function(op, right) {
       this.op = op;
@@ -258,59 +258,65 @@
 // Grammar
 
 start
-  = Statements
+  = Block
 
-// Statements
+// Top-level
 
-Statements
-  = EOL* stmts:Statement* {
-      return new Statements(stmts);
+Block
+  = EOL* elems:( __ elem:BlockElement EOL { return elem; } )* {
+      return new BlockNode(elems);
+    }
+
+BlockElement
+  = Control
+  / Statement
+  / Comment
+
+Control
+  = IfElse
+  / For
+  / While
+  / Begin
+
+IfElse
+  = __ 'if' WB __ cond:Value EOL
+    tblock:Block
+    fblock:(
+      __ 'else' EOL
+      b:Block {
+        return b;
+      }
+    )?
+    __ 'end' {
+      return new IfNode(cond, tblock, fblock);
+    }
+
+For
+  = __ 'for' WB __ sym:Symbol __ 'in' WB __ range:Value EOL
+    block:Block
+    __ 'end' {
+      return new ForNode(sym, range, block);
+    }
+
+While
+  = __ 'while' WB __ cond:Value EOL
+    block:Block
+    __ 'end' {
+      return new WhileNode(cond, block);
+    }
+
+Begin
+  = __ 'begin' WB __ sym:Symbol EOL
+    block:Block
+    __ 'end' {
+      return new BeginNode(sym, block);
     }
 
 Statement
-  = IfBlock
-  / ForBlock
-  / WhileBlock
-  / BeginBlock
-  / Assign
+  = Assign
   / Delete
   / Call
   / Flow
-  / Comment
-
-IfBlock
-  = __ 'if' WB __ cond:Value EOL
-    tstmts:Statements
-    fstmts:(
-      __ 'else' EOL
-      s:Statements {
-        return s;
-      }
-    )?
-    __ 'end' EOL {
-      return new IfBlock(cond, tstmts, fstmts);
-    }
-
-ForBlock
-  = __ 'for' WB __ sym:Symbol __ 'in' WB __ range:Value EOL
-    stmts:Statements
-    __ 'end' EOL {
-      return new ForBlock(sym, range, stmts);
-    }
-
-WhileBlock
-  = __ 'while' WB __ cond:Value EOL
-    stmts:Statements
-    __ 'end' EOL {
-      return new WhileBlock(cond, stmts);
-    }
-
-BeginBlock
-  = __ 'begin' WB __ sym:Symbol EOL
-    stmts:Statements
-    __ 'end' EOL {
-      return new BeginBlock(sym, stmts);
-    }
 
 Assign
   = __ 'let' WB __ sym:Symbol
@@ -319,11 +325,11 @@ Assign
         return v;
       }
     )*
-    __ '=' __ value:Value EOL {
+    __ '=' __ value:Value {
       if (indexes.length == 0) {
-        return new Assign(sym, value);
+        return new AssignNode(sym, value);
       } else {
-        return buildIndex(new Variable(sym), indexes, value);
+        return buildIndex(new VariableNode(sym), indexes, value);
       }
     }
 
@@ -333,41 +339,41 @@ Delete
       __ '[' __ v:Value ']' {
         return v;
       }
-    )* EOL {
+    )* {
       if (indexes.length == 0) {
-        return new Delete(sym);
+        return new DeleteNode(sym);
       } else {
-        return buildIndex(new Variable(sym), indexes, $remove);
+        return buildIndex(new VariableNode(sym), indexes, $remove);
       }
     }
 
 Call
   = __ target:(
       'call' WB __ e:IndexExpr { return e; }
-      / sym:Symbol { return new Variable(sym); }
+      / sym:Symbol { return new VariableNode(sym); }
     )
     args:(
       __ v:Values? __ {
         return v;
       }
-    )? EOL {
-      return new Funcall(target, args);
+    )? {
+      return new FuncallNode(target, args);
     }
 
 Flow
-  = __ 'break' EOL {
-      return new Break;
+  = __ 'break' {
+      return new BreakNode;
     }
-  / __ 'next' EOL {
-      return new Next;
+  / __ 'next' {
+      return new NextNode;
     }
-  / __ 'return' result:( WB __ val:Value { return val; } )? EOL {
-      return new Return(result);
+  / __ 'return' result:( WB __ val:Value { return val; } )? {
+      return new ReturnNode(result);
     }
 
 Comment
-  = __ '--' __ text:$[^\n]* EOL {
-      return new Comment(text);
+  = __ '--' __ text:$[^\n]* {
+      return new CommentNode(text);
     }
 
 // Values
@@ -394,13 +400,13 @@ CondOp
 
 NotExpr
   = 'not' WB __ comp:RelExpr {
-      return new LogicalOp('not', null, comp);
+      return new LogicalOpNode('not', null, comp);
     }
   / RelExpr
 
 RelExpr
   = left:AddExpr __ op:RelOp __ right:AddExpr {
-      return new BinaryOp(op, left, right);
+      return new BinaryOpNode(op, left, right);
     }
   / '(' __ cond:CondExpr __ ')' {
       return cond;
@@ -446,10 +452,10 @@ PowOp
 UnaryExpr
   = op:AddOp __ num:Number {
       // handle +/- number in the parser
-      return new Literal(handle(num).unaryops[op](num));
+      return new LiteralNode(handle(num).unaryops[op](num));
     }
   / op:AddOp __ right:CallExpr {
-      return new UnaryOp(op, right);
+      return new UnaryOpNode(op, right);
     }
   / CallExpr
 
@@ -457,7 +463,7 @@ UnaryExpr
 
 CallExpr
   = target:IndexExpr __ '(' __ args:Values? __ ')' {
-      return new Funcall(target, args);
+      return new FuncallNode(target, args);
     }
   / IndexExpr
 
@@ -466,16 +472,16 @@ CallExpr
 IndexExpr
   = sym:Symbol indexes:( __ '[' __ v:Value ']' { return v; } )* {
       if (indexes.length == 0) {
-        return new Variable(sym);
+        return new VariableNode(sym);
       } else {
-        return buildIndex(new Variable(sym), indexes);
+        return buildIndex(new VariableNode(sym), indexes);
       }
     }
   / PrimaryExpr
 
 PrimaryExpr
   = lit:Literal {
-      return new Literal(lit);
+      return new LiteralNode(lit);
     }
   / '(' __ val:Value __ ')' {
       return val;
