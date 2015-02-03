@@ -104,8 +104,8 @@ define([ 'start-lang', 'start-lib' ], function(startlang, startlib) {
           len = items.length;
           count = -1;
           (function loop() {
-            if (++count < len) {
-              _this.ctx.set(node.name, items[count]);
+            if (items.more()) {
+              _this.ctx.set(node.name, items.next());
               _this.visit(node.body, function(err) {
                 if (err) {
                   if (err.flow && err.scope == 'loop') {

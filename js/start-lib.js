@@ -70,13 +70,28 @@ define(function() {
     return obj == null ? snone : obj['$$start$$handler$$'];
   }
 
+  // enumerate a basic array or string
+  function enumerate(a) {
+    var current = 0, len = a.length;
+
+    return {
+      more: function() {
+        return current < len;
+      },
+
+      next: function() {
+        return a[current++];
+      }
+    };
+  }
+
   var snone = {
     repr: function() {
       return '*none*';
     },
 
     enumerate: function() {
-      return [];
+      return enumerate([]);
     },
 
     getindex: function() {
@@ -103,7 +118,7 @@ define(function() {
     },
 
     enumerate: function(b) {
-      return b ? [b] : [];
+      return enumerate(b ? [b] : []);
     },
 
     getindex: function() {
@@ -139,7 +154,7 @@ define(function() {
     },
 
     enumerate: function(n) {
-      return [n];
+      return enumerate([n]);
     },
 
     getindex: function() {
@@ -179,14 +194,8 @@ define(function() {
         return Math.random() * num;
       },
 
-      count: function(from, to, by) {
-        var a = [];
-
-        for (var i = from; i <= to; i += by || 1) {
-          a.push(i);
-        }
-
-        return a;
+      count: function(start, end, step) {
+        return new Range(start, end, step);
       }
     }),
 
@@ -219,13 +228,74 @@ define(function() {
     enumerable: false
   });
 
+  function Range(start, end, step) {
+    this.start = start;
+    this.end = end;
+    this.step = step || 1;
+  }
+
+  var srange = {
+    repr: function(r) {
+      return '[ ' + r.start + ' => ' + r.end + ' : ' + r.step + ' ]';
+    },
+
+    enumerate: function(r) {
+      var current = r.start;
+
+      // return an interator over the range
+      return {
+        more: function() {
+          return current <= r.end;
+        },
+
+        next: function() {
+          // preincrement
+          var result = current;
+          current += r.step;
+          return result;
+        }
+      };
+    },
+
+    getindex: function(r, index) {
+      return r.start + index * r.step;
+    },
+
+    setindex: function() {
+      throw new Error('object does not support []');
+    },
+
+    delindex: function() {
+      throw new Error('object does not support []');
+    },
+
+    methods: [],
+
+    unaryops: {},
+
+    binaryops: {
+      '=' : function(left, right) {
+        // equal if it's the same range
+        return left.start == right.start &&
+               left.end == right.end &&
+               left.step == right.step;
+      },
+      '!=': function(left, right) { return ! this['='](left, right); }
+    }
+  };
+
+  Object.defineProperty(Range.prototype, '$$start$$handler$$', {
+    value: srange,
+    enumerable: false
+  });
+
   var sstring = {
     repr: function(s) {
       return s;
     },
 
     enumerate: function(s) {
-      return s.split('');
+      return enumerate(s);
     },
 
     getindex: function(s, index) {
@@ -329,7 +399,7 @@ define(function() {
     },
 
     enumerate: function(a) {
-      return a;
+      return enumerate(a);
     },
 
     getindex: function(a, index) {
@@ -477,7 +547,7 @@ define(function() {
     },
 
     enumerate: function(t) {
-      return Object.keys(t);
+      return enumerate(Object.keys(t));
     },
 
     getindex: function(t, index) {
