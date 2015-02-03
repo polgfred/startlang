@@ -3653,7 +3653,7 @@ define(function (require, exports, module) {module.exports = (function() {
       var VariableNode = Node.extend({
         node: 'VariableNode',
 
-        constructor: function(name, index) {
+        constructor: function(name) {
           this.name = name;
         }
       });
