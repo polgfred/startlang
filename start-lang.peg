@@ -40,41 +40,41 @@
     }
   });
 
-  var IfNode = Node.extend({
-    node: 'IfNode',
+  var IfElseNode = Node.extend({
+    node: 'IfElseNode',
 
-    constructor: function(cond, tblock, fblock) {
+    constructor: function(cond, tbody, fbody) {
       this.cond = cond;
-      this.tblock = tblock;
-      this.fblock = fblock;
+      this.tbody = tbody;
+      this.fbody = fbody;
     }
   });
 
-  var ForNode = Node.extend({
-    node: 'ForNode',
+  var ForInNode = Node.extend({
+    node: 'ForInNode',
 
-    constructor: function(name, range, block) {
+    constructor: function(name, range, body) {
       this.name = name;
       this.range = range;
-      this.block = block;
+      this.body = body;
     }
   });
 
   var WhileNode = Node.extend({
     node: 'WhileNode',
 
-    constructor: function(cond, block) {
+    constructor: function(cond, body) {
       this.cond = cond;
-      this.block = block;
+      this.body = body;
     }
   });
 
   var BeginNode = Node.extend({
     node: 'BeginNode',
 
-    constructor: function(name, block) {
+    constructor: function(name, body) {
       this.name = name;
-      this.block = block;
+      this.body = body;
     }
   });
 
@@ -263,7 +263,7 @@ start
 // Top-level
 
 Block
-  = EOL* elems:( __ elem:BlockElement EOL { return elem; } )* {
+  = elems:( __ elem:BlockElement EOL { return elem; } )* {
       return new BlockNode(elems);
     }
 
@@ -274,42 +274,61 @@ BlockElement
 
 Control
   = IfElse
-  / For
+  / ForIn
   / While
   / Begin
 
 IfElse
-  = __ 'if' WB __ cond:Value EOL
-    tblock:Block
-    fblock:(
+  // single line
+  = __ 'if' WB __ cond:Value __ tbody:Statement
+    fbody:( __ 'else' WB __ s:Statement { return s; } )? {
+      return new IfElseNode(cond, tbody, fbody);
+    }
+  // block
+  / __ 'if' WB __ cond:Value EOL
+    tbody:Block
+    fbody:(
       __ 'else' EOL
-      b:Block {
-        return b;
-      }
+      b:Block { return b; }
     )?
     __ 'end' {
-      return new IfNode(cond, tblock, fblock);
+      return new IfElseNode(cond, tbody, fbody);
     }
 
-For
-  = __ 'for' WB __ sym:Symbol __ 'in' WB __ range:Value EOL
-    block:Block
+ForIn
+  // single line
+  = __ 'for' WB __ sym:Symbol __ 'in' WB __ range:Value __ body:Statement {
+      return new ForInNode(sym, range, body);
+    }
+  // block
+  / __ 'for' WB __ sym:Symbol __ 'in' WB __ range:Value EOL
+    body:Block
     __ 'end' {
-      return new ForNode(sym, range, block);
+      return new ForInNode(sym, range, body);
     }
 
 While
-  = __ 'while' WB __ cond:Value EOL
-    block:Block
+  // single line
+  = __ 'while' WB __ cond:Value __ body:Statement {
+      return new WhileNode(cond, body);
+    }
+  // block
+  / __ 'while' WB __ cond:Value EOL
+    body:Block
     __ 'end' {
-      return new WhileNode(cond, block);
+      return new WhileNode(cond, body);
     }
 
 Begin
-  = __ 'begin' WB __ sym:Symbol EOL
-    block:Block
+  // single line
+  = __ 'begin' WB __ sym:Symbol __ body:Statement {
+      return new BeginNode(sym, body);
+    }
+  // block
+  / __ 'begin' WB __ sym:Symbol EOL
+    body:Block
     __ 'end' {
-      return new BeginNode(sym, block);
+      return new BeginNode(sym, body);
     }
 
 Statement

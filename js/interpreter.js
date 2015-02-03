@@ -79,22 +79,22 @@ define([ 'start-lang', 'start-lib' ], function(startlang, startlib) {
       })();
     },
 
-    IfNode: function(node, done) {
+    IfElseNode: function(node, done) {
       var _this = this;
       _this.visit(node.cond, function(err, cres) {
         if (err) {
           done(err);
         } else if (cres) {
-          _this.visit(node.tblock, done);
-        } else if (node.fblock) {
-          _this.visit(node.fblock, done);
+          _this.visit(node.tbody, done);
+        } else if (node.fbody) {
+          _this.visit(node.fbody, done);
         } else {
           done();
         }
       });
     },
 
-    ForNode: function(node, done) {
+    ForInNode: function(node, done) {
       var _this = this, items, len, count;
       _this.visit(node.range, function(err, rres) {
         if (err) {
@@ -106,7 +106,7 @@ define([ 'start-lang', 'start-lib' ], function(startlang, startlib) {
           (function loop() {
             if (++count < len) {
               _this.ctx.set(node.name, items[count]);
-              _this.visit(node.block, function(err) {
+              _this.visit(node.body, function(err) {
                 if (err) {
                   if (err.flow && err.scope == 'loop') {
                     (err.terminate ? done : loop)();
@@ -132,7 +132,7 @@ define([ 'start-lang', 'start-lib' ], function(startlang, startlib) {
           if (err) {
             done(err);
           } else if (cres) {
-            _this.visit(node.block, function(err) {
+            _this.visit(node.body, function(err) {
               if (err) {
                 if (err.flow && err.scope == 'loop') {
                   (err.terminate ? done : loop)();
@@ -154,7 +154,7 @@ define([ 'start-lang', 'start-lib' ], function(startlang, startlib) {
       var _this = this;
       _this.ctx.set(node.name, function(args, done2) {
         _this.ctx.push();
-        _this.visit(node.block, function(err) {
+        _this.visit(node.body, function(err) {
           _this.ctx.pop();
           if (err) {
             if (err.flow) {
