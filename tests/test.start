@@ -1,17 +1,13 @@
-begin f1
+begin f1 do
 end
 
 let x = 50
 let y = (x + 1)
 
-begin john
-  for i in count(1, 10, 2)
+begin john do
+  for i in count(1, 10, 2) do
     print i, x, "hi, ""there"""
-    if x
-      call f1
-    else
-      call f2
-    end
+    if x then call f1 else call f2
   end
 end
 

@@ -279,50 +279,50 @@ Control
 // Control structures each have a single-line form and a block form
 
 IfElse
-  = __ 'if' WB __ cond:Value __ tbody:Statement __ 'else' WB __ fbody:Statement {
+  = __ 'if' WB __ cond:Value __ 'then' WB __ tbody:Statement __ 'else' WB __ fbody:Statement {
       return new IfElseNode(cond, tbody, fbody);
     }
-  / __ 'if' WB __ cond:Value __ tbody:Statement {
+  / __ 'if' WB __ cond:Value __ 'then' WB __ tbody:Statement {
       return new IfElseNode(cond, tbody);
     }
-  / __ 'if' WB __ cond:Value EOL
+  / __ 'if' WB __ cond:Value __ 'then' EOL
     tbody:Block
     __ 'else' EOL
     fbody:Block
     __ 'end' {
       return new IfElseNode(cond, tbody, fbody);
     }
-  / __ 'if' WB __ cond:Value EOL
+  / __ 'if' WB __ cond:Value __ 'then' EOL
     tbody:Block
     __ 'end' {
       return new IfElseNode(cond, tbody);
     }
 
 ForIn
-  = __ 'for' WB __ sym:Symbol __ 'in' WB __ range:Value __ body:Statement {
+  = __ 'for' WB __ sym:Symbol __ 'in' WB __ range:Value __ 'do' WB __ body:Statement {
       return new ForInNode(sym, range, body);
     }
-  / __ 'for' WB __ sym:Symbol __ 'in' WB __ range:Value EOL
+  / __ 'for' WB __ sym:Symbol __ 'in' WB __ range:Value __ 'do' EOL
     body:Block
     __ 'end' {
       return new ForInNode(sym, range, body);
     }
 
 While
-  = __ 'while' WB __ cond:Value __ body:Statement {
+  = __ 'while' WB __ cond:Value __ 'do' WB __ body:Statement {
       return new WhileNode(cond, body);
     }
-  / __ 'while' WB __ cond:Value EOL
+  / __ 'while' WB __ cond:Value __ 'do' EOL
     body:Block
     __ 'end' {
       return new WhileNode(cond, body);
     }
 
 Begin
-  = __ 'begin' WB __ sym:Symbol __ body:Statement {
+  = __ 'begin' WB __ sym:Symbol __ 'do' WB __ body:Statement {
       return new BeginNode(sym, body);
     }
-  / __ 'begin' WB __ sym:Symbol EOL
+  / __ 'begin' WB __ sym:Symbol __ 'do' EOL
     body:Block
     __ 'end' {
       return new BeginNode(sym, body);

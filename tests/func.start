@@ -8,30 +8,21 @@ let a[3] = 3
 
 print len(a)
 
-begin len
+begin len do
   print "blargh"
 end
 
 call len
 
-begin func1
-  print 1
-end
-
-begin func2
-  print 2
-end
+begin func1 do print 1
+begin func2 do print 2
 
 let b = array()
 let b[0] = func1
 let b[1] = func2
 
-for i in count(0, len(b))
-  call b[i]
-end
+for i in count(0, len(b)) do call b[i]
 
-for f in b
-  call f
-end
+for f in b do call f
 
---this is comment
+--this is a comment

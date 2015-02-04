@@ -1,8 +1,8 @@
-begin loop
+begin loop do
   let y = x * 2
   print y + 7
 
-  if y + 7 > 18
+  if y + 7 > 18 then
     print "It's ""greater"" than 18"
   end
 
@@ -12,7 +12,7 @@ end
 
 print "hi"
 
-for x in count(0, 10)
+for x in count(0, 10) do
   let z = 1
   print "hi"
   loop

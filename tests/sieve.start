@@ -1,15 +1,15 @@
 let primes = array(1000)
 
-for i in count(0, 1) let primes[i] = 0
-for i in count(2, 1000) let primes[i] = 1
+for i in count(0, 1) do let primes[i] = 0
+for i in count(2, 1000) do let primes[i] = 1
 
 let i = 0
-while i <= 1000
-  while i <= 1000 and primes[i] = 0 let i = i + 1
-  if i <= 1000
+while i <= 1000 do
+  while i <= 1000 and primes[i] = 0 do let i = i + 1
+  if i <= 1000 then
     let j = 2
     let k = j * i
-    while k <= 1000
+    while k <= 1000 do
       let primes[k] = 0
       let j = j + 1
       let k = j * i
@@ -18,6 +18,6 @@ while i <= 1000
   end
 end
 
-for i in count(0, 1000)
-  if primes[i] = 1 print i + " is prime"
+for i in count(0, 1000) do
+  if primes[i] = 1 then print i + " is prime"
 end
