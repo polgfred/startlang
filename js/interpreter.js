@@ -28,16 +28,20 @@ define([ 'start-lang', 'start-lib' ], function(startlang, startlib) {
       });
     },
 
-    // main node visitor, handles calling `enter' and `handleError' traps,
+    // main node visitor, handles calling `enter', `exit',` and `error' traps,
     // exception handling, and dispatching to AST nodes
     visit: function(node, done) {
       var _this = this;
       rawAsap(function() {
         _this.enter(node, function retry() {
           try {
-            _this[node.node](node, done);
+            _this[node.node](node, function(err, result) {
+              _this.exit(node, err, result, function() {
+                done(err, result);
+              });
+            });
           } catch (err) {
-            _this.handleError(node, err, retry, function() {
+            _this.error(node, err, retry, function() {
               err.node = node;
               done(err);
             });
@@ -53,10 +57,15 @@ define([ 'start-lang', 'start-lib' ], function(startlang, startlib) {
     },
 
     // ** OVERRIDE **
+    // trap will be called upon exit of every node, do anything you want and call cont()
+    exit: function(node, err, result, cont) {
+      cont();
+    },
+
+    // ** OVERRIDE **
     // trap will be called for any exception while evaluating a node, do anything you
     // want and call retry() or fail()
-    handleError: function(node, err, retry, fail) {
-      console.log('failing', node, err);
+    error: function(node, err, retry, fail) {
       fail();
     },
 
