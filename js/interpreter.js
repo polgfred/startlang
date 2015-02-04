@@ -36,14 +36,18 @@ define([ 'start-lang', 'start-lib' ], function(startlang, startlib) {
         _this.enter(node, function retry() {
           try {
             _this[node.node](node, function(err, result) {
-              _this.exit(node, err, result, function() {
-                done(err, result);
+              rawAsap(function() {
+                _this.exit(node, err, result, function() {
+                  done(err, result);
+                });
               });
             });
           } catch (err) {
-            _this.error(node, err, retry, function() {
-              err.node = node;
-              done(err);
+            rawAsap(function() {
+              _this.error(node, err, retry, function() {
+                err.node = node;
+                done(err);
+              });
             });
           }
         });
