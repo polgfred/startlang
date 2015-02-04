@@ -48,16 +48,18 @@ let t["name"] = "Fred"
 let t["age"] = 40
 
 let u = table()
-let u["name"] = "Fred"
-let u["age"] = 40
+let u.name = "Fred"
+let u.age = 40
 
 if t = u then print "5a should see this"
 
-let t["likes"] = "computers"
+let t.likes = "computers"
 
 if t != u then print "5b should see this"
 
-delete t["likes"]
-let t["age"] = 41
+delete t.likes
+let t.age = 41
 
 if t != u then print "5c should see this"
+
+print t
