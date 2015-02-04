@@ -281,16 +281,23 @@ Control
 // Control structures each have a single-line form and a block form
 
 IfElse
-  = __ 'if' WB __ cond:Value __ tbody:Statement
-    fbody:( __ 'else' WB __ s:Statement { return s; } )? {
+  = __ 'if' WB __ cond:Value __ tbody:Statement __ 'else' WB __ fbody:Statement {
+      return new IfElseNode(cond, tbody, fbody);
+    }
+  / __ 'if' WB __ cond:Value __ tbody:Statement {
+      return new IfElseNode(cond, tbody);
+    }
+  / __ 'if' WB __ cond:Value EOL
+    tbody:Block
+    __ 'else' EOL
+    fbody:Block
+    __ 'end' {
       return new IfElseNode(cond, tbody, fbody);
     }
   / __ 'if' WB __ cond:Value EOL
     tbody:Block
-    fbody:( __ 'else' EOL
-            b:Block { return b; } )?
     __ 'end' {
-      return new IfElseNode(cond, tbody, fbody);
+      return new IfElseNode(cond, tbody);
     }
 
 ForIn
@@ -330,9 +337,7 @@ Statement
   / Flow
 
 Assign
-  = __ 'let' WB __ sym:Symbol
-    indexes:( __ '[' __ v:Value ']' { return v; } )*
-    __ '=' __ value:Value {
+  = __ 'let' WB __ sym:Symbol indexes:Indexes __ '=' __ value:Value {
       if (indexes.length == 0) {
         return new AssignNode(sym, value);
       } else {
@@ -341,8 +346,7 @@ Assign
     }
 
 Delete
-  = __ 'delete' WB __ sym:Symbol
-    indexes:( __ '[' __ v:Value ']' { return v; } )* {
+  = __ 'delete' WB __ sym:Symbol indexes:Indexes {
       if (indexes.length == 0) {
         return new DeleteNode(sym);
       } else {
@@ -351,20 +355,21 @@ Delete
     }
 
 Call
-  = __ target:( 'call' WB __ e:IndexExpr { return e; }
-                / sym:Symbol { return new VariableNode(sym); } )
-    args:( __ v:Values? __ { return v; } )? {
-      return new FuncallNode(target, args);
+  = 'call' WB __ expr:IndexExpr __ args:Values? {
+      return new FuncallNode(expr, args);
+    }
+  / sym:Symbol __ args:Values? {
+      return new FuncallNode(new VariableNode(sym), args);
     }
 
 Flow
-  = __ 'break' {
+  = __ 'break' WB {
       return new BreakNode;
     }
-  / __ 'next' {
+  / __ 'next' WB {
       return new NextNode;
     }
-  / __ 'return' result:( WB __ val:Value { return val; } )? {
+  / __ 'return' WB __ result:Value? {
       return new ReturnNode(result);
     }
 
@@ -464,10 +469,10 @@ CallExpr
     }
   / IndexExpr
 
-// Index
+// Indexes
 
 IndexExpr
-  = sym:Symbol indexes:( __ '[' __ v:Value ']' { return v; } )* {
+  = sym:Symbol indexes:Indexes {
       if (indexes.length == 0) {
         return new VariableNode(sym);
       } else {
@@ -475,6 +480,17 @@ IndexExpr
       }
     }
   / PrimaryExpr
+
+Indexes
+  = ( __ elem:IndexElement { return elem; } )*
+
+IndexElement
+  = '[' __ v:Value __ ']' {
+      return v;
+    }
+  / '.' sym:Symbol {
+      return new LiteralNode(sym);
+    }
 
 PrimaryExpr
   = lit:Literal {
