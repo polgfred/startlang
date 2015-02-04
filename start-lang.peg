@@ -156,17 +156,15 @@
     }
   });
 
-  // special token to signal buildIndex that we're building a delete_index call
+  // special token to signal buildIndex that we have a DeleteIndex call
   var $remove = {};
 
-  // take a base, indexes, and (optionally) a value, and construct a left-folding tree
-  // that terminates in an index lookup, assignment, or deletion
-  function buildIndex(base, indexes, value) {
-    indexes || (indexes = []);
+  // take a base, dimensions, and (optionally) a value, and construct a
+  // left-folding tree that terminates in an index lookup, assign, or delete
+  function buildIndex(base, dims, value) {
+    var next, last = dims.pop();
 
-    var next, last = indexes.pop();
-
-    while (next = indexes.shift()) {
+    while (next = dims.shift()) {
       base = new IndexNode(base, next);
     }
 
@@ -337,20 +335,20 @@ Statement
   / Flow
 
 Assign
-  = __ 'let' WB __ sym:Symbol indexes:Indexes __ '=' __ value:Value {
-      if (indexes.length == 0) {
+  = __ 'let' WB __ sym:Symbol __ dims:Dimensions? __ '=' __ value:Value {
+      if (!dims) {
         return new AssignNode(sym, value);
       } else {
-        return buildIndex(new VariableNode(sym), indexes, value);
+        return buildIndex(new VariableNode(sym), dims, value);
       }
     }
 
 Delete
-  = __ 'delete' WB __ sym:Symbol indexes:Indexes {
-      if (indexes.length == 0) {
+  = __ 'delete' WB __ sym:Symbol __ dims:Dimensions? {
+      if (!dims) {
         return new DeleteNode(sym);
       } else {
-        return buildIndex(new VariableNode(sym), indexes, $remove);
+        return buildIndex(new VariableNode(sym), dims, $remove);
       }
     }
 
@@ -472,19 +470,21 @@ CallExpr
 // Indexes
 
 IndexExpr
-  = sym:Symbol indexes:Indexes {
-      if (indexes.length == 0) {
+  = sym:Symbol __ dims:Dimensions? {
+      if (!dims) {
         return new VariableNode(sym);
       } else {
-        return buildIndex(new VariableNode(sym), indexes);
+        return buildIndex(new VariableNode(sym), dims);
       }
     }
   / PrimaryExpr
 
-Indexes
-  = ( __ elem:IndexElement { return elem; } )*
+Dimensions
+  = first:Dimension rest:( __ dim:Dimension { return dim; } )* {
+      return [first].concat(rest);
+    }
 
-IndexElement
+Dimension
   = '[' __ v:Value __ ']' {
       return v;
     }
