@@ -258,18 +258,33 @@ define(function() {
     },
 
     getindex: function(r, index) {
-      return r.start + index * r.step;
+      var val = r.start + index * r.step;
+
+      if (val <= r.end) {
+        return val;
+      }
     },
 
     setindex: function() {
-      throw new Error('object does not support []');
+      throw new Error('object cannot be modified with []');
     },
 
     delindex: function() {
-      throw new Error('object does not support []');
+      throw new Error('object cannot be modified with []');
     },
 
-    methods: [],
+    methods: {
+      len: function(r) {
+        var div = (r.end - r.start) / r.step,
+            floor = Math.floor(div);
+
+        if (div == Math.floor(div)) {
+          return div + 1;
+        } else {
+          return Math.ceil(div);
+        }
+      }
+    },
 
     unaryops: {},
 
