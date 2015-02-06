@@ -19,7 +19,7 @@ module.exports = function(grunt) {
         command: 'pegjs parser.pegjs'
       },
       bundle: {
-        command: 'browserify web/main.js -o web/bundle.js'
+        command: 'cd web ; browserify main.js --debug | exorcist bundle.js.map > bundle.js'
       }
     }
   });
