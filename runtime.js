@@ -188,7 +188,7 @@ var SNumber = exports.SNumber = {
       return Math.random() * num;
     },
 
-    count: function(start, end, step) {
+    step: function(start, end, step) {
       return new Range(start, end, step);
     }
   }),
@@ -239,7 +239,7 @@ var SRange = exports.SRange = {
     // return an interator over the range
     return {
       more: function() {
-        return current <= r.end;
+        return current < r.end;
       },
 
       next: function() {

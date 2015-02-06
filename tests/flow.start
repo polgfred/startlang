@@ -1,8 +1,8 @@
-for i in count(1, 5) do print i
+for i in step(1, 5) do print i
 
 if i = 5 then print "done0" else print "done1"
 
-for i in count(1, 10) do
+for i in step(1, 10) do
   print "hi", i
   if i = 4 then next
   if i = 8 then break

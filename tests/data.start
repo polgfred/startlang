@@ -12,7 +12,7 @@ end
 
 print "hi"
 
-for x in count(0, 10) do
+for x in step(0, 10) do
   let z = 1
   print "hi"
   loop

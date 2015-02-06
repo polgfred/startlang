@@ -5,7 +5,7 @@ let x = 50
 let y = (x + 1)
 
 begin john do
-  for i in count(1, 10, 2) do
+  for i in step(1, 10, 2) do
     print i, x, "hi, ""there"""
     if x then call f1 else call f2
   end
