@@ -10,7 +10,11 @@
   "dependencies": {
     "asap": "~2.0.0"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "grunt": "*",
+    "grunt-contrib-watch": "*",
+    "grunt-shell": "*"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

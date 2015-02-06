@@ -420,6 +420,6 @@ mixin(SInterpreter.prototype, {
   }
 });
 
-exports.create = function(source) {
-  return new SInterpreter(parser.parse(source));
+exports.create = function(source, ctx) {
+  return new SInterpreter(parser.parse(source), ctx);
 };
