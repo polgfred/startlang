@@ -1,7 +1,7 @@
 // Language Nodes
 
 {
-  var handle = require('start-lib').handle;
+  var runtime = require('./runtime');
 
   function mixin(object, properties) {
     Object.keys(properties).forEach(function(prop) {
@@ -452,7 +452,7 @@ PowOp
 UnaryExpr
   = op:AddOp __ num:Number {
       // handle +/- number in the parser
-      return new LiteralNode(handle(num).unaryops[op](num));
+      return new LiteralNode(runtime.handle(num).unaryops[op](num));
     }
   / op:AddOp __ right:CallExpr {
       return new UnaryOpNode(op, right);
