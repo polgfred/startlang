@@ -24,5 +24,4 @@ interp.run(function(err, result, ctx) {
     console.log(err);
     console.log(err.stack);
   }
-  console.log(util.inspect(ctx, false, null));
 });
