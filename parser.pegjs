@@ -15,13 +15,13 @@
     var delegate = options.constructor,
         ctor = function() {
           // grab the info about where we are in the source
-          this._text = text();
-          this._offset = offset();
-          this._line = line();
-          this._column = column();
-
-          // copy from proto so we can inspect it
-          this._node = this.node;
+          this.meta = {
+            node: this.node,
+            text: text(),
+            offset: offset(),
+            line: line(),
+            column: column()
+          };
 
           delegate.apply(this, arguments);
         };
