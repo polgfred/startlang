@@ -3,14 +3,16 @@ module.exports = function(grunt) {
     watch: {
       config: {
         files: ['Gruntfile.js'],
-        options: { reload: true }
+        options: {
+          reload: true
+        }
       },
       pegjs: {
         files: ['parser.pegjs'],
         tasks: ['shell:pegjs']
       },
       bundle: {
-        files: ['*.js', '!Gruntfile.js'],
+        files: ['*.js', 'web/*.js', '!Gruntfile.js', '!web/bundle.js'],
         tasks: ['shell:bundle']
       }
     },

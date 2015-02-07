@@ -52,7 +52,7 @@ var ctx = runtime.create(),
           }
         });
         var interp = interpreter.create(command + '\n', ctx);
-        console.log(interp.ast);
+        console.log(interp.root);
         interp.run(function() {
           terminal.echo('');
           prompt.setValue('');
