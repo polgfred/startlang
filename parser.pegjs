@@ -30,18 +30,19 @@
   // take a base, dimensions, and (optionally) a value, and construct a
   // left-folding tree that terminates in an index lookup, assign, or delete
   function buildIndex(base, dims, value) {
-    var next, last = dims.pop();
+    var last = dims.shift();
 
-    while (next = dims.shift()) {
-      base = buildNode('index', { base: base, index: next });
-    }
-
-    if (value === undefined) {
-      return buildNode('index', { base: base, index: last });
-    } else if (value === $remove) {
-      return buildNode('deleteIndex', { base: base, index: last });
+    if (dims.length == 0) {
+      if (value === undefined) {
+        return buildNode('index', { base: base, index: last });
+      } else if (value === $remove) {
+        return buildNode('deleteIndex', { base: base, index: last });
+      } else {
+        return buildNode('letIndex', { base: base, index: last, value: value });
+      }
     } else {
-      return buildNode('letIndex', { base: base, index: last, value: value });
+      var node = buildNode('index', { base: base, index: last });
+      return buildIndex(node, dims, value);
     }
   }
 
