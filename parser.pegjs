@@ -3,158 +3,26 @@
 {
   var runtime = require('./runtime');
 
-  function mixin(object, properties) {
-    Object.keys(properties).forEach(function(prop) {
-      object[prop] = properties[prop];
-    });
+  // build an object for this node
+  function buildNode(type, attrs) {
+    // show the type first
+    var node = { type: type };
+
+    // then the passed-in attributes
+    for (var p in attrs) {
+      node[p] = attrs[p];
+    }
+
+    // then the source metadata
+    node.meta = {
+      text: text(),
+      offset: offset(),
+      line: line(),
+      column: column()
+    };
+
+    return node;
   }
-
-  function Node() {}
-
-  Node.extend = function(options) {
-    var delegate = options.constructor,
-        ctor = function() {
-          // grab the info about where we are in the source
-          this.meta = {
-            node: this.node,
-            text: text(),
-            offset: offset(),
-            line: line(),
-            column: column()
-          };
-
-          delegate.apply(this, arguments);
-        };
-
-    ctor.prototype = Object.create(Node.prototype);
-    options.constructor = ctor;
-    mixin(ctor.prototype, options);
-    return ctor;
-  };
-
-  var BlockNode = Node.extend({
-    node: 'BlockNode',
-
-    constructor: function(elems) {
-      this.elems = elems || [];
-    }
-  });
-
-  var IfElseNode = Node.extend({
-    node: 'IfElseNode',
-
-    constructor: function(cond, tbody, fbody) {
-      this.cond = cond;
-      this.tbody = tbody;
-      this.fbody = fbody;
-    }
-  });
-
-  var ForInNode = Node.extend({
-    node: 'ForInNode',
-
-    constructor: function(name, range, body) {
-      this.name = name;
-      this.range = range;
-      this.body = body;
-    }
-  });
-
-  var WhileNode = Node.extend({
-    node: 'WhileNode',
-
-    constructor: function(cond, body) {
-      this.cond = cond;
-      this.body = body;
-    }
-  });
-
-  var BeginNode = Node.extend({
-    node: 'BeginNode',
-
-    constructor: function(name, body) {
-      this.name = name;
-      this.body = body;
-    }
-  });
-
-  var FuncallNode = Node.extend({
-    node: 'FuncallNode',
-
-    constructor: function(target, args) {
-      this.target = target;
-      this.args = args || [];
-    }
-  });
-
-  var BreakNode = Node.extend({
-    node: 'BreakNode'
-  });
-
-  var NextNode = Node.extend({
-    node: 'NextNode'
-  });
-
-  var ReturnNode = Node.extend({
-    node: 'ReturnNode',
-
-    constructor: function(result) {
-      this.result = result;
-    }
-  });
-
-  var VariableNode = Node.extend({
-    node: 'VariableNode',
-
-    constructor: function(name) {
-      this.name = name;
-    }
-  });
-
-  var AssignNode = Node.extend({
-    node: 'AssignNode',
-
-    constructor: function(name, value) {
-      this.name = name;
-      this.value = value;
-    }
-  });
-
-  var DeleteNode = Node.extend({
-    node: 'DeleteNode',
-
-    constructor: function(name) {
-      this.name = name;
-    }
-  });
-
-  var IndexNode = Node.extend({
-    node: 'IndexNode',
-
-    constructor: function(base, index) {
-      this.base = base;
-      this.index = index;
-    }
-  });
-
-  var AssignIndexNode = Node.extend({
-    node: 'AssignIndexNode',
-
-    constructor: function(base, index, value) {
-      this.base = base;
-      this.index = index;
-      this.value = value;
-    }
-  });
-
-  var DeleteIndexNode = Node.extend({
-    node: 'DeleteIndexNode',
-
-    constructor: function(base, index) {
-      this.base = base;
-      this.index = index;
-    }
-  });
 
   // special token to signal buildIndex that we have a DeleteIndex call
   var $remove = {};
@@ -165,71 +33,37 @@
     var next, last = dims.pop();
 
     while (next = dims.shift()) {
-      base = new IndexNode(base, next);
+      base = buildNode('index', { base: base, index: next });
     }
 
     if (value === undefined) {
-      return new IndexNode(base, last);
+      return buildNode('index', { base: base, index: last });
     } else if (value === $remove) {
-      return new DeleteIndexNode(base, last);
+      return buildNode('deleteIndex', { base: base, index: last });
     } else {
-      return new AssignIndexNode(base, last, value);
+      return buildNode('letIndex', { base: base, index: last, value: value });
     }
   }
-
-  var LiteralNode = Node.extend({
-    node: 'LiteralNode',
-
-    constructor: function(value) {
-      this.value = value;
-    }
-  });
-
-  var CommentNode = Node.extend({
-    node: 'CommentNode',
-
-    constructor: function(text) {
-      this.text = text;
-    }
-  });
-
-  var LogicalOpNode = Node.extend({
-    node: 'LogicalOpNode',
-
-    constructor: function(op, left, right) {
-      this.op = op;
-      this.left = left;
-      this.right = right;
-    }
-  });
 
   // take a chain of equal-precedence logical exprs and construct a left-folding tree
   function buildLogicalOp(first, rest) {
     if (rest.length == 0) {
       return first;
     } else {
-      var next = rest.shift();
-      return buildLogicalOp(new LogicalOpNode(next[0], first, next[1]), rest);
+      var next = rest.shift(),
+          node = buildNode('logicalOp', { op: next[0], left: first, right: next[1] });
+      return buildLogicalOp(node, rest);
     }
   }
-
-  var BinaryOpNode = Node.extend({
-    node: 'BinaryOpNode',
-
-    constructor: function(op, left, right) {
-      this.op = op;
-      this.left = left;
-      this.right = right;
-    }
-  });
 
   // take a chain of equal-precedence binary exprs and construct a left-folding tree
   function buildBinaryOp(first, rest) {
     if (rest.length == 0) {
       return first;
     } else {
-      var next = rest.shift();
-      return buildBinaryOp(new BinaryOpNode(next[0], first, next[1]), rest);
+      var next = rest.shift(),
+          node = buildNode('binaryOp', { op: next[0], left: first, right: next[1] });
+      return buildBinaryOp(node, rest);
     }
   }
 
@@ -238,19 +72,11 @@
     if (rest.length == 0) {
       return last;
     } else {
-      var next = rest.pop();
-      return buildBinaryOpRight(rest, new BinaryOpNode(next[0], next[1], last));
+      var next = rest.pop(),
+          node = buildNode('binaryOp', { op: next[0], left: next[1], right: last });
+      return buildBinaryOpRight(rest, node);
     }
   }
-
-  var UnaryOpNode = Node.extend({
-    node: 'UnaryOpNode',
-
-    constructor: function(op, right) {
-      this.op = op;
-      this.right = right;
-    }
-  });
 }
 
 // Grammar
@@ -262,7 +88,7 @@ start
 
 Block
   = elems:( __ elem:BlockElement EOL { return elem; } )* {
-      return new BlockNode(elems);
+      return buildNode('block', { elems: elems });
     }
 
 BlockElement
@@ -271,109 +97,109 @@ BlockElement
   / Comment
 
 Control
-  = IfElse
-  / ForIn
+  = If
+  / For
   / While
   / Begin
 
 // Control structures each have a single-line form and a block form
 
-IfElse
+If
   = __ 'if' WB __ cond:Value __ 'then' WB __ tbody:Statement __ 'else' WB __ fbody:Statement {
-      return new IfElseNode(cond, tbody, fbody);
+      return buildNode('if', { cond: cond, tbody: tbody, fbody: fbody });
     }
   / __ 'if' WB __ cond:Value __ 'then' WB __ tbody:Statement {
-      return new IfElseNode(cond, tbody);
+      return buildNode('if', { cond: cond, tbody: tbody });
     }
   / __ 'if' WB __ cond:Value __ 'then' EOL
     tbody:Block
     __ 'else' EOL
     fbody:Block
     __ 'end' {
-      return new IfElseNode(cond, tbody, fbody);
+      return buildNode('if', { cond: cond, tbody: tbody, fbody: fbody });
     }
   / __ 'if' WB __ cond:Value __ 'then' EOL
     tbody:Block
     __ 'end' {
-      return new IfElseNode(cond, tbody);
+      return buildNode('if', { cond: cond, tbody: tbody });
     }
 
-ForIn
+For
   = __ 'for' WB __ sym:Symbol __ 'in' WB __ range:Value __ 'do' WB __ body:Statement {
-      return new ForInNode(sym, range, body);
+      return buildNode('for', { name: sym, range: range, body: body });
     }
   / __ 'for' WB __ sym:Symbol __ 'in' WB __ range:Value __ 'do' EOL
     body:Block
     __ 'end' {
-      return new ForInNode(sym, range, body);
+      return buildNode('for', { name: sym, range: range, body: body });
     }
 
 While
   = __ 'while' WB __ cond:Value __ 'do' WB __ body:Statement {
-      return new WhileNode(cond, body);
+      return buildNode('while', { cond: cond, body: body });
     }
   / __ 'while' WB __ cond:Value __ 'do' EOL
     body:Block
     __ 'end' {
-      return new WhileNode(cond, body);
+      return buildNode('while', { cond: cond, body: body });
     }
 
 Begin
   = __ 'begin' WB __ sym:Symbol __ 'do' WB __ body:Statement {
-      return new BeginNode(sym, body);
+      return buildNode('begin', { name: sym, body: body });
     }
   / __ 'begin' WB __ sym:Symbol __ 'do' EOL
     body:Block
     __ 'end' {
-      return new BeginNode(sym, body);
+      return buildNode('begin', { name: sym, body: body });
     }
 
 Statement
-  = Assign
+  = Let
   / Delete
   / Call
   / Flow
 
-Assign
+Let
   = __ 'let' WB __ sym:Symbol __ dims:Dimensions? __ '=' __ value:Value {
       if (!dims) {
-        return new AssignNode(sym, value);
+        return buildNode('let', { name: sym, value: value });
       } else {
-        return buildIndex(new VariableNode(sym), dims, value);
+        return buildIndex(buildNode('var', { name: sym }), dims, value);
       }
     }
 
 Delete
   = __ 'delete' WB __ sym:Symbol __ dims:Dimensions? {
       if (!dims) {
-        return new DeleteNode(sym);
+        return buildNode('delete', { name: sym });
       } else {
-        return buildIndex(new VariableNode(sym), dims, $remove);
+        return buildIndex(buildNode('var', { name: sym }), dims, $remove);
       }
     }
 
 Call
   = 'call' WB __ expr:IndexExpr __ args:Values? {
-      return new FuncallNode(expr, args);
+      return buildNode('call', { target: expr, args: args });
     }
   / sym:Symbol __ args:Values? {
-      return new FuncallNode(new VariableNode(sym), args);
+      return buildNode('call', { target: buildNode('var', { name: sym }), args: args });
     }
 
 Flow
   = __ 'break' WB {
-      return new BreakNode;
+      return buildNode('break');
     }
   / __ 'next' WB {
-      return new NextNode;
+      return buildNode('next');
     }
   / __ 'return' WB __ result:Value? {
-      return new ReturnNode(result);
+      return buildNode('return', { result: result });
     }
 
 Comment
   = __ '--' __ text:$[^\n]* {
-      return new CommentNode(text);
+      return buildNode('comment', { text: text });
     }
 
 // Values
@@ -400,13 +226,13 @@ CondOp
 
 NotExpr
   = 'not' WB __ comp:RelExpr {
-      return new LogicalOpNode('not', null, comp);
+      return buildNode('logicalOp', { op: 'not', right: comp });
     }
   / RelExpr
 
 RelExpr
   = left:AddExpr __ op:RelOp __ right:AddExpr {
-      return new BinaryOpNode(op, left, right);
+      return buildNode('binaryOp', { op: op, left: left, right: right });
     }
   / '(' __ cond:CondExpr __ ')' {
       return cond;
@@ -452,10 +278,10 @@ PowOp
 UnaryExpr
   = op:AddOp __ num:Number {
       // handle +/- number in the parser
-      return new LiteralNode(runtime.handle(num).unaryops[op](num));
+      return buildNode('literal', { value: runtime.handle(num).unaryops[op](num) });
     }
   / op:AddOp __ right:CallExpr {
-      return new UnaryOpNode(op, right);
+      return buildNode('unaryOp', { op: op, right: right });
     }
   / CallExpr
 
@@ -463,7 +289,7 @@ UnaryExpr
 
 CallExpr
   = target:IndexExpr __ '(' __ args:Values? __ ')' {
-      return new FuncallNode(target, args);
+      return buildNode('call', { target: target, args: args });
     }
   / IndexExpr
 
@@ -472,9 +298,9 @@ CallExpr
 IndexExpr
   = sym:Symbol __ dims:Dimensions? {
       if (!dims) {
-        return new VariableNode(sym);
+        return buildNode('var', { name: sym });
       } else {
-        return buildIndex(new VariableNode(sym), dims);
+        return buildIndex(buildNode('var', { name: sym }), dims);
       }
     }
   / PrimaryExpr
@@ -489,12 +315,12 @@ Dimension
       return v;
     }
   / '.' sym:Symbol {
-      return new LiteralNode(sym);
+      return buildNode('literal', { value: sym });
     }
 
 PrimaryExpr
   = lit:Literal {
-      return new LiteralNode(lit);
+      return buildNode('literal', { value: lit });
     }
   / '(' __ val:Value __ ')' {
       return val;

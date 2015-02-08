@@ -35,7 +35,7 @@ mixin(SInterpreter.prototype, {
     rawAsap(function() {
       _this.enter(node, function retry() {
         try {
-          _this[node.node](node, function(err, result) {
+          _this[node.type + 'Node'](node, function(err, result) {
             rawAsap(function() {
               _this.exit(node, err, result, function() {
                 done(err, result);
@@ -75,7 +75,7 @@ mixin(SInterpreter.prototype, {
 
   // ** implementations of AST nodes **
 
-  BlockNode: function(node, done) {
+  blockNode: function(node, done) {
     var _this = this, len = node.elems.length, count = -1;
     (function loop() {
       if (++count < len) {
@@ -92,7 +92,7 @@ mixin(SInterpreter.prototype, {
     })();
   },
 
-  IfElseNode: function(node, done) {
+  ifNode: function(node, done) {
     var _this = this;
     _this.visit(node.cond, function(err, cres) {
       if (err) {
@@ -107,7 +107,7 @@ mixin(SInterpreter.prototype, {
     });
   },
 
-  ForInNode: function(node, done) {
+  forNode: function(node, done) {
     var _this = this, items, len, count;
     _this.visit(node.range, function(err, rres) {
       if (err) {
@@ -138,7 +138,7 @@ mixin(SInterpreter.prototype, {
     });
   },
 
-  WhileNode: function(node, done) {
+  whileNode: function(node, done) {
     var _this = this;
     (function loop() {
       _this.visit(node.cond, function(err, cres) {
@@ -163,7 +163,7 @@ mixin(SInterpreter.prototype, {
     })();
   },
 
-  BeginNode: function(node, done) {
+  beginNode: function(node, done) {
     var _this = this;
     _this.ctx.set(node.name, function(args, done2) {
       _this.ctx.push();
@@ -183,8 +183,8 @@ mixin(SInterpreter.prototype, {
     done();
   },
 
-  FuncallNode: function(node, done) {
-    var _this = this, len = node.args.length, args = [], count = -1;
+  callNode: function(node, done) {
+    var _this = this, len = node.args ? node.args.length : 0, args = [], count = -1;
     _this.visit(node.target, function(err, tres) {
       if (err) {
         done(err);
@@ -209,7 +209,7 @@ mixin(SInterpreter.prototype, {
     });
   },
 
-  BreakNode: function(node, done) {
+  breakNode: function(node, done) {
     done({
       flow: true,
       terminate: true,
@@ -217,7 +217,7 @@ mixin(SInterpreter.prototype, {
     });
   },
 
-  NextNode: function(node, done) {
+  nextNode: function(node, done) {
     done({
       flow: true,
       terminate: false,
@@ -225,7 +225,7 @@ mixin(SInterpreter.prototype, {
     });
   },
 
-  ReturnNode: function(node, done) {
+  returnNode: function(node, done) {
     var _this = this;
     if (node.result) {
       _this.visit(node.result, function(err, rres) {
@@ -249,11 +249,11 @@ mixin(SInterpreter.prototype, {
     }
   },
 
-  VariableNode: function(node, done) {
+  varNode: function(node, done) {
     done(null, this.ctx.get(node.name));
   },
 
-  AssignNode: function(node, done) {
+  letNode: function(node, done) {
     var _this = this;
     _this.visit(node.value, function(err, vres) {
       if (err) {
@@ -265,12 +265,12 @@ mixin(SInterpreter.prototype, {
     });
   },
 
-  DeleteNode: function(node, done) {
+  deleteNode: function(node, done) {
     this.ctx.del(node.name);
     done();
   },
 
-  IndexNode: function(node, done) {
+  indexNode: function(node, done) {
     var _this = this;
     _this.visit(node.base, function(err, bres) {
       if (err) {
@@ -287,7 +287,7 @@ mixin(SInterpreter.prototype, {
     });
   },
 
-  AssignIndexNode: function(node, done) {
+  letIndexNode: function(node, done) {
     var _this = this;
     _this.visit(node.base, function(err, bres) {
       if (err) {
@@ -311,7 +311,7 @@ mixin(SInterpreter.prototype, {
     });
   },
 
-  DeleteIndexNode: function(node, done) {
+  deleteIndexNode: function(node, done) {
     var _this = this;
     _this.visit(node.base, function(err, bres) {
       if (err) {
@@ -329,12 +329,12 @@ mixin(SInterpreter.prototype, {
     });
   },
 
-  LogicalOpNode: function(node, done) {
-    var method = 'LogicalOpNode_' + node.op;
+  logicalOpNode: function(node, done) {
+    var method = 'logicalOpNode_' + node.op;
     this[method](node, done);
   },
 
-  LogicalOpNode_and: function(node, done) {
+  logicalOpNode_and: function(node, done) {
     var _this = this;
     _this.visit(node.left, function(err, lres) {
       if (err) {
@@ -353,7 +353,7 @@ mixin(SInterpreter.prototype, {
     });
   },
 
-  LogicalOpNode_or: function(node, done) {
+  logicalOpNode_or: function(node, done) {
     var _this = this;
     _this.visit(node.left, function(err, lres) {
       if (err) {
@@ -372,7 +372,7 @@ mixin(SInterpreter.prototype, {
     });
   },
 
-  LogicalOpNode_not: function(node, done) {
+  logicalOpNode_not: function(node, done) {
     var _this = this;
     _this.visit(node.right, function(err, rres) {
       if (err) {
@@ -383,7 +383,7 @@ mixin(SInterpreter.prototype, {
     });
   },
 
-  BinaryOpNode: function(node, done) {
+  binaryOpNode: function(node, done) {
     var _this = this;
     _this.visit(node.left, function(err, lres) {
       if (err) {
@@ -400,7 +400,7 @@ mixin(SInterpreter.prototype, {
     });
   },
 
-  UnaryOpNode: function(node, done) {
+  unaryOpNode: function(node, done) {
     var _this = this;
     _this.visit(node.right, function(err, rres) {
       if (err) {
@@ -411,11 +411,11 @@ mixin(SInterpreter.prototype, {
     });
   },
 
-  LiteralNode: function(node, done) {
+  literalNode: function(node, done) {
     done(null, node.value);
   },
 
-  CommentNode: function(node, done) {
+  commentNode: function(node, done) {
     done();
   }
 });
