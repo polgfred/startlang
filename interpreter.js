@@ -164,9 +164,12 @@ mixin(SInterpreter.prototype, {
   },
 
   beginNode: function(node, done) {
-    var _this = this;
+    var _this = this, len = node.params ? node.params.length : 0;
     _this.ctx.set(node.name, function(args, done2) {
       _this.ctx.push();
+      for (var i = 0; i < len; ++i) {
+        _this.ctx.set(node.params[i], args[i]);
+      }
       _this.visit(node.body, function(err) {
         _this.ctx.pop();
         if (err) {

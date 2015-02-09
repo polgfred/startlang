@@ -154,13 +154,18 @@ While
     }
 
 Begin
-  = __ 'begin' WB __ sym:Symbol __ 'do' WB __ body:Statement {
-      return buildNode('begin', { name: sym, body: body });
+  = __ 'begin' WB __ sym:Symbol __ params:Params? __ 'do' WB __ body:Statement {
+      return buildNode('begin', { name: sym, params: params, body: body });
     }
-  / __ 'begin' WB __ sym:Symbol __ 'do' EOL
+  / __ 'begin' WB __ sym:Symbol __ params:Params? __ 'do' EOL
     body:Block
     __ 'end' {
-      return buildNode('begin', { name: sym, body: body });
+      return buildNode('begin', { name: sym, params: params, body: body });
+    }
+
+Params
+  = '(' __ first:Symbol rest:( __ ',' __ sym:Symbol { return sym; } )* __ ')' {
+      return [first].concat(rest);
     }
 
 Statement
