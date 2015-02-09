@@ -345,7 +345,7 @@ PrimaryExpr
 String
   = '"' rest:StringSegment* '"' {
       // if the first segment isn't a string literal, make it one
-      var first = (rest.length > 0 && rest[0].type == 'literal') ?
+      var first = (rest.length > 0 && rest[0].type == 'literal' && typeof rest[0].value == 'string') ?
                     rest.shift() :
                     buildNode('literal', { value: '' });
 
