@@ -22,3 +22,5 @@ for x in step(0, 10) do
   print a[0][1]
   print a
 end
+
+print "the length of ""fred"" is `len("fred")`"
