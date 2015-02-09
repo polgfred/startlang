@@ -2,9 +2,7 @@ begin loop do
   let y = x * 2
   print y + 7
 
-  if y + 7 > 18 then
-    print "It's ""greater"" than 18"
-  end
+  if y + 7 > 18 then print "`y + 7` is ""greater"" than 18"
 
   let z = 5
   print z

@@ -3,7 +3,7 @@ for i in step(1, 5) do print i
 if i = 5 then print "done0" else print "done1"
 
 for i in step(1, 10) do
-  print "hi", i
+  print "hi `i`"
   if i = 4 then next
   if i = 8 then break
   print "there"
@@ -22,7 +22,7 @@ print "done2"
 let i = 1
 while i < 50 do let i = i * 2
 
-print "done3", i
+print "done3 `i`"
 
 begin fred do
   let x = 1

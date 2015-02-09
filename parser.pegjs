@@ -1,8 +1,6 @@
 // Language Nodes
 
 {
-  var runtime = require('./runtime');
-
   // build an object for this node
   function buildNode(type, attrs) {
     // show the type first
@@ -76,6 +74,16 @@
       var next = rest.pop(),
           node = buildNode('binaryOp', { op: next[0], left: next[1], right: last });
       return buildBinaryOpRight(rest, node);
+    }
+  }
+
+  function buildString(first, rest) {
+    if (rest.length == 0) {
+      return first;
+    } else {
+      var next = rest.shift(),
+          node = buildNode('binaryOp', { op: '&', left: first, right: next });
+      return buildString(node, rest);
     }
   }
 }
@@ -257,6 +265,7 @@ AddExpr
 AddOp
   = '+'
   / '-'
+  / '&'
 
 MultExpr
   = first:PowExpr rest:( __ op:MultOp __ e:PowExpr { return [op, e]; } )* {
@@ -277,9 +286,9 @@ PowOp
   = '^'
 
 UnaryExpr
-  = op:AddOp __ num:Number {
+  = op:AddOp __ right:NumberFormat {
       // handle +/- number in the parser
-      return buildNode('literal', { value: runtime.handle(num).unaryops[op](num) });
+      return buildNode('literal', { value: parseFloat(op + right) });
     }
   / op:AddOp __ right:CallExpr {
       return buildNode('unaryOp', { op: op, right: right });
@@ -320,12 +329,37 @@ Dimension
     }
 
 PrimaryExpr
-  = lit:Literal {
-      return buildNode('literal', { value: lit });
-    }
+  = String
+  / Literal
   / '(' __ val:Value __ ')' {
       return val;
     }
+
+// Strings
+
+String
+  = '"' rest:StringSegment* '"' {
+      // if the first segment isn't a string literal, make it one
+      var first = (rest.length > 0 && rest[0].type == 'literal') ?
+                    rest.shift() :
+                    buildNode('literal', { value: '' });
+
+      return buildString(first, rest);
+    }
+
+StringSegment
+  = "`" val:Value "`" {
+      // interpolation of value expressions
+      return val;
+    }
+  / chars:Char+ {
+      return buildNode('literal', { value: chars.join('') });
+    }
+
+Char
+  = '""' { return '"'; }
+  / '``' { return '`'; }
+  / [^"`]
 
 // Data
 
@@ -333,30 +367,35 @@ Literal
   = None
   / Boolean
   / Number
-  / String
 
 None
-  = 'none' WB { return null; }
+  = 'none' WB {
+      return buildNode('literal', { value: null });
+    }
 
 Boolean
-  = 'true'  WB { return true; }
-  / 'false' WB { return false; }
+  = 'true'  WB {
+      return buildNode('literal', { value: true });
+    }
+  / 'false' WB {
+      return buildNode('literal', { value: false });
+    }
 
 Number
-  = 'infinity' WB { return Infinity; }
-  / num:$( Digits ( '.' Digits )? ( [eE] [-+]? Digits )? ) {
-      return parseFloat(num);
+  = 'infinity' WB {
+      return buildNode('literal', { value: Infinity });
     }
+  / num:NumberFormat {
+      return buildNode('literal', { value: parseFloat(num) });
+    }
+
+NumberFormat
+  = $( Digits ( '.' Digits )? ( [eE] [-+]? Digits )? )
 
 Digits
   = $[0-9]+
 
-String
-  = '"' chars:Char* '"' { return chars.join(''); }
-
-Char
-  = '""' { return '"'; }
-  / [^"]
+// Symbols
 
 Symbol
   = $( !Reserved [a-z_]i [a-z0-9_]i* )

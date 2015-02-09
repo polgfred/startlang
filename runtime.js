@@ -357,7 +357,7 @@ var SString = exports.SString = {
 
   binaryops: {
     // concatenation
-    '+' : function(left, right) { return left +  right; },
+    '&' : function(left, right) { return left + handle(right).repr(right); },
 
     // comparison
     '=' : function(left, right) { return left == right; },
@@ -476,9 +476,16 @@ var SArray = exports.SArray = {
     }
   },
 
-  unaryops: {},
-
   binaryops: {
+    // concatenation
+    '&': function(left, right) {
+      if (handle(right) != SArray) {
+        throw new Error('object cannot be merged into array');
+      }
+
+      return left.concat(right);
+    },
+
     '=' : function(left, right) {
       var i, l, r;
 
@@ -590,6 +597,19 @@ var STable = exports.STable = {
   unaryops: {},
 
   binaryops: {
+    // concatenation
+    '&': function(left, right) {
+      if (handle(right) != STable) {
+        throw new Error('object cannot be merged into table');
+      }
+
+      var t = {};
+
+      mixin(t, left);
+      mixin(t, right);
+      return t;
+    },
+
     '=': function(left, right) {
       var i, l, r;
 

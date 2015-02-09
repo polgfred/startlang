@@ -13,5 +13,5 @@ while i <= check do
 end
 
 for i in step(0, upper) do
-  if primes[i] = 1 then print i + " is prime"
+  if primes[i] = 1 then print "`i` is prime"
 end

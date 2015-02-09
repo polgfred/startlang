@@ -1,4 +1,4 @@
-print len("fred")
+print "the length of ""fred"" is `len("fred")`"
 
 let a = array()
 let a[0] = 0
