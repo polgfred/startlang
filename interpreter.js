@@ -1,6 +1,4 @@
-var rawAsap = require('asap/raw'),
-    parser = require('./parser'),
-    runtime = require('./runtime');
+var rawAsap = require('asap/raw');
 
 function mixin(object, properties) {
   Object.keys(properties).forEach(function(prop) {
@@ -8,9 +6,9 @@ function mixin(object, properties) {
   });
 }
 
-var SInterpreter = exports.SInterpreter = function(node, ctx) {
-  this.root = node;
-  this.ctx  = ctx || runtime.create();
+var SInterpreter = exports.SInterpreter = function(root, ctx) {
+  this.root = root;
+  this.ctx = ctx;
 };
 
 mixin(SInterpreter.prototype, {
@@ -113,7 +111,7 @@ mixin(SInterpreter.prototype, {
       if (err) {
         done(err);
       } else {
-        items = runtime.handle(rres).enumerate(rres);
+        items = _this.ctx.enumerate(rres);
         len = items.length;
         count = -1;
         (function loop() {
@@ -423,6 +421,6 @@ mixin(SInterpreter.prototype, {
   }
 });
 
-exports.create = function(source, ctx) {
-  return new SInterpreter(parser.parse(source), ctx);
+exports.create = function(root, ctx) {
+  return new SInterpreter(root, ctx);
 };

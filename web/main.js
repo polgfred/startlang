@@ -1,4 +1,5 @@
-var runtime = require('../runtime'),
+var parser = require('../parser'),
+    runtime = require('../runtime'),
     interpreter = require('../interpreter');
 
 window.prompt = ace.edit('prompt');
@@ -44,15 +45,15 @@ runtime.globals.clear = function() {
 var ctx = runtime.create(),
     runCommand = function() {
       var command = prompt.getValue().trim();
-
       if (command) {
         terminal.echo(command, {
           finalize: function(div) {
             div.addClass('input').prepend('<span>&#8701;</span>');
           }
         });
-        var interp = interpreter.create(command + '\n', ctx);
-        console.log(interp.root);
+        var root = parser.parse(command + '\n'),
+            interp = interpreter.create(root, ctx);
+        console.log(root);
         interp.run(function() {
           terminal.echo('');
           prompt.setValue('');

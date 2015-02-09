@@ -12,12 +12,14 @@
     }
 
     // then the source metadata
-    node.meta = {
-      text: text(),
-      offset: offset(),
-      line: line(),
-      column: column()
-    };
+    if (options.meta) {
+      node.meta = {
+        text: text(),
+        offset: offset(),
+        line: line(),
+        column: column()
+      };
+    }
 
     return node;
   }

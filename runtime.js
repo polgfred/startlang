@@ -44,6 +44,10 @@ mixin(SRuntime.prototype, {
     handle(base).delindex(base, index);
   },
 
+  enumerate: function(value) {
+    return handle(value).enumerate(value);
+  },
+
   unaryop: function(op, right) {
     return handle(right).unaryops[op](right);
   },

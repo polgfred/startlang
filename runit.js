@@ -1,8 +1,14 @@
 var fs = require('fs'),
     util = require('util'),
+    parser = require('./parser'),
+    runtime = require('./runtime'),
     interpreter = require('./interpreter');
 
-var source, prog, interp;
+var source, root, ctx, interp, options = {};
+
+if (process.argv.indexOf('--meta') != -1) {
+  options.meta = true;
+}
 
 try {
   source = fs.readFileSync(process.argv[2], 'utf-8');
@@ -11,8 +17,10 @@ try {
 }
 
 try {
-  interp = interpreter.create(source);
-  util.puts(util.inspect(interp.root, false, null));
+  root = parser.parse(source, options);
+  ctx = runtime.create();
+  interp = interpreter.create(root, ctx);
+  util.puts(util.inspect(root, false, null));
 } catch (e) {
   console.log(util.inspect(e, false, null));
   throw e;
