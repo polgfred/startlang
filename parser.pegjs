@@ -353,7 +353,7 @@ String
     }
 
 StringSegment
-  = "`" val:Value "`" {
+  = "`" __ val:Value __ "`" {
       // interpolation of value expressions
       return val;
     }
