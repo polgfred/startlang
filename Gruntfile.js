@@ -18,7 +18,7 @@ module.exports = function(grunt) {
     },
     shell: {
       pegjs: {
-        command: 'pegjs parser.pegjs'
+        command: 'pegjs --cache parser.pegjs'
       },
       bundle: {
         command: 'cd web ; browserify main.js --debug | exorcist bundle.js.map > bundle.js'
