@@ -273,14 +273,7 @@ var SRange = exports.SRange = {
 
   methods: {
     len: function(r) {
-      var div = (r.end - r.start) / r.step,
-          floor = Math.floor(div);
-
-      if (div == Math.floor(div)) {
-        return div + 1;
-      } else {
-        return Math.ceil(div);
-      }
+      return Math.ceil((r.end - r.start) / r.step);
     }
   },
 
