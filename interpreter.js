@@ -272,60 +272,85 @@ mixin(SInterpreter.prototype, {
   },
 
   indexNode: function(node, done) {
-    var _this = this;
+    var _this = this, len = node.indexes.length, count = -1;
     _this.visit(node.base, function(err, bres) {
       if (err) {
         done(err);
       } else {
-        _this.visit(node.index, function(err, ires) {
-          if (err) {
-            done(err);
+        (function loop() {
+          if (++count < len) {
+            _this.visit(node.indexes[count], function(err, ires) {
+              if (err) {
+                done(err);
+              } else {
+                bres = _this.ctx.getindex(bres, ires);
+                loop();
+              }
+            });
           } else {
-            done(null, _this.ctx.getindex(bres, ires));
+            done(null, bres);
           }
-        });
+        })();
       }
     });
   },
 
   letIndexNode: function(node, done) {
-    var _this = this;
+    var _this = this, len = node.indexes.length, count = -1;
     _this.visit(node.base, function(err, bres) {
       if (err) {
         done(err);
       } else {
-        _this.visit(node.index, function(err, ires) {
-          if (err) {
-            done(err);
-          } else {
-            _this.visit(node.value, function(err, vres) {
+        (function loop() {
+          if (++count < len) {
+            _this.visit(node.indexes[count], function(err, ires) {
               if (err) {
                 done(err);
+              } else if (count < len - 1) {
+                bres = _this.ctx.getindex(bres, ires);
+                loop();
               } else {
-                _this.ctx.setindex(bres, ires, vres);
-                done();
+                _this.visit(node.value, function(err, vres) {
+                  if (err) {
+                    done(err);
+                  } else {
+                    _this.ctx.setindex(bres, ires, vres);
+                    loop();
+                  }
+                });
               }
             });
+          } else {
+            done();
           }
-        });
+        })();
       }
     });
   },
 
   deleteIndexNode: function(node, done) {
-    var _this = this;
+    var _this = this, len = node.indexes.length, count = -1;
     _this.visit(node.base, function(err, bres) {
       if (err) {
         done(err);
       } else {
-        _this.visit(node.index, function(err, ires) {
-          if (err) {
-            done(err);
+        (function loop() {
+          if (++count < len) {
+            _this.visit(node.indexes[count], function(err, ires) {
+              if (err) {
+                done(err);
+              } else if (count < len - 1) {
+                bres = _this.ctx.getindex(bres, ires);
+                loop();
+              } else {
+                _this.ctx.delindex(bres, ires);
+                loop();
+              }
+            });
           } else {
-            _this.ctx.delindex(bres, ires);
             done();
           }
-        });
+        })();
       }
     });
   },

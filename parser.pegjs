@@ -27,22 +27,14 @@
   // special token to signal buildIndex that we have a DeleteIndex call
   var $remove = {};
 
-  // take a base, dimensions, and (optionally) a value, and construct a
-  // left-folding tree that terminates in an index lookup, assign, or delete
-  function buildIndex(base, dims, value) {
-    var first = dims.shift();
-
-    if (dims.length == 0) {
-      if (value === undefined) {
-        return buildNode('index', { base: base, index: first });
-      } else if (value === $remove) {
-        return buildNode('deleteIndex', { base: base, index: first });
-      } else {
-        return buildNode('letIndex', { base: base, index: first, value: value });
-      }
+  // take a base, dimensions, and (optionally) a value, and construct an indexish node
+  function buildIndex(base, indexes, value) {
+    if (value === undefined) {
+      return buildNode('index', { base: base, indexes: indexes });
+    } else if (value === $remove) {
+      return buildNode('deleteIndex', { base: base, indexes: indexes });
     } else {
-      var node = buildNode('index', { base: base, index: first });
-      return buildIndex(node, dims, value);
+      return buildNode('letIndex', { base: base, indexes: indexes, value: value });
     }
   }
 
