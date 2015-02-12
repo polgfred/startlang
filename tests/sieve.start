@@ -1,6 +1,6 @@
 let upper = 1000
 let check = sqrt(upper)
-let primes = array(upper)
+let primes = list(upper)
 
 for i in step(0, 2) do let primes[i] = 0
 for i in step(2, upper) do let primes[i] = 1

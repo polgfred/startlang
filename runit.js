@@ -39,10 +39,15 @@ try {
   throw e;
 }
 
-interp.run(function(err, result, ctx) {
-  if (err) {
-    console.log('an error occurred:');
-    console.log(err);
-    console.log(err.stack);
-  }
-});
+try {
+  interp.run(function(err, result, ctx) {
+    if (err) {
+      console.log('an error occurred:');
+      console.log(err);
+      console.log(err.stack);
+    }
+  });
+} catch (e) {
+  console.log(util.inspect(e, false, null));
+  throw e;
+}

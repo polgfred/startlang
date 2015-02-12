@@ -89,7 +89,7 @@ var SNone = exports.SNone = {
   },
 
   enumerate: function() {
-    return enumerate([]);
+    throw new Error('object does not support iteration');
   },
 
   getindex: function() {
@@ -115,8 +115,8 @@ var SBoolean = exports.SBoolean = {
     return b ? '*true*' : '*false*';
   },
 
-  enumerate: function(b) {
-    return enumerate(b ? [b] : []);
+  enumerate: function() {
+    throw new Error('object does not support iteration');
   },
 
   getindex: function() {
@@ -132,12 +132,12 @@ var SBoolean = exports.SBoolean = {
   unaryops: {},
 
   binaryops: {
-    '=' : function(left, right) { return left == right; },
-    '!=': function(left, right) { return left != right; }
+    '=' : function(left, right) { return right == null; },
+    '!=': function(left, right) { return right != null; }
   }
 };
 
-Object.defineProperty(Boolean.prototype, '$$start$$handler$$', {
+Object.defineProperty(Boolean.prototype, '@@__START_HANDLER__@@', {
   value: SBoolean,
   enumerable: false
 });
@@ -151,8 +151,8 @@ var SNumber = exports.SNumber = {
     }
   },
 
-  enumerate: function(n) {
-    return enumerate([n]);
+  enumerate: function() {
+    throw new Error('object does not support iteration');
   },
 
   getindex: function() {
@@ -221,7 +221,7 @@ var SNumber = exports.SNumber = {
   }
 };
 
-Object.defineProperty(Number.prototype, '$$start$$handler$$', {
+Object.defineProperty(Number.prototype, '@@__START_HANDLER__@@', {
   value: SNumber,
   enumerable: false
 });
@@ -234,7 +234,7 @@ function Range(start, end, step) {
 
 var SRange = exports.SRange = {
   repr: function(r) {
-    return '[ ' + r.start + ' => ' + r.end + ' : ' + r.step + ' ]';
+    return '[ ' + r.start + ' .. ' + r.end + ' / ' + r.step + ' ]';
   },
 
   enumerate: function(r) {
@@ -290,7 +290,7 @@ var SRange = exports.SRange = {
   }
 };
 
-Object.defineProperty(Range.prototype, '$$start$$handler$$', {
+Object.defineProperty(Range.prototype, '@@__START_HANDLER__@@', {
   value: SRange,
   enumerable: false
 });
@@ -366,107 +366,105 @@ var SString = exports.SString = {
   }
 };
 
-Object.defineProperty(String.prototype, '$$start$$handler$$', {
+Object.defineProperty(String.prototype, '@@__START_HANDLER__@@', {
   value: SString,
   enumerable: false
 });
 
 // Arrays
 
-var SArray = exports.SArray = {
+var SList = exports.SList = {
   create: function(dims) {
     if (dims.length == 0) {
       dims.push(0);
     }
 
-    return this._buildSubArray(dims);
+    return (function subList(dims) {
+      var sub = new Array(dims[0]),
+          next = dims.slice(1);
+
+      for (var i = 0; i < dims[0]; ++i) {
+        sub[i] = dims.length > 1 ? subList(next) : null;
+      }
+
+      return sub;
+    })(dims);
   },
 
-  _buildSubArray: function(dims) {
-    var sub = new Array(dims[0]),
-        next = dims.slice(1);
-
-    for (var i = 0; i < dims[0]; ++i) {
-      sub[i] = dims.length > 1 ? this._buildSubArray(next) : null;
-    }
-
-    return sub;
-  },
-
-  repr: function(a) {
+  repr: function(l) {
     var i, j = [], k;
 
-    for (i = 0; i < a.length; ++i) {
-      k = a[i];
+    for (i = 0; i < l.length; ++i) {
+      k = l[i];
       j.push(handle(k).repr(k));
     }
 
     return '[ ' + j.join(', ') + ' ]';
   },
 
-  enumerate: function(a) {
-    return enumerate(a);
+  enumerate: function(l) {
+    return enumerate(l);
   },
 
-  getindex: function(a, index) {
-    return a[index];
+  getindex: function(l, index) {
+    return l[index];
   },
 
-  setindex: function(a, index, value) {
-    a[index] = value;
+  setindex: function(l, index, value) {
+    l[index] = value;
   },
 
-  delindex: function(a, index) {
-    delete a[index];
+  delindex: function(l, index) {
+    delete l[index];
   },
 
   methods: {
-    len: function(a) {
-      return a.length;
+    len: function(l) {
+      return l.length;
     },
 
-    find: function(a, search) {
-      return a.indexOf(search);
+    find: function(l, search) {
+      return l.indexOf(search);
     },
 
-    findlast: function(a, search) {
-      return a.lastIndexOf(search);
+    findlast: function(l, search) {
+      return l.lastIndexOf(search);
     },
 
-    join: function(a, delim) {
-      return a.join(delim || ' ');
+    join: function(l, delim) {
+      return l.join(delim || ' ');
     },
 
-    push: function(a, item) {
-      a.push(item);
+    push: function(l, item) {
+      l.push(item);
     },
 
-    pop: function(a) {
-      return a.pop();
+    pop: function(l) {
+      return l.pop();
     },
 
-    reverse: function(a) {
-      a.reverse();
+    reverse: function(l) {
+      l.reverse();
     },
 
-    range: function(a, at, length) {
-      return a.slice(at, at + length);
+    range: function(l, at, length) {
+      return l.slice(at, at + length);
     },
 
-    remove: function(a, at, length) {
-      return a.splice(at, length);
+    remove: function(l, at, length) {
+      return l.splice(at, length);
     },
 
-    insert: function(a, at) {
-      a.splice.apply(a, [at, 0].concat([].slice.call(arguments, 2)));
+    insert: function(l, at) {
+      l.splice.apply(l, [at, 0].concat([].slice.call(arguments, 2)));
     },
 
-    replace: function(a, at, length) {
-      return a.splice.apply(a, [at, length].concat([].slice.call(arguments, 3)));
+    replace: function(l, at, length) {
+      return l.splice.apply(l, [at, length].concat([].slice.call(arguments, 3)));
     },
 
-    sort: function(a) {
-      a.sort(function(left, right) {
+    sort: function(l) {
+      l.sort(function(left, right) {
         var h = handle(left);
         return h.binaryops['<'](left, right) ? -1 : (h.binaryops['>'](left, right) ? 1 : 0);
       });
@@ -476,7 +474,7 @@ var SArray = exports.SArray = {
   binaryops: {
     // concatenation
     '&': function(left, right) {
-      if (handle(right) != SArray) {
+      if (handle(right) != SList) {
         throw new Error('object cannot be merged into array');
       }
 
@@ -509,6 +507,8 @@ var SArray = exports.SArray = {
         r = right[i];
         if (handle(l).binaryops['<'](l, r)) {
           return true;
+        } else if (handle(l).binaryops['>'](l, r)) {
+          return false;
         }
       }
 
@@ -523,6 +523,8 @@ var SArray = exports.SArray = {
         r = right[i];
         if (handle(l).binaryops['>'](l, r)) {
           return true;
+        } else if (handle(l).binaryops['<'](l, r)) {
+          return false;
         }
       }
 
@@ -535,8 +537,8 @@ var SArray = exports.SArray = {
   }
 };
 
-Object.defineProperty(Array.prototype, '$$start$$handler$$', {
-  value: SArray,
+Object.defineProperty(Array.prototype, '@@__START_HANDLER__@@', {
+  value: SList,
   enumerable: false
 });
 
@@ -629,19 +631,19 @@ var STable = exports.STable = {
   }
 };
 
-Object.defineProperty(Object.prototype, '$$start$$handler$$', {
+Object.defineProperty(Object.prototype, '@@__START_HANDLER__@@', {
   value: STable,
   enumerable: false
 });
 
 // find a protocol handler for this object
 var handle = exports.handle = function(obj) {
-  return obj == null ? SNone : obj['$$start$$handler$$'];
+  return obj == null ? SNone : obj['@@__START_HANDLER__@@'];
 };
 
 var globals = exports.globals = {
-  array: function() {
-    return SArray.create([].slice.call(arguments));
+  list: function() {
+    return SList.create([].slice.call(arguments));
   },
 
   table: function() {

@@ -28,9 +28,9 @@ if (a + 2) = b then
   print "3 should not see this"
 end
 
-let g = array()
+let g = list()
 insert g, 0, 1, 2, 3, 4, 5
-let h = array()
+let h = list()
 insert h, 0, 1, 2, 3, 4, 5
 
 if g = h then print "4a should see this"
