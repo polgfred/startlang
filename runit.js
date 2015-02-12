@@ -6,8 +6,12 @@ var fs = require('fs'),
 
 var source, root, ctx, interp, options = {};
 
+if (process.argv.indexOf('--ast') != -1) {
+  options.ast = true;
+}
+
 if (process.argv.indexOf('--meta') != -1) {
-  options.meta = true;
+  options.ast = options.meta = true;
 }
 
 try {
@@ -18,9 +22,18 @@ try {
 
 try {
   root = parser.parse(source, options);
+  if (options.ast) {
+    util.puts(util.inspect(root, false, null));
+    process.exit();
+  }
+} catch (e) {
+  console.log(util.inspect(e, false, null));
+  throw e;
+}
+
+try {
   ctx = runtime.create();
   interp = interpreter.create(root, ctx);
-  util.puts(util.inspect(root, false, null));
 } catch (e) {
   console.log(util.inspect(e, false, null));
   throw e;
