@@ -1,8 +1,4 @@
-function mixin(object, properties) {
-  Object.keys(properties).forEach(function(prop) {
-    object[prop] = properties[prop];
-  });
-}
+var util = require('util');
 
 // Environment
 
@@ -10,7 +6,7 @@ var SRuntime = exports.SRuntime = function() {
   this._ns = {};
 };
 
-mixin(SRuntime.prototype, {
+util._extend(SRuntime.prototype, {
   // push and pop new objects onto the prototype chain to implement fast scopes
   push: function() {
     this._ns = Object.create(this._ns);
@@ -604,8 +600,8 @@ var STable = exports.STable = {
 
       var t = {};
 
-      mixin(t, left);
-      mixin(t, right);
+      util._extend(t, left);
+      util._extend(t, right);
       return t;
     },
 
