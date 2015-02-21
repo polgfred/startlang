@@ -6,8 +6,21 @@ var fs = require('fs'),
 
 var source, root, ctx, interp, options = {};
 
+var inspectOpts = {
+  colors: true,
+  depth: null
+};
+
 if (process.argv.indexOf('--ast') != -1) {
   options.ast = true;
+}
+
+if (process.argv.indexOf('--ns') != -1) {
+  options.ns = true;
+}
+
+if (process.argv.indexOf('--frames') != -1) {
+  options.frames = true;
 }
 
 if (process.argv.indexOf('--meta') != -1) {
@@ -23,11 +36,11 @@ try {
 try {
   root = parser.parse(source, options);
   if (options.ast) {
-    util.puts(util.inspect(root, false, null));
+    util.puts(util.inspect(root, inspectOpts));
     process.exit();
   }
 } catch (e) {
-  console.log(util.inspect(e, false, null));
+  util.puts(util.inspect(e, inspectOpts));
   throw e;
 }
 
@@ -35,19 +48,27 @@ try {
   ctx = runtime.create();
   interp = interpreter.create(root, ctx);
 } catch (e) {
-  console.log(util.inspect(e, false, null));
+  util.puts(util.inspect(e, inspectOpts));
   throw e;
 }
 
 try {
   interp.run(function(err, result, ctx) {
+    if (options.ns) {
+      util.puts(util.inspect(ctx.ns, inspectOpts));
+    }
+    if (options.frames) {
+      util.puts(util.inspect(ctx.frames, inspectOpts));
+    }
     if (err) {
-      console.log('an error occurred:');
-      console.log(err);
-      console.log(err.stack);
+      util.puts('an error occurred:');
+      util.puts(util.inspect(err, inspectOpts));
+      if (err.stack) {
+        util.puts(util.inspect(err.stack, inspectOpts));
+      }
     }
   });
 } catch (e) {
-  console.log(util.inspect(e, false, null));
+  util.puts(util.inspect(e, inspectOpts));
   throw e;
 }

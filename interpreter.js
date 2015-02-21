@@ -30,12 +30,14 @@ mixin(SInterpreter.prototype, {
   // exception handling, and dispatching to AST nodes
   visit: function(node, done) {
     var _this = this;
+    _this.ctx.frames.push({ stage: 'in', node: node });
     rawAsap(function() {
       _this.enter(node, function retry() {
         try {
           _this[node.type + 'Node'](node, function(err, result) {
             rawAsap(function() {
               _this.exit(node, err, result, function() {
+                _this.ctx.frames.push({ stage: 'out', err: err, result: result, node: node });
                 done(err, result);
               });
             });

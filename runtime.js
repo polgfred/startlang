@@ -3,30 +3,31 @@ var util = require('util');
 // Environment
 
 var SRuntime = exports.SRuntime = function() {
-  this._fn = {};
-  this._ns = {};
+  this.fn = {};
+  this.ns = {};
+  this.frames = [];
 };
 
 util._extend(SRuntime.prototype, {
   // push and pop new objects onto the prototype chain to implement fast scopes
   push: function() {
-    this._ns = Object.create(this._ns);
+    this.ns = Object.create(this.ns);
   },
 
   pop: function() {
-    this._ns = Object.getPrototypeOf(this._ns);
+    this.ns = Object.getPrototypeOf(this.ns);
   },
 
   get: function(name) {
-    return this._ns[name];
+    return this.ns[name];
   },
 
   set: function(name, value) {
-    this._ns[name] = value;
+    this.ns[name] = value;
   },
 
   del: function(name) {
-    delete this._ns[name];
+    delete this.ns[name];
   },
 
   getindex: function(base, index) {
@@ -54,12 +55,12 @@ util._extend(SRuntime.prototype, {
   },
 
   define: function(name, body) {
-    this._fn[name] = body;
+    this.fn[name] = body;
   },
 
   funcall: function(name, args, done) {
     // look for a user-defined function
-    var fn = this._fn[name];
+    var fn = this.fn[name];
     if (fn) {
       fn(args, done);
       return;
