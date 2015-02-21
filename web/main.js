@@ -26,8 +26,10 @@ runtime.globals.print = function() {
   if (arguments.length > 0) {
     Array.prototype.forEach.call(arguments, function(arg) {
       terminal.echo(runtime.handle(arg).repr(arg), {
+        raw: true,
         finalize: function(div) {
-          div.addClass('output').prepend('<span>&#8702;</span>');
+          div.addClass('output').children().last().width('');
+          div.prepend('<span>&#8702;</span>');
         }
       });
     });
