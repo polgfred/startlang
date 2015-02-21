@@ -3,6 +3,7 @@ var util = require('util');
 // Environment
 
 var SRuntime = exports.SRuntime = function() {
+  this._fn = {};
   this._ns = {};
 };
 
@@ -52,12 +53,23 @@ util._extend(SRuntime.prototype, {
     return handle(left).binaryops[op](left, right);
   },
 
-  syscall: function(name, args) {
-    // try to find a function defined on the first argument,
-    // or a global system function
-    var target = (args.length > 0 && handle(args[0]).methods[name]) || globals[name];
-    if (target) {
-      return target.apply(null, args);
+  define: function(name, body) {
+    this._fn[name] = body;
+  },
+
+  funcall: function(name, args, done) {
+    // look for a user-defined function
+    var fn = this._fn[name];
+    if (fn) {
+      fn(args, done);
+      return;
+    } else {
+      // look for an rt function by dispatching on first argument, or a global function
+      fn = (args.length > 0 && handle(args[0]).methods[name]) || globals[name];
+      if (fn) {
+        done(null, fn.apply(null, args));
+        return;
+      }
     }
 
     throw new Error('object not found or not a function');

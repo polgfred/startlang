@@ -187,11 +187,8 @@ Delete
     }
 
 Call
-  = 'call' WB __ expr:IndexExpr __ args:Values? {
-      return buildNode('call', { target: expr, args: args });
-    }
-  / sym:Symbol __ args:Values? {
-      return buildNode('call', { target: buildNode('var', { name: sym }), args: args });
+  = sym:Symbol __ args:Values? {
+      return buildNode('call', { name: sym, args: args });
     }
 
 Flow
@@ -297,8 +294,8 @@ UnaryExpr
 // Invocation
 
 CallExpr
-  = target:IndexExpr __ '(' __ args:Values? __ ')' {
-      return buildNode('call', { target: target, args: args });
+  = name:Symbol __ '(' __ args:Values? __ ')' {
+      return buildNode('call', { name: name, args: args });
     }
   / IndexExpr
 
@@ -416,7 +413,6 @@ Reserved
   / 'return'   WB
   / 'let'      WB
   / 'delete'   WB
-  / 'call'     WB
   / 'and'      WB
   / 'or'       WB
   / 'not'      WB

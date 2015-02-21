@@ -163,7 +163,7 @@ mixin(SInterpreter.prototype, {
 
   beginNode: function(node, done) {
     var _this = this, len = node.params ? node.params.length : 0;
-    _this.ctx.set(node.name, function(args, done2) {
+    _this.ctx.define(node.name, function(args, done2) {
       _this.ctx.push();
       for (var i = 0; i < len; ++i) {
         _this.ctx.set(node.params[i], args[i]);
@@ -186,28 +186,20 @@ mixin(SInterpreter.prototype, {
 
   callNode: function(node, done) {
     var _this = this, len = node.args ? node.args.length : 0, args = [], count = -1;
-    _this.visit(node.target, function(err, tres) {
-      if (err) {
-        done(err);
-      } else {
-        (function loop() {
-          if (++count < len) {
-            _this.visit(node.args[count], function(err, ares) {
-              if (err) {
-                done(err);
-              } else {
-                args[count] = ares;
-                loop();
-              }
-            });
-          } else if (tres) {
-            tres(args, done); //=> see beginBlock callback target
+    (function loop() {
+      if (++count < len) {
+        _this.visit(node.args[count], function(err, ares) {
+          if (err) {
+            done(err);
           } else {
-            done(null, _this.ctx.syscall(node.target.name, args));
+            args[count] = ares;
+            loop();
           }
-        })();
+        });
+      } else {
+        _this.ctx.funcall(node.name, args, done);
       }
-    });
+    })();
   },
 
   breakNode: function(node, done) {
