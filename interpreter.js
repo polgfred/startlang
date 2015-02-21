@@ -1,17 +1,12 @@
-var rawAsap = require('asap/raw');
-
-function mixin(object, properties) {
-  Object.keys(properties).forEach(function(prop) {
-    object[prop] = properties[prop];
-  });
-}
+var util = require('util'),
+    rawAsap = require('asap/raw');
 
 var SInterpreter = exports.SInterpreter = function(root, ctx) {
   this.root = root;
   this.ctx = ctx;
 };
 
-mixin(SInterpreter.prototype, {
+util._extend(SInterpreter.prototype, {
   // main entry point, visit the root node, report errors, and return the
   // program's final result, along with a reference to the final state of the
   // runtime
@@ -30,14 +25,14 @@ mixin(SInterpreter.prototype, {
   // exception handling, and dispatching to AST nodes
   visit: function(node, done) {
     var _this = this;
-    _this.ctx.frames.push({ stage: 'in', node: node });
+    _this.ctx.frames.push({ stage: 'enter', node: node });
     rawAsap(function() {
       _this.enter(node, function retry() {
         try {
           _this[node.type + 'Node'](node, function(err, result) {
             rawAsap(function() {
               _this.exit(node, err, result, function() {
-                _this.ctx.frames.push({ stage: 'out', err: err, result: result, node: node });
+                _this.ctx.frames.push({ stage: 'exit', err: err, result: result, node: node });
                 done(err, result);
               });
             });
