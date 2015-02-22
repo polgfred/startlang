@@ -47,12 +47,6 @@ try {
 try {
   ctx = runtime.create();
   interp = interpreter.create(root, ctx);
-} catch (e) {
-  util.puts(util.inspect(e, inspectOpts));
-  throw e;
-}
-
-try {
   interp.run(function(err, result, ctx) {
     if (options.ns) {
       util.puts(util.inspect(ctx.ns, inspectOpts));
