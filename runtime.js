@@ -76,21 +76,6 @@ util._extend(SRuntime.prototype, {
   }
 });
 
-// enumerate a basic array or string
-function enumerate(a) {
-  var current = 0, len = a.length;
-
-  return {
-    more: function() {
-      return current < len;
-    },
-
-    next: function() {
-      return a[current++];
-    }
-  };
-}
-
 var SNone = exports.SNone = {
   repr: function() {
     return '*none*';
