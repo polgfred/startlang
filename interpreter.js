@@ -8,17 +8,11 @@ var SInterpreter = exports.SInterpreter = function(root, ctx) {
 };
 
 util._extend(SInterpreter.prototype, {
-  // main entry point, visit the root node, report errors, and return the
-  // program's final result, along with a reference to the final state of the
-  // runtime
-  run: function(done) {
+  // main entry point
+  run: function() {
     var _this = this;
-    _this.visit(_this.root, function(err, result) {
-      if (err) {
-        done(err);
-      } else {
-        done(null, result);
-      }
+    _this.visit(_this.root, function(err) {
+      _this.end(err);
     });
   },
 
@@ -71,6 +65,11 @@ util._extend(SInterpreter.prototype, {
     fail();
   },
 
+  // ** OVERRIDE **
+  // trap will be called when program completes
+  end: function(node, err) {
+  },
+
   // ** implementations of AST nodes **
 
   blockNode: function(node, done) {
@@ -81,7 +80,6 @@ util._extend(SInterpreter.prototype, {
           if (err) {
             done(err);
           } else {
-            _this.frames.push({ stage: 'in', count: count, node: node });
             loop(count + 1);
           }
         });
@@ -97,7 +95,6 @@ util._extend(SInterpreter.prototype, {
       if (err) {
         done(err);
       } else {
-        _this.frames.push({ stage: 'in', cond: cres, node: node });
         if (cres) {
           _this.visit(node.tbody, done);
         } else if (node.fbody) {

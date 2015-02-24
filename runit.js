@@ -51,7 +51,8 @@ try {
 try {
   ctx = runtime.create();
   interp = interpreter.create(root, ctx);
-  interp.run(function(err, result) {
+  interp.run();
+  interp.end = function(node, err) {
     if (options.ns) {
       output(ctx.ns);
     }
@@ -65,7 +66,7 @@ try {
         output(err.stack);
       }
     }
-  });
+  };
 } catch (e) {
   output(e);
   throw e;
