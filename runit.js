@@ -11,6 +11,10 @@ var inspectOpts = {
   depth: null
 };
 
+function output(obj) {
+  console.log(util.inspect(obj, inspectOpts));
+}
+
 if (process.argv.indexOf('--ast') != -1) {
   options.ast = true;
 }
@@ -36,11 +40,11 @@ try {
 try {
   root = parser.parse(source, options);
   if (options.ast) {
-    util.puts(util.inspect(root, inspectOpts));
+    output(root);
     process.exit();
   }
 } catch (e) {
-  util.puts(util.inspect(e, inspectOpts));
+  output(e);
   throw e;
 }
 
@@ -49,20 +53,20 @@ try {
   interp = interpreter.create(root, ctx);
   interp.run(function(err, result, ctx) {
     if (options.ns) {
-      util.puts(util.inspect(ctx.ns, inspectOpts));
+      output(ctx.ns);
     }
     if (options.frames) {
-      util.puts(util.inspect(ctx.frames, inspectOpts));
+      output(ctx.frames);
     }
     if (err) {
-      util.puts('an error occurred:');
-      util.puts(util.inspect(err, inspectOpts));
+      output('an error occurred:');
+      output(err);
       if (err.stack) {
-        util.puts(util.inspect(err.stack, inspectOpts));
+        output(err.stack);
       }
     }
   });
 } catch (e) {
-  util.puts(util.inspect(e, inspectOpts));
+  output(e);
   throw e;
 }
