@@ -5,7 +5,6 @@ var util = require('util');
 var SRuntime = exports.SRuntime = function() {
   this.fn = {};
   this.ns = {};
-  this.frames = [];
 };
 
 util._extend(SRuntime.prototype, {

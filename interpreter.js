@@ -4,6 +4,7 @@ var util = require('util'),
 var SInterpreter = exports.SInterpreter = function(root, ctx) {
   this.root = root;
   this.ctx = ctx;
+  this.frames = [];
 };
 
 util._extend(SInterpreter.prototype, {
@@ -14,9 +15,9 @@ util._extend(SInterpreter.prototype, {
     var _this = this;
     _this.visit(_this.root, function(err, result) {
       if (err) {
-        done(err, _this.ctx);
+        done(err);
       } else {
-        done(null, result, _this.ctx);
+        done(null, result);
       }
     });
   },
@@ -25,27 +26,29 @@ util._extend(SInterpreter.prototype, {
   // exception handling, and dispatching to AST nodes
   visit: function(node, done) {
     var _this = this;
-    _this.ctx.frames.push({ stage: 'enter', node: node });
     rawAsap(function() {
-      _this.enter(node, function retry() {
+      function enter() {
         try {
           _this[node.type + 'Node'](node, function(err, result) {
             rawAsap(function() {
+              _this.frames.push({ stage: 'exit', err: err, result: result, node: node });
               _this.exit(node, err, result, function() {
-                _this.ctx.frames.push({ stage: 'exit', err: err, result: result, node: node });
                 done(err, result);
               });
             });
           });
         } catch (err) {
           rawAsap(function() {
-            _this.error(node, err, retry, function() {
+            _this.error(node, err, enter, function() {
               err.node = node;
               done(err);
             });
           });
         }
-      });
+      }
+
+      _this.frames.push({ stage: 'enter', enter: enter, node: node });
+      _this.enter(node, enter);
     });
   },
 

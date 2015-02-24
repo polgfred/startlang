@@ -51,12 +51,12 @@ try {
 try {
   ctx = runtime.create();
   interp = interpreter.create(root, ctx);
-  interp.run(function(err, result, ctx) {
+  interp.run(function(err, result) {
     if (options.ns) {
       output(ctx.ns);
     }
     if (options.frames) {
-      output(ctx.frames);
+      output(interp.frames);
     }
     if (err) {
       output('an error occurred:');
