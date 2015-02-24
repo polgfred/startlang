@@ -245,20 +245,16 @@ var SRange = exports.SRange = {
     return '[ ' + r.start + ' .. ' + r.end + ' / ' + r.step + ' ]';
   },
 
-  enumerate: function(r) {
-    var current = r.start;
+  enumerate: function(r, current) {
+    if (typeof current == 'undefined') {
+      current = r.start;
+    }
 
-    // return an interator over the range
     return {
-      more: function() {
-        return current < r.end;
-      },
-
+      value: current,
+      more: current < r.end,
       next: function() {
-        // preincrement
-        var result = current;
-        current += r.step;
-        return result;
+        return SRange.enumerate(r, current + r.step);
       }
     };
   },
@@ -308,8 +304,16 @@ var SString = exports.SString = {
     return s;
   },
 
-  enumerate: function(s) {
-    return enumerate(s);
+  enumerate: function(s, index) {
+    index = index || 0;
+
+    return {
+      value: s.charAt(index),
+      more: index < s.length,
+      next: function() {
+        return SString.enumerate(s, index + 1);
+      }
+    };
   },
 
   getindex: function(s, index) {
@@ -410,8 +414,16 @@ var SList = exports.SList = {
     return '[ ' + j.join(', ') + ' ]';
   },
 
-  enumerate: function(l) {
-    return enumerate(l);
+  enumerate: function(l, index) {
+    index = index || 0;
+
+    return {
+      value: l[index],
+      more: index < l.length,
+      next: function() {
+        return SList.enumerate(l, index + 1);
+      }
+    };
   },
 
   getindex: function(l, index) {
@@ -570,7 +582,7 @@ var STable = exports.STable = {
   },
 
   enumerate: function(t) {
-    return enumerate(Object.keys(t));
+    return SList.enumerate(Object.keys(t));
   },
 
   getindex: function(t, index) {

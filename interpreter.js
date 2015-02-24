@@ -74,20 +74,21 @@ util._extend(SInterpreter.prototype, {
   // ** implementations of AST nodes **
 
   blockNode: function(node, done) {
-    var _this = this, len = node.elems.length, count = -1;
-    (function loop() {
-      if (++count < len) {
+    var _this = this, len = node.elems.length;
+    (function loop(count) {
+      if (count < len) {
         _this.visit(node.elems[count], function(err) {
           if (err) {
             done(err);
           } else {
-            loop();
+            _this.frames.push({ stage: 'in', count: count, node: node });
+            loop(count + 1);
           }
         });
       } else {
         done();
       }
-    })();
+    })(0);
   },
 
   ifNode: function(node, done) {
@@ -95,43 +96,43 @@ util._extend(SInterpreter.prototype, {
     _this.visit(node.cond, function(err, cres) {
       if (err) {
         done(err);
-      } else if (cres) {
-        _this.visit(node.tbody, done);
-      } else if (node.fbody) {
-        _this.visit(node.fbody, done);
       } else {
-        done();
+        _this.frames.push({ stage: 'in', cond: cres, node: node });
+        if (cres) {
+          _this.visit(node.tbody, done);
+        } else if (node.fbody) {
+          _this.visit(node.fbody, done);
+        } else {
+          done();
+        }
       }
     });
   },
 
   forNode: function(node, done) {
-    var _this = this, items, len, count;
+    var _this = this;
     _this.visit(node.range, function(err, rres) {
       if (err) {
         done(err);
       } else {
-        items = _this.ctx.enumerate(rres);
-        len = items.length;
-        count = -1;
-        (function loop() {
-          if (items.more()) {
-            _this.ctx.set(node.name, items.next());
+        (function loop(iter) {
+          if (iter.more) {
+            _this.ctx.set(node.name, iter.value);
             _this.visit(node.body, function(err) {
               if (err) {
                 if (err.flow && err.scope == 'loop') {
-                  (err.terminate ? done : loop)();
+                  err.terminate ? done() : loop(iter.next());
                 } else {
                   done(err);
                 }
               } else {
-                loop();
+                loop(iter.next());
               }
             });
           } else {
             done();
           }
-        })();
+        })(_this.ctx.enumerate(rres));
       }
     });
   },
@@ -185,21 +186,21 @@ util._extend(SInterpreter.prototype, {
   },
 
   callNode: function(node, done) {
-    var _this = this, len = node.args ? node.args.length : 0, args = [], count = -1;
-    (function loop() {
-      if (++count < len) {
+    var _this = this, len = node.args ? node.args.length : 0, args = [];
+    (function loop(count) {
+      if (count < len) {
         _this.visit(node.args[count], function(err, ares) {
           if (err) {
             done(err);
           } else {
             args[count] = ares;
-            loop();
+            loop(count + 1);
           }
         });
       } else {
         _this.ctx.funcall(node.name, args, done);
       }
-    })();
+    })(0);
   },
 
   breakNode: function(node, done) {
@@ -264,50 +265,50 @@ util._extend(SInterpreter.prototype, {
   },
 
   indexNode: function(node, done) {
-    var _this = this, len = node.indexes.length, count = -1;
+    var _this = this, len = node.indexes.length;
     _this.visit(node.base, function(err, bres) {
       if (err) {
         done(err);
       } else {
-        (function loop() {
-          if (++count < len) {
+        (function loop(count) {
+          if (count < len) {
             _this.visit(node.indexes[count], function(err, ires) {
               if (err) {
                 done(err);
               } else {
                 bres = _this.ctx.getindex(bres, ires);
-                loop();
+                loop(count + 1);
               }
             });
           } else {
             done(null, bres);
           }
-        })();
+        })(0);
       }
     });
   },
 
   letIndexNode: function(node, done) {
-    var _this = this, len = node.indexes.length, count = -1;
+    var _this = this, len = node.indexes.length;
     _this.visit(node.base, function(err, bres) {
       if (err) {
         done(err);
       } else {
-        (function loop() {
-          if (++count < len) {
+        (function loop(count) {
+          if (count < len) {
             _this.visit(node.indexes[count], function(err, ires) {
               if (err) {
                 done(err);
               } else if (count < len - 1) {
                 bres = _this.ctx.getindex(bres, ires);
-                loop();
+                loop(count + 1);
               } else {
                 _this.visit(node.value, function(err, vres) {
                   if (err) {
                     done(err);
                   } else {
                     _this.ctx.setindex(bres, ires, vres);
-                    loop();
+                    loop(count + 1);
                   }
                 });
               }
@@ -315,34 +316,34 @@ util._extend(SInterpreter.prototype, {
           } else {
             done();
           }
-        })();
+        })(0);
       }
     });
   },
 
   deleteIndexNode: function(node, done) {
-    var _this = this, len = node.indexes.length, count = -1;
+    var _this = this, len = node.indexes.length;
     _this.visit(node.base, function(err, bres) {
       if (err) {
         done(err);
       } else {
-        (function loop() {
-          if (++count < len) {
+        (function loop(count) {
+          if (count < len) {
             _this.visit(node.indexes[count], function(err, ires) {
               if (err) {
                 done(err);
               } else if (count < len - 1) {
                 bres = _this.ctx.getindex(bres, ires);
-                loop();
+                loop(count + 1);
               } else {
                 _this.ctx.delindex(bres, ires);
-                loop();
+                loop(count + 1);
               }
             });
           } else {
             done();
           }
-        })();
+        })(0);
       }
     });
   },
