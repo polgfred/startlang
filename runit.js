@@ -4,7 +4,7 @@ var fs = require('fs'),
     runtime = require('./runtime'),
     interpreter = require('./interpreter');
 
-var source, root, ctx, interp, options = {};
+var options = {}, parserOptions = {};
 
 var inspectOpts = {
   colors: true,
@@ -17,6 +17,7 @@ function output(obj) {
 
 if (process.argv.indexOf('--ast') != -1) {
   options.ast = true;
+  parserOptions.ast = true;
 }
 
 if (process.argv.indexOf('--ns') != -1) {
@@ -28,7 +29,12 @@ if (process.argv.indexOf('--frames') != -1) {
 }
 
 if (process.argv.indexOf('--meta') != -1) {
-  options.ast = options.meta = true;
+  options.ast = true;
+  parserOptions.ast = parserOptions.meta = true;
+}
+
+if (process.argv.indexOf('--repl') != -1) {
+  options.repl = true;
 }
 
 try {
@@ -38,7 +44,7 @@ try {
 }
 
 try {
-  root = parser.parse(source, options);
+  root = parser.parse(source, parserOptions);
   if (options.ast) {
     output(root);
     process.exit();
@@ -65,6 +71,17 @@ try {
       if (err.stack) {
         output(err.stack);
       }
+    }
+
+    if (options.repl) {
+      console.log('\n You have `source`, `root`, `ctx`, and `interp`.\n');
+      require('repl').start({
+        prompt: '> ',
+        useGlobal: true,
+        writer: function(obj) {
+          return util.inspect(obj, { colors: true, depth: null });
+        }
+      });
     }
   };
 } catch (e) {
