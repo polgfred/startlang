@@ -190,7 +190,7 @@ var SBoolean = exports.SBoolean = {
   }
 };
 
-Object.defineProperty(Boolean.prototype, '@@__START_HANDLER__@@', {
+Object.defineProperty(Boolean.prototype, '@@__handler__@@', {
   value: SBoolean,
   enumerable: false
 });
@@ -274,7 +274,7 @@ var SNumber = exports.SNumber = {
   }
 };
 
-Object.defineProperty(Number.prototype, '@@__START_HANDLER__@@', {
+Object.defineProperty(Number.prototype, '@@__handler__@@', {
   value: SNumber,
   enumerable: false
 });
@@ -335,7 +335,7 @@ var SRange = exports.SRange = {
   }
 };
 
-Object.defineProperty(Range.prototype, '@@__START_HANDLER__@@', {
+Object.defineProperty(Range.prototype, '@@__handler__@@', {
   value: SRange,
   enumerable: false
 });
@@ -457,7 +457,7 @@ var SString = exports.SString = {
   }
 };
 
-Object.defineProperty(String.prototype, '@@__START_HANDLER__@@', {
+Object.defineProperty(String.prototype, '@@__handler__@@', {
   value: SString,
   enumerable: false
 });
@@ -635,7 +635,7 @@ var SList = exports.SList = {
   }
 };
 
-Object.defineProperty(immutable.List.prototype, '@@__START_HANDLER__@@', {
+Object.defineProperty(immutable.List.prototype, '@@__handler__@@', {
   value: SList,
   enumerable: false
 });
@@ -721,14 +721,14 @@ var SMap = exports.SMap = {
   }
 };
 
-Object.defineProperty(immutable.Map.prototype, '@@__START_HANDLER__@@', {
+Object.defineProperty(immutable.Map.prototype, '@@__handler__@@', {
   value: SMap,
   enumerable: false
 });
 
 // find a protocol handler for this object
 var handle = exports.handle = function(obj) {
-  return obj == null ? SNone : obj['@@__START_HANDLER__@@'];
+  return obj == null ? SNone : obj['@@__handler__@@'];
 };
 
 var globals = exports.globals = {
