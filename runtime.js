@@ -142,7 +142,11 @@ var SNone = exports.SNone = {
   },
 
   setindex: function() {
-    throw new Error('object does not support [] assignment');
+    throw new Error('object does not support []');
+  },
+
+  delindex: function() {
+    throw new Error('object does not support []');
   },
 
   methods: [],
@@ -169,7 +173,11 @@ var SBoolean = exports.SBoolean = {
   },
 
   setindex: function() {
-    throw new Error('object does not support [] assignment');
+    throw new Error('object does not support []');
+  },
+
+  delindex: function() {
+    throw new Error('object does not support []');
   },
 
   methods: [],
@@ -271,20 +279,20 @@ Object.defineProperty(Number.prototype, '@@__START_HANDLER__@@', {
   enumerable: false
 });
 
-function Range(start, end, step) {
-  this.start = start;
+function Range(current, end, step) {
+  this.current = current;
   this.end = end;
   this.step = step || 1;
 }
 
 var SRange = exports.SRange = {
   repr: function(r) {
-    return '[ ' + r.start + ' .. ' + r.end + ' / ' + r.step + ' ]';
+    return '[ ' + r.current + ' .. ' + r.end + ' / ' + r.step + ' ]';
   },
 
   enumerate: function(r, current) {
     if (typeof current == 'undefined') {
-      current = r.start;
+      current = r.current;
     }
 
     return {
@@ -310,7 +318,7 @@ var SRange = exports.SRange = {
 
   methods: {
     len: function(r) {
-      return Math.ceil((r.end - r.start) / r.step);
+      return Math.ceil((r.end - r.current) / r.step);
     }
   },
 
