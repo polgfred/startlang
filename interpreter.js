@@ -23,11 +23,12 @@ util._extend(SInterpreter.prototype, {
     rawAsap(function() {
       function enter() {
         try {
-          _this[node.type + 'Node'](node, function(err, result) {
+          _this[node.type + 'Node'](node, function() {
+            var args = arguments;
             rawAsap(function() {
-              _this.frames.push({ stage: 'exit', err: err, result: result, node: node });
-              _this.exit(node, err, result, function() {
-                done(err, result);
+              _this.frames.push({ stage: 'exit', args: args, node: node });
+              _this.exit(node, args, function() {
+                done.apply(null, args);
               });
             });
           });
@@ -54,7 +55,7 @@ util._extend(SInterpreter.prototype, {
 
   // ** OVERRIDE **
   // trap will be called upon exit of every node, do anything you want and call cont()
-  exit: function(node, err, result, cont) {
+  exit: function(node, args, cont) {
     cont();
   },
 
@@ -161,7 +162,7 @@ util._extend(SInterpreter.prototype, {
 
   beginNode: function(node, done) {
     var _this = this, len = node.params ? node.params.length : 0;
-    _this.ctx.define(node.name, function(args, done2) {
+    _this.ctx.setfn(node.name, function(args, done2) {
       _this.ctx.push();
       for (var i = 0; i < len; ++i) {
         _this.ctx.set(node.params[i], args[i]);
@@ -183,19 +184,47 @@ util._extend(SInterpreter.prototype, {
   },
 
   callNode: function(node, done) {
-    var _this = this, len = node.args ? node.args.length : 0, args = [];
+    var _this = this, len = node.args ? node.args.length : 0, args = [],
+        fn, name, indexes, res, repl;
     (function loop(count) {
       if (count < len) {
-        _this.visit(node.args[count], function(err, ares) {
+        // handle arguments
+        var arg = node.args[count];
+        _this.visit(arg, function(err, ares) {
           if (err) {
             done(err);
           } else {
+            if (count == 0) {
+              // if first arg is a var or index, capture for replacement
+              if (arg.type == 'var') {
+                name = arg.name;
+              } else if (arg.type == 'index') {
+                // index node will pass indexes in extra param
+                name = arg.name;
+                indexes = arguments[2];
+              }
+            }
+            // capture the arg and loop around
             args[count] = ares;
             loop(count + 1);
           }
         });
       } else {
-        _this.ctx.funcall(node.name, args, done);
+        if (fn = _this.ctx.getfn(node.name)) {
+          fn(args, done);
+        } else {
+          res = _this.ctx.syscall(node.name, args, done);
+          // if this result is a replacement, try to assign it to first argument
+          if (name && res && (repl = res['@@__replace__@@'])) {
+            if (indexes) {
+              _this.ctx.setindex(name, indexes, repl);
+            } else {
+              _this.ctx.set(name, repl);
+            }
+            res = res['@@__result__@@'] || repl;
+          }
+          done(null, res);
+        }
       }
     })(0);
   },
@@ -274,7 +303,8 @@ util._extend(SInterpreter.prototype, {
           }
         });
       } else {
-        done(null, _this.ctx.getindex(node.name, indexes));
+        // callNode will visit this manually and pull off the indexes
+        done(null, _this.ctx.getindex(node.name, indexes), indexes);
       }
     })(0);
   },
