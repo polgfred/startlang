@@ -4,45 +4,67 @@ var util = require('util'),
 // Environment
 
 var SRuntime = exports.SRuntime = function() {
-  this.fn = {};
-  this.ns = {};
+  this.fn = immutable.Map();
+  this.ns = immutable.Map();
+  this.stack = immutable.Stack();
 };
 
 util._extend(SRuntime.prototype, {
-  // push and pop new objects onto the prototype chain to implement fast scopes
+  // push and pop new objects onto the ns stack
   push: function() {
-    this.ns = Object.create(this.ns);
+    this.stack = this.stack.push(this.ns);
+    this.ns = immutable.Map();
   },
 
   pop: function() {
-    this.ns = Object.getPrototypeOf(this.ns);
+    this.ns = this.stack.first();
+    this.stack = this.stack.pop();
   },
 
   get: function(name) {
-    return this.ns[name];
+    // look in the current ns
+    var result = this.ns.get(name);
+    if (typeof result != 'undefined') {
+      return result;
+    }
+
+    // look up the stack (should we do this?)
+    var iter = this.stack.values(), next;
+    while (true) {
+      next = iter.next();
+      if (next.done) {
+        break;
+      }
+      result = next.value.get(name);
+      if (typeof result != 'undefined') {
+        return result;
+      }
+    }
   },
 
   set: function(name, value) {
-    this.ns[name] = value;
+    // always in the current ns only
+    this.ns = this.ns.set(name, value);
   },
 
   del: function(name) {
-    delete this.ns[name];
+    // always in the current ns only
+    this.ns = this.ns.delete(name);
   },
 
   getindex: function(name, indexes) {
-    var base = this.ns[name];
+    var base = this.get(name);
     return handle(base).getindex(base, indexes);
   },
 
   setindex: function(name, indexes, value) {
-    var base = this.ns[name];
-    this.ns[name] = handle(base).setindex(base, indexes, value);
+    var base = this.get(name);
+    this.set(name, handle(base).setindex(base, indexes, value));
   },
 
   delindex: function(name, indexes) {
-    var base = this.ns[name];
-    this.ns[name] = handle(base).delindex(base, indexes);
+    var base = this.get(name);
+    this.set(name, handle(base).delindex(base, indexes));
   },
 
   enumerate: function(value) {
@@ -58,11 +80,11 @@ util._extend(SRuntime.prototype, {
   },
 
   getfn: function(name) {
-    return this.fn[name];
+    return this.fn.get(name);
   },
 
   setfn: function(name, body) {
-    this.fn[name] = body;
+    this.fn = this.fn.set(name, body);
   },
 
   syscall: function(name, args, done) {
