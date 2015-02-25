@@ -87,14 +87,44 @@ util._extend(SRuntime.prototype, {
     this.fn = this.fn.set(name, body);
   },
 
-  syscall: function(name, args, done) {
-    // look for an rt function by dispatching on first argument, or a global function
+  syscall: function(name, args, assn) {
+    // look for a function by first argument, or in global map
     var fn = (args.length > 0 && handle(args[0]).methods[name]) || globals[name];
-    if (fn) {
-      return fn.apply(null, args);
+    if (!fn) {
+      throw new Error('object not found or not a function');
     }
 
-    throw new Error('object not found or not a function');
+    // call a runtime function
+    var res = fn.apply(null, args), repl, i, a, r;
+    if (res) {
+      repl = res['@@__replace__@@'];
+      if (repl) {
+        // if this result contains replacement args, assign them
+        if (!Array.isArray(repl)) {
+          repl = [ repl ];
+        }
+        // loop over replacement args
+        for (i = 0; i < repl.length; ++i) {
+          r = repl[i];
+          if (typeof r != 'undefined') {
+            // we have a replacement for this slot
+            a = assn[i];
+            if (a) {
+              // this slot can be assigned to
+              if (a.indexes) {
+                this.setindex(a.name, a.indexes, r);
+              } else {
+                this.set(a.name, r);
+              }
+            }
+          }
+        }
+        // grab an explicit result, or the first replacement
+        res = res['@@__result__@@'] || repl[0];
+      }
+    }
+
+    return res;
   }
 });
 
@@ -700,6 +730,15 @@ var globals = exports.globals = {
 
   map: function() {
     return SMap.create();
+  },
+
+  swap: function(a, b) {
+    return {
+      '@@__replace__@@':
+        [ b, a ],
+      '@@__result__@@':
+        null
+    };
   },
 
   print: function() {

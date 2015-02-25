@@ -184,28 +184,16 @@ util._extend(SInterpreter.prototype, {
   },
 
   callNode: function(node, done) {
-    var _this = this, len = node.args ? node.args.length : 0, args = [],
-        fn, name, indexes, res, repl;
+    var _this = this, len = node.args ? node.args.length : 0, args = [], assn = [], fn;
     (function loop(count) {
       if (count < len) {
-        // handle arguments
         var arg = node.args[count];
-        _this.visit(arg, function(err, ares) {
+        _this.visit(arg, function(err, ares, assign) {
           if (err) {
             done(err);
           } else {
-            if (count == 0) {
-              // if first arg is a var or index, capture for replacement
-              if (arg.type == 'var') {
-                name = arg.name;
-              } else if (arg.type == 'index') {
-                // index node will pass indexes in extra param
-                name = arg.name;
-                indexes = arguments[2];
-              }
-            }
-            // capture the arg and loop around
             args[count] = ares;
+            assn[count] = assign;
             loop(count + 1);
           }
         });
@@ -213,17 +201,7 @@ util._extend(SInterpreter.prototype, {
         if (fn = _this.ctx.getfn(node.name)) {
           fn(args, done);
         } else {
-          res = _this.ctx.syscall(node.name, args, done);
-          // if this result is a replacement, try to assign it to first argument
-          if (name && res && (repl = res['@@__replace__@@'])) {
-            if (indexes) {
-              _this.ctx.setindex(name, indexes, repl);
-            } else {
-              _this.ctx.set(name, repl);
-            }
-            res = res['@@__result__@@'] || repl;
-          }
-          done(null, res);
+          done(null, _this.ctx.syscall(node.name, args, assn));
         }
       }
     })(0);
@@ -270,7 +248,8 @@ util._extend(SInterpreter.prototype, {
   },
 
   varNode: function(node, done) {
-    done(null, this.ctx.get(node.name));
+    // pass assign info as the second argument
+    done(null, this.ctx.get(node.name), { name: node.name });
   },
 
   letNode: function(node, done) {
@@ -303,8 +282,11 @@ util._extend(SInterpreter.prototype, {
           }
         });
       } else {
-        // callNode will visit this manually and pull off the indexes
-        done(null, _this.ctx.getindex(node.name, indexes), indexes);
+        // pass assign info as the second argument
+        done(null, _this.ctx.getindex(node.name, indexes), {
+          name: node.name,
+          indexes: indexes
+        });
       }
     })(0);
   },
