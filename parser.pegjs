@@ -27,14 +27,14 @@
   // special token to signal buildIndex that we have a DeleteIndex call
   var $remove = {};
 
-  // take a base, dimensions, and (optionally) a value, and construct an indexish node
-  function buildIndex(base, indexes, value) {
+  // take a base name, dimensions, and (optionally) a value, and construct an indexish node
+  function buildIndex(name, indexes, value) {
     if (value === undefined) {
-      return buildNode('index', { base: base, indexes: indexes });
+      return buildNode('index', { name: name, indexes: indexes });
     } else if (value === $remove) {
-      return buildNode('deleteIndex', { base: base, indexes: indexes });
+      return buildNode('deleteIndex', { name: name, indexes: indexes });
     } else {
-      return buildNode('letIndex', { base: base, indexes: indexes, value: value });
+      return buildNode('letIndex', { name: name, indexes: indexes, value: value });
     }
   }
 
@@ -169,26 +169,26 @@ Statement
   / Flow
 
 Let
-  = __ 'let' WB __ sym:Symbol __ dims:Dimensions? __ '=' __ value:Value {
-      if (!dims) {
-        return buildNode('let', { name: sym, value: value });
+  = __ 'let' WB __ name:Symbol __ indexes:Dimensions? __ '=' __ value:Value {
+      if (!indexes) {
+        return buildNode('let', { name: name, value: value });
       } else {
-        return buildIndex(buildNode('var', { name: sym }), dims, value);
+        return buildIndex(name, indexes, value);
       }
     }
 
 Delete
-  = __ 'delete' WB __ sym:Symbol __ dims:Dimensions? {
-      if (!dims) {
-        return buildNode('delete', { name: sym });
+  = __ 'delete' WB __ name:Symbol __ indexes:Dimensions? {
+      if (!indexes) {
+        return buildNode('delete', { name: name });
       } else {
-        return buildIndex(buildNode('var', { name: sym }), dims, $remove);
+        return buildIndex(name, indexes, $remove);
       }
     }
 
 Call
-  = sym:Symbol __ args:Values? {
-      return buildNode('call', { name: sym, args: args });
+  = name:Symbol __ args:Values? {
+      return buildNode('call', { name: name, args: args });
     }
 
 Flow
@@ -302,11 +302,11 @@ CallExpr
 // Indexes
 
 IndexExpr
-  = sym:Symbol __ dims:Dimensions? {
-      if (!dims) {
+  = sym:Symbol __ indexes:Dimensions? {
+      if (!indexes) {
         return buildNode('var', { name: sym });
       } else {
-        return buildIndex(buildNode('var', { name: sym }), dims);
+        return buildIndex(sym, indexes);
       }
     }
   / PrimaryExpr

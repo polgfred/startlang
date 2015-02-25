@@ -1,4 +1,5 @@
-var util = require('util');
+var util = require('util'),
+    immutable = require('immutable');
 
 // Environment
 
@@ -29,16 +30,19 @@ util._extend(SRuntime.prototype, {
     delete this.ns[name];
   },
 
-  getindex: function(base, index) {
-    return handle(base).getindex(base, index);
+  getindex: function(name, indexes) {
+    var base = this.ns[name];
+    return handle(base).getindex(base, indexes);
   },
 
-  setindex: function(base, index, value) {
-    handle(base).setindex(base, index, value);
+  setindex: function(name, indexes, value) {
+    var base = this.ns[name];
+    this.ns[name] = handle(base).setindex(base, indexes, value);
   },
 
-  delindex: function(base, index) {
-    handle(base).delindex(base, index);
+  delindex: function(name, indexes) {
+    var base = this.ns[name];
+    this.ns[name] = handle(base).delindex(base, indexes);
   },
 
   enumerate: function(value) {
@@ -244,20 +248,16 @@ var SRange = exports.SRange = {
     };
   },
 
-  getindex: function(r, index) {
-    var val = r.start + index * r.step;
-
-    if (val <= r.end) {
-      return val;
-    }
+  getindex: function() {
+    throw new Error('object does not support []');
   },
 
   setindex: function() {
-    throw new Error('object cannot be modified with []');
+    throw new Error('object does not support []');
   },
 
   delindex: function() {
-    throw new Error('object cannot be modified with []');
+    throw new Error('object does not support []');
   },
 
   methods: {
@@ -372,6 +372,8 @@ Object.defineProperty(String.prototype, '@@__START_HANDLER__@@', {
 
 var SList = exports.SList = {
   create: function(dims) {
+    return immutable.List();
+
     if (dims.length == 0) {
       dims.push(0);
     }
@@ -389,43 +391,38 @@ var SList = exports.SList = {
   },
 
   repr: function(l) {
-    var i, j = [], k;
-
-    for (i = 0; i < l.length; ++i) {
-      k = l[i];
-      j.push(handle(k).repr(k));
-    }
-
-    return '[ ' + j.join(', ') + ' ]';
+    return '[ ' + l.map(function(el) {
+      return handle(el).repr(el);
+    }).join(', ') + ' ]';
   },
 
   enumerate: function(l, index) {
     index = index || 0;
 
     return {
-      value: l[index],
-      more: index < l.length,
+      value: l.get(index),
+      more: index < l.size,
       next: function() {
         return SList.enumerate(l, index + 1);
       }
     };
   },
 
-  getindex: function(l, index) {
-    return l[index];
+  getindex: function(l, indexes) {
+    return l.getIn(indexes);
   },
 
-  setindex: function(l, index, value) {
-    l[index] = value;
+  setindex: function(l, indexes, value) {
+    return l.setIn(indexes, value);
   },
 
-  delindex: function(l, index) {
-    delete l[index];
+  delindex: function(l, indexes) {
+    return l.deleteIn(indexes);
   },
 
   methods: {
     len: function(l) {
-      return l.length;
+      return l.size;
     },
 
     find: function(l, search) {
@@ -487,53 +484,41 @@ var SList = exports.SList = {
     },
 
     '=' : function(left, right) {
-      var i, l, r;
-
-      if (left.length != right.length) {
-        return false;
-      }
-
-      for (i = 0; i < left.length; ++i) {
-        l = left[i];
-        r = right[i];
-        if (!handle(l).binaryops['='](l, r)) {
-          return false;
-        }
-      }
-
-      return true;
+      return left.equals(right);
     },
 
     '<' : function(left, right) {
-      var i, l, r, len = Math.min(left.length, right.length);
+      var i, l, r, h, len = Math.min(left.size, right.size);
 
       for (i = 0; i < len; ++i) {
-        l = left[i];
-        r = right[i];
-        if (handle(l).binaryops['<'](l, r)) {
+        l = left.get(i);
+        r = right.get(i);
+        h = handle(l);
+        if (h.binaryops['<'](l, r)) {
           return true;
-        } else if (handle(l).binaryops['>'](l, r)) {
+        } else if (h.binaryops['>'](l, r)) {
           return false;
         }
       }
 
-      return left.length < right.length;
+      return left.size < right.size;
     },
 
     '>' : function(left, right) {
-      var i, l, r, len = Math.min(left.length, right.length);
+      var i, l, r, h, len = Math.min(left.size, right.size);
 
       for (i = 0; i < len; ++i) {
-        l = left[i];
-        r = right[i];
-        if (handle(l).binaryops['>'](l, r)) {
+        l = left.get(i);
+        r = right.get(i);
+        h = handle(l);
+        if (h.binaryops['>'](l, r)) {
           return true;
-        } else if (handle(l).binaryops['<'](l, r)) {
+        } else if (h.binaryops['<'](l, r)) {
           return false;
         }
       }
 
-      return left.length > right.length;
+      return left.size > right.size;
     },
 
     '!=': function(left, right) { return ! this['='](left, right); },
@@ -542,44 +527,38 @@ var SList = exports.SList = {
   }
 };
 
-Object.defineProperty(Array.prototype, '@@__START_HANDLER__@@', {
+Object.defineProperty(immutable.List.prototype, '@@__START_HANDLER__@@', {
   value: SList,
   enumerable: false
 });
 
-// Tables (Hashes)
+// Tables (Maps, Hashes)
 
 var STable = exports.STable = {
   create: function() {
-    return {};
+    return immutable.Map();
   },
 
   repr: function(t) {
-    var i, j = [], k = Object.keys(t), l, m;
-
-    for (i = 0; i < k.length; ++i) {
-      l = k[i];
-      m = t[l];
-      j.push(l + ': ' + handle(m).repr(m));
-    }
-
-    return '[ ' + j.join(', ') + ' ]';
+    return '[ ' + t.map(function(val, key) {
+      return handle(key).repr(key) + ': ' + handle(val).repr(val);
+    }).join(', ') + ' ]';
   },
 
   enumerate: function(t) {
-    return SList.enumerate(Object.keys(t));
+    return SList.enumerate(t.keySeq());
   },
 
-  getindex: function(t, index) {
-    return t[index];
+  getindex: function(t, indexes) {
+    return t.getIn(indexes);
   },
 
-  setindex: function(t, index, value) {
-    t[index] = value;
+  setindex: function(t, indexes, value) {
+    return t.setIn(indexes, value);
   },
 
-  delindex: function(t, index) {
-    delete t[index];
+  delindex: function(t, indexes) {
+    return t.deleteIn(indexes);
   },
 
   methods: {
@@ -588,7 +567,7 @@ var STable = exports.STable = {
     },
 
     keys: function(t) {
-      return Object.keys(t);
+      return immutable.List(t.keySeq());
     },
 
     remove: function(t) {
@@ -607,36 +586,18 @@ var STable = exports.STable = {
         throw new Error('object cannot be merged into table');
       }
 
-      var t = {};
-
-      util._extend(t, left);
-      util._extend(t, right);
-      return t;
+      return left.merge(right);
     },
 
     '=': function(left, right) {
-      var i, l, r;
-
-      for (i in left) {
-        if (!(i in right)) {
-          return false;
-        }
-
-        l = left[i];
-        r = right[i];
-        if (!handle(l).binaryops['='](l, r)) {
-          return false;
-        }
-      }
-
-      return Object.keys(left).length == Object.keys(right).length;
+      return left.equals(right);
     },
 
     '!=': function(left, right) { return ! this['='](left, right); }
   }
 };
 
-Object.defineProperty(Object.prototype, '@@__START_HANDLER__@@', {
+Object.defineProperty(immutable.Map.prototype, '@@__START_HANDLER__@@', {
   value: STable,
   enumerable: false
 });
@@ -648,7 +609,7 @@ var handle = exports.handle = function(obj) {
 
 var globals = exports.globals = {
   list: function() {
-    return SList.create([].slice.call(arguments));
+    return SList.create();
   },
 
   table: function() {

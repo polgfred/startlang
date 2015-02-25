@@ -262,87 +262,65 @@ util._extend(SInterpreter.prototype, {
   },
 
   indexNode: function(node, done) {
-    var _this = this, len = node.indexes.length;
-    _this.visit(node.base, function(err, bres) {
-      if (err) {
-        done(err);
-      } else {
-        (function loop(count) {
-          if (count < len) {
-            _this.visit(node.indexes[count], function(err, ires) {
-              if (err) {
-                done(err);
-              } else {
-                bres = _this.ctx.getindex(bres, ires);
-                loop(count + 1);
-              }
-            });
+    var _this = this, len = node.indexes.length, indexes = [];
+    (function loop(count) {
+      if (count < len) {
+        _this.visit(node.indexes[count], function(err, ires) {
+          if (err) {
+            done(err);
           } else {
-            done(null, bres);
+            indexes[count] = ires;
+            loop(count + 1);
           }
-        })(0);
+        });
+      } else {
+        done(null, _this.ctx.getindex(node.name, indexes));
       }
-    });
+    })(0);
   },
 
   letIndexNode: function(node, done) {
-    var _this = this, len = node.indexes.length;
-    _this.visit(node.base, function(err, bres) {
-      if (err) {
-        done(err);
-      } else {
-        (function loop(count) {
-          if (count < len) {
-            _this.visit(node.indexes[count], function(err, ires) {
-              if (err) {
-                done(err);
-              } else if (count < len - 1) {
-                bres = _this.ctx.getindex(bres, ires);
-                loop(count + 1);
-              } else {
-                _this.visit(node.value, function(err, vres) {
-                  if (err) {
-                    done(err);
-                  } else {
-                    _this.ctx.setindex(bres, ires, vres);
-                    loop(count + 1);
-                  }
-                });
-              }
-            });
+    var _this = this, len = node.indexes.length, indexes = [];
+    (function loop(count) {
+      if (count < len) {
+        _this.visit(node.indexes[count], function(err, ires) {
+          if (err) {
+            done(err);
           } else {
+            indexes[count] = ires;
+            loop(count + 1);
+          }
+        });
+      } else {
+        _this.visit(node.value, function(err, vres) {
+          if (err) {
+            done(err);
+          } else {
+            _this.ctx.setindex(node.name, indexes, vres);
             done();
           }
-        })(0);
+        });
       }
-    });
+    })(0);
   },
 
   deleteIndexNode: function(node, done) {
-    var _this = this, len = node.indexes.length;
-    _this.visit(node.base, function(err, bres) {
-      if (err) {
-        done(err);
-      } else {
-        (function loop(count) {
-          if (count < len) {
-            _this.visit(node.indexes[count], function(err, ires) {
-              if (err) {
-                done(err);
-              } else if (count < len - 1) {
-                bres = _this.ctx.getindex(bres, ires);
-                loop(count + 1);
-              } else {
-                _this.ctx.delindex(bres, ires);
-                loop(count + 1);
-              }
-            });
+    var _this = this, len = node.indexes.length, indexes = [];
+    (function loop(count) {
+      if (count < len) {
+        _this.visit(node.indexes[count], function(err, ires) {
+          if (err) {
+            done(err);
           } else {
-            done();
+            indexes[count] = ires;
+            loop(count + 1);
           }
-        })(0);
+        });
+      } else {
+        _this.ctx.delindex(node.name, indexes);
+        done();
       }
-    });
+    })(0);
   },
 
   logicalOpNode: function(node, done) {
