@@ -53,18 +53,39 @@ util._extend(SRuntime.prototype, {
   },
 
   getindex: function(name, indexes) {
-    var base = this.get(name);
-    return handle(base).getindex(base, indexes);
+    var max = indexes.length - 1;
+    return next(this.get(name), 0);
+
+    function next(b, i) {
+      var h = handle(b), idx = indexes[i];
+      return (i == max) ?
+                h.getindex(b, idx) :
+                next(h.getindex(b, idx), i + 1);
+    }
   },
 
   setindex: function(name, indexes, value) {
-    var base = this.get(name);
-    this.set(name, handle(base).setindex(base, indexes, value));
+    var max = indexes.length - 1;
+    this.set(name, next(this.get(name), 0));
+
+    function next(b, i) {
+      var h = handle(b), idx = indexes[i];
+      return (i == max) ?
+                h.setindex(b, idx, value) :
+                h.setindex(b, idx, next(h.getindex(b, idx), i + 1));
+    }
   },
 
   delindex: function(name, indexes) {
-    var base = this.get(name);
-    this.set(name, handle(base).delindex(base, indexes));
+    var max = indexes.length - 1;
+    this.set(name, next(this.get(name), 0));
+
+    function next(b, i) {
+      var h = handle(b), idx = indexes[i];
+      return (i == max) ?
+                h.delindex(b, idx) :
+                h.setindex(b, idx, next(h.getindex(b, idx), i + 1));
+    }
   },
 
   enumerate: function(value) {
@@ -357,30 +378,16 @@ var SString = exports.SString = {
     };
   },
 
-  getindex: function(s, indexes) {
-    if (indexes.length == 1) {
-      return s.charAt(indexes[0]);
-    }
-
-    throw new Error('string has only one dimension');
+  getindex: function(s, index) {
+    return s.charAt(index);
   },
 
-  setindex: function(s, indexes, value) {
-    if (indexes.length == 1) {
-      var index = indexes[0];
-      return s.substr(0, index) + value + s.substr(index + 1);
-    }
-
-    throw new Error('string has only one dimension');
+  setindex: function(s, index, value) {
+    return s.substr(0, index) + value + s.substr(index + 1);
   },
 
-  delindex: function(s, indexes) {
-    if (indexes.length == 1) {
-      var index = indexes[0];
-      return s.substr(0, index) + s.substr(index + 1);
-    }
-
-    throw new Error('string has only one dimension');
+  delindex: function(s, index) {
+    return s.substr(0, index) + s.substr(index + 1);
   },
 
   methods: {
@@ -498,16 +505,16 @@ var SList = exports.SList = {
     };
   },
 
-  getindex: function(l, indexes) {
-    return l.getIn(indexes);
+  getindex: function(l, index) {
+    return l.get(index);
   },
 
-  setindex: function(l, indexes, value) {
-    return l.setIn(indexes, value);
+  setindex: function(l, index, value) {
+    return l.set(index, value);
   },
 
-  delindex: function(l, indexes) {
-    return l.deleteIn(indexes);
+  delindex: function(l, index) {
+    return l.delete(index);
   },
 
   methods: {
@@ -657,16 +664,16 @@ var SMap = exports.SMap = {
     return SList.enumerate(m.keySeq());
   },
 
-  getindex: function(m, indexes) {
-    return m.getIn(indexes);
+  getindex: function(m, index) {
+    return m.get(index);
   },
 
-  setindex: function(m, indexes, value) {
-    return m.setIn(indexes, value);
+  setindex: function(m, index, value) {
+    return m.set(index, value);
   },
 
-  delindex: function(m, indexes) {
-    return m.deleteIn(indexes);
+  delindex: function(m, index) {
+    return m.delete(index);
   },
 
   methods: {
