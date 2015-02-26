@@ -118,7 +118,7 @@ util._extend(SRuntime.prototype, {
     // call a runtime function
     var res = fn.apply(null, args), repl, i, a, r;
     if (res) {
-      repl = res['@@__replace__@@'];
+      repl = res['@@__assign__@@'];
       if (repl) {
         // if this result contains replacement args, assign them
         if (!Array.isArray(repl)) {
@@ -233,8 +233,16 @@ util._extend(SNumber, {
     ns[method] = Math[method];
     return ns;
   }, {
-    random: function(num) {
-      return Math.random() * num;
+    inc: function(n) {
+      return { '@@__assign__@@': n + 1 };
+    },
+
+    dec: function(n) {
+      return { '@@__assign__@@': n - 1 };
+    },
+
+    random: function(n) {
+      return Math.random() * n;
     },
 
     step: function(start, end, step) {
@@ -371,29 +379,29 @@ util._extend(SString, {
     },
 
     insert: function(s, at, more) {
-      return { '@@__replace__@@': s.substr(0, at) + more + s.substr(at) };
+      return { '@@__assign__@@': s.substr(0, at) + more + s.substr(at) };
     },
 
     remove: function(s, at, length) {
       return {
+        '@@__assign__@@':
+          s.substr(0, at) + s.substr(at + length),
         '@@__result__@@':
-          s.substr(at, length),
-        '@@__replace__@@':
-          s.substr(0, at) + s.substr(at + length)
+          s.substr(at, length)
       };
     },
 
     replace: function(s, at, length, more) {
       return {
+        '@@__assign__@@':
+          s.substr(0, at) + more + s.substr(at + length),
         '@@__result__@@':
-          s.substr(at, length),
-        '@@__replace__@@':
-          s.substr(0, at) + more + s.substr(at + length)
+          s.substr(at, length)
       };
     },
 
     sub: function(s, search, to) {
-      return { '@@__replace__@@': s.replace(search, to) };
+      return { '@@__assign__@@': s.replace(search, to) };
     },
 
     split: function(s, delim) {
@@ -504,24 +512,27 @@ util._extend(SList, {
     },
 
     insert: function(l, at) {
-      return { '@@__replace__@@': l.splice.apply(l, [at, 0].concat([].slice.call(arguments, 2))) };
+      return {
+        '@@__assign__@@':
+          l.splice.apply(l, [at, 0].concat([].slice.call(arguments, 2)))
+      };
     },
 
     remove: function(l, at, length) {
       return {
+        '@@__assign__@@':
+          l.splice(at, length),
         '@@__result__@@':
-          l.slice(at, at + length),
-        '@@__replace__@@':
-          l.splice(at, length)
+          l.slice(at, at + length)
       };
     },
 
     replace: function(l, at, length) {
       return {
+        '@@__assign__@@':
+          l.splice.apply(l, [at, length].concat([].slice.call(arguments, 3))),
         '@@__result__@@':
-          l.slice(at, at + length),
-        '@@__replace__@@':
-          l.splice.apply(l, [at, length].concat([].slice.call(arguments, 3)))
+          l.slice(at, at + length)
       };
     },
 
@@ -530,20 +541,20 @@ util._extend(SList, {
     },
 
     push: function(l, item) {
-      return { '@@__replace__@@': l.push(item) };
+      return { '@@__assign__@@': l.push(item) };
     },
 
     pop: function(l) {
-      return { '@@__result__@@': l.last(), '@@__replace__@@': l.pop() };
+      return { '@@__assign__@@': l.pop(), '@@__result__@@': l.last() };
     },
 
     reverse: function(l) {
-      return { '@@__replace__@@': l.reverse() };
+      return { '@@__assign__@@': l.reverse() };
     },
 
     sort: function(l) {
       return {
-        '@@__replace__@@':
+        '@@__assign__@@':
           l.sort(function(left, right) {
             var h = handle(left);
             return h.binaryops['<'](left, right) ? -1 : (h.binaryops['>'](left, right) ? 1 : 0);
@@ -644,14 +655,14 @@ util._extend(SMap, {
     },
 
     clear: function(m) {
-      return { '@@__replace__@@': m.clear() };
+      return { '@@__assign__@@': m.clear() };
     },
 
     remove: function(m) {
       var args = arguments, removed = immutable.Map().asMutable();
 
       return {
-        '@@__replace__@@':
+        '@@__assign__@@':
           m.withMutations(function(mut) {
             for (var i = 1; i < args.length; ++i) {
               removed.set(args[i], mut.get(args[i]));
@@ -705,7 +716,7 @@ var globals = exports.globals = {
 
   swap: function(a, b) {
     return {
-      '@@__replace__@@':
+      '@@__assign__@@':
         [ b, a ],
       '@@__result__@@':
         null
