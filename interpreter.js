@@ -73,7 +73,7 @@ util._extend(SInterpreter.prototype, {
 
   // ** OVERRIDE **
   // trap will be called when program completes
-  end: function(node, err) {
+  end: function(/*node, err*/) {
   },
 
   // ** implementations of AST nodes **
