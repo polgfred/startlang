@@ -20,15 +20,14 @@ util._extend(SInterpreter.prototype, {
   // exception handling, and dispatching to AST nodes
   visit: function(node, done) {
     var _this = this;
+
     rawAsap(function() {
       function enter() {
         try {
-          _this[node.type + 'Node'](node, function() {
-            var args = arguments;
+          _this[node.type + 'Node'](node, function(err, result, assign) {
             rawAsap(function() {
-              _this.frames.push({ stage: 'exit', args: args, node: node });
-              _this.exit(node, args, function() {
-                done.apply(null, args);
+              _this.exit(node, err, result, function() {
+                done(err, result, assign);
               });
             });
           });
@@ -42,7 +41,13 @@ util._extend(SInterpreter.prototype, {
         }
       }
 
-      _this.frames.push({ stage: 'enter', enter: enter, node: node });
+      _this.frames.push({
+        node: node,
+        ns: _this.ctx.ns,
+        stack: _this.ctx.stack,
+        enter: enter
+      });
+
       _this.enter(node, enter);
     });
   },
@@ -55,7 +60,7 @@ util._extend(SInterpreter.prototype, {
 
   // ** OVERRIDE **
   // trap will be called upon exit of every node, do anything you want and call cont()
-  exit: function(node, args, cont) {
+  exit: function(node, err, result, cont) {
     cont();
   },
 
