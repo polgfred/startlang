@@ -472,7 +472,8 @@ Object.defineProperty(String.prototype, '@@__handler__@@', {
 // Arrays
 
 var SList = exports.SList = {
-  create: function(dims) {
+  create: function() {
+    var dims = [].slice.call(arguments);
     if (dims.length == 0) {
       dims.push(0);
     }
@@ -740,7 +741,7 @@ var handle = exports.handle = function(obj) {
 
 var globals = exports.globals = {
   list: function() {
-    return SList.create([].slice.call(arguments));
+    return SList.create.apply(null, arguments);
   },
 
   map: function() {
