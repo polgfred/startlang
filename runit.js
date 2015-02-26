@@ -59,7 +59,7 @@ try {
   interp = interpreter.create(root, ctx);
   interp.end = function(node, err) {
     if (options.ns) {
-      output(ctx.ns);
+      output(ctx.ns.toJS());
     }
     if (options.frames) {
       output(interp.frames);

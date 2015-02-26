@@ -43,9 +43,9 @@ util._extend(SInterpreter.prototype, {
 
       _this.frames.push({
         node: node,
+        enter: enter,
         ns: _this.ctx.ns,
-        stack: _this.ctx.stack,
-        enter: enter
+        stack: _this.ctx.stack
       });
 
       _this.enter(node, enter);
