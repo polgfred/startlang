@@ -8,7 +8,6 @@
     "test": "tests"
   },
   "dependencies": {
-    "asap": "*",
     "immutable": "*"
   },
   "devDependencies": {

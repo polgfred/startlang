@@ -1,5 +1,4 @@
-var util = require('util'),
-    rawAsap = require('asap/raw');
+var util = require('util');
 
 var SInterpreter = exports.SInterpreter = function(root, ctx) {
   this.root = root;
@@ -21,18 +20,18 @@ util._extend(SInterpreter.prototype, {
   visit: function(node, done) {
     var _this = this;
 
-    rawAsap(function() {
+    process.nextTick(function() {
       function enter() {
         try {
           _this[node.type + 'Node'](node, function(err, result, assign) {
-            rawAsap(function() {
+            process.nextTick(function() {
               _this.exit(node, err, result, function() {
                 done(err, result, assign);
               });
             });
           });
         } catch (err) {
-          rawAsap(function() {
+          process.nextTick(function() {
             _this.error(node, err, enter, function() {
               err.node = node;
               done(err);
