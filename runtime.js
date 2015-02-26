@@ -149,11 +149,9 @@ util._extend(SRuntime.prototype, {
   }
 });
 
-var SNone = exports.SNone = {
-  repr: function() {
-    return '*none*';
-  },
+// Handler defaults
 
+var SBase = exports.SBase = {
   enumerate: function() {
     throw new Error('object does not support iteration');
   },
@@ -180,65 +178,38 @@ var SNone = exports.SNone = {
   }
 };
 
-var SBoolean = exports.SBoolean = {
+// Handler definitions
+
+var SNone = exports.SNone = {};
+util._extend(SNone, SBase);
+util._extend(SNone, {
+  repr: function() {
+    return '*none*';
+  }
+});
+
+var SBoolean = exports.SBoolean = {};
+util._extend(SBoolean, SBase);
+util._extend(SBoolean, {
   repr: function(b) {
     return b ? '*true*' : '*false*';
-  },
-
-  enumerate: function() {
-    throw new Error('object does not support iteration');
-  },
-
-  getindex: function() {
-    throw new Error('object does not support []');
-  },
-
-  setindex: function() {
-    throw new Error('object does not support []');
-  },
-
-  delindex: function() {
-    throw new Error('object does not support []');
-  },
-
-  methods: [],
-
-  unaryops: {},
-
-  binaryops: {
-    '=' : function(left, right) { return right == null; },
-    '!=': function(left, right) { return right != null; }
   }
-};
+});
 
 Object.defineProperty(Boolean.prototype, '@@__handler__@@', {
   value: SBoolean,
   enumerable: false
 });
 
-var SNumber = exports.SNumber = {
+var SNumber = exports.SNumber = {};
+util._extend(SNumber, SBase);
+util._extend(SNumber, {
   repr: function(n) {
     if (isFinite(n)) {
       return String(n);
     } else {
       return n > 0 ? '*infinity*' : '-*infinity*';
     }
-  },
-
-  enumerate: function() {
-    throw new Error('object does not support iteration');
-  },
-
-  getindex: function() {
-    throw new Error('object does not support []');
-  },
-
-  setindex: function() {
-    throw new Error('object does not support []');
-  },
-
-  delindex: function() {
-    throw new Error('object does not support []');
   },
 
   methods: [
@@ -293,7 +264,7 @@ var SNumber = exports.SNumber = {
     '>' : function(left, right) { return left >  right; },
     '>=': function(left, right) { return left >= right; }
   }
-};
+});
 
 Object.defineProperty(Number.prototype, '@@__handler__@@', {
   value: SNumber,
@@ -306,7 +277,9 @@ function Range(current, end, step) {
   this.step = step || 1;
 }
 
-var SRange = exports.SRange = {
+var SRange = exports.SRange = {};
+util._extend(SRange, SBase);
+util._extend(SRange, {
   repr: function(r) {
     return '[ ' + r.current + ' .. ' + r.end + ' / ' + r.step + ' ]';
   },
@@ -325,25 +298,11 @@ var SRange = exports.SRange = {
     };
   },
 
-  getindex: function() {
-    throw new Error('object does not support []');
-  },
-
-  setindex: function() {
-    throw new Error('object does not support []');
-  },
-
-  delindex: function() {
-    throw new Error('object does not support []');
-  },
-
   methods: {
     len: function(r) {
       return Math.ceil((r.end - r.current) / r.step);
     }
   },
-
-  unaryops: {},
 
   binaryops: {
     '=' : function(left, right) {
@@ -354,14 +313,16 @@ var SRange = exports.SRange = {
     },
     '!=': function(left, right) { return ! this['='](left, right); }
   }
-};
+});
 
 Object.defineProperty(Range.prototype, '@@__handler__@@', {
   value: SRange,
   enumerable: false
 });
 
-var SString = exports.SString = {
+var SString = exports.SString = {};
+util._extend(SString, SBase);
+util._extend(SString, {
   repr: function(s) {
     return s;
   },
@@ -448,8 +409,6 @@ var SString = exports.SString = {
     }
   },
 
-  unaryops: {},
-
   binaryops: {
     // concatenation
     '&' : function(left, right) { return left + handle(right).repr(right); },
@@ -462,16 +421,35 @@ var SString = exports.SString = {
     '>' : function(left, right) { return left >  right; },
     '>=': function(left, right) { return left >= right; }
   }
-};
+});
 
 Object.defineProperty(String.prototype, '@@__handler__@@', {
   value: SString,
   enumerable: false
 });
 
-// Arrays
+// Containers
 
-var SList = exports.SList = {
+var SBaseContainer = exports.SBaseContainer = {
+  getindex: function(c, index) {
+    return c.get(index);
+  },
+
+  setindex: function(c, index, value) {
+    return c.set(index, value);
+  },
+
+  delindex: function(l, index) {
+    return c.delete(index);
+  }
+};
+
+// Lists
+
+var SList = exports.SList = {};
+util._extend(SList, SBase);
+util._extend(SList, SBaseContainer);
+util._extend(SList, {
   create: function() {
     var dims = [].slice.call(arguments);
     if (dims.length == 0) {
@@ -504,18 +482,6 @@ var SList = exports.SList = {
         return SList.enumerate(l, index + 1);
       }
     };
-  },
-
-  getindex: function(l, index) {
-    return l.get(index);
-  },
-
-  setindex: function(l, index, value) {
-    return l.set(index, value);
-  },
-
-  delindex: function(l, index) {
-    return l.delete(index);
   },
 
   methods: {
@@ -641,7 +607,7 @@ var SList = exports.SList = {
     '<=': function(left, right) { return ! this['>'](left, right); },
     '>=': function(left, right) { return ! this['<'](left, right); }
   }
-};
+});
 
 Object.defineProperty(immutable.List.prototype, '@@__handler__@@', {
   value: SList,
@@ -650,7 +616,10 @@ Object.defineProperty(immutable.List.prototype, '@@__handler__@@', {
 
 // Tables (Maps, Hashes)
 
-var SMap = exports.SMap = {
+var SMap = exports.SMap = {}
+util._extend(SMap, SBase);
+util._extend(SMap, SBaseContainer);
+util._extend(SMap, {
   create: function() {
     return immutable.Map();
   },
@@ -663,18 +632,6 @@ var SMap = exports.SMap = {
 
   enumerate: function(m) {
     return SList.enumerate(m.keySeq());
-  },
-
-  getindex: function(m, index) {
-    return m.get(index);
-  },
-
-  setindex: function(m, index, value) {
-    return m.set(index, value);
-  },
-
-  delindex: function(m, index) {
-    return m.delete(index);
   },
 
   methods: {
@@ -707,8 +664,6 @@ var SMap = exports.SMap = {
     }
   },
 
-  unaryops: {},
-
   binaryops: {
     // concatenation
     '&': function(left, right) {
@@ -727,7 +682,7 @@ var SMap = exports.SMap = {
       return !left.equals(right);
     }
   }
-};
+});
 
 Object.defineProperty(immutable.Map.prototype, '@@__handler__@@', {
   value: SMap,
