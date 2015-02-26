@@ -57,7 +57,6 @@ try {
 try {
   ctx = runtime.create();
   interp = interpreter.create(root, ctx);
-  interp.run();
   interp.end = function(node, err) {
     if (options.ns) {
       output(ctx.ns);
@@ -72,19 +71,27 @@ try {
         output(err.stack);
       }
     }
-
-    if (options.repl) {
-      console.log('\n You have `source`, `root`, `ctx`, and `interp`.\n');
-      require('repl').start({
-        prompt: '> ',
-        useGlobal: true,
-        writer: function(obj) {
-          return util.inspect(obj, { colors: true, depth: null });
-        }
-      });
-    }
   };
 } catch (e) {
   output(e);
   throw e;
+}
+
+if (options.repl) {
+  console.log('\n You have `source`, `root`, `ctx`, and `interp`.\n');
+  require('repl').start({
+    prompt: '> ',
+    useGlobals: true,
+    useColors: true,
+    writer: function(obj) {
+      return util.inspect(obj, { colors: true, depth: null });
+    }
+  });
+} else {
+  try {
+    interp.run();
+  } catch (e) {
+    output(e);
+    throw e;
+  }
 }
