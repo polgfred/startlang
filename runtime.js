@@ -246,8 +246,8 @@ util._extend(SNumber, {
       return Math.random() * n;
     },
 
-    step: function(start, end, step) {
-      return new Range(start, end, step);
+    range: function(start, end, step) {
+      return immutable.Range(start, end, step);
     }
   }),
 
@@ -280,51 +280,44 @@ Object.defineProperty(Number.prototype, '@@__handler__@@', {
   enumerable: false
 });
 
-function Range(current, end, step) {
-  this.current = current;
-  this.end = end;
-  this.step = step || 1;
-}
-
 var SRange = exports.SRange = {};
 util._extend(SRange, SBase);
 util._extend(SRange, {
   repr: function(r) {
-    return '[ ' + r.current + ' .. ' + r.end + ' / ' + r.step + ' ]';
+    return '[ ' + r._start + ' .. ' + r._end + ' / ' + r._step + ' ]';
   },
 
   enumerate: function(r, current) {
     if (typeof current == 'undefined') {
-      current = r.current;
+      current = r._start;
     }
 
     return {
       value: current,
-      more: current < r.end,
+      more: current < r._end,
       next: function() {
-        return SRange.enumerate(r, current + r.step);
+        return SRange.enumerate(r, current + r._step);
       }
     };
   },
 
   methods: {
     len: function(r) {
-      return Math.ceil((r.end - r.current) / r.step);
+      return Math.ceil((r._end - r._start) / r._step);
     }
   },
 
   binaryops: {
     '=' : function(left, right) {
-      // equal if it's the same range
-      return left.start == right.start &&
-             left.end == right.end &&
-             left.step == right.step;
+      return left.equals(right);
     },
-    '!=': function(left, right) { return ! this['='](left, right); }
+    '!=': function(left, right) {
+      return !left.equals(right);
+    }
   }
 });
 
-Object.defineProperty(Range.prototype, '@@__handler__@@', {
+Object.defineProperty(immutable.Range.prototype, '@@__handler__@@', {
   value: SRange,
   enumerable: false
 });
@@ -448,7 +441,7 @@ var SBaseContainer = exports.SBaseContainer = {
     return c.set(index, value);
   },
 
-  delindex: function(l, index) {
+  delindex: function(c, index) {
     return c.delete(index);
   }
 };
