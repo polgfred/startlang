@@ -57,7 +57,7 @@ try {
 try {
   ctx = runtime.create();
   interp = interpreter.create(root, ctx);
-  interp.end = function(node, err) {
+  interp.end = function(err) {
     if (options.ns) {
       output(ctx.ns.toJS());
     }
@@ -65,10 +65,10 @@ try {
       output(interp.frames);
     }
     if (err) {
-      output('an error occurred:');
-      output(err);
+      console.log('an error occurred:', err.message);
+      output(err.node);
       if (err.stack) {
-        output(err.stack);
+        console.log(err.stack);
       }
     }
   };
