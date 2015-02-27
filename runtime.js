@@ -1,5 +1,6 @@
 var util = require('util'),
-    immutable = require('immutable');
+    immutable = require('immutable'),
+    ary = Array.prototype;
 
 // Environment
 
@@ -459,7 +460,7 @@ util._extend(SList, SBase);
 util._extend(SList, SBaseContainer);
 util._extend(SList, {
   create: function() {
-    var dims = [].slice.call(arguments);
+    var dims = ary.slice.call(arguments);
     if (dims.length == 0) {
       dims.push(0);
     }
@@ -514,7 +515,7 @@ util._extend(SList, {
     insert: function(l, at) {
       return {
         '@@__assign__@@':
-          l.splice.apply(l, [at, 0].concat([].slice.call(arguments, 2)))
+          l.splice.apply(l, [at, 0].concat(ary.slice.call(arguments, 2)))
       };
     },
 
@@ -530,7 +531,7 @@ util._extend(SList, {
     replace: function(l, at, length) {
       return {
         '@@__assign__@@':
-          l.splice.apply(l, [at, length].concat([].slice.call(arguments, 3))),
+          l.splice.apply(l, [at, length].concat(ary.slice.call(arguments, 3))),
         '@@__result__@@':
           l.slice(at, at + length)
       };
@@ -540,8 +541,8 @@ util._extend(SList, {
       return l.join(delim || ' ');
     },
 
-    push: function(l, item) {
-      return { '@@__assign__@@': l.push(item) };
+    push: function(l) {
+      return { '@@__assign__@@': l.push.apply(l, ary.slice.call(arguments, 1)) };
     },
 
     pop: function(l) {
@@ -658,6 +659,19 @@ util._extend(SMap, {
       return { '@@__assign__@@': m.clear() };
     },
 
+    insert: function(m) {
+      var args = arguments;
+
+      return {
+        '@@__assign__@@':
+          m.withMutations(function(mut) {
+            for (var i = 1; i < args.length; i += 2) {
+              mut.set(args[i], args[i + 1]);
+            }
+          }),
+      };
+    },
+
     remove: function(m) {
       var args = arguments, removed = immutable.Map().asMutable();
 
@@ -725,7 +739,7 @@ var globals = exports.globals = {
 
   print: function() {
     if (arguments.length > 0) {
-      [].forEach.call(arguments, function(arg) {
+      ary.forEach.call(arguments, function(arg) {
         console.log(handle(arg).repr(arg));
       });
     } else {
