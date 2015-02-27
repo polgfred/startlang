@@ -2,6 +2,21 @@ var util = require('util'),
     immutable = require('immutable'),
     ary = Array.prototype;
 
+// wrapper function that ensures all its arguments are of the same type
+function checked(fn) {
+  return function() {
+    var h = handle(arguments[0]), i;
+    for (i = 1; i < arguments.length; i++) {
+      if (h != handle(arguments[i])) {
+        throw new Error('operands must be of the same type');
+      }
+    }
+
+    // forward onto the original
+    return fn.apply(this, arguments);
+  };
+}
+
 // Environment
 
 var SRuntime = exports.SRuntime = function() {
@@ -178,10 +193,10 @@ var SBase = exports.SBase = {
     '=' : function(left, right) { return left == right; },
     '!=': function(left, right) { return left != right; },
 
-    '<' : function(left, right) { return left <  right; },
-    '<=': function(left, right) { return left <= right; },
-    '>' : function(left, right) { return left >  right; },
-    '>=': function(left, right) { return left >= right; }
+    '<' : checked(function(left, right) { return left <  right; }),
+    '<=': checked(function(left, right) { return left <= right; }),
+    '>' : checked(function(left, right) { return left >  right; }),
+    '>=': checked(function(left, right) { return left >= right; })
   }
 };
 
@@ -258,8 +273,8 @@ util._extend(SNumber, {
   }),
 
   unaryops: {
-    '+': function(right) { return + right; },
-    '-': function(right) { return - right; }
+    '+': checked(function(right) { return + right; }),
+    '-': checked(function(right) { return - right; })
   },
 
   binaryops: {}
@@ -268,12 +283,12 @@ util._extend(SNumber, {
 util._extend(SNumber.binaryops, SBase.binaryops);
 util._extend(SNumber.binaryops, {
   // math
-  '+': function(left, right) { return left + right; },
-  '-': function(left, right) { return left - right; },
-  '*': function(left, right) { return left * right; },
-  '/': function(left, right) { return left / right; },
-  '%': function(left, right) { return left % right; },
-  '^': function(left, right) { return Math.pow(left, right); }
+  '+': checked(function(left, right) { return left + right; }),
+  '-': checked(function(left, right) { return left - right; }),
+  '*': checked(function(left, right) { return left * right; }),
+  '/': checked(function(left, right) { return left / right; }),
+  '%': checked(function(left, right) { return left % right; }),
+  '^': checked(function(left, right) { return Math.pow(left, right); })
 });
 
 Object.defineProperty(Number.prototype, '@@__handler__@@', {
@@ -558,7 +573,7 @@ util._extend(SList, {
 
 util._extend(SList.binaryops, SContainer.binaryops);
 util._extend(SList.binaryops, {
-  '&': function(left, right) { return left.concat(right); }
+  '&': checked(function(left, right) { return left.concat(right); })
 });
 
 Object.defineProperty(immutable.List.prototype, '@@__handler__@@', {
@@ -644,7 +659,7 @@ util._extend(SMap, {
 
 util._extend(SMap.binaryops, SContainer.binaryops);
 util._extend(SMap.binaryops, {
-  '&': function(left, right) { return left.merge(right); }
+  '&': checked(function(left, right) { return left.merge(right); })
 });
 
 Object.defineProperty(immutable.Map.prototype, '@@__handler__@@', {
