@@ -55,12 +55,13 @@ var ctx = runtime.create(),
         });
         var root = parser.parse(command + '\n'),
             interp = interpreter.create(root, ctx);
-        console.log(root);
-        interp.run(function() {
+        interp.run();
+        interp.end = function() {
           terminal.echo('');
           prompt.setValue('');
           prompt.focus();
-        });
+        };
+        console.log(root);
       }
     };
 
