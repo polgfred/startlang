@@ -174,8 +174,14 @@ var SBase = exports.SBase = {
   unaryops: {},
 
   binaryops: {
+    // standard comparison operators
     '=' : function(left, right) { return left == right; },
-    '!=': function(left, right) { return left != right; }
+    '!=': function(left, right) { return left != right; },
+
+    '<' : function(left, right) { return left <  right; },
+    '<=': function(left, right) { return left <= right; },
+    '>' : function(left, right) { return left >  right; },
+    '>=': function(left, right) { return left >= right; }
   }
 };
 
@@ -252,27 +258,22 @@ util._extend(SNumber, {
   }),
 
   unaryops: {
-    '+' : function(right) { return + right; },
-    '-' : function(right) { return - right; }
+    '+': function(right) { return + right; },
+    '-': function(right) { return - right; }
   },
 
-  binaryops: {
-    // math
-    '+' : function(left, right) { return left +  right; },
-    '-' : function(left, right) { return left -  right; },
-    '*' : function(left, right) { return left *  right; },
-    '/' : function(left, right) { return left /  right; },
-    '%' : function(left, right) { return left %  right; },
-    '^' : function(left, right) { return Math.pow(left, right); },
+  binaryops: {}
+});
 
-    // comparison
-    '=' : function(left, right) { return left == right; },
-    '!=': function(left, right) { return left != right; },
-    '<' : function(left, right) { return left <  right; },
-    '<=': function(left, right) { return left <= right; },
-    '>' : function(left, right) { return left >  right; },
-    '>=': function(left, right) { return left >= right; }
-  }
+util._extend(SNumber.binaryops, SBase.binaryops);
+util._extend(SNumber.binaryops, {
+  // math
+  '+': function(left, right) { return left + right; },
+  '-': function(left, right) { return left - right; },
+  '*': function(left, right) { return left * right; },
+  '/': function(left, right) { return left / right; },
+  '%': function(left, right) { return left % right; },
+  '^': function(left, right) { return Math.pow(left, right); }
 });
 
 Object.defineProperty(Number.prototype, '@@__handler__@@', {
@@ -308,12 +309,8 @@ util._extend(SRange, {
   },
 
   binaryops: {
-    '=' : function(left, right) {
-      return left.equals(right);
-    },
-    '!=': function(left, right) {
-      return !left.equals(right);
-    }
+    '=' : function(left, right) { return  left.equals(right); },
+    '!=': function(left, right) { return !left.equals(right); }
   }
 });
 
@@ -411,18 +408,12 @@ util._extend(SString, {
     }
   },
 
-  binaryops: {
-    // concatenation
-    '&' : function(left, right) { return left + handle(right).repr(right); },
+  binaryops: {}
+});
 
-    // comparison
-    '=' : function(left, right) { return left == right; },
-    '!=': function(left, right) { return left != right; },
-    '<' : function(left, right) { return left <  right; },
-    '<=': function(left, right) { return left <= right; },
-    '>' : function(left, right) { return left >  right; },
-    '>=': function(left, right) { return left >= right; }
-  }
+util._extend(SString.binaryops, SBase.binaryops);
+util._extend(SString.binaryops, {
+  '&': function(left, right) { return left + handle(right).repr(right); }
 });
 
 Object.defineProperty(String.prototype, '@@__handler__@@', {
@@ -432,7 +423,7 @@ Object.defineProperty(String.prototype, '@@__handler__@@', {
 
 // Containers
 
-var SBaseContainer = exports.SBaseContainer = {
+var SContainer = exports.SContainer = {
   getindex: function(c, index) {
     return c.get(index);
   },
@@ -443,6 +434,11 @@ var SBaseContainer = exports.SBaseContainer = {
 
   delindex: function(c, index) {
     return c.delete(index);
+  },
+
+  binaryops: {
+    '=' : function(left, right) { return  left.equals(right); },
+    '!=': function(left, right) { return !left.equals(right); }
   }
 };
 
@@ -450,7 +446,7 @@ var SBaseContainer = exports.SBaseContainer = {
 
 var SList = exports.SList = {};
 util._extend(SList, SBase);
-util._extend(SList, SBaseContainer);
+util._extend(SList, SContainer);
 util._extend(SList, {
   create: function() {
     var dims = ary.slice.call(arguments);
@@ -557,61 +553,12 @@ util._extend(SList, {
     }
   },
 
-  binaryops: {
-    // concatenation
-    '&': function(left, right) {
-      if (handle(right) == SList) {
-        return left.concat(right);
-      }
+  binaryops: {}
+});
 
-      throw new Error('object cannot be merged into array');
-    },
-
-    '=' : function(left, right) {
-      return left.equals(right);
-    },
-
-    '!=' : function(left, right) {
-      return !left.equals(right);
-    },
-
-    '<' : function(left, right) {
-      var i, l, r, h, len = Math.min(left.size, right.size);
-
-      for (i = 0; i < len; ++i) {
-        l = left.get(i);
-        r = right.get(i);
-        h = handle(l);
-        if (h.binaryops['<'](l, r)) {
-          return true;
-        } else if (h.binaryops['>'](l, r)) {
-          return false;
-        }
-      }
-
-      return left.size < right.size;
-    },
-
-    '>' : function(left, right) {
-      var i, l, r, h, len = Math.min(left.size, right.size);
-
-      for (i = 0; i < len; ++i) {
-        l = left.get(i);
-        r = right.get(i);
-        h = handle(l);
-        if (h.binaryops['>'](l, r)) {
-          return true;
-        } else if (h.binaryops['<'](l, r)) {
-          return false;
-        }
-      }
-
-      return left.size > right.size;
-    },
-
-    '<=': function(left, right) { return ! this['>'](left, right); },
-    '>=': function(left, right) { return ! this['<'](left, right); }
-  }
+util._extend(SList.binaryops, SContainer.binaryops);
+util._extend(SList.binaryops, {
+  '&': function(left, right) { return left.concat(right); }
 });
 
 Object.defineProperty(immutable.List.prototype, '@@__handler__@@', {
@@ -619,11 +566,11 @@ Object.defineProperty(immutable.List.prototype, '@@__handler__@@', {
   enumerable: false
 });
 
-// Tables (Maps, Hashes)
+// Maps (Tables, Hashes)
 
 var SMap = exports.SMap = {}
 util._extend(SMap, SBase);
-util._extend(SMap, SBaseContainer);
+util._extend(SMap, SContainer);
 util._extend(SMap, {
   create: function() {
     return immutable.Map();
@@ -652,54 +599,52 @@ util._extend(SMap, {
       return { '@@__assign__@@': m.clear() };
     },
 
+    range: function(m) {
+      var args = arguments;
+
+      return immutable.Map().withMutations(function(n) {
+        for (var i = 1; i < args.length; ++i) {
+          n.set(args[i], m.get(args[i]));
+        }
+      });
+    },
+
     insert: function(m) {
       var args = arguments;
 
       return {
         '@@__assign__@@':
-          m.withMutations(function(mut) {
+          m.withMutations(function(n) {
             for (var i = 1; i < args.length; i += 2) {
-              mut.set(args[i], args[i + 1]);
+              n.set(args[i], args[i + 1]);
             }
           }),
       };
     },
 
     remove: function(m) {
-      var args = arguments, removed = immutable.Map().asMutable();
+      var args = arguments, o = m.asMutable();
 
       return {
-        '@@__assign__@@':
-          m.withMutations(function(mut) {
+        '@@__result__@@':
+          immutable.Map().withMutations(function(n) {
             for (var i = 1; i < args.length; ++i) {
-              removed.set(args[i], mut.get(args[i]));
-              mut.delete(args[i]);
+              n.set(args[i], m.get(args[i]));
+              o.delete(args[i]);
             }
           }),
-        '@@__result__@@':
-          removed.asImmutable()
+        '@@__assign__@@':
+          o.asImmutable()
       };
     }
   },
 
-  binaryops: {
-    // concatenation
-    '&': function(left, right) {
-      if (handle(right) == SMap) {
-        return left.merge(right);
-      }
+  binaryops: {}
+});
 
-      throw new Error('object cannot be merged into table');
-    },
-
-    '=': function(left, right) {
-      return left.equals(right);
-    },
-
-    '!=': function(left, right) {
-      return !left.equals(right);
-    }
-  }
+util._extend(SMap.binaryops, SContainer.binaryops);
+util._extend(SMap.binaryops, {
+  '&': function(left, right) { return left.merge(right); }
 });
 
 Object.defineProperty(immutable.Map.prototype, '@@__handler__@@', {

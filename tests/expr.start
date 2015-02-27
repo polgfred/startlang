@@ -34,14 +34,7 @@ let h = list()
 insert h, 0, 1, 2, 3, 4, 5
 
 if g = h then print "4a should see this"
-if g <= h then print "4b should see this"
-
-let h[4] = 6
-
-if g < h then print "4c should see this"
-if g <= h then print "4d should see this"
-if g > h then print "4e should not see this"
-if g >= h then print "4f should not see this"
+if g != h then print "4b should not see this"
 
 let t = table()
 let t["name"] = "Fred"
