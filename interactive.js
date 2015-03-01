@@ -21,18 +21,21 @@ rl.prompt();
 
 rl.on('line', function(line) {
   try {
-    var root = parser.parse(line + '\n');
-    var interp = interpreter.create(root, ctx);
-    interp.end = function(err) {
-      if (err) {
-        output(err.node);
-        console.log(err.stack);
-      }
+    var root = parser.parse(line + '\n'),
+        interp = interpreter.create(root, ctx);
+
+    interp.on('error', function(err) {
+      console.log('Error: ' + err.message);
       rl.prompt();
-    }
+    });
+
+    interp.on('end', function() {
+      rl.prompt();
+    });
+
     interp.run();
   } catch(err) {
-    console.log(err.message);
+    console.log('Error: ' + err.message);
     rl.prompt();
   }
 });

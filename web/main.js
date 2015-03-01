@@ -53,15 +53,26 @@ var ctx = runtime.create(),
             div.addClass('input').prepend('<span>&#8701;</span>');
           }
         });
+
         var root = parser.parse(command + '\n'),
             interp = interpreter.create(root, ctx);
-        interp.run();
-        interp.end = function() {
+
+        console.log(root);
+
+        interp.on('error', function(err) {
+          terminal.echo('Error: ' + err.message);
           terminal.echo('');
           prompt.setValue('');
           prompt.focus();
-        };
-        console.log(root);
+        });
+
+        interp.on('end', function() {
+          terminal.echo('');
+          prompt.setValue('');
+          prompt.focus();
+        });
+
+        interp.run();
       }
     };
 

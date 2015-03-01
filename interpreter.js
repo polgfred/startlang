@@ -1,4 +1,5 @@
-var util = require('util');
+var util = require('util'),
+    events = require('events');
 
 var SInterpreter = exports.SInterpreter = function(root, ctx) {
   this.root = root;
@@ -6,12 +7,14 @@ var SInterpreter = exports.SInterpreter = function(root, ctx) {
   this.frames = [];
 };
 
+util.inherits(SInterpreter, events.EventEmitter);
+
 util._extend(SInterpreter.prototype, {
   // main entry point
   run: function() {
     var _this = this;
     _this.visit(_this.root, function(err) {
-      _this.end(err);
+      _this.emit('end');
     });
   },
 
@@ -20,59 +23,33 @@ util._extend(SInterpreter.prototype, {
   visit: function(node, done) {
     var _this = this;
 
-    process.nextTick(function() {
-      function enter() {
-        try {
-          _this[node.type + 'Node'](node, function(err, result, assign) {
-            process.nextTick(function() {
-              _this.exit(node, err, result, function() {
-                done(err, result, assign);
-              });
-            });
-          });
-        } catch (err) {
-          process.nextTick(function() {
-            _this.error(node, err, enter, function() {
-              err.node = node;
-              done(err);
-            });
-          });
-        }
-      }
-
-      _this.frames.push({
-        node: node,
-        enter: enter,
-        ns: _this.ctx.ns,
-        stack: _this.ctx.stack
-      });
-
-      _this.enter(node, enter);
+    _this.frames.push({
+      node: node,
+      done: done,
+      ns: _this.ctx.ns,
+      stack: _this.ctx.stack
     });
-  },
 
-  // ** OVERRIDE **
-  // trap will be called upon entry to every node, do anything you want and call cont()
-  enter: function(node, cont) {
-    cont();
-  },
-
-  // ** OVERRIDE **
-  // trap will be called upon exit of every node, do anything you want and call cont()
-  exit: function(node, err, result, cont) {
-    cont();
-  },
-
-  // ** OVERRIDE **
-  // trap will be called for any exception while evaluating a node, do anything you
-  // want and call retry() or fail()
-  error: function(node, err, retry, fail) {
-    fail();
-  },
-
-  // ** OVERRIDE **
-  // trap will be called when program completes
-  end: function(/*node, err*/) {
+    process.nextTick(function() {
+      _this.emit('enter', node);
+      if (node.stop) {
+        return;
+      }
+      try {
+        _this[node.type + 'Node'](node, function(err, result, assign) {
+          process.nextTick(function() {
+            _this.emit('exit', node, err, result);
+            if (node.stop) {
+              return;
+            }
+            done(err, result, assign);
+          });
+        });
+      } catch(err) {
+        err.node = node;
+        _this.emit('error', err);
+      }
+    });
   },
 
   // ** implementations of AST nodes **

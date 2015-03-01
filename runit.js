@@ -33,10 +33,6 @@ if (process.argv.indexOf('--meta') != -1) {
   parserOptions.ast = parserOptions.meta = true;
 }
 
-if (process.argv.indexOf('--repl') != -1) {
-  options.repl = true;
-}
-
 try {
   source = fs.readFileSync(process.argv[2], 'utf-8');
 } catch (e) {
@@ -54,44 +50,32 @@ try {
   throw e;
 }
 
-try {
-  ctx = runtime.create();
-  interp = interpreter.create(root, ctx);
-  interp.end = function(err) {
-    if (options.ns) {
-      output(ctx.ns.toJS());
-    }
-    if (options.frames) {
-      output(interp.frames);
-    }
-    if (err) {
-      console.log('an error occurred:', err.message);
-      output(err.node);
-      if (err.stack) {
-        console.log(err.stack);
-      }
-    }
-  };
-} catch (e) {
-  output(e);
-  throw e;
-}
+ctx = runtime.create();
+interp = interpreter.create(root, ctx);
 
-if (options.repl) {
-  console.log('\n You have `source`, `root`, `ctx`, and `interp`.\n');
-  require('repl').start({
-    prompt: '> ',
-    useGlobals: true,
-    useColors: true,
-    writer: function(obj) {
-      return util.inspect(obj, { colors: true, depth: null });
-    }
-  });
-} else {
-  try {
-    interp.run();
-  } catch (e) {
-    output(e);
-    throw e;
+interp.on('end', function() {
+  if (options.ns) {
+    output(ctx.ns.toJS());
   }
-}
+  if (options.frames) {
+    output(interp.frames);
+  }
+});
+
+interp.on('error', function(err) {
+  if (options.ns) {
+    output(ctx.ns.toJS());
+  }
+  if (options.frames) {
+    output(interp.frames);
+  }
+  if (err) {
+    console.log('an error occurred:', err.message);
+    output(err.node);
+    if (err.stack) {
+      console.log(err.stack);
+    }
+  }
+});
+
+interp.run();
