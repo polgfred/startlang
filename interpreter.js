@@ -44,6 +44,7 @@ util._extend(SInterpreter.prototype, {
       return (function loop(count) {
         if (count < len) {
           return _this.visit(node.elems[count]).then(function(eres) {
+            // propagate break/next/return
             return eres.flow ? eres : loop(count + 1);
           });
         }
@@ -72,11 +73,9 @@ util._extend(SInterpreter.prototype, {
             _this.ctx.set(node.name, iter.value);
             return _this.visit(node.body).then(function(bres) {
               var flow = bres.flow;
-              if (flow == 'next') {
-                return loop(iter.next());
-              } else if (flow && flow != 'break') {
+              if (flow == 'return') {
                 return bres; // propagate
-              } else if (!flow) {
+              } else if (!flow || flow == 'next') {
                 return loop(iter.next());
               }
             });
@@ -94,11 +93,9 @@ util._extend(SInterpreter.prototype, {
           if (cres.rv) {
             return _this.visit(node.body).then(function(bres) {
               var flow = bres.flow;
-              if (flow == 'next') {
-                return loop();
-              } else if (flow && flow != 'break') {
+              if (flow == 'return') {
                 return bres; // propagate
-              } else if (!flow) {
+              } else if (!flow || flow == 'next') {
                 return loop();
               }
             });
