@@ -40,17 +40,11 @@ util._extend(SInterpreter.prototype, {
 
   blockNode: function(node) {
     var _this = this, len = node.elems.length;
-    return new Promise(function(resolve) {
-      (function loop(count) {
-        if (count == len) {
-          resolve();
-        } else {
-          _this.visit(node.elems[count]).then(function(eres) {
-            if (hasOwnProperty.call(eres, 'flow')) {
-              resolve(eres);
-            } else {
-              loop(count + 1);
-            }
+    return Promise.try(function() {
+      return (function loop(count) {
+        if (count < len) {
+          return _this.visit(node.elems[count]).then(function(eres) {
+            return eres.flow ? eres : loop(count + 1);
           });
         }
       })(0);
@@ -70,55 +64,42 @@ util._extend(SInterpreter.prototype, {
 
   forNode: function(node) {
     var _this = this;
-    return new Promise(function(resolve) {
-      _this.visit(node.range).then(function(rres) {
-        (function loop(iter) {
-          if (!iter.more) {
-            resolve();
-          } else {
+    return Promise.try(function() {
+      return _this.visit(node.range).then(function(rres) {
+        var range = _this.ctx.enumerate(rres.rv);
+        return (function loop(iter) {
+          if (iter.more) {
             _this.ctx.set(node.name, iter.value);
-            _this.visit(node.body).then(function(bres) {
-              if (hasOwnProperty.call(bres, 'flow')) {
-                var flow = bres.flow;
-                if (flow == 'next') {
-                  loop(iter.next());
-                } else if (flow == 'break') {
-                  // exit the loop and stop propagating the break
-                  resolve();
-                } else {
-                  resolve(bres);
-                }
-              } else {
-                loop(iter.next());
+            return _this.visit(node.body).then(function(bres) {
+              var flow = bres.flow;
+              if (flow == 'next') {
+                return loop(iter.next());
+              } else if (flow && flow != 'break') {
+                return bres; // propagate
+              } else if (!flow) {
+                return loop(iter.next());
               }
             });
           }
-        })(_this.ctx.enumerate(rres.rv));
+        })(range);
       });
     });
   },
 
   whileNode: function(node) {
     var _this = this;
-    return new Promise(function(resolve) {
-      (function loop() {
-        _this.visit(node.cond).then(function(cres) {
-          if (!cres.rv) {
-            resolve();
-          } else {
-            _this.visit(node.body).then(function(bres) {
-              if (hasOwnProperty.call(bres, 'flow')) {
-                var flow = bres.flow;
-                if (flow == 'next') {
-                  loop();
-                } else if (flow == 'break') {
-                  // exit the loop and stop propagating the break
-                  resolve();
-                } else {
-                  resolve(bres);
-                }
-              } else {
-                loop();
+    return Promise.try(function() {
+      return (function loop() {
+        return _this.visit(node.cond).then(function(cres) {
+          if (cres.rv) {
+            return _this.visit(node.body).then(function(bres) {
+              var flow = bres.flow;
+              if (flow == 'next') {
+                return loop();
+              } else if (flow && flow != 'break') {
+                return bres; // propagate
+              } else if (!flow) {
+                return loop();
               }
             });
           }
@@ -129,26 +110,21 @@ util._extend(SInterpreter.prototype, {
 
   beginNode: function(node) {
     var _this = this, len = node.params ? node.params.length : 0;
-    return new Promise(function(resolve) {
-      resolve(_this.ctx.setfn(node.name, fn));
+    return Promise.try(function() {
+      return _this.ctx.setfn(node.name, fn);
     });
 
     function fn(args) {
-      return new Promise(function(resolve2) {
+      return Promise.try(function() {
         _this.ctx.push();
         for (var i = 0; i < len; ++i) {
           _this.ctx.set(node.params[i], args[i]);
         }
-        _this.visit(node.body).then(function(bres) {
+        return _this.visit(node.body).then(function(bres) {
           _this.ctx.pop();
-          if (hasOwnProperty.call(bres, 'flow')) {
-            var flow = bres.flow;
-            if (flow == 'return') {
-              resolve2(bres.rv);
-              return;
-            }
+          if (bres.flow == 'return') {
+            return bres.rv;
           }
-          resolve2();
         });
       });
     }
@@ -156,16 +132,16 @@ util._extend(SInterpreter.prototype, {
 
   callNode: function(node) {
     var _this = this, len = node.args ? node.args.length : 0, args = [], assn = [], fn;
-    return new Promise(function(resolve) {
-      (function loop(count) {
+    return Promise.try(function() {
+      return (function loop(count) {
         if (count == len) {
           fn = _this.ctx.getfn(node.name);
-          resolve(fn ? fn(args) : _this.ctx.syscall(node.name, args, assn));
+          return fn ? fn(args) : _this.ctx.syscall(node.name, args, assn);
         } else {
-          _this.visit(node.args[count]).then(function(ares) {
+          return _this.visit(node.args[count]).then(function(ares) {
             args[count] = ares.rv;
             assn[count] = ares.lv;
-            loop(count + 1);
+            return loop(count + 1);
           });
         }
       })(0);
@@ -214,17 +190,17 @@ util._extend(SInterpreter.prototype, {
 
   indexNode: function(node) {
     var _this = this, len = node.indexes.length, indexes = [];
-    return new Promise(function(resolve) {
-      (function loop(count) {
+    return Promise.try(function() {
+      return (function loop(count) {
         if (count == len) {
-          resolve({
+          return {
             rv: _this.ctx.getindex(node.name, indexes),
             lv: { name: node.name, indexes: indexes }
-          });
+          };
         } else {
-          _this.visit(node.indexes[count]).then(function(ires) {
+          return _this.visit(node.indexes[count]).then(function(ires) {
             indexes[count] = ires.rv;
-            loop(count + 1);
+            return loop(count + 1);
           });
         }
       })(0);
@@ -233,16 +209,16 @@ util._extend(SInterpreter.prototype, {
 
   letIndexNode: function(node) {
     var _this = this, len = node.indexes.length, indexes = [];
-    return new Promise(function(resolve) {
-      (function loop(count) {
+    return Promise.try(function() {
+      return (function loop(count) {
         if (count == len) {
-          _this.visit(node.value).then(function(vres) {
-            resolve(_this.ctx.setindex(node.name, indexes, vres.rv));
+          return _this.visit(node.value).then(function(vres) {
+            return _this.ctx.setindex(node.name, indexes, vres.rv);
           });
         } else {
-          _this.visit(node.indexes[count]).then(function(ires) {
+          return _this.visit(node.indexes[count]).then(function(ires) {
             indexes[count] = ires.rv;
-            loop(count + 1);
+            return loop(count + 1);
           });
         }
       })(0);
@@ -251,14 +227,14 @@ util._extend(SInterpreter.prototype, {
 
   deleteIndexNode: function(node) {
     var _this = this, len = node.indexes.length, indexes = [];
-    return new Promise(function(resolve) {
-      (function loop(count) {
+    return Promise.try(function() {
+      return (function loop(count) {
         if (count == len) {
-          resolve(_this.ctx.delindex(node.name, indexes));
+          return _this.ctx.delindex(node.name, indexes);
         } else {
-          _this.visit(node.indexes[count]).then(function(ires) {
+          return _this.visit(node.indexes[count]).then(function(ires) {
             indexes[count] = ires.rv;
-            loop(count + 1);
+            return loop(count + 1);
           });
         }
       })(0);
