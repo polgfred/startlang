@@ -1,10 +1,15 @@
+begin shmoop do
+  let z = 10
+  print z
+end
+
 begin loop do
   let y = x * 2
-  print y + 7
 
   if y + 7 > 18 then print "`y + 7` is ""greater"" than 18"
 
   let z = 5
+  shmoop
   print z
 end
 
@@ -12,15 +17,8 @@ print "hi"
 
 for x in range(0, 10) do
   let z = 1
-  print "hi"
   loop
   print z
-
-  let a = list(2, 2)
-  let x = 0
-  let a[x][x + 1] = 42
-  print a[0][1]
-  print a
 end
 
 print "the length of ""fred"" is `len("fred")`"

@@ -118,11 +118,12 @@ util._extend(SInterpreter.prototype, {
           _this.ctx.set(node.params[i], args[i]);
         }
         return _this.visit(node.body).then(function(bres) {
-          _this.ctx.pop();
           if (bres.flow == 'return') {
             return bres.rv;
           }
         });
+      }).finally(function() {
+        _this.ctx.pop();
       });
     }
   },
