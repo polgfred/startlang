@@ -33,3 +33,13 @@ let y = 2
 print fred()
 let y = 3
 print fred()
+
+begin fred do
+  for i in range(1, 5) do
+    if i * 2 = 6 then return "three"
+    print i
+  end
+  print "never get here"
+end
+
+print fred()

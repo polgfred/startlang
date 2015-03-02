@@ -8,6 +8,7 @@
     "test": "tests"
   },
   "dependencies": {
+    "bluebird": "*",
     "immutable": "*"
   },
   "devDependencies": {

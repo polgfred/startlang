@@ -1,5 +1,7 @@
 var util = require('util'),
-    events = require('events');
+    events = require('events'),
+    Promise = require('bluebird'),
+    hasOwnProperty = Object.prototype.hasOwnProperty;
 
 var SInterpreter = exports.SInterpreter = function(root, ctx) {
   this.root = root;
@@ -13,397 +15,316 @@ util._extend(SInterpreter.prototype, {
   // main entry point
   run: function() {
     var _this = this;
-    _this.visit(_this.root, function(err) {
-      _this.emit('end');
+    return _this.visit(_this.root).tap(function(result) {
+      _this.emit('end', result);
+    }).catch(function(err) {
+      _this.emit('error', err);
     });
   },
 
-  // main node visitor, handles calling `enter', `exit',` and `error' traps,
-  // exception handling, and dispatching to AST nodes
-  visit: function(node, done) {
+  visit: function(node) {
     var _this = this;
-
-    _this.frames.push({
-      node: node,
-      done: done,
-      ns: _this.ctx.ns,
-      stack: _this.ctx.stack
-    });
-
-    process.nextTick(function() {
+    return Promise.try(function() {
       _this.emit('enter', node);
-      if (node.stop) {
-        return;
-      }
-      try {
-        _this[node.type + 'Node'](node, function(err, result, assign) {
-          process.nextTick(function() {
-            _this.emit('exit', node, err, result);
-            if (node.stop) {
-              return;
-            }
-            done(err, result, assign);
-          });
-        });
-      } catch(err) {
-        err.node = node;
-        _this.emit('error', err);
-      }
+      return _this[node.type + 'Node'](node).then(function(result) {
+        if (result == null || !hasOwnProperty.call(result, 'rv')) {
+          result = { rv: result };
+        }
+        _this.emit('exit', node, result);
+        return result;
+      });
     });
   },
 
   // ** implementations of AST nodes **
 
-  blockNode: function(node, done) {
+  blockNode: function(node) {
     var _this = this, len = node.elems.length;
-    (function loop(count) {
-      if (count < len) {
-        _this.visit(node.elems[count], function(err) {
-          if (err) {
-            done(err);
-          } else {
-            loop(count + 1);
-          }
-        });
-      } else {
-        done();
-      }
-    })(0);
+    return new Promise(function(resolve) {
+      (function loop(count) {
+        if (count == len) {
+          resolve();
+        } else {
+          _this.visit(node.elems[count]).then(function(eres) {
+            if (hasOwnProperty.call(eres, 'flow')) {
+              resolve(eres);
+            } else {
+              loop(count + 1);
+            }
+          });
+        }
+      })(0);
+    });
   },
 
-  ifNode: function(node, done) {
+  ifNode: function(node) {
     var _this = this;
-    _this.visit(node.cond, function(err, cres) {
-      if (err) {
-        done(err);
-      } else {
-        if (cres) {
-          _this.visit(node.tbody, done);
-        } else if (node.fbody) {
-          _this.visit(node.fbody, done);
-        } else {
-          done();
-        }
+    return _this.visit(node.cond).then(function(cres) {
+      if (cres.rv) {
+        return _this.visit(node.tbody);
+      } else if (node.fbody) {
+        return _this.visit(node.fbody);
       }
     });
   },
 
-  forNode: function(node, done) {
+  forNode: function(node) {
     var _this = this;
-    _this.visit(node.range, function(err, rres) {
-      if (err) {
-        done(err);
-      } else {
+    return new Promise(function(resolve) {
+      _this.visit(node.range).then(function(rres) {
         (function loop(iter) {
-          if (iter.more) {
+          if (!iter.more) {
+            resolve();
+          } else {
             _this.ctx.set(node.name, iter.value);
-            _this.visit(node.body, function(err) {
-              if (err) {
-                if (err.flow && err.scope == 'loop') {
-                  err.terminate ? done() : loop(iter.next());
+            _this.visit(node.body).then(function(bres) {
+              if (hasOwnProperty.call(bres, 'flow')) {
+                var flow = bres.flow;
+                if (flow == 'next') {
+                  loop(iter.next());
+                } else if (flow == 'break') {
+                  // exit the loop and stop propagating the break
+                  resolve();
                 } else {
-                  done(err);
+                  resolve(bres);
                 }
               } else {
                 loop(iter.next());
               }
             });
-          } else {
-            done();
           }
-        })(_this.ctx.enumerate(rres));
-      }
+        })(_this.ctx.enumerate(rres.rv));
+      });
     });
   },
 
-  whileNode: function(node, done) {
+  whileNode: function(node) {
     var _this = this;
-    (function loop() {
-      _this.visit(node.cond, function(err, cres) {
-        if (err) {
-          done(err);
-        } else if (cres) {
-          _this.visit(node.body, function(err) {
-            if (err) {
-              if (err.flow && err.scope == 'loop') {
-                (err.terminate ? done : loop)();
+    return new Promise(function(resolve) {
+      (function loop() {
+        _this.visit(node.cond).then(function(cres) {
+          if (!cres.rv) {
+            resolve();
+          } else {
+            _this.visit(node.body).then(function(bres) {
+              if (hasOwnProperty.call(bres, 'flow')) {
+                var flow = bres.flow;
+                if (flow == 'next') {
+                  loop();
+                } else if (flow == 'break') {
+                  // exit the loop and stop propagating the break
+                  resolve();
+                } else {
+                  resolve(bres);
+                }
               } else {
-                done(err);
+                loop();
               }
-            } else {
-              loop();
-            }
-          });
-        } else {
-          done();
-        }
-      });
-    })();
-  },
-
-  beginNode: function(node, done) {
-    var _this = this, len = node.params ? node.params.length : 0;
-    _this.ctx.setfn(node.name, function(args, done2) {
-      _this.ctx.push();
-      for (var i = 0; i < len; ++i) {
-        _this.ctx.set(node.params[i], args[i]);
-      }
-      _this.visit(node.body, function(err) {
-        _this.ctx.pop();
-        if (err) {
-          if (err.flow) {
-            done2(null, err.result);
-          } else {
-            done2(err);
-          }
-        } else {
-          done2();
-        }
-      });
-    });
-    done();
-  },
-
-  callNode: function(node, done) {
-    var _this = this, len = node.args ? node.args.length : 0, args = [], assn = [], fn;
-    (function loop(count) {
-      if (count < len) {
-        var arg = node.args[count];
-        _this.visit(arg, function(err, ares, assign) {
-          if (err) {
-            done(err);
-          } else {
-            args[count] = ares;
-            assn[count] = assign;
-            loop(count + 1);
+            });
           }
         });
-      } else {
-        if (fn = _this.ctx.getfn(node.name)) {
-          fn(args, done);
-        } else {
-          done(null, _this.ctx.syscall(node.name, args, assn));
-        }
-      }
-    })(0);
-  },
-
-  breakNode: function(node, done) {
-    done({
-      flow: true,
-      terminate: true,
-      scope: 'loop'
+      })();
     });
   },
 
-  nextNode: function(node, done) {
-    done({
-      flow: true,
-      terminate: false,
-      scope: 'loop'
+  beginNode: function(node) {
+    var _this = this, len = node.params ? node.params.length : 0;
+    return new Promise(function(resolve) {
+      resolve(_this.ctx.setfn(node.name, fn));
     });
-  },
 
-  returnNode: function(node, done) {
-    var _this = this;
-    if (node.result) {
-      _this.visit(node.result, function(err, rres) {
-        if (err) {
-          done(err);
-        } else {
-          done({
-            flow: true,
-            terminate: true,
-            scope: 'function',
-            result: rres
-          });
+    function fn(args) {
+      return new Promise(function(resolve2) {
+        _this.ctx.push();
+        for (var i = 0; i < len; ++i) {
+          _this.ctx.set(node.params[i], args[i]);
         }
-      });
-    } else {
-      done({
-        flow: true,
-        terminate: true,
-        scope: 'function'
+        _this.visit(node.body).then(function(bres) {
+          _this.ctx.pop();
+          if (hasOwnProperty.call(bres, 'flow')) {
+            var flow = bres.flow;
+            if (flow == 'return') {
+              resolve2(bres.rv);
+              return;
+            }
+          }
+          resolve2();
+        });
       });
     }
   },
 
-  varNode: function(node, done) {
-    // pass assign info as the second argument
-    done(null, this.ctx.get(node.name), { name: node.name });
-  },
-
-  letNode: function(node, done) {
-    var _this = this;
-    _this.visit(node.value, function(err, vres) {
-      if (err) {
-        done(err);
-      } else {
-        _this.ctx.set(node.name, vres);
-        done();
-      }
+  callNode: function(node) {
+    var _this = this, len = node.args ? node.args.length : 0, args = [], assn = [], fn;
+    return new Promise(function(resolve) {
+      (function loop(count) {
+        if (count == len) {
+          fn = _this.ctx.getfn(node.name);
+          resolve(fn ? fn(args) : _this.ctx.syscall(node.name, args, assn));
+        } else {
+          _this.visit(node.args[count]).then(function(ares) {
+            args[count] = ares.rv;
+            assn[count] = ares.lv;
+            loop(count + 1);
+          });
+        }
+      })(0);
     });
   },
 
-  deleteNode: function(node, done) {
-    this.ctx.del(node.name);
-    done();
+  breakNode: function() {
+    return Promise.resolve({ rv: undefined, flow: 'break' });
   },
 
-  indexNode: function(node, done) {
+  nextNode: function() {
+    return Promise.resolve({ rv: undefined, flow: 'next' });
+  },
+
+  returnNode: function(node) {
+    var _this = this;
+    if (node.result) {
+      return _this.visit(node.result).then(function(rres) {
+        return { rv: rres.rv, flow: 'return' };
+      });
+    } else {
+      return Promise.resolve({ rv: undefined, flow: 'return' });
+    }
+  },
+
+  varNode: function(node) {
+    return Promise.resolve({
+      rv: this.ctx.get(node.name),
+      lv: { name: node.name }
+    });
+  },
+
+  letNode: function(node) {
+    var _this = this;
+    return _this.visit(node.value).then(function(vres) {
+      return _this.ctx.set(node.name, vres.rv);
+    });
+  },
+
+  deleteNode: function(node) {
+    var _this = this;
+    return Promise.try(function() {
+      return _this.ctx.del(node.name);
+    });
+  },
+
+  indexNode: function(node) {
     var _this = this, len = node.indexes.length, indexes = [];
-    (function loop(count) {
-      if (count < len) {
-        _this.visit(node.indexes[count], function(err, ires) {
-          if (err) {
-            done(err);
-          } else {
-            indexes[count] = ires;
+    return new Promise(function(resolve) {
+      (function loop(count) {
+        if (count == len) {
+          resolve({
+            rv: _this.ctx.getindex(node.name, indexes),
+            lv: { name: node.name, indexes: indexes }
+          });
+        } else {
+          _this.visit(node.indexes[count]).then(function(ires) {
+            indexes[count] = ires.rv;
             loop(count + 1);
-          }
-        });
-      } else {
-        // pass assign info as the second argument
-        done(null, _this.ctx.getindex(node.name, indexes), {
-          name: node.name,
-          indexes: indexes
-        });
-      }
-    })(0);
+          });
+        }
+      })(0);
+    });
   },
 
-  letIndexNode: function(node, done) {
+  letIndexNode: function(node) {
     var _this = this, len = node.indexes.length, indexes = [];
-    (function loop(count) {
-      if (count < len) {
-        _this.visit(node.indexes[count], function(err, ires) {
-          if (err) {
-            done(err);
-          } else {
-            indexes[count] = ires;
+    return new Promise(function(resolve) {
+      (function loop(count) {
+        if (count == len) {
+          _this.visit(node.value).then(function(vres) {
+            resolve(_this.ctx.setindex(node.name, indexes, vres.rv));
+          });
+        } else {
+          _this.visit(node.indexes[count]).then(function(ires) {
+            indexes[count] = ires.rv;
             loop(count + 1);
-          }
-        });
-      } else {
-        _this.visit(node.value, function(err, vres) {
-          if (err) {
-            done(err);
-          } else {
-            _this.ctx.setindex(node.name, indexes, vres);
-            done();
-          }
-        });
-      }
-    })(0);
+          });
+        }
+      })(0);
+    });
   },
 
-  deleteIndexNode: function(node, done) {
+  deleteIndexNode: function(node) {
     var _this = this, len = node.indexes.length, indexes = [];
-    (function loop(count) {
-      if (count < len) {
-        _this.visit(node.indexes[count], function(err, ires) {
-          if (err) {
-            done(err);
-          } else {
-            indexes[count] = ires;
+    return new Promise(function(resolve) {
+      (function loop(count) {
+        if (count == len) {
+          resolve(_this.ctx.delindex(node.name, indexes));
+        } else {
+          _this.visit(node.indexes[count]).then(function(ires) {
+            indexes[count] = ires.rv;
             loop(count + 1);
-          }
-        });
-      } else {
-        _this.ctx.delindex(node.name, indexes);
-        done();
-      }
-    })(0);
+          });
+        }
+      })(0);
+    });
   },
 
-  logicalOpNode: function(node, done) {
+  logicalOpNode: function(node) {
     var method = 'logicalOpNode_' + node.op;
-    this[method](node, done);
+    return this[method](node);
   },
 
-  logicalOpNode_and: function(node, done) {
+  logicalOpNode_and: function(node) {
     var _this = this;
-    _this.visit(node.left, function(err, lres) {
-      if (err) {
-        done(err);
-      } else if (!lres) {
-        done(null, false);
+    return _this.visit(node.left).then(function(lres) {
+      if (!lres.rv) {
+        return false;
       } else {
-        _this.visit(node.right, function(err, rres) {
-          if (err) {
-            done(err);
-          } else {
-            done(null, !!rres);
-          }
+        return _this.visit(node.right).then(function(rres) {
+          return !!rres.rv;
         });
       }
     });
   },
 
-  logicalOpNode_or: function(node, done) {
+  logicalOpNode_or: function(node) {
     var _this = this;
-    _this.visit(node.left, function(err, lres) {
-      if (err) {
-        done(err);
-      } else if (lres) {
-        done(null, true);
+    return _this.visit(node.left).then(function(lres) {
+      if (lres.rv) {
+        return true;
       } else {
-        _this.visit(node.right, function(err, rres) {
-          if (err) {
-            done(err);
-          } else {
-            done(null, !!rres);
-          }
+        return _this.visit(node.right).then(function(rres) {
+          return !!rres.rv;
         });
       }
     });
   },
 
-  logicalOpNode_not: function(node, done) {
+  logicalOpNode_not: function(node) {
     var _this = this;
-    _this.visit(node.right, function(err, rres) {
-      if (err) {
-        done(err);
-      } else {
-        done(null, !rres);
-      }
+    return _this.visit(node.right).then(function(rres) {
+      return !rres.rv;
     });
   },
 
-  binaryOpNode: function(node, done) {
+  binaryOpNode: function(node) {
     var _this = this;
-    _this.visit(node.left, function(err, lres) {
-      if (err) {
-        done(err);
-      } else {
-        _this.visit(node.right, function(err, rres) {
-          if (err) {
-            done(err);
-          } else {
-            done(null, _this.ctx.binaryop(node.op, lres, rres));
-          }
-        });
-      }
+    return _this.visit(node.left).then(function(lres) {
+      return _this.visit(node.right).then(function(rres) {
+        return _this.ctx.binaryop(node.op, lres.rv, rres.rv);
+      });
     });
   },
 
-  unaryOpNode: function(node, done) {
+  unaryOpNode: function(node) {
     var _this = this;
-    _this.visit(node.right, function(err, rres) {
-      if (err) {
-        done(err);
-      } else {
-        done(null, _this.ctx.unaryop(node.op, rres));
-      }
+    return _this.visit(node.right).then(function(rres) {
+      return _this.ctx.unaryop(node.op, rres.rv);
     });
   },
 
-  literalNode: function(node, done) {
-    done(null, node.value);
+  literalNode: function(node) {
+    return Promise.resolve(node.value);
   },
 
-  commentNode: function(node, done) {
-    done();
+  commentNode: function(node) {
+    return Promise.resolve();
   }
 });
 
