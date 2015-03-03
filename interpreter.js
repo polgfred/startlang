@@ -1,7 +1,14 @@
 var util = require('util'),
     events = require('events'),
     Promise = require('bluebird'),
-    hasOwnProperty = Object.prototype.hasOwnProperty;
+    // cache this for performance
+    hasOwnProperty = Object.prototype.hasOwnProperty,
+    // shared control object for the enter event
+    control = {};
+
+function ScriptExit() {}
+
+util.inherits(ScriptExit, Error);
 
 var SInterpreter = exports.SInterpreter = function(root, ctx) {
   this.root = root;
@@ -15,25 +22,46 @@ util._extend(SInterpreter.prototype, {
   // main entry point
   run: function() {
     var _this = this;
-    return _this.visit(_this.root).tap(function(result) {
-      _this.emit('end', result);
+    return _this.visit(_this.root).tap(function() {
+      _this.emit('end');
+    }).catch(ScriptExit, function() {
+      _this.emit('end');
     }).catch(function(err) {
       _this.emit('error', err);
     });
   },
 
+  // main node visitor
   visit: function(node) {
-    var _this = this;
-    return Promise.try(function() {
-      _this.emit('enter', node);
-      return _this[node.type + 'Node'](node).then(function(result) {
-        if (result == null || !hasOwnProperty.call(result, 'rv')) {
-          result = { rv: result };
-        }
-        _this.emit('exit', node, result);
-        return result;
+    var _this = this, method = node.type + 'Node';
+    // give the caller a chance to exit or pause
+    _this.emit('enter', node, control);
+    if (control.exit) {
+      control = {};
+      // throw a special error to exit the program
+      throw new ScriptExit();
+    } else if (control.pause) {
+      control = {};
+      // return a promise to resume execution
+      return new Promise(function(resolve) {
+        // call interpreter.resume() to resume execution
+        _this.resume = function() {
+          _this.resume = null;
+          // don't invoke until resumed, in case caller has changed the runtime env
+          resolve(_this[method](node).then(handleResult));
+        };
       });
-    });
+    }
+    // return the node result
+    return _this[method](node).then(handleResult);
+    // normalize the result and emit an exit event
+    function handleResult(result) {
+      if (result == null || !hasOwnProperty.call(result, 'rv')) {
+        result = { rv: result };
+      }
+      _this.emit('exit', node, result);
+      return result;
+    }
   },
 
   // ** implementations of AST nodes **
