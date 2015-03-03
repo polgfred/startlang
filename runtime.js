@@ -1,5 +1,6 @@
 var util = require('util'),
     immutable = require('immutable'),
+    Promise = require('bluebird'),
     ary = Array.prototype;
 
 // wrapper function that ensures all its arguments are of the same type
@@ -698,6 +699,10 @@ var globals = exports.globals = {
     } else {
       console.log();
     }
+  },
+
+  sleep: function(seconds) {
+    return Promise.delay(seconds * 1000);
   }
 };
 
