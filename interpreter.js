@@ -33,7 +33,7 @@ util._extend(SInterpreter.prototype, {
 
   // main node visitor
   visit: function(node) {
-    var _this = this, method = node.type + 'Node';
+    var _this = this;
     // give the caller a chance to exit or pause
     _this.emit('enter', node, control);
     if (control.exit) {
@@ -42,34 +42,49 @@ util._extend(SInterpreter.prototype, {
       throw new ScriptExit();
     } else if (control.pause) {
       control = {};
-      // return a promise to resume execution
+      // return a promise to resume execution when resume() is called
       return new Promise(function(resolve) {
-        // call interpreter.resume() to resume execution
         _this.resume = function() {
           _this.resume = null;
-          // don't invoke until resumed, in case caller has changed the runtime env
-          resolve(_this[method](node).then(handleResult));
+          return this.nodeResult(node);
         };
       });
     }
-    // return the node result
-    return _this[method](node).then(handleResult);
-    // normalize the result and emit an exit event
-    function handleResult(result) {
+    // return the node's result immediately
+    return this.nodeResult(node);
+  },
+
+  // safely get and normalize the node's result, and handle errors
+  nodeResult: function(node) {
+    var _this = this, method = node.type + 'Node';
+    // literals don't need to worry about conversion, exceptions, or 'exit' event
+    if (node.type == 'literal') {
+      return Promise.resolve({ rv: _this[method](node) });
+    }
+    return Promise.try(function() {
+      return _this[method](node);
+    }).then(function(result) {
+      // if the node returns a plain value, convert it to an rvalue
       if (result == null || !hasOwnProperty.call(result, 'rv')) {
         result = { rv: result };
       }
+      // notify caller that we're exiting
       _this.emit('exit', node, result);
       return result;
-    }
+    }).catch(function(err) {
+      // attach the node where the error occured
+      if (!err.node) {
+        err.node = node;
+      }
+      throw err;
+    });
   },
 
   // ** implementations of AST nodes **
 
   blockNode: function(node) {
     var _this = this, len = node.elems.length;
-    // return a resolved promise if empty
-    return len == 0 ? Promise.resolve() : loop(0);
+    return loop(0);
     // recursive loop over block statements
     function loop(count) {
       if (count < len) {
@@ -136,9 +151,7 @@ util._extend(SInterpreter.prototype, {
 
   beginNode: function(node) {
     var _this = this, len = node.params ? node.params.length : 0;
-    return Promise.try(function() {
-      return _this.ctx.setfn(node.name, fn);
-    });
+    return _this.ctx.setfn(node.name, fn);
     // implement function body (invoked from call node)
     function fn(args) {
       // push a new stack and set parameter values
@@ -159,30 +172,28 @@ util._extend(SInterpreter.prototype, {
 
   callNode: function(node) {
     var _this = this, len = node.args ? node.args.length : 0, args = [], assn = [], fn;
-    return Promise.try(function() {
-      return loop(0);
-      // loop to collect arguments and call the function
-      function loop(count) {
-        if (count == len) {
-          fn = _this.ctx.getfn(node.name);
-          return fn ? fn(args) : _this.ctx.syscall(node.name, args, assn);
-        } else {
-          return _this.visit(node.args[count]).then(function(ares) {
-            args[count] = ares.rv;
-            assn[count] = ares.lv;
-            return loop(count + 1);
-          });
-        }
+    return loop(0);
+    // loop to collect arguments and call the function
+    function loop(count) {
+      if (count == len) {
+        fn = _this.ctx.getfn(node.name);
+        return fn ? fn(args) : _this.ctx.syscall(node.name, args, assn);
+      } else {
+        return _this.visit(node.args[count]).then(function(ares) {
+          args[count] = ares.rv;
+          assn[count] = ares.lv;
+          return loop(count + 1);
+        });
       }
-    });
+    }
   },
 
   breakNode: function() {
-    return Promise.resolve({ rv: undefined, flow: 'break' });
+    return { rv: undefined, flow: 'break' };
   },
 
   nextNode: function() {
-    return Promise.resolve({ rv: undefined, flow: 'next' });
+    return { rv: undefined, flow: 'next' };
   },
 
   returnNode: function(node) {
@@ -192,15 +203,13 @@ util._extend(SInterpreter.prototype, {
         return { rv: rres.rv, flow: 'return' };
       });
     } else {
-      return Promise.resolve({ rv: undefined, flow: 'return' });
+      return { rv: undefined, flow: 'return' };
     }
   },
 
   varNode: function(node) {
     var _this = this;
-    return Promise.try(function() {
-      return { rv: _this.ctx.get(node.name), lv: { name: node.name } };
-    });
+    return { rv: _this.ctx.get(node.name), lv: { name: node.name } };
   },
 
   letNode: function(node) {
@@ -212,9 +221,7 @@ util._extend(SInterpreter.prototype, {
 
   deleteNode: function(node) {
     var _this = this;
-    return Promise.try(function() {
-      return _this.ctx.del(node.name);
-    });
+    return _this.ctx.del(node.name);
   },
 
   indexNode: function(node) {
@@ -325,11 +332,10 @@ util._extend(SInterpreter.prototype, {
   },
 
   literalNode: function(node) {
-    return Promise.resolve(node.value);
+    return node.value;
   },
 
   commentNode: function(node) {
-    return Promise.resolve();
   }
 });
 
