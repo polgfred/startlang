@@ -33,12 +33,14 @@ util._extend(SInterpreter.prototype, {
 
   // main node visitor
   visit: function(node) {
-    // optimize literals for speed: skip conversion, events, and error handling,
+    // optimize literals: skip conversion, frames, events, and error handling,
     // and extract the value directly from the node without a function call
     if (node.type == 'literal') {
       return Promise.resolve({ rv: node.value });
     }
     var _this = this;
+    // push a frame onto the stack
+    _this.frames.push({ node: node, ns: _this.ctx.ns, stack: _this.ctx.stack });
     // give the caller a chance to exit or pause
     _this.emit('enter', node, control);
     if (control.exit) {
