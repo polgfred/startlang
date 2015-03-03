@@ -33,13 +33,18 @@ util._extend(SInterpreter.prototype, {
 
   // main node visitor
   visit: function(node) {
+    // optimize literals for speed: skip conversion, events, and error handling,
+    // and extract the value directly from the node without a function call
+    if (node.type == 'literal') {
+      return Promise.resolve({ rv: node.value });
+    }
     var _this = this;
     // give the caller a chance to exit or pause
     _this.emit('enter', node, control);
     if (control.exit) {
       control = {};
-      // throw a special error to exit the program
-      throw new ScriptExit();
+      // return a special error to exit the program
+      return Promise.reject(new ScriptExit());
     } else if (control.pause) {
       control = {};
       // return a promise to resume execution when resume() is called
@@ -57,10 +62,6 @@ util._extend(SInterpreter.prototype, {
   // safely get and normalize the node's result, and handle errors
   nodeResult: function(node) {
     var _this = this, method = node.type + 'Node';
-    // literals don't need to worry about conversion, exceptions, or 'exit' event
-    if (node.type == 'literal') {
-      return Promise.resolve({ rv: _this[method](node) });
-    }
     return Promise.try(function() {
       return _this[method](node);
     }).then(function(result) {
