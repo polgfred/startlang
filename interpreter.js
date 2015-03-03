@@ -68,16 +68,59 @@ util._extend(SInterpreter.prototype, {
 
   blockNode: function(node) {
     var _this = this, len = node.elems.length;
-    return Promise.try(function() {
-      return (function loop(count) {
-        if (count < len) {
-          return _this.visit(node.elems[count]).then(function(eres) {
-            // propagate break/next/return
-            return eres.flow ? eres : loop(count + 1);
+    // return a resolved promise if empty
+    return len == 0 ? Promise.resolve() : loop(0);
+    // recursive loop over block statements
+    function loop(count) {
+      if (count < len) {
+        return _this.visit(node.elems[count]).then(function(eres) {
+          // propagate break/next/return
+          return eres.flow ? eres : loop(count + 1);
+        });
+      }
+    }
+  },
+
+  forNode: function(node) {
+    var _this = this;
+    return _this.visit(node.range).then(function(rres) {
+      // convert the range to an enumeration
+      return loop(_this.ctx.enumerate(rres.rv));
+      // recursive loop over range
+      function loop(iter) {
+        if (iter.more) {
+          _this.ctx.set(node.name, iter.value);
+          return _this.visit(node.body).then(function(bres) {
+            var flow = bres.flow;
+            if (flow == 'return') {
+              return bres; // propagate
+            } else if (!flow || flow == 'next') {
+              return loop(iter.next());
+            }
           });
         }
-      })(0);
+      }
     });
+  },
+
+  whileNode: function(node) {
+    var _this = this;
+    return loop();
+    // recursive loop while condition is true
+    function loop() {
+      return _this.visit(node.cond).then(function(cres) {
+        if (cres.rv) {
+          return _this.visit(node.body).then(function(bres) {
+            var flow = bres.flow;
+            if (flow == 'return') {
+              return bres; // propagate
+            } else if (!flow || flow == 'next') {
+              return loop();
+            }
+          });
+        }
+      });
+    }
   },
 
   ifNode: function(node) {
@@ -91,65 +134,23 @@ util._extend(SInterpreter.prototype, {
     });
   },
 
-  forNode: function(node) {
-    var _this = this;
-    return Promise.try(function() {
-      return _this.visit(node.range).then(function(rres) {
-        var range = _this.ctx.enumerate(rres.rv);
-        return (function loop(iter) {
-          if (iter.more) {
-            _this.ctx.set(node.name, iter.value);
-            return _this.visit(node.body).then(function(bres) {
-              var flow = bres.flow;
-              if (flow == 'return') {
-                return bres; // propagate
-              } else if (!flow || flow == 'next') {
-                return loop(iter.next());
-              }
-            });
-          }
-        })(range);
-      });
-    });
-  },
-
-  whileNode: function(node) {
-    var _this = this;
-    return Promise.try(function() {
-      return (function loop() {
-        return _this.visit(node.cond).then(function(cres) {
-          if (cres.rv) {
-            return _this.visit(node.body).then(function(bres) {
-              var flow = bres.flow;
-              if (flow == 'return') {
-                return bres; // propagate
-              } else if (!flow || flow == 'next') {
-                return loop();
-              }
-            });
-          }
-        });
-      })();
-    });
-  },
-
   beginNode: function(node) {
     var _this = this, len = node.params ? node.params.length : 0;
     return Promise.try(function() {
       return _this.ctx.setfn(node.name, fn);
     });
-
+    // implement function body (invoked from call node)
     function fn(args) {
-      return Promise.try(function() {
-        _this.ctx.push();
-        for (var i = 0; i < len; ++i) {
-          _this.ctx.set(node.params[i], args[i]);
+      // push a new stack and set parameter values
+      _this.ctx.push();
+      for (var i = 0; i < len; ++i) {
+        _this.ctx.set(node.params[i], args[i]);
+      }
+      // capture a possible return value and then clean up
+      return _this.visit(node.body).then(function(bres) {
+        if (bres.flow == 'return') {
+          return bres.rv;
         }
-        return _this.visit(node.body).then(function(bres) {
-          if (bres.flow == 'return') {
-            return bres.rv;
-          }
-        });
       }).finally(function() {
         _this.ctx.pop();
       });
@@ -159,7 +160,9 @@ util._extend(SInterpreter.prototype, {
   callNode: function(node) {
     var _this = this, len = node.args ? node.args.length : 0, args = [], assn = [], fn;
     return Promise.try(function() {
-      return (function loop(count) {
+      return loop(0);
+      // loop to collect arguments and call the function
+      function loop(count) {
         if (count == len) {
           fn = _this.ctx.getfn(node.name);
           return fn ? fn(args) : _this.ctx.syscall(node.name, args, assn);
@@ -170,7 +173,7 @@ util._extend(SInterpreter.prototype, {
             return loop(count + 1);
           });
         }
-      })(0);
+      }
     });
   },
 
@@ -194,9 +197,9 @@ util._extend(SInterpreter.prototype, {
   },
 
   varNode: function(node) {
-    return Promise.resolve({
-      rv: this.ctx.get(node.name),
-      lv: { name: node.name }
+    var _this = this;
+    return Promise.try(function() {
+      return { rv: _this.ctx.get(node.name), lv: { name: node.name } };
     });
   },
 
@@ -216,55 +219,55 @@ util._extend(SInterpreter.prototype, {
 
   indexNode: function(node) {
     var _this = this, len = node.indexes.length, indexes = [];
-    return Promise.try(function() {
-      return (function loop(count) {
-        if (count == len) {
-          return {
-            rv: _this.ctx.getindex(node.name, indexes),
-            lv: { name: node.name, indexes: indexes }
-          };
-        } else {
-          return _this.visit(node.indexes[count]).then(function(ires) {
-            indexes[count] = ires.rv;
-            return loop(count + 1);
-          });
-        }
-      })(0);
-    });
+    return loop(0);
+    // collect indexes and lookup value
+    function loop(count) {
+      if (count == len) {
+        return {
+          rv: _this.ctx.getindex(node.name, indexes),
+          lv: { name: node.name, indexes: indexes }
+        };
+      } else {
+        return _this.visit(node.indexes[count]).then(function(ires) {
+          indexes[count] = ires.rv;
+          return loop(count + 1);
+        });
+      }
+    }
   },
 
   letIndexNode: function(node) {
     var _this = this, len = node.indexes.length, indexes = [];
-    return Promise.try(function() {
-      return (function loop(count) {
-        if (count == len) {
-          return _this.visit(node.value).then(function(vres) {
-            return _this.ctx.setindex(node.name, indexes, vres.rv);
-          });
-        } else {
-          return _this.visit(node.indexes[count]).then(function(ires) {
-            indexes[count] = ires.rv;
-            return loop(count + 1);
-          });
-        }
-      })(0);
-    });
+    return loop(0);
+    // collect indexes and set value
+    function loop(count) {
+      if (count == len) {
+        return _this.visit(node.value).then(function(vres) {
+          return _this.ctx.setindex(node.name, indexes, vres.rv);
+        });
+      } else {
+        return _this.visit(node.indexes[count]).then(function(ires) {
+          indexes[count] = ires.rv;
+          return loop(count + 1);
+        });
+      }
+    }
   },
 
   deleteIndexNode: function(node) {
     var _this = this, len = node.indexes.length, indexes = [];
-    return Promise.try(function() {
-      return (function loop(count) {
-        if (count == len) {
-          return _this.ctx.delindex(node.name, indexes);
-        } else {
-          return _this.visit(node.indexes[count]).then(function(ires) {
-            indexes[count] = ires.rv;
-            return loop(count + 1);
-          });
-        }
-      })(0);
-    });
+    return loop(0);
+    // collect indexes and delete value
+    function loop(count) {
+      if (count == len) {
+        return _this.ctx.delindex(node.name, indexes);
+      } else {
+        return _this.visit(node.indexes[count]).then(function(ires) {
+          indexes[count] = ires.rv;
+          return loop(count + 1);
+        });
+      }
+    }
   },
 
   logicalOpNode: function(node) {
