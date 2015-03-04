@@ -85,7 +85,10 @@
 // Grammar
 
 start
-  = Block
+  = EOL?
+    block:Block {
+      return block;
+    }
 
 // Top-level
 
@@ -97,7 +100,6 @@ Block
 BlockElement
   = Control
   / Statement
-  / Comment
 
 Control
   = If
@@ -200,11 +202,6 @@ Flow
     }
   / __ 'return' WB __ result:Value? {
       return buildNode('return', { result: result });
-    }
-
-Comment
-  = __ '--' __ text:$[^\n]* {
-      return buildNode('comment', { text: text });
     }
 
 // Values
@@ -423,7 +420,7 @@ WB
   = ![a-z_]i
 
 __
-  = [ \t]*
+  = [ \t]* ( '--' [^\n;]* )?
 
 EOL
   = ( __ [\n;] )+

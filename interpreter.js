@@ -332,13 +332,6 @@ util._extend(SInterpreter.prototype, {
     return _this.visit(node.right).then(function(rres) {
       return _this.ctx.unaryop(node.op, rres.rv);
     });
-  },
-
-  literalNode: function(node) {
-    return node.value;
-  },
-
-  commentNode: function(node) {
   }
 });
 
