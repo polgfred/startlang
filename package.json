@@ -8,8 +8,8 @@
     "test": "tests"
   },
   "dependencies": {
-    "bluebird": "*",
-    "immutable": "*"
+    "immutable": "*",
+    "snapsvg": "git://github.com/adobe-webplatform/Snap.svg.git#dev"
   },
   "devDependencies": {
     "grunt": "*",

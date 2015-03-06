@@ -1,6 +1,5 @@
 var util = require('util'),
     events = require('events'),
-    Promise = require('bluebird'),
     // cache this for performance
     hasOwnProperty = Object.prototype.hasOwnProperty,
     // shared control object for the enter event
@@ -22,12 +21,14 @@ util._extend(SInterpreter.prototype, {
   // main entry point
   run: function() {
     var _this = this;
-    return _this.visit(_this.root).tap(function() {
-      _this.emit('end');
-    }).catch(ScriptExit, function() {
+    return _this.visit(_this.root).then(function() {
       _this.emit('end');
     }).catch(function(err) {
-      _this.emit('error', err);
+      if (err instanceof ScriptExit) {
+        _this.emit('end');
+      } else {
+        _this.emit('error', err);
+      }
     });
   },
 
@@ -64,8 +65,8 @@ util._extend(SInterpreter.prototype, {
   // safely get and normalize the node's result, and handle errors
   nodeResult: function(node) {
     var _this = this, method = node.type + 'Node';
-    return Promise.try(function() {
-      return _this[method](node);
+    return new Promise(function(resolve) {
+      resolve(_this[method](node));
     }).then(function(result) {
       // if the node returns a plain value, convert it to an rvalue
       if (result == null || !hasOwnProperty.call(result, 'rv')) {
@@ -164,11 +165,13 @@ util._extend(SInterpreter.prototype, {
       }
       // capture a possible return value and then clean up
       return _this.visit(node.body).then(function(bres) {
+        _this.ctx.pop();
         if (bres.flow == 'return') {
           return bres.rv;
         }
-      }).finally(function() {
+      }, function(err) {
         _this.ctx.pop();
+        throw err;
       });
     }
   },

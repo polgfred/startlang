@@ -1,6 +1,7 @@
 var parser = require('../parser'),
     runtime = require('../runtime'),
-    interpreter = require('../interpreter');
+    interpreter = require('../interpreter'),
+    Snap = require('snapsvg');
 
 window.prompt = ace.edit('prompt');
 prompt.setTheme('ace/theme/textmate');
