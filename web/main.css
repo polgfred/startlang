@@ -4,6 +4,19 @@ body {
   padding: 0;
 }
 
+#canvas {
+  background-color: #fff;
+  border-color: #000;
+  border-radius: 4px;
+  border-width: 0;
+  box-shadow: 2px 2px 6px rgba(0,0,0,0.5);
+  color: #000;
+  display: block;
+  margin: 10px;
+  height: calc(100vh - 20px);
+  width: calc(60vw - 20px);
+}
+
 /* Sidebar and code editor */
 
 #sidebar {
@@ -11,7 +24,7 @@ body {
   height: 100vh;
   right: 10px;
   top: 10px;
-  width: 40%;
+  width: calc(40vw - 20px);
 }
 
 #terminal, #prompt, #runner {
@@ -27,7 +40,7 @@ body {
 }
 
 #terminal {
-  height: 60vh;
+  height: calc(60vh - 50px);
   margin: 0;
   padding: 10px;
 }
@@ -71,11 +84,12 @@ body {
 
 #prompt {
   font-size: 14px;
-  height: 20vh;
+  height: calc(40vh - 50px);
 }
 
 #runner {
   font-size: 16px;
+  height: 40px;
   margin: 10px auto 0;
   padding: 8px;
   width: 25%;

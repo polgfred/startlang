@@ -669,7 +669,15 @@ Object.defineProperty(immutable.Map.prototype, '@@__handler__@@', {
 
 // find a protocol handler for this object
 var handle = exports.handle = function(obj) {
-  return obj == null ? SNone : obj['@@__handler__@@'];
+  // have to check for null/undefined explicitly
+  if (obj == null) {
+    return SNone;
+  }
+
+  // if protocol handler is a function call it with the object -- this allows
+  // for duck type polymorphism on objects
+  var handler = obj['@@__handler__@@']
+  return typeof handler == 'function' ? handler(obj) : handler;
 };
 
 var globals = exports.globals = {
