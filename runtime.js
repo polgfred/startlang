@@ -310,7 +310,7 @@ util._extend(SRange, {
 
     return {
       value: current,
-      more: current < r._end,
+      more: r._step > 0 ? current <= r._end : current >= r._end,
       next: function() {
         return SRange.enumerate(r, current + r._step);
       }
