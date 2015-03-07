@@ -6,16 +6,27 @@ var SShape = exports.SShape = {
   // keep a reference to the canvas element
   paper: Snap('#canvas'),
 
-  methods: {}
-};
+  getindex: function(el, index) {
+    return el.attr(index);
+  },
 
-var SCircle = exports.SCircle = {
-  repr: function(circ) {
-    return '*circle(' + circ.id + ')*'
+  setindex: function(el, index, value) {
+    el.attr(index, value);
+    return el;
   },
 
   methods: {}
 };
+
+var SCircle = exports.SShape = {};
+util._extend(SCircle, SShape);
+util._extend(SCircle, {
+  repr: function(circ) {
+    return '*circle(' + circ.id + ')*';
+  },
+
+  methods: {}
+});
 
 util._extend(SCircle.methods, SShape.methods);
 util._extend(SCircle.methods, {
@@ -24,13 +35,15 @@ util._extend(SCircle.methods, {
   }
 });
 
-var SRect = exports.SCircle = {
+var SRect = exports.SShape = {};
+util._extend(SRect, SShape);
+util._extend(SRect, {
   repr: function(rect) {
-    return '*rect(' + rect.id + ')*'
+    return '*rect(' + rect.id + ')*';
   },
 
   methods: {}
-};
+});
 
 util._extend(SRect.methods, SShape.methods);
 util._extend(SRect.methods, {
