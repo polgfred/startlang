@@ -35,13 +35,27 @@ runtime.globals.clear = function() {
 // wire it up
 
 var ctx = runtime.create(),
-    buffer = '',
+    session = editor.getSession(),
+    doc = session.getDocument(),
+    buffer = [],
     level = 1,
     prefix = '>>>>>>>>>>';
 
+// hook up the run button
+$('#runner').click(function() {
+  terminal.clear();
+  // execute the code in the buffer
+  var root = parser.parse(doc.getAllLines().join('\n')),
+      interp = interpreter.create(root, ctx);
+  interp.on('error', function(err) {
+    terminal.error('[ERROR]: ' + err.message);
+  });
+  interp.run();
+});
+
 terminal.terminal(function(command) {
   if (command) {
-    buffer += command + '\n';
+    buffer.push(command);
     // see if we're going into a nested block
     if (/(?:do|then|else)\s*$/.test(command)) {
       level++;
@@ -56,18 +70,21 @@ terminal.terminal(function(command) {
     if (level > 1) {
       return;
     }
-    // parse and evaluate the command
-    var root = parser.parse(buffer),
+    // execute the code in the buffer
+    var root = parser.parse(buffer.join('\n') + '\n'),
         interp = interpreter.create(root, ctx);
     interp.on('error', function(err) {
       terminal.error('[ERROR]: ' + err.message);
+      // reset the command buffer
+      buffer = [];
+    });
+    interp.on('end', function(err) {
+      // add command to the editor
+      doc.insertLines(doc.getLength() - 1, buffer);
+      // reset the command buffer
+      buffer = [];
     });
     interp.run();
-    // add command to the editor
-    var session = editor.getSession();
-    session.insert({ row: session.getLength(), column: 0 }, buffer);
-    // reset the command buffer
-    buffer = '';
   }
 }, {
   greetings: '[[b;;]Welcome to Start!]\n',
