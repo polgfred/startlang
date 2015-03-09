@@ -23,11 +23,11 @@ body {
   position: fixed;
   height: 100vh;
   right: 10px;
-  top: 10px;
+  top: 0;
   width: calc(40vw - 20px);
 }
 
-#terminal, #prompt, #runner {
+#editor, #terminal, #runner {
   background-color: #fff;
   border-color: #000;
   border-radius: 4px;
@@ -39,9 +39,14 @@ body {
   margin: 10px 0 0;
 }
 
+#editor {
+  font-size: 14px;
+  height: calc(100vh - 340px);
+}
+
 #terminal {
-  height: calc(60vh - 50px);
-  margin: 0;
+  height: 240px;
+  margin: 10px auto 0;
   padding: 10px;
 }
 
@@ -49,42 +54,8 @@ body {
   overflow: scroll;
 }
 
-#terminal, #terminal .cmd {
-  background-color: #fff;
-  color: #000;
-  font-family: monospace;
-  font-size: 14px;
-  line-height: 16px;
-}
-
-#terminal .terminal-output div div {
-  line-height: 16px;
-}
-
-#terminal .terminal-output .input {
-  color: #888;
-  margin-top: 10px;
-  position: relative;
-}
-
-#terminal .terminal-output .output {
-  margin-top: 2px;
-  position: relative;
-}
-
-#terminal .terminal-output .input span,
-#terminal .terminal-output .output span {
-  position: absolute;
-}
-
-#terminal .terminal-output .output div,
-#terminal .terminal-output .input div {
-  margin-left: 20px;
-}
-
-#prompt {
-  font-size: 14px;
-  height: calc(40vh - 50px);
+#terminal-inner .bold {
+  font-weight: bold;
 }
 
 #runner {
