@@ -41,7 +41,7 @@ body {
 
 #editor {
   font-size: 14px;
-  height: calc(100vh - 340px);
+  height: calc(100vh - 290px);
 }
 
 #terminal {
@@ -59,11 +59,16 @@ body {
 }
 
 #runner {
+  background-color: #eee;
   font-size: 16px;
   height: 40px;
-  margin: 10px auto 0;
-  padding: 8px;
-  width: 25%;
+  margin: 10px;
+  opacity: 0.75;
+  padding: 8px 20px;
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  z-index: 10;
 }
 
 #runner:active {
