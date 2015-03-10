@@ -43,12 +43,19 @@ var ctx = runtime.create(),
 
 // hook up the run button
 $('#runner').click(function() {
+  // wipe stuff clean and make a fresh program context
+  ctx = runtime.create();
   terminal.clear();
+  graphics.SShape.paper.clear();
   // execute the code in the buffer
   var root = parser.parse(doc.getAllLines().join('\n')),
       interp = interpreter.create(root, ctx);
   interp.on('error', function(err) {
     terminal.error('[ERROR]: ' + err.message);
+    terminal.focus();
+  });
+  interp.on('end', function() {
+    terminal.focus();
   });
   interp.run();
 });
