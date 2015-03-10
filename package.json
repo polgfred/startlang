@@ -9,6 +9,8 @@
   },
   "dependencies": {
     "immutable": "*",
+    "jquery": "*",
+    "brace": "*",
     "snapsvg": "git://github.com/adobe-webplatform/Snap.svg.git#dev"
   },
   "devDependencies": {

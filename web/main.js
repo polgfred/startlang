@@ -1,7 +1,12 @@
-var parser = require('../parser'),
+var $ = window.jQuery = require('jquery'),
+    ace = require('brace'),
+    parser = require('../parser'),
     runtime = require('../runtime'),
     interpreter = require('../interpreter'),
     graphics = require('./graphics');
+
+require('brace/mode/pascal');
+require('./jquery.terminal');
 
 window.editor = ace.edit('editor');
 editor.setTheme('ace/theme/textmate');
