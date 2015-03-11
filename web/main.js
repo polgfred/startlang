@@ -15,7 +15,7 @@ editor.getSession().setTabSize(2);
 editor.getSession().setUseSoftTabs(true);
 editor.getSession().setMode('ace/mode/pascal');
 
-window.terminal = $('#terminal').term();
+window.terminal = $('#terminal').term({ prompt: '> ' });
 var termapi = terminal.data('term');
 
 // override print to output to the terminal
@@ -68,12 +68,12 @@ termapi.on('line', function(command) {
     // see if we're going into a nested block
     if (/(?:do|then|else)\s*$/.test(command)) {
       level++;
-      //terminal.set_prompt(prefix.substr(0, level) + ' ');
+      termapi.setPrompt(prefix.substr(0, level) + ' ');
     }
     // see if we're exiting a nested block
     if (/end\s*$/.test(command)) {
       level--;
-      //terminal.set_prompt(prefix.substr(0, level) + ' ');
+      termapi.setPrompt(prefix.substr(0, level) + ' ');
     }
     // if we're nested, don't evaluate
     if (level > 1) {

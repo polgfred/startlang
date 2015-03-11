@@ -52,10 +52,6 @@ body {
   padding: 10px;
 }
 
-#terminal .terminal-command::before {
-  content: "> ";
-}
-
 #terminal .terminal-output-line,
 #terminal .terminal-output-error {
   font-weight: bold;
