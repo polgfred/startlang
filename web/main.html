@@ -3,7 +3,6 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
     <link rel="stylesheet" type="text/css" href="main.css">
-    <link rel="stylesheet" type="text/css" href="jquery.terminal.css">
   </head>
   <body>
     <div id="display">
@@ -14,7 +13,10 @@
       <pre id="editor"></pre>
       <button id="runner">Run</button>
       <div id="terminal">
-        <div id="terminal-inner"></div>
+        <div class="terminal-output"></div>
+        <div class="terminal-command">
+          <input class="terminal-text" type="text">
+        </div>
       </div>
     </div>
 

@@ -6,7 +6,7 @@ var $ = window.jQuery = require('jquery'),
     graphics = require('./graphics');
 
 require('brace/mode/pascal');
-require('./jquery.terminal');
+require('./term');
 
 window.editor = ace.edit('editor');
 editor.setTheme('ace/theme/textmate');
@@ -15,26 +15,23 @@ editor.getSession().setTabSize(2);
 editor.getSession().setUseSoftTabs(true);
 editor.getSession().setMode('ace/mode/pascal');
 
-window.terminal = $('#terminal-inner');
+window.terminal = $('#terminal').term();
+var termapi = terminal.data('term');
 
 // override print to output to the terminal
 
 runtime.globals.print = function() {
   if (arguments.length > 0) {
     Array.prototype.forEach.call(arguments, function(arg) {
-      terminal.echo(runtime.handle(arg).repr(arg), {
-        finalize: function(div) {
-          div.addClass('bold');
-        }
-      });
+      termapi.echo(runtime.handle(arg).repr(arg));
     });
   } else {
-    terminal.echo();
+    termapi.echo('');
   }
 };
 
 runtime.globals.clear = function() {
-  terminal.clear();
+  termapi.clear();
 };
 
 // wire it up
@@ -50,33 +47,33 @@ var ctx = runtime.create(),
 $('#runner').click(function() {
   // wipe stuff clean and make a fresh program context
   ctx = runtime.create();
-  terminal.clear();
+  termapi.clear();
   graphics.SShape.paper.clear();
   // execute the code in the buffer
   var root = parser.parse(doc.getAllLines().join('\n')),
       interp = interpreter.create(root, ctx);
   interp.on('error', function(err) {
-    terminal.error('[ERROR]: ' + err.message);
-    terminal.focus();
+    termapi.error('[ERROR]: ' + err.message);
+    termapi.focus();
   });
   interp.on('end', function() {
-    terminal.focus();
+    termapi.focus();
   });
   interp.run();
 });
 
-terminal.terminal(function(command) {
+termapi.on('line', function(command) {
   if (command) {
     buffer.push(command);
     // see if we're going into a nested block
     if (/(?:do|then|else)\s*$/.test(command)) {
       level++;
-      terminal.set_prompt(prefix.substr(0, level) + ' ');
+      //terminal.set_prompt(prefix.substr(0, level) + ' ');
     }
     // see if we're exiting a nested block
     if (/end\s*$/.test(command)) {
       level--;
-      terminal.set_prompt(prefix.substr(0, level) + ' ');
+      //terminal.set_prompt(prefix.substr(0, level) + ' ');
     }
     // if we're nested, don't evaluate
     if (level > 1) {
@@ -86,7 +83,7 @@ terminal.terminal(function(command) {
     var root = parser.parse(buffer.join('\n') + '\n'),
         interp = interpreter.create(root, ctx);
     interp.on('error', function(err) {
-      terminal.error('[ERROR]: ' + err.message);
+      termapi.error('[ERROR]: ' + err.message);
       // reset the command buffer
       buffer = [];
     });
@@ -98,8 +95,4 @@ terminal.terminal(function(command) {
     });
     interp.run();
   }
-}, {
-  greetings: '[[b;;]Welcome to Start!]\n',
-  height: 240,
-  prompt: '> '
 });
