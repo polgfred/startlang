@@ -18,6 +18,12 @@ editor.getSession().setMode('ace/mode/pascal');
 window.terminal = $('#terminal').term({ prompt: '> ' });
 var termapi = terminal.data('term');
 
+function refresh() {
+  return new Promise(function(resolve) {
+    setTimeout(resolve, 0);
+  });
+}
+
 // override print to output to the terminal
 
 runtime.globals.print = function() {
@@ -28,10 +34,14 @@ runtime.globals.print = function() {
   } else {
     termapi.echo('');
   }
+  // yield to UI for redraw
+  return refresh();
 };
 
 runtime.globals.clear = function() {
   termapi.clear();
+  // yield to UI for redraw
+  return refresh();
 };
 
 // wire it up
