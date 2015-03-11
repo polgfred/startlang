@@ -1,6 +1,6 @@
 var util = require('util'),
-    runtime = require('../runtime.js'),
     Snap = require('snapsvg'),
+    runtime = require('./runtime.js'),
     ary = Array.prototype;
 
 function number(s) {

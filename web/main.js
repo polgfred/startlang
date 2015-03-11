@@ -2,11 +2,11 @@ var $ = window.jQuery = require('jquery'),
     ace = require('brace'),
     parser = require('../parser'),
     runtime = require('../runtime'),
-    interpreter = require('../interpreter'),
-    graphics = require('./graphics');
+    graphics = require('../graphics'),
+    interpreter = require('../interpreter');
 
 require('brace/mode/pascal');
-require('./term');
+require('../term');
 
 window.editor = ace.edit('editor');
 editor.setTheme('ace/theme/textmate');
