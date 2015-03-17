@@ -11,10 +11,6 @@ module.exports = function(grunt) {
         files: [ 'parser.pegjs' ],
         tasks: [ 'peg' ]
       },
-      babel: {
-        files: [ '*.js', 'web/*.js', '!Gruntfile.js', '!web/bundle.js' ],
-        tasks: [ 'newer:babel' ]
-      },
       bundle: {
         files: [ '*.js', 'web/*.js', '!Gruntfile.js', '!web/bundle.js' ],
         tasks: [ 'copy', 'browserify', 'extract_sourcemap' ]
@@ -32,16 +28,6 @@ module.exports = function(grunt) {
         }
       }
     },
-    babel: {
-      options: {
-        loose: 'all'
-      },
-      files: {
-        expand: true,
-        src: [ '*.js', 'web/*.js', '!Gruntfile.js', '!web/bundle.js' ],
-        dest: 'dist/'
-      }
-    },
     copy: {
       files: {
         expand: true,
@@ -52,10 +38,11 @@ module.exports = function(grunt) {
     browserify: {
       dist: {
         files: {
-          'dist/web/bundle.js': 'dist/web/main.js'
+          'dist/web/bundle.js': 'web/main.js'
         }
       },
       options: {
+        transform: [ 'babelify' ],
         browserifyOptions: {
           debug: true,
           basedir: 'dist/web'
@@ -76,7 +63,6 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-extract-sourcemap');
-  grunt.loadNpmTasks('grunt-newer');
   grunt.loadNpmTasks('grunt-peg');
 
   grunt.registerTask('default', [ 'watch' ]);
