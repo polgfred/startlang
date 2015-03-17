@@ -1,4 +1,3 @@
 node_modules
 parser.js
-web/bundle.js
-web/bundle.js.map
+dist/

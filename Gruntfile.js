@@ -2,32 +2,82 @@ module.exports = function(grunt) {
   grunt.initConfig({
     watch: {
       config: {
-        files: ['Gruntfile.js'],
+        files: [ 'Gruntfile.js' ],
         options: {
           reload: true
         }
       },
-      pegjs: {
-        files: ['parser.pegjs'],
-        tasks: ['shell:pegjs']
+      peg: {
+        files: [ 'parser.pegjs' ],
+        tasks: [ 'peg' ]
+      },
+      babel: {
+        files: [ '*.js', 'web/*.js', '!Gruntfile.js', '!web/bundle.js' ],
+        tasks: [ 'newer:babel' ]
       },
       bundle: {
-        files: ['*.js', 'web/*.js', '!Gruntfile.js', '!web/bundle.js'],
-        tasks: ['shell:bundle']
+        files: [ '*.js', 'web/*.js', '!Gruntfile.js', '!web/bundle.js' ],
+        tasks: [ 'copy', 'browserify', 'extract_sourcemap' ]
       }
     },
-    shell: {
-      pegjs: {
-        command: 'pegjs --cache parser.pegjs'
+    peg: {
+      options: {
+        trackLineAndColumn: true
       },
-      bundle: {
-        command: 'cd web ; browserify main.js --debug | exorcist bundle.js.map > bundle.js'
+      parser: {
+        src: 'parser.pegjs',
+        dest: 'parser.js',
+        options: {
+          cache: true
+        }
+      }
+    },
+    babel: {
+      options: {
+        loose: 'all'
+      },
+      files: {
+        expand: true,
+        src: [ '*.js', 'web/*.js', '!Gruntfile.js', '!web/bundle.js' ],
+        dest: 'dist/'
+      }
+    },
+    copy: {
+      files: {
+        expand: true,
+        src: [ 'web/main.html', 'web/main.css' ],
+        dest: 'dist/'
+      }
+    },
+    browserify: {
+      dist: {
+        files: {
+          'dist/web/bundle.js': 'dist/web/main.js'
+        }
+      },
+      options: {
+        browserifyOptions: {
+          debug: true,
+          basedir: 'dist/web'
+        }
+      }
+    },
+    extract_sourcemap: {
+      dist: {
+        files: {
+          'dist/web': [ 'dist/web/bundle.js' ]
+        }
       }
     }
   });
 
-  grunt.loadNpmTasks('grunt-shell');
+  grunt.loadNpmTasks('grunt-babel');
+  grunt.loadNpmTasks('grunt-browserify');
+  grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-contrib-watch');
+  grunt.loadNpmTasks('grunt-extract-sourcemap');
+  grunt.loadNpmTasks('grunt-newer');
+  grunt.loadNpmTasks('grunt-peg');
 
-  grunt.registerTask('default', ['watch']);
+  grunt.registerTask('default', [ 'watch' ]);
 };
