@@ -24,7 +24,10 @@ module.exports = function(grunt) {
         src: 'parser.pegjs',
         dest: 'parser.js',
         options: {
-          cache: true
+          cache: true,
+          wrapper: function(src, parser) {
+            return 'export default ' + parser;
+          }
         }
       }
     },
@@ -42,7 +45,9 @@ module.exports = function(grunt) {
         }
       },
       options: {
-        transform: [ 'babelify' ],
+        transform: [
+          [ 'babelify', { loose: 'all' } ]
+        ],
         browserifyOptions: {
           debug: true,
           basedir: 'dist/web'
