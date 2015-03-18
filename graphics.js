@@ -1,14 +1,14 @@
-var util = require('util'),
-    Snap = require('snapsvg'),
-    runtime = require('./runtime.js'),
-    ary = Array.prototype;
+import util from 'util';
+import Snap from 'snapsvg';
+import * as runtime from './runtime';
+import { extendObject, checkArgumentTypes } from './utils';
 
 function number(s) {
   return parseInt(s, 10);
 }
 
 function defaults(el) {
-  return el.attr({ fill: 'transparent', stroke: '#000' });
+  return el.attr({ fill: '', stroke: '' });
 }
 
 function applyTransforms(el) {
@@ -33,41 +33,42 @@ function applyTransforms(el) {
   el.transform(mat);
 }
 
-var SShape = exports.SShape = {
+// all shapes have these basic utilities in common
+export var SShape = {
   // keep a reference to the canvas element
   paper: Snap('#canvas'),
 
-  repr: function(el) {
+  repr(el) {
     return '*' + el.type + ':' + el.id + '*';
   },
 
   methods: {
-    fill: function(el, color) {
+    fill(el, color = null) {
       if (color == null) {
-        el.attr('fill', 'transparent');
+        el.attr('fill', '');
       } else {
         el.attr('fill', color);
       }
     },
 
-    stroke: function(el, color) {
+    stroke(el, color = null) {
       if (color == null) {
-        el.attr('stroke', 'transparent');
+        el.attr('stroke', '');
       } else {
         el.attr('stroke', color);
       }
     },
 
-    opacity: function(el, opac) {
-      if (opac == null || opac == 1) {
+    opacity(el, opac = 1) {
+      if (opac == 1) {
         el.attr('opacity', null);
       } else {
         el.attr('opacity', opac);
       }
     },
 
-    rotate: function(el, rot) {
-      if (rot == null || rot == 0) {
+    rotate(el, rot = 0) {
+      if (rot == 0) {
         el.removeData('rot');
       } else {
         el.data('rot', rot);
@@ -76,13 +77,8 @@ var SShape = exports.SShape = {
       applyTransforms(el);
     },
 
-    scale: function(el, sx, sy) {
-      // default sy to sx
-      if (sy == null) {
-        sy = sx;
-      }
-
-      if (sx == null || (sx == 1 && sy == 1)) {
+    scale(el, sx = 1, sy = sx) {
+      if (sx == 1 && sy == 1) {
         el.removeData('skew');
       } else {
         el.data('skew', [sx, sy]);
@@ -91,88 +87,85 @@ var SShape = exports.SShape = {
       applyTransforms(el);
     },
 
-    clone: function(el) {
+    clone(el) {
       var el2 = el.clone();
       // copy transform data
       el2.data(el.data());
       return el2;
     },
 
-    remove: function(el) {
+    remove(el) {
       el.remove();
     }
   }
 };
 
-function defineShape(methods) {
-  var shape = {};
-  util._extend(shape, SShape);
-  shape.methods = {};
-  util._extend(shape.methods, SShape.methods);
-  for (var i = 0; i < arguments.length; ++i) {
-    util._extend(shape.methods, arguments[i]);
-  }
-  return shape;
-}
-
-var SRect = exports.SRect = defineShape({
-  move: function(el, x, y) {
-    el.attr({ x: x, y: y });
-    applyTransforms(el);
-  }
-});
-
-var SCircle = exports.SCircle = defineShape({
-  move: function(el, x, y) {
-    el.attr({ cx: x, cy: y });
-    applyTransforms(el);
-  }
-});
-
-var SEllipse = exports.SEllipse = defineShape({
-  move: function(el, x, y) {
-    el.attr({ cx: x, cy: y });
-    applyTransforms(el);
-  }
-});
-
-var SLine = exports.SLine = defineShape({
-  move: function(el, x, y) {
-    var attr = el.attr(),
-        dx = x - number(attr.x1),
-        dy = y - number(attr.y1);
-    el.attr({ x1: x, y1: y, x2: number(attr.x2) + dx, y2: number(attr.y2) + dy });
-    applyTransforms(el);
-  }
-});
-
-var PathSupport = {
-  move: function(el, x, y) {
-    var op = el.attr('points'), np = [],
-        dx = x - number(op[0]),
-        dy = y - number(op[1]);
-    np[0] = x;
-    np[1] = y;
-    for (var i = 2; i < op.length; i += 2) {
-      np[i + 0] = number(op[i]) + dx;
-      np[i + 1] = number(op[i + 1]) + dy;
+export var SRect = extendObject(SShape, {
+  methods: extendObject(SShape.methods, {
+    move(el, x, y) {
+      el.attr({ x: x, y: y });
+      applyTransforms(el);
     }
-    el.attr('points', np);
-    applyTransforms(el);
-  }
-};
+  })
+});
 
-var SPolyline = exports.SPolyline = defineShape(PathSupport);
+export var SCircle = extendObject(SShape, {
+  methods: extendObject(SShape.methods, {
+    move(el, x, y) {
+      el.attr({ cx: x, cy: y });
+      applyTransforms(el);
+    }
+  })
+});
 
-var SPolygon = exports.SPolygon = defineShape(PathSupport);
+export var SEllipse = extendObject(SShape, {
+  methods: extendObject(SShape.methods, {
+    move(el, x, y) {
+      el.attr({ cx: x, cy: y });
+      applyTransforms(el);
+    }
+  })
+});
 
+export var SLine = extendObject(SShape, {
+  methods: extendObject(SShape.methods, {
+    move(el, x, y) {
+      var attr = el.attr(),
+          dx = x - number(attr.x1),
+          dy = y - number(attr.y1);
+      el.attr({ x1: x, y1: y, x2: number(attr.x2) + dx, y2: number(attr.y2) + dy });
+      applyTransforms(el);
+    }
+  })
+});
+
+// used for both polylines and polygons, as it just moves points
+export var SPolygon = extendObject(SShape, {
+  methods: extendObject(SShape.methods, {
+    move(el, x, y) {
+      var op = el.attr('points'), np = [],
+          dx = x - number(op[0]),
+          dy = y - number(op[1]);
+      np[0] = x;
+      np[1] = y;
+      for (var i = 2; i < op.length; i += 2) {
+        np[i + 0] = number(op[i]) + dx;
+        np[i + 1] = number(op[i + 1]) + dy;
+      }
+      el.attr('points', np);
+      applyTransforms(el);
+    }
+  })
+});
+
+// hook into Snap so we can inject a handler property
 Snap.plugin(function(_, Element, Paper) {
   var handlerMap = {
     rect: SRect,
     circle: SCircle,
     ellipse: SEllipse,
     line: SLine,
-    polyline: SPolyline,
+    polyline: SPolygon,
     polygon: SPolygon
   };
 
@@ -201,11 +194,11 @@ util._extend(runtime.globals, {
     return defaults(SShape.paper.line(x1, y1, x2, y2));
   },
 
-  polyline: function() {
-    return defaults(SShape.paper.polyline(ary.slice.call(arguments)));
+  polyline: function(...coords) {
+    return defaults(SShape.paper.polyline(...coords));
   },
 
-  polygon: function() {
-    return defaults(SShape.paper.polygon(ary.slice.call(arguments)));
+  polygon: function(...coords) {
+    return defaults(SShape.paper.polygon(...coords));
   }
 });

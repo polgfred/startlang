@@ -1,8 +1,7 @@
-var events = require('events'),
-    // cache this for performance
-    hasOwnProperty = Object.prototype.hasOwnProperty,
-    // shared control object for the enter event
-    control = {};
+import events from 'events';
+
+var hasOwnProperty = Object.prototype.hasOwnProperty, // cache this for performance
+    control = {}; // shared control object for the enter event
 
 export class ScriptExit extends Error {}
 

@@ -1,43 +1,28 @@
-var util = require('util'),
-    immutable = require('immutable'),
-    ary = Array.prototype;
-
-// wrapper function that ensures all its arguments are of the same type
-function checked(fn) {
-  return function() {
-    var h = handle(arguments[0]), i;
-    for (i = 1; i < arguments.length; i++) {
-      if (h != handle(arguments[i])) {
-        throw new Error('operands must be of the same type');
-      }
-    }
-
-    // forward onto the original
-    return fn.apply(this, arguments);
-  };
-}
+import util from 'util';
+import immutable from 'immutable';
+import { extendObject, checkArgumentTypes } from './utils';
 
 // Environment
 
-var SRuntime = exports.SRuntime = function() {
-  this.fn = immutable.Map();
-  this.ns = immutable.Map();
-  this.stack = immutable.Stack();
-};
+export class SRuntime {
+  constructor() {
+    this.fn = immutable.Map();
+    this.ns = immutable.Map();
+    this.stack = immutable.Stack();
+  }
 
-util._extend(SRuntime.prototype, {
   // push and pop new objects onto the ns stack
-  push: function() {
+  push() {
     this.stack = this.stack.push(this.ns);
     this.ns = immutable.Map();
-  },
+  }
 
-  pop: function() {
+  pop() {
     this.ns = this.stack.first();
     this.stack = this.stack.pop();
-  },
+  }
 
-  get: function(name) {
+  get(name) {
     // look in the current ns
     var result = this.ns.get(name);
     if (typeof result != 'undefined') {
@@ -56,19 +41,19 @@ util._extend(SRuntime.prototype, {
         return result;
       }
     }
-  },
+  }
 
-  set: function(name, value) {
+  set(name, value) {
     // always in the current ns only
     this.ns = this.ns.set(name, value);
-  },
+  }
 
-  del: function(name) {
+  del(name) {
     // always in the current ns only
     this.ns = this.ns.delete(name);
-  },
+  }
 
-  getindex: function(name, indexes) {
+  getindex(name, indexes) {
     var max = indexes.length - 1;
     return next(this.get(name), 0);
 
@@ -78,9 +63,9 @@ util._extend(SRuntime.prototype, {
                 h.getindex(b, idx) :
                 next(h.getindex(b, idx), i + 1);
     }
-  },
+  }
 
-  setindex: function(name, indexes, value) {
+  setindex(name, indexes, value) {
     var max = indexes.length - 1;
     this.set(name, next(this.get(name), 0));
 
@@ -90,9 +75,9 @@ util._extend(SRuntime.prototype, {
                 h.setindex(b, idx, value) :
                 h.setindex(b, idx, next(h.getindex(b, idx), i + 1));
     }
-  },
+  }
 
-  delindex: function(name, indexes) {
+  delindex(name, indexes) {
     var max = indexes.length - 1;
     this.set(name, next(this.get(name), 0));
 
@@ -102,29 +87,29 @@ util._extend(SRuntime.prototype, {
                 h.delindex(b, idx) :
                 h.setindex(b, idx, next(h.getindex(b, idx), i + 1));
     }
-  },
+  }
 
-  enumerate: function(value) {
+  enumerate(value) {
     return handle(value).enumerate(value);
-  },
+  }
 
-  unaryop: function(op, right) {
+  unaryop(op, right) {
     return handle(right).unaryops[op](right);
-  },
+  }
 
-  binaryop: function(op, left, right) {
+  binaryop(op, left, right) {
     return handle(left).binaryops[op](left, right);
-  },
+  }
 
-  getfn: function(name) {
+  getfn(name) {
     return this.fn.get(name);
-  },
+  }
 
-  setfn: function(name, body) {
+  setfn(name, body) {
     this.fn = this.fn.set(name, body);
-  },
+  }
 
-  syscall: function(name, args, assn) {
+  syscall(name, args, assn) {
     // look for a function by first argument, or in global map
     var fn = (args.length > 0 && handle(args[0]).methods[name]) || globals[name];
     if (!fn) {
@@ -163,24 +148,24 @@ util._extend(SRuntime.prototype, {
 
     return res;
   }
-});
+}
 
 // Handler defaults
 
-var SBase = exports.SBase = {
-  enumerate: function() {
+export var SBase = {
+  enumerate() {
     throw new Error('object does not support iteration');
   },
 
-  getindex: function() {
+  getindex() {
     throw new Error('object does not support []');
   },
 
-  setindex: function() {
+  setindex() {
     throw new Error('object does not support []');
   },
 
-  delindex: function() {
+  delindex() {
     throw new Error('object does not support []');
   },
 
@@ -190,30 +175,26 @@ var SBase = exports.SBase = {
 
   binaryops: {
     // standard comparison operators
-    '=' : function(left, right) { return left == right; },
-    '!=': function(left, right) { return left != right; },
+    '=' : (left, right) => left == right,
+    '!=': (left, right) => left != right,
 
-    '<' : checked(function(left, right) { return left <  right; }),
-    '<=': checked(function(left, right) { return left <= right; }),
-    '>' : checked(function(left, right) { return left >  right; }),
-    '>=': checked(function(left, right) { return left >= right; })
+    '<' : checkArgumentTypes((left, right) => left <  right),
+    '<=': checkArgumentTypes((left, right) => left <= right),
+    '>' : checkArgumentTypes((left, right) => left >  right),
+    '>=': checkArgumentTypes((left, right) => left >= right)
   }
 };
 
 // Handler definitions
 
-var SNone = exports.SNone = {};
-util._extend(SNone, SBase);
-util._extend(SNone, {
-  repr: function() {
+export var SNone = extendObject(SBase, {
+  repr() {
     return '*none*';
   }
 });
 
-var SBoolean = exports.SBoolean = {};
-util._extend(SBoolean, SBase);
-util._extend(SBoolean, {
-  repr: function(b) {
+export var SBoolean = extendObject(SBase, {
+  repr(b) {
     return b ? '*true*' : '*false*';
   }
 });
@@ -223,10 +204,8 @@ Object.defineProperty(Boolean.prototype, '@@__handler__@@', {
   enumerable: false
 });
 
-var SNumber = exports.SNumber = {};
-util._extend(SNumber, SBase);
-util._extend(SNumber, {
-  repr: function(n) {
+export var SNumber = extendObject(SBase, {
+  repr(n) {
     if (isFinite(n)) {
       return String(n);
     } else {
@@ -251,44 +230,41 @@ util._extend(SNumber, {
     'pow',
     'max',
     'min'
-  ].reduce(function(ns, method) {
+  ].reduce((ns, method) => {
     ns[method] = Math[method];
     return ns;
   }, {
-    inc: function(n) {
+    inc(n) {
       return { '@@__assign__@@': n + 1 };
     },
 
-    dec: function(n) {
+    dec(n) {
       return { '@@__assign__@@': n - 1 };
     },
 
-    random: function(n) {
+    random(n) {
       return Math.random() * n;
     },
 
-    range: function(start, end, step) {
+    range(start, end, step) {
       return immutable.Range(start, end, step);
     }
   }),
 
   unaryops: {
-    '+': checked(function(right) { return + right; }),
-    '-': checked(function(right) { return - right; })
+    '+': (right) => +right,
+    '-': (right) => -right
   },
 
-  binaryops: {}
-});
-
-util._extend(SNumber.binaryops, SBase.binaryops);
-util._extend(SNumber.binaryops, {
-  // math
-  '+': checked(function(left, right) { return left + right; }),
-  '-': checked(function(left, right) { return left - right; }),
-  '*': checked(function(left, right) { return left * right; }),
-  '/': checked(function(left, right) { return left / right; }),
-  '%': checked(function(left, right) { return left % right; }),
-  '^': checked(function(left, right) { return Math.pow(left, right); })
+  binaryops: extendObject(SBase.binaryops, {
+    // math
+    '+': checkArgumentTypes((left, right) => left + right),
+    '-': checkArgumentTypes((left, right) => left - right),
+    '*': checkArgumentTypes((left, right) => left * right),
+    '/': checkArgumentTypes((left, right) => left / right),
+    '%': checkArgumentTypes((left, right) => left % right),
+    '^': checkArgumentTypes((left, right) => Math.pow(left, right))
+  })
 });
 
 Object.defineProperty(Number.prototype, '@@__handler__@@', {
@@ -296,14 +272,12 @@ Object.defineProperty(Number.prototype, '@@__handler__@@', {
   enumerable: false
 });
 
-var SRange = exports.SRange = {};
-util._extend(SRange, SBase);
-util._extend(SRange, {
-  repr: function(r) {
-    return '[ ' + r._start + ' .. ' + r._end + ' / ' + r._step + ' ]';
+export var SRange = extendObject(SBase, {
+  repr(r) {
+    return `[ ${r._start} .. ${r._end} / ${r._step} ]`;
   },
 
-  enumerate: function(r, current) {
+  enumerate(r, current) {
     if (typeof current == 'undefined') {
       current = r._start;
     }
@@ -311,21 +285,19 @@ util._extend(SRange, {
     return {
       value: current,
       more: r._step > 0 ? current <= r._end : current >= r._end,
-      next: function() {
-        return SRange.enumerate(r, current + r._step);
-      }
+      next: () => SRange.enumerate(r, current + r._step)
     };
   },
 
   methods: {
-    len: function(r) {
+    len(r) {
       return Math.ceil((r._end - r._start) / r._step);
     }
   },
 
   binaryops: {
-    '=' : function(left, right) { return  left.equals(right); },
-    '!=': function(left, right) { return !left.equals(right); }
+    '=' : (left, right) =>  left.equals(right),
+    '!=': (left, right) => !left.equals(right)
   }
 });
 
@@ -334,61 +306,55 @@ Object.defineProperty(immutable.Range.prototype, '@@__handler__@@', {
   enumerable: false
 });
 
-var SString = exports.SString = {};
-util._extend(SString, SBase);
-util._extend(SString, {
-  repr: function(s) {
+export var SString = extendObject(SBase, {
+  repr(s) {
     return s;
   },
 
-  enumerate: function(s, index) {
-    index = index || 0;
-
+  enumerate(s, index = 0) {
     return {
       value: s.charAt(index),
       more: index < s.length,
-      next: function() {
-        return SString.enumerate(s, index + 1);
-      }
+      next: () => SString.enumerate(s, index + 1)
     };
   },
 
-  getindex: function(s, index) {
+  getindex(s, index) {
     return s.charAt(index);
   },
 
-  setindex: function(s, index, value) {
+  setindex(s, index, value) {
     return s.substr(0, index) + value + s.substr(index + 1);
   },
 
-  delindex: function(s, index) {
+  delindex(s, index) {
     return s.substr(0, index) + s.substr(index + 1);
   },
 
   methods: {
-    len: function(s) {
+    len(s) {
       return s.length;
     },
 
-    find: function(s, search) {
+    find(s, search) {
       var pos = s.indexOf(search);
       return pos >= 0 ? pos : null;
     },
 
-    findlast: function(s, search) {
+    findlast(s, search) {
       var pos = s.lastIndexOf(search);
       return pos >= 0 ? pos : null;
     },
 
-    range: function(s, at, length) {
+    range(s, at, length) {
       return s.substr(at, length);
     },
 
-    insert: function(s, at, more) {
+    insert(s, at, more) {
       return { '@@__assign__@@': s.substr(0, at) + more + s.substr(at) };
     },
 
-    remove: function(s, at, length) {
+    remove(s, at, length) {
       return {
         '@@__assign__@@':
           s.substr(0, at) + s.substr(at + length),
@@ -397,7 +363,7 @@ util._extend(SString, {
       };
     },
 
-    replace: function(s, at, length, more) {
+    replace(s, at, length, more) {
       return {
         '@@__assign__@@':
           s.substr(0, at) + more + s.substr(at + length),
@@ -406,29 +372,26 @@ util._extend(SString, {
       };
     },
 
-    sub: function(s, search, to) {
+    sub(s, search, to) {
       return { '@@__assign__@@': s.replace(search, to) };
     },
 
-    split: function(s, delim) {
+    split(s, delim) {
       return s.split(delim || ' ');
     },
 
-    upper: function(s) {
+    upper(s) {
       return s.toUpperCase();
     },
 
-    lower: function(s) {
+    lower(s) {
       return s.toLowerCase();
     }
   },
 
-  binaryops: {}
-});
-
-util._extend(SString.binaryops, SBase.binaryops);
-util._extend(SString.binaryops, {
-  '&': function(left, right) { return left + handle(right).repr(right); }
+  binaryops: extendObject(SBase.binaryops, {
+    '&': (left, right) => left + handle(right).repr(right)
+  })
 });
 
 Object.defineProperty(String.prototype, '@@__handler__@@', {
@@ -438,92 +401,79 @@ Object.defineProperty(String.prototype, '@@__handler__@@', {
 
 // Containers
 
-var SContainer = exports.SContainer = {
-  getindex: function(c, index) {
+export var SContainer = extendObject(SBase, {
+  getindex(c, index) {
     return c.get(index);
   },
 
-  setindex: function(c, index, value) {
+  setindex(c, index, value) {
     return c.set(index, value);
   },
 
-  delindex: function(c, index) {
+  delindex(c, index) {
     return c.delete(index);
   },
 
   binaryops: {
-    '=' : function(left, right) { return  left.equals(right); },
-    '!=': function(left, right) { return !left.equals(right); }
+    '=' : (left, right) =>  left.equals(right),
+    '!=': (left, right) => !left.equals(right)
   }
-};
+});
 
 // Lists
 
-var SList = exports.SList = {};
-util._extend(SList, SBase);
-util._extend(SList, SContainer);
-util._extend(SList, {
-  create: function() {
-    var dims = ary.slice.call(arguments);
-    if (dims.length == 0) {
-      dims.push(0);
-    }
-
-    return function buildSubArray(dims) {
+export var SList = extendObject(SContainer, {
+  create(dims = [0]) {
+    var buildSubArray = (dims) => {
       var next = dims.slice(1);
-      return immutable.List().withMutations(function(sub) {
+      return immutable.List().withMutations((sub) => {
         for (var i = 0; i < dims[0]; ++i) {
           sub.set(i, dims.length > 1 ? buildSubArray(next) : null);
         }
       });
-    }(dims);
+    }
+    return buildSubArray(dims);
   },
 
-  repr: function(l) {
-    return '[ ' + l.map(function(el) {
-      return handle(el).repr(el);
-    }).join(', ') + ' ]';
+  repr(l) {
+    return '[ ' + l.map((el) => handle(el).repr(el)).join(', ') + ' ]';
   },
 
-  enumerate: function(l, index) {
-    index = index || 0;
-
+  enumerate(l, index = 0) {
     return {
       value: l.get(index),
       more: index < l.size,
-      next: function() {
-        return SList.enumerate(l, index + 1);
-      }
+      next: () => SList.enumerate(l, index + 1)
     };
   },
 
   methods: {
-    len: function(l) {
+    len(l) {
       return l.size;
     },
 
-    find: function(l, search) {
+    find(l, search) {
       var pos = l.indexOf(search);
       return pos >= 0 ? pos : null;
     },
 
-    findlast: function(l, search) {
+    findlast(l, search) {
       var pos = l.lastIndexOf(search);
       return pos >= 0 ? pos : null;
     },
 
-    range: function(l, at, length) {
+    range(l, at, length) {
       return l.slice(at, at + length);
     },
 
-    insert: function(l, at) {
+    insert(l, at, ...values) {
       return {
         '@@__assign__@@':
-          l.splice.apply(l, [at, 0].concat(ary.slice.call(arguments, 2)))
+          l.splice(at, 0, ...values)
       };
     },
 
-    remove: function(l, at, length) {
+    remove(l, at, length) {
       return {
         '@@__assign__@@':
           l.splice(at, length),
@@ -532,35 +482,35 @@ util._extend(SList, {
       };
     },
 
-    replace: function(l, at, length) {
+    replace(l, at, length, ...values) {
       return {
         '@@__assign__@@':
-          l.splice.apply(l, [at, length].concat(ary.slice.call(arguments, 3))),
+          l.splice(at, length, ...values),
         '@@__result__@@':
           l.slice(at, at + length)
       };
     },
 
-    join: function(l, delim) {
+    join(l, delim) {
       return l.join(delim || ' ');
     },
 
-    push: function(l) {
-      return { '@@__assign__@@': l.push.apply(l, ary.slice.call(arguments, 1)) };
+    push(l, ...values) {
+      return { '@@__assign__@@': l.push(...values) };
     },
 
-    pop: function(l) {
+    pop(l) {
       return { '@@__assign__@@': l.pop(), '@@__result__@@': l.last() };
     },
 
-    reverse: function(l) {
+    reverse(l) {
       return { '@@__assign__@@': l.reverse() };
     },
 
-    sort: function(l) {
+    sort(l) {
       return {
         '@@__assign__@@':
-          l.sort(function(left, right) {
+          l.sort((left, right) => {
             var h = handle(left);
             return h.binaryops['<'](left, right) ? -1 : (h.binaryops['>'](left, right) ? 1 : 0);
           })
@@ -568,12 +518,9 @@ util._extend(SList, {
     }
   },
 
-  binaryops: {}
-});
-
-util._extend(SList.binaryops, SContainer.binaryops);
-util._extend(SList.binaryops, {
-  '&': checked(function(left, right) { return left.concat(right); })
+  binaryops: extendObject(SContainer.binaryops, {
+    '&': checkArgumentTypes((left, right) => left.concat(right))
+  })
 });
 
 Object.defineProperty(immutable.List.prototype, '@@__handler__@@', {
@@ -583,69 +530,63 @@ Object.defineProperty(immutable.List.prototype, '@@__handler__@@', {
 
 // Maps (Tables, Hashes)
 
-var SMap = exports.SMap = {}
-util._extend(SMap, SBase);
-util._extend(SMap, SContainer);
-util._extend(SMap, {
-  create: function() {
+export var SMap = extendObject(SContainer, {
+  create() {
     return immutable.Map();
   },
 
-  repr: function(m) {
-    return '[ ' + m.map(function(val, key) {
-      return handle(key).repr(key) + ': ' + handle(val).repr(val);
-    }).join(', ') + ' ]';
+  repr(m) {
+    return '[ '
+      + m.map((val, key) => handle(key).repr(key) + ': '
+                            + handle(val).repr(val)).join(', ')
+      + ' ]';
   },
 
-  enumerate: function(m) {
+  enumerate(m) {
     return SList.enumerate(m.keySeq());
   },
 
   methods: {
-    len: function(m) {
+    len(m) {
       return m.size;
     },
 
-    keys: function(m) {
+    keys(m) {
       return immutable.List(m.keySeq());
     },
 
-    clear: function(m) {
+    clear(m) {
       return { '@@__assign__@@': m.clear() };
     },
 
-    range: function(m) {
-      var args = arguments;
-
-      return immutable.Map().withMutations(function(n) {
-        for (var i = 1; i < args.length; ++i) {
-          n.set(args[i], m.get(args[i]));
+    range(m, ...keys) {
+      return immutable.Map().withMutations((n) => {
+        for (var i = 0; i < keys.length; ++i) {
+          n.set(keys[i], m.get(keys[i]));
         }
       });
     },
 
-    insert: function(m) {
-      var args = arguments;
-
+    insert(m, ...pairs) {
       return {
         '@@__assign__@@':
-          m.withMutations(function(n) {
-            for (var i = 1; i < args.length; i += 2) {
-              n.set(args[i], args[i + 1]);
+          m.withMutations((n) => {
+            for (var i = 0; i < pairs.length; i += 2) {
+              n.set(pairs[i], pairs[i + 1]);
             }
           }),
       };
     },
 
-    remove: function(m) {
-      var args = arguments, o = m.asMutable();
+    remove(m, ...keys) {
+      var o = m.asMutable();
 
       return {
         '@@__result__@@':
-          immutable.Map().withMutations(function(n) {
-            for (var i = 1; i < args.length; ++i) {
-              n.set(args[i], m.get(args[i]));
-              o.delete(args[i]);
+          immutable.Map().withMutations((n) => {
+            for (var i = 0; i < keys.length; ++i) {
+              n.set(keys[i], m.get(keys[i]));
+              o.delete(keys[i]);
             }
           }),
         '@@__assign__@@':
@@ -654,12 +595,9 @@ util._extend(SMap, {
     }
   },
 
-  binaryops: {}
-});
-
-util._extend(SMap.binaryops, SContainer.binaryops);
-util._extend(SMap.binaryops, {
-  '&': checked(function(left, right) { return left.merge(right); })
+  binaryops: extendObject(SContainer.binaryops, {
+    '&': checkArgumentTypes((left, right) => left.merge(right))
+  })
 });
 
 Object.defineProperty(immutable.Map.prototype, '@@__handler__@@', {
@@ -668,7 +606,7 @@ Object.defineProperty(immutable.Map.prototype, '@@__handler__@@', {
 });
 
 // find a protocol handler for this object
-var handle = exports.handle = function(obj) {
+export function handle(obj) {
   // have to check for null/undefined explicitly
   if (obj == null) {
     return SNone;
@@ -678,18 +616,18 @@ var handle = exports.handle = function(obj) {
   // for duck type polymorphism on objects
   var handler = obj['@@__handler__@@']
   return typeof handler == 'function' ? handler(obj) : handler;
-};
+}
 
-var globals = exports.globals = {
-  list: function() {
-    return SList.create.apply(null, arguments);
+export var globals = {
+  list(...dims) {
+    return SList.create(dims);
   },
 
-  map: function() {
+  map() {
     return SMap.create();
   },
 
-  swap: function(a, b) {
+  swap(a, b) {
     return {
       '@@__assign__@@':
         [ b, a ],
@@ -698,18 +636,18 @@ var globals = exports.globals = {
     };
   },
 
-  print: function() {
-    if (arguments.length > 0) {
-      ary.forEach.call(arguments, function(arg) {
-        console.log(handle(arg).repr(arg));
+  print(...values) {
+    if (values.length > 0) {
+      values.forEach((value) => {
+        console.log(handle(value).repr(value));
       });
     } else {
       console.log();
     }
   },
 
-  sleep: function(seconds) {
-    return new Promise(function(resolve) {
+  sleep(seconds) {
+    return new Promise((resolve) => {
       setTimeout(resolve, seconds * 1000);
     });
   }
@@ -718,6 +656,6 @@ var globals = exports.globals = {
 globals.array = globals.list;
 globals.table = globals.map;
 
-exports.create = function() {
+export function create() {
   return new SRuntime();
-};
+}
