@@ -45,9 +45,7 @@ module.exports = function(grunt) {
         }
       },
       options: {
-        transform: [
-          [ 'babelify', { loose: 'all' } ]
-        ],
+        transform: [ 'babelify' ],
         browserifyOptions: {
           debug: true,
           basedir: 'dist/web'
