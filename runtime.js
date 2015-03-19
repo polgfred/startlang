@@ -450,16 +450,20 @@ export const SContainer = extendObject(SBase, {
 // Lists
 
 export const SList = extendObject(SContainer, {
-  create(dims = [0]) {
-    let buildSubArray = (dims) => {
-      let next = dims.slice(1);
+  create(dims) {
+    // optimize for the usual case
+    if (dims.length == 0) {
+      return immutable.List();
+    }
+    // create an n-dimensional nested list
+    let subList = ([ next, ...rest ]) => {
       return immutable.List().withMutations((sub) => {
-        for (let i = 0; i < dims[0]; ++i) {
-          sub.set(i, dims.length > 1 ? buildSubArray(next) : null);
+        for (let i = 0; i < next; ++i) {
+          sub.set(i, rest.length > 0 ? subList(rest) : null);
         }
       });
     }
-    return buildSubArray(dims);
+    return subList(dims);
   },
 
   repr(l) {
