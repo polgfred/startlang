@@ -268,38 +268,32 @@ export class SInterpreter extends EventEmitter {
   }
 
   logicalOpNode(node) {
-    var method = 'logicalOpNode_' + node.op;
-    return this[method](node);
-  }
-
-  logicalOpNode_and(node) {
-    return this.visit(node.left).then((lres) => {
-      if (!lres.rv) {
-        return false;
-      } else {
-        return this.visit(node.right).then((rres) => {
-          return !!rres.rv;
+    switch (node.op) {
+      case 'and':
+        return this.visit(node.left).then((lres) => {
+          if (!lres.rv) {
+            return false;
+          } else {
+            return this.visit(node.right).then((rres) => {
+              return !!rres.rv;
+            });
+          }
         });
-      }
-    });
-  }
-
-  logicalOpNode_or(node) {
-    return this.visit(node.left).then((lres) => {
-      if (lres.rv) {
-        return true;
-      } else {
-        return this.visit(node.right).then((rres) => {
-          return !!rres.rv;
+      case 'or':
+        return this.visit(node.left).then((lres) => {
+          if (lres.rv) {
+            return true;
+          } else {
+            return this.visit(node.right).then((rres) => {
+              return !!rres.rv;
+            });
+          }
         });
-      }
-    });
-  }
-
-  logicalOpNode_not(node) {
-    return this.visit(node.right).then((rres) => {
-      return !rres.rv;
-    });
+      case 'not':
+        return this.visit(node.right).then((rres) => {
+          return !rres.rv;
+        });
+    }
   }
 
   binaryOpNode(node) {
