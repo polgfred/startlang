@@ -664,9 +664,6 @@ export const globals = {
   }
 };
 
-globals.array = globals.list;
-globals.table = globals.map;
-
 export function createRuntime() {
   return new SRuntime();
 }
