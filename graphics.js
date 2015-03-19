@@ -15,21 +15,17 @@ function applyTransforms(el) {
   let rot = el.data('rot'),
       skew = el.data('skew'),
       mat = new Snap.Matrix();
-
   if (rot || skew) {
     let bb = el.getBBox(true); // without transforms
-
     if (rot) {
       // rotate from the center of the object
       mat.rotate(rot, bb.cx, bb.cy);
     }
-
     if (skew) {
       // apply the scaling factor
       mat.scale(skew[0], skew[1], bb.cx, bb.cy);
     }
   }
-
   el.transform(mat);
 }
 
@@ -73,7 +69,6 @@ export const SShape = {
       } else {
         el.data('rot', rot);
       }
-
       applyTransforms(el);
     },
 
@@ -83,7 +78,6 @@ export const SShape = {
       } else {
         el.data('skew', [sx, sy]);
       }
-
       applyTransforms(el);
     },
 
