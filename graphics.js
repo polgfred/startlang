@@ -1,7 +1,7 @@
 import util from 'util';
 import Snap from 'snapsvg';
 import { globals } from './runtime';
-import { extendObject, checkArgumentTypes } from './utils';
+import { extendObject } from './utils';
 
 function number(s) {
   return parseInt(s, 10);
