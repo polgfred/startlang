@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events';
 
-var hasOwnProperty = Object.prototype.hasOwnProperty, // cache this for performance
+let hasOwnProperty = Object.prototype.hasOwnProperty, // cache this for performance
     control = {}; // shared control object for the enter event
 
 export class ScriptExit extends Error {}
@@ -55,7 +55,7 @@ export class SInterpreter extends EventEmitter {
 
   // safely get and normalize the node's result, and handle errors
   nodeResult(node) {
-    var method = node.type + 'Node';
+    let method = node.type + 'Node';
     return new Promise((resolve) => {
       resolve(this[method](node));
     }).then((result) => {
@@ -78,9 +78,9 @@ export class SInterpreter extends EventEmitter {
   // ** implementations of AST nodes **
 
   blockNode(node) {
-    var len = node.elems.length;
+    let len = node.elems.length;
     // recursive loop over block statements
-    var loop = (count) => {
+    let loop = (count) => {
       if (count < len) {
         return this.visit(node.elems[count]).then((eres) => {
           // propagate break/next/return
@@ -94,11 +94,11 @@ export class SInterpreter extends EventEmitter {
   forNode(node) {
     return this.visit(node.range).then((rres) => {
       // recursive loop over range
-      var loop = (iter) => {
+      let loop = (iter) => {
         if (iter.more) {
           this.ctx.set(node.name, iter.value);
           return this.visit(node.body).then((bres) => {
-            var flow = bres.flow;
+            let flow = bres.flow;
             if (flow == 'return') {
               return bres; // propagate
             } else if (!flow || flow == 'next') {
@@ -114,11 +114,11 @@ export class SInterpreter extends EventEmitter {
 
   whileNode(node) {
     // recursive loop while condition is true
-    var loop = () => {
+    let loop = () => {
       return this.visit(node.cond).then((cres) => {
         if (cres.rv) {
           return this.visit(node.body).then((bres) => {
-            var flow = bres.flow;
+            let flow = bres.flow;
             if (flow == 'return') {
               return bres; // propagate
             } else if (!flow || flow == 'next') {
@@ -142,12 +142,12 @@ export class SInterpreter extends EventEmitter {
   }
 
   beginNode(node) {
-    var len = node.params ? node.params.length : 0;
+    let len = node.params ? node.params.length : 0;
     // implement function body (invoked from call node)
-    var fn = (args) => {
+    let fn = (args) => {
       // push a new stack and set parameter values
       this.ctx.push();
-      for (var i = 0; i < len; ++i) {
+      for (let i = 0; i < len; ++i) {
         this.ctx.set(node.params[i], args[i]);
       }
       // capture a possible return value and then clean up
@@ -165,11 +165,11 @@ export class SInterpreter extends EventEmitter {
   }
 
   callNode(node) {
-    var len = node.args ? node.args.length : 0, args = [], assn = [], fn;
+    let len = node.args ? node.args.length : 0, args = [], assn = [];
     // loop to collect arguments and call the function
-    var loop = (count) => {
+    let loop = (count) => {
       if (count == len) {
-        fn = this.ctx.getfn(node.name);
+        let fn = this.ctx.getfn(node.name);
         return fn ? fn(args) : this.ctx.syscall(node.name, args, assn);
       } else {
         return this.visit(node.args[count]).then((ares) => {
@@ -215,9 +215,9 @@ export class SInterpreter extends EventEmitter {
   }
 
   indexNode(node) {
-    var len = node.indexes.length, indexes = [];
+    let len = node.indexes.length, indexes = [];
     // collect indexes and lookup value
-    var loop = (count) => {
+    let loop = (count) => {
       if (count == len) {
         return {
           rv: this.ctx.getindex(node.name, indexes),
@@ -234,9 +234,9 @@ export class SInterpreter extends EventEmitter {
   }
 
   letIndexNode(node) {
-    var len = node.indexes.length, indexes = [];
+    let len = node.indexes.length, indexes = [];
     // collect indexes and set value
-    var loop = (count) => {
+    let loop = (count) => {
       if (count == len) {
         return this.visit(node.value).then((vres) => {
           return this.ctx.setindex(node.name, indexes, vres.rv);
@@ -252,9 +252,9 @@ export class SInterpreter extends EventEmitter {
   }
 
   deleteIndexNode(node) {
-    var len = node.indexes.length, indexes = [];
+    let len = node.indexes.length, indexes = [];
     // collect indexes and delete value
-    var loop = (count) => {
+    let loop = (count) => {
       if (count == len) {
         return this.ctx.delindex(node.name, indexes);
       } else {

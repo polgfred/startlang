@@ -4,10 +4,10 @@
   // build an object for this node
   function buildNode(type, attrs) {
     // show the type first
-    var node = { type: type };
+    let node = { type: type };
 
     // then the passed-in attributes
-    for (var p in attrs) {
+    for (let p in attrs) {
       node[p] = attrs[p];
     }
 
@@ -25,7 +25,7 @@
   }
 
   // special token to signal buildIndex that we have a DeleteIndex call
-  var $remove = {};
+  let $remove = {};
 
   // take a base name, dimensions, and (optionally) a value, and construct an indexish node
   function buildIndex(name, indexes, value) {
@@ -43,7 +43,7 @@
     if (rest.length == 0) {
       return first;
     } else {
-      var next = rest.shift(),
+      let next = rest.shift(),
           node = buildNode('logicalOp', { op: next[0], left: first, right: next[1] });
       return buildLogicalOp(node, rest);
     }
@@ -54,7 +54,7 @@
     if (rest.length == 0) {
       return first;
     } else {
-      var next = rest.shift(),
+      let next = rest.shift(),
           node = buildNode('binaryOp', { op: next[0], left: first, right: next[1] });
       return buildBinaryOp(node, rest);
     }
@@ -65,7 +65,7 @@
     if (rest.length == 0) {
       return last;
     } else {
-      var next = rest.pop(),
+      let next = rest.pop(),
           node = buildNode('binaryOp', { op: next[0], left: next[1], right: last });
       return buildBinaryOpRight(rest, node);
     }
@@ -75,7 +75,7 @@
     if (rest.length == 0) {
       return first;
     } else {
-      var next = rest.shift(),
+      let next = rest.shift(),
           node = buildNode('binaryOp', { op: '&', left: first, right: next });
       return buildString(node, rest);
     }
@@ -333,7 +333,7 @@ PrimaryExpr
 String
   = '"' rest:StringSegment* '"' {
       // if the first segment isn't a string literal, make it one
-      var first = (rest.length > 0 && rest[0].type == 'literal' && typeof rest[0].value == 'string') ?
+      let first = (rest.length > 0 && rest[0].type == 'literal' && typeof rest[0].value == 'string') ?
                     rest.shift() :
                     buildNode('literal', { value: '' });
 

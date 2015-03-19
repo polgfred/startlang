@@ -5,8 +5,8 @@ import { extendObject } from './utils';
 // wrapper function that ensures all its arguments are of the same type
 export function checkArgumentTypes(fn) {
   return function() {
-    var h = handle(arguments[0]), i;
-    for (i = 1; i < arguments.length; i++) {
+    let h = handle(arguments[0]);
+    for (let i = 1; i < arguments.length; i++) {
       if (h != handle(arguments[i])) {
         throw new Error('operands must be of the same type');
       }
@@ -39,15 +39,15 @@ export class SRuntime {
 
   get(name) {
     // look in the current ns
-    var result = this.ns.get(name);
+    let result = this.ns.get(name);
     if (typeof result != 'undefined') {
       return result;
     }
 
     // look up the stack (should we do this?)
-    var iter = this.stack.values(), next;
+    let iter = this.stack.values();
     while (true) {
-      next = iter.next();
+      let next = iter.next();
       if (next.done) {
         break;
       }
@@ -69,11 +69,11 @@ export class SRuntime {
   }
 
   getindex(name, indexes) {
-    var max = indexes.length - 1;
+    let max = indexes.length - 1;
     return next(this.get(name), 0);
 
     function next(b, i) {
-      var h = handle(b), idx = indexes[i];
+      let h = handle(b), idx = indexes[i];
       return (i == max) ?
                 h.getindex(b, idx) :
                 next(h.getindex(b, idx), i + 1);
@@ -81,11 +81,11 @@ export class SRuntime {
   }
 
   setindex(name, indexes, value) {
-    var max = indexes.length - 1;
+    let max = indexes.length - 1;
     this.set(name, next(this.get(name), 0));
 
     function next(b, i) {
-      var h = handle(b), idx = indexes[i];
+      let h = handle(b), idx = indexes[i];
       return (i == max) ?
                 h.setindex(b, idx, value) :
                 h.setindex(b, idx, next(h.getindex(b, idx), i + 1));
@@ -93,11 +93,11 @@ export class SRuntime {
   }
 
   delindex(name, indexes) {
-    var max = indexes.length - 1;
+    let max = indexes.length - 1;
     this.set(name, next(this.get(name), 0));
 
     function next(b, i) {
-      var h = handle(b), idx = indexes[i];
+      let h = handle(b), idx = indexes[i];
       return (i == max) ?
                 h.delindex(b, idx) :
                 h.setindex(b, idx, next(h.getindex(b, idx), i + 1));
@@ -126,26 +126,26 @@ export class SRuntime {
 
   syscall(name, args, assn) {
     // look for a function by first argument, or in global map
-    var fn = (args.length > 0 && handle(args[0]).methods[name]) || globals[name];
+    let fn = (args.length > 0 && handle(args[0]).methods[name]) || globals[name];
     if (!fn) {
       throw new Error('object not found or not a function');
     }
 
     // call a runtime function
-    var res = fn.apply(null, args), repl, i, a, r;
+    let res = fn.apply(null, args);
     if (res) {
-      repl = res['@@__assign__@@'];
+      let repl = res['@@__assign__@@'];
       if (repl) {
         // if this result contains replacement args, assign them
         if (!Array.isArray(repl)) {
           repl = [ repl ];
         }
         // loop over replacement args
-        for (i = 0; i < repl.length; ++i) {
-          r = repl[i];
+        for (let i = 0; i < repl.length; ++i) {
+          let r = repl[i];
           if (typeof r != 'undefined') {
             // we have a replacement for this slot
-            a = assn[i];
+            let a = assn[i];
             if (a) {
               // this slot can be assigned to
               if (a.indexes) {
@@ -167,7 +167,7 @@ export class SRuntime {
 
 // Handler defaults
 
-export var SBase = {
+export const SBase = {
   enumerate() {
     throw new Error('object does not support iteration');
   },
@@ -202,13 +202,13 @@ export var SBase = {
 
 // Handler definitions
 
-export var SNone = extendObject(SBase, {
+export const SNone = extendObject(SBase, {
   repr() {
     return '*none*';
   }
 });
 
-export var SBoolean = extendObject(SBase, {
+export const SBoolean = extendObject(SBase, {
   repr(b) {
     return b ? '*true*' : '*false*';
   }
@@ -219,7 +219,7 @@ Object.defineProperty(Boolean.prototype, '@@__handler__@@', {
   enumerable: false
 });
 
-export var SNumber = extendObject(SBase, {
+export const SNumber = extendObject(SBase, {
   repr(n) {
     if (isFinite(n)) {
       return String(n);
@@ -287,7 +287,7 @@ Object.defineProperty(Number.prototype, '@@__handler__@@', {
   enumerable: false
 });
 
-export var SRange = extendObject(SBase, {
+export const SRange = extendObject(SBase, {
   repr(r) {
     return `[ ${r._start} .. ${r._end} / ${r._step} ]`;
   },
@@ -321,7 +321,7 @@ Object.defineProperty(immutable.Range.prototype, '@@__handler__@@', {
   enumerable: false
 });
 
-export var SString = extendObject(SBase, {
+export const SString = extendObject(SBase, {
   repr(s) {
     return s;
   },
@@ -352,12 +352,12 @@ export var SString = extendObject(SBase, {
     },
 
     find(s, search) {
-      var pos = s.indexOf(search);
+      let pos = s.indexOf(search);
       return pos >= 0 ? pos : null;
     },
 
     findlast(s, search) {
-      var pos = s.lastIndexOf(search);
+      let pos = s.lastIndexOf(search);
       return pos >= 0 ? pos : null;
     },
 
@@ -416,7 +416,7 @@ Object.defineProperty(String.prototype, '@@__handler__@@', {
 
 // Containers
 
-export var SContainer = extendObject(SBase, {
+export const SContainer = extendObject(SBase, {
   getindex(c, index) {
     return c.get(index);
   },
@@ -437,12 +437,12 @@ export var SContainer = extendObject(SBase, {
 
 // Lists
 
-export var SList = extendObject(SContainer, {
+export const SList = extendObject(SContainer, {
   create(dims = [0]) {
-    var buildSubArray = (dims) => {
-      var next = dims.slice(1);
+    let buildSubArray = (dims) => {
+      let next = dims.slice(1);
       return immutable.List().withMutations((sub) => {
-        for (var i = 0; i < dims[0]; ++i) {
+        for (let i = 0; i < dims[0]; ++i) {
           sub.set(i, dims.length > 1 ? buildSubArray(next) : null);
         }
       });
@@ -468,12 +468,12 @@ export var SList = extendObject(SContainer, {
     },
 
     find(l, search) {
-      var pos = l.indexOf(search);
+      let pos = l.indexOf(search);
       return pos >= 0 ? pos : null;
     },
 
     findlast(l, search) {
-      var pos = l.lastIndexOf(search);
+      let pos = l.lastIndexOf(search);
       return pos >= 0 ? pos : null;
     },
 
@@ -526,7 +526,7 @@ export var SList = extendObject(SContainer, {
       return {
         '@@__assign__@@':
           l.sort((left, right) => {
-            var h = handle(left);
+            let h = handle(left);
             return h.binaryops['<'](left, right) ? -1 : (h.binaryops['>'](left, right) ? 1 : 0);
           })
       };
@@ -545,7 +545,7 @@ Object.defineProperty(immutable.List.prototype, '@@__handler__@@', {
 
 // Maps (Tables, Hashes)
 
-export var SMap = extendObject(SContainer, {
+export const SMap = extendObject(SContainer, {
   create() {
     return immutable.Map();
   },
@@ -576,7 +576,7 @@ export var SMap = extendObject(SContainer, {
 
     range(m, ...keys) {
       return immutable.Map().withMutations((n) => {
-        for (var i = 0; i < keys.length; ++i) {
+        for (let i = 0; i < keys.length; ++i) {
           n.set(keys[i], m.get(keys[i]));
         }
       });
@@ -586,7 +586,7 @@ export var SMap = extendObject(SContainer, {
       return {
         '@@__assign__@@':
           m.withMutations((n) => {
-            for (var i = 0; i < pairs.length; i += 2) {
+            for (let i = 0; i < pairs.length; i += 2) {
               n.set(pairs[i], pairs[i + 1]);
             }
           }),
@@ -594,12 +594,12 @@ export var SMap = extendObject(SContainer, {
     },
 
     remove(m, ...keys) {
-      var o = m.asMutable();
+      let o = m.asMutable();
 
       return {
         '@@__result__@@':
           immutable.Map().withMutations((n) => {
-            for (var i = 0; i < keys.length; ++i) {
+            for (let i = 0; i < keys.length; ++i) {
               n.set(keys[i], m.get(keys[i]));
               o.delete(keys[i]);
             }
@@ -629,11 +629,11 @@ export function handle(obj) {
 
   // if protocol handler is a function call it with the object -- this allows
   // for duck type polymorphism on objects
-  var handler = obj['@@__handler__@@']
+  let handler = obj['@@__handler__@@']
   return typeof handler == 'function' ? handler(obj) : handler;
 }
 
-export var globals = {
+export const globals = {
   list(...dims) {
     return SList.create(dims);
   },

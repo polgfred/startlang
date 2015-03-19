@@ -12,12 +12,12 @@ function defaults(el) {
 }
 
 function applyTransforms(el) {
-  var rot = el.data('rot'),
+  let rot = el.data('rot'),
       skew = el.data('skew'),
       mat = new Snap.Matrix();
 
   if (rot || skew) {
-    var bb = el.getBBox(true); // without transforms
+    let bb = el.getBBox(true); // without transforms
 
     if (rot) {
       // rotate from the center of the object
@@ -34,7 +34,7 @@ function applyTransforms(el) {
 }
 
 // all shapes have these basic utilities in common
-export var SShape = {
+export const SShape = {
   // keep a reference to the canvas element
   paper: Snap('#canvas'),
 
@@ -88,7 +88,7 @@ export var SShape = {
     },
 
     clone(el) {
-      var el2 = el.clone();
+      let el2 = el.clone();
       // copy transform data
       el2.data(el.data());
       return el2;
@@ -100,7 +100,7 @@ export var SShape = {
   }
 };
 
-export var SRect = extendObject(SShape, {
+export const SRect = extendObject(SShape, {
   methods: extendObject(SShape.methods, {
     move(el, x, y) {
       el.attr({ x: x, y: y });
@@ -109,7 +109,7 @@ export var SRect = extendObject(SShape, {
   })
 });
 
-export var SCircle = extendObject(SShape, {
+export const SCircle = extendObject(SShape, {
   methods: extendObject(SShape.methods, {
     move(el, x, y) {
       el.attr({ cx: x, cy: y });
@@ -118,7 +118,7 @@ export var SCircle = extendObject(SShape, {
   })
 });
 
-export var SEllipse = extendObject(SShape, {
+export const SEllipse = extendObject(SShape, {
   methods: extendObject(SShape.methods, {
     move(el, x, y) {
       el.attr({ cx: x, cy: y });
@@ -127,10 +127,10 @@ export var SEllipse = extendObject(SShape, {
   })
 });
 
-export var SLine = extendObject(SShape, {
+export const SLine = extendObject(SShape, {
   methods: extendObject(SShape.methods, {
     move(el, x, y) {
-      var attr = el.attr(),
+      let attr = el.attr(),
           dx = x - number(attr.x1),
           dy = y - number(attr.y1);
       el.attr({ x1: x, y1: y, x2: number(attr.x2) + dx, y2: number(attr.y2) + dy });
@@ -140,15 +140,16 @@ export var SLine = extendObject(SShape, {
 });
 
 // used for both polylines and polygons, as it just moves points
-export var SPolygon = extendObject(SShape, {
+export const SPolygon = extendObject(SShape, {
   methods: extendObject(SShape.methods, {
     move(el, x, y) {
-      var op = el.attr('points'), np = [],
+      let op = el.attr('points'),
           dx = x - number(op[0]),
-          dy = y - number(op[1]);
+          dy = y - number(op[1]),
+          np = [];
       np[0] = x;
       np[1] = y;
-      for (var i = 2; i < op.length; i += 2) {
+      for (let i = 2; i < op.length; i += 2) {
         np[i + 0] = number(op[i]) + dx;
         np[i + 1] = number(op[i + 1]) + dy;
       }
@@ -160,7 +161,7 @@ export var SPolygon = extendObject(SShape, {
 
 // hook into Snap so we can inject a handler property
 Snap.plugin(function(_, Element, Paper) {
-  var handlerMap = {
+  let handlerMap = {
     rect: SRect,
     circle: SCircle,
     ellipse: SEllipse,
