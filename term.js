@@ -11,7 +11,7 @@ class Term extends EventEmitter {
 
     this.$('.terminal-text').keyup(({ keyCode }) => {
       if (keyCode == 13) {
-        this.$('.terminal-output').append($('<div>').append(this.ps + this.$('.terminal-text').val()));
+        this.$('.terminal-output').append($('<div>').text(this.ps + this.$('.terminal-text').val()));
         this.emit('line', this.$('.terminal-text').val());
         this.$('.terminal-text').val('');
       }
@@ -38,12 +38,12 @@ class Term extends EventEmitter {
   }
 
   echo(val) {
-    this.$('.terminal-output').append($('<div class="terminal-output-line">').append(val));
+    this.$('.terminal-output').append($('<div class="terminal-output-line">').text(val));
     this.focus();
   }
 
   error(val) {
-    this.$('.terminal-output').append($('<div class="terminal-output-error">').append(val));
+    this.$('.terminal-output').append($('<div class="terminal-output-error">').text(val));
     this.focus();
   }
 
