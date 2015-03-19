@@ -371,19 +371,15 @@ export const SString = extendObject(SBase, {
 
     remove(s, at, length) {
       return {
-        '@@__assign__@@':
-          s.substr(0, at) + s.substr(at + length),
-        '@@__result__@@':
-          s.substr(at, length)
+        '@@__assign__@@': s.substr(0, at) + s.substr(at + length),
+        '@@__result__@@': s.substr(at, length)
       };
     },
 
     replace(s, at, length, more) {
       return {
-        '@@__assign__@@':
-          s.substr(0, at) + more + s.substr(at + length),
-        '@@__result__@@':
-          s.substr(at, length)
+        '@@__assign__@@': s.substr(0, at) + more + s.substr(at + length),
+        '@@__result__@@': s.substr(at, length)
       };
     },
 
@@ -482,27 +478,20 @@ export const SList = extendObject(SContainer, {
     },
 
     insert(l, at, ...values) {
-      return {
-        '@@__assign__@@':
-          l.splice(at, 0, ...values)
-      };
+      return { '@@__assign__@@': l.splice(at, 0, ...values) };
     },
 
     remove(l, at, length) {
       return {
-        '@@__assign__@@':
-          l.splice(at, length),
-        '@@__result__@@':
-          l.slice(at, at + length)
+        '@@__assign__@@': l.splice(at, length),
+        '@@__result__@@': l.slice(at, at + length)
       };
     },
 
     replace(l, at, length, ...values) {
       return {
-        '@@__assign__@@':
-          l.splice(at, length, ...values),
-        '@@__result__@@':
-          l.slice(at, at + length)
+        '@@__assign__@@': l.splice(at, length, ...values),
+        '@@__result__@@': l.slice(at, at + length)
       };
     },
 
@@ -524,11 +513,10 @@ export const SList = extendObject(SContainer, {
 
     sort(l) {
       return {
-        '@@__assign__@@':
-          l.sort((left, right) => {
-            let h = handle(left);
-            return h.binaryops['<'](left, right) ? -1 : (h.binaryops['>'](left, right) ? 1 : 0);
-          })
+        '@@__assign__@@': l.sort((left, right) => {
+          let h = handle(left);
+          return h.binaryops['<'](left, right) ? -1 : (h.binaryops['>'](left, right) ? 1 : 0);
+        })
       };
     }
   },
@@ -551,10 +539,8 @@ export const SMap = extendObject(SContainer, {
   },
 
   repr(m) {
-    return '[ '
-      + m.map((val, key) => handle(key).repr(key) + ': '
-                            + handle(val).repr(val)).join(', ')
-      + ' ]';
+    let pairs = m.map((val, key) => handle(key).repr(key) + ': ' + handle(val).repr(val));
+    return '[ ' + pairs.join(', ') + ' ]';
   },
 
   enumerate(m) {
@@ -570,10 +556,6 @@ export const SMap = extendObject(SContainer, {
       return immutable.List(m.keySeq());
     },
 
-    clear(m) {
-      return { '@@__assign__@@': m.clear() };
-    },
-
     range(m, ...keys) {
       return immutable.Map().withMutations((n) => {
         for (let i = 0; i < keys.length; ++i) {
@@ -584,28 +566,24 @@ export const SMap = extendObject(SContainer, {
 
     insert(m, ...pairs) {
       return {
-        '@@__assign__@@':
-          m.withMutations((n) => {
-            for (let i = 0; i < pairs.length; i += 2) {
-              n.set(pairs[i], pairs[i + 1]);
-            }
-          }),
+        '@@__assign__@@': m.withMutations((n) => {
+          for (let i = 0; i < pairs.length; i += 2) {
+            n.set(pairs[i], pairs[i + 1]);
+          }
+        })
       };
     },
 
     remove(m, ...keys) {
       let o = m.asMutable();
-
       return {
-        '@@__result__@@':
-          immutable.Map().withMutations((n) => {
-            for (let i = 0; i < keys.length; ++i) {
-              n.set(keys[i], m.get(keys[i]));
-              o.delete(keys[i]);
-            }
-          }),
-        '@@__assign__@@':
-          o.asImmutable()
+        '@@__result__@@': immutable.Map().withMutations((n) => {
+          for (let i = 0; i < keys.length; ++i) {
+            n.set(keys[i], m.get(keys[i]));
+            o.delete(keys[i]);
+          }
+        }),
+        '@@__assign__@@': o.asImmutable()
       };
     }
   },
@@ -644,10 +622,8 @@ export const globals = {
 
   swap(a, b) {
     return {
-      '@@__assign__@@':
-        [ b, a ],
-      '@@__result__@@':
-        null
+      '@@__assign__@@': [ b, a ],
+      '@@__result__@@': null
     };
   },
 
