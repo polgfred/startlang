@@ -312,11 +312,7 @@ export const SRange = extendObject(SBase, {
     return `[ ${r._start} .. ${r._end} / ${r._step} ]`;
   },
 
-  enumerate(r, current) {
-    if (typeof current == 'undefined') {
-      current = r._start;
-    }
-
+  enumerate(r, current = r._start) {
     return {
       value: current,
       more: r._step > 0 ? current <= r._end : current >= r._end,
