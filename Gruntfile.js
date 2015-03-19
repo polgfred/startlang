@@ -22,13 +22,7 @@ module.exports = function(grunt) {
       },
       parser: {
         src: 'parser.pegjs',
-        dest: 'parser.js',
-        options: {
-          cache: true,
-          wrapper: function(src, parser) {
-            return 'export default ' + parser;
-          }
-        }
+        dest: 'parser.js'
       }
     },
     copy: {
@@ -40,12 +34,12 @@ module.exports = function(grunt) {
     },
     browserify: {
       dist: {
-        files: {
-          'dist/web/bundle.js': 'web/main.js'
-        }
+        files: { 'dist/web/bundle.js': 'web/main.js' }
       },
       options: {
-        transform: [ 'babelify' ],
+        transform: [
+          [ 'babelify', { ignore: 'parser.js' } ]
+        ],
         browserifyOptions: {
           debug: true,
           basedir: 'dist/web'
@@ -54,9 +48,7 @@ module.exports = function(grunt) {
     },
     extract_sourcemap: {
       dist: {
-        files: {
-          'dist/web': [ 'dist/web/bundle.js' ]
-        }
+        files: { 'dist/web': [ 'dist/web/bundle.js' ] }
       }
     }
   });
