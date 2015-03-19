@@ -2,18 +2,30 @@ import util from 'util';
 import immutable from 'immutable';
 import { extendObject } from './utils';
 
-// wrapper function that ensures all its arguments are of the same type
-export function checkArgumentTypes(fn) {
-  return function() {
-    let h = handle(arguments[0]);
-    for (let i = 1; i < arguments.length; i++) {
-      if (h != handle(arguments[i])) {
-        throw new Error('operands must be of the same type');
-      }
+// ensures its operands are of the same type
+export function checkOp(fn) {
+  return function(left, right) {
+    if (handle(left) !== handle(right)) {
+      throw new Error('operands must be of the same type');
     }
-
     // forward onto the original
-    return fn.apply(this, arguments);
+    return fn(left, right);
+  };
+}
+
+// the above, plus ensures that its return value is not NaN
+export function checkMathOp(fn) {
+  return function(left, right) {
+    if (handle(left) !== handle(right)) {
+      throw new Error('operands must be of the same type');
+    }
+    // forward onto the original
+    let result = fn(left, right);
+    // check for valid result
+    if (result !== result) {
+      throw new Error('result is not a number');
+    }
+    return result;
   };
 }
 
@@ -190,13 +202,13 @@ export const SBase = {
 
   binaryops: {
     // standard comparison operators
-    '=' : (left, right) => left == right,
-    '!=': (left, right) => left != right,
+    '=' : (left, right) => left === right,
+    '!=': (left, right) => left !== right,
 
-    '<' : checkArgumentTypes((left, right) => left <  right),
-    '<=': checkArgumentTypes((left, right) => left <= right),
-    '>' : checkArgumentTypes((left, right) => left >  right),
-    '>=': checkArgumentTypes((left, right) => left >= right)
+    '<' : checkOp((left, right) => left <  right),
+    '<=': checkOp((left, right) => left <= right),
+    '>' : checkOp((left, right) => left >  right),
+    '>=': checkOp((left, right) => left >= right)
   }
 };
 
@@ -246,7 +258,15 @@ export const SNumber = extendObject(SBase, {
     'max',
     'min'
   ].reduce((ns, method) => {
-    ns[method] = Math[method];
+    ns[method] = function(...args) {
+      // forward onto built-in Math function
+      var result = Math[method](...args);
+      // check for valid result
+      if (result !== result) {
+        throw new Error('result is not a number');
+      }
+      return result;
+    };
     return ns;
   }, {
     inc(n) {
@@ -267,18 +287,18 @@ export const SNumber = extendObject(SBase, {
   }),
 
   unaryops: {
-    '+': (right) => +right,
-    '-': (right) => -right
+    '+': (right) => + right,
+    '-': (right) => - right
   },
 
   binaryops: extendObject(SBase.binaryops, {
     // math
-    '+': checkArgumentTypes((left, right) => left + right),
-    '-': checkArgumentTypes((left, right) => left - right),
-    '*': checkArgumentTypes((left, right) => left * right),
-    '/': checkArgumentTypes((left, right) => left / right),
-    '%': checkArgumentTypes((left, right) => left % right),
-    '^': checkArgumentTypes((left, right) => Math.pow(left, right))
+    '+': checkMathOp((left, right) => left + right),
+    '-': checkMathOp((left, right) => left - right),
+    '*': checkMathOp((left, right) => left * right),
+    '/': checkMathOp((left, right) => left / right),
+    '%': checkMathOp((left, right) => left % right),
+    '^': checkMathOp((left, right) => Math.pow(left, right))
   })
 });
 
@@ -522,7 +542,7 @@ export const SList = extendObject(SContainer, {
   },
 
   binaryops: extendObject(SContainer.binaryops, {
-    '&': checkArgumentTypes((left, right) => left.concat(right))
+    '&': checkOp((left, right) => left.concat(right))
   })
 });
 
@@ -589,7 +609,7 @@ export const SMap = extendObject(SContainer, {
   },
 
   binaryops: extendObject(SContainer.binaryops, {
-    '&': checkArgumentTypes((left, right) => left.merge(right))
+    '&': checkOp((left, right) => left.merge(right))
   })
 });
 
