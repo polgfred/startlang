@@ -1,6 +1,21 @@
 import util from 'util';
 import immutable from 'immutable';
-import { extendObject, checkArgumentTypes } from './utils';
+import { extendObject } from './utils';
+
+// wrapper function that ensures all its arguments are of the same type
+export function checkArgumentTypes(fn) {
+  return function() {
+    var h = handle(arguments[0]), i;
+    for (i = 1; i < arguments.length; i++) {
+      if (h != handle(arguments[i])) {
+        throw new Error('operands must be of the same type');
+      }
+    }
+
+    // forward onto the original
+    return fn.apply(this, arguments);
+  };
+}
 
 // Environment
 

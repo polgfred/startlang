@@ -1,6 +1,6 @@
 import util from 'util';
 import Snap from 'snapsvg';
-import * as runtime from './runtime';
+import { globals } from './runtime';
 import { extendObject, checkArgumentTypes } from './utils';
 
 function number(s) {
@@ -177,7 +177,7 @@ Snap.plugin(function(_, Element, Paper) {
   });
 });
 
-util._extend(runtime.globals, {
+util._extend(globals, {
   rect: function(x, y, w, h) {
     return defaults(SShape.paper.rect(x, y, w, h));
   },

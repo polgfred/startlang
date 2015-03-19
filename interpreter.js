@@ -1,11 +1,11 @@
-import events from 'events';
+import { EventEmitter } from 'events';
 
 var hasOwnProperty = Object.prototype.hasOwnProperty, // cache this for performance
     control = {}; // shared control object for the enter event
 
 export class ScriptExit extends Error {}
 
-export class SInterpreter extends events.EventEmitter {
+export class SInterpreter extends EventEmitter {
   constructor(root, ctx) {
     this.root = root;
     this.ctx = ctx;
