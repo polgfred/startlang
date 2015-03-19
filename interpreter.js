@@ -7,6 +7,7 @@ export class ScriptExit extends Error {}
 
 export class SInterpreter extends EventEmitter {
   constructor(root, ctx) {
+    super();
     this.root = root;
     this.ctx = ctx;
     this.frames = [];

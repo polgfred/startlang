@@ -3,6 +3,8 @@ import { EventEmitter } from 'events';
 
 class Term extends EventEmitter {
   constructor(el, options) {
+    super();
+
     this.el = el;
 
     if (options) {
