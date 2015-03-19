@@ -1,36 +1,35 @@
-var $ = window.jQuery = require('jquery'),
-    ace = require('brace'),
-    parser = require('../parser'),
-    runtime = require('../runtime'),
-    graphics = require('../graphics'),
-    interpreter = require('../interpreter');
+import $ from 'jquery';
+import ace from 'brace';
+import 'brace/mode/pascal';
+import { parse } from '../parser';
+import { createRuntime, globals, handle } from '../runtime';
+import { createInterpreter } from '../interpreter';
+import { paper } from '../graphics';
+import '../term';
 
-require('brace/mode/pascal');
-require('../term');
-
-window.editor = ace.edit('editor');
+export const editor = ace.edit('editor');
 editor.setTheme('ace/theme/textmate');
 editor.setShowFoldWidgets(false);
 editor.getSession().setTabSize(2);
 editor.getSession().setUseSoftTabs(true);
 editor.getSession().setMode('ace/mode/pascal');
 
-window.terminal = $('#terminal').term({ prompt: '> ' });
+export const terminal = $('#terminal').term({ prompt: '> ' });
 var termapi = terminal.data('term');
 
 function refresh() {
-  return new Promise(function(resolve) {
+  return new Promise((resolve) => {
     setTimeout(resolve, 0);
   });
 }
 
 // override print to output to the terminal
 
-runtime.globals.print = function() {
-  if (arguments.length > 0) {
-    Array.prototype.forEach.call(arguments, function(arg) {
-      termapi.echo(runtime.handle(arg).repr(arg));
-    });
+globals.print = function(...values) {
+  if (values.length > 0) {
+    for (let v of values) {
+      termapi.echo(handle(v).repr(v));
+    }
   } else {
     termapi.echo('');
   }
@@ -38,7 +37,7 @@ runtime.globals.print = function() {
   return refresh();
 };
 
-runtime.globals.clear = function() {
+globals.clear = function() {
   termapi.clear();
   // yield to UI for redraw
   return refresh();
@@ -46,7 +45,7 @@ runtime.globals.clear = function() {
 
 // wire it up
 
-var ctx = runtime.create(),
+let ctx = createRuntime(),
     session = editor.getSession(),
     doc = session.getDocument(),
     buffer = [],
@@ -54,25 +53,25 @@ var ctx = runtime.create(),
     prefix = '>>>>>>>>>>';
 
 // hook up the run button
-$('#runner').click(function() {
+$('#runner').click(() => {
   // wipe stuff clean and make a fresh program context
-  ctx = runtime.create();
+  ctx = createRuntime();
   termapi.clear();
-  graphics.SShape.paper.clear();
+  paper.clear();
   // execute the code in the buffer
-  var root = parser.parse(doc.getAllLines().join('\n')),
-      interp = interpreter.create(root, ctx);
-  interp.on('error', function(err) {
+  let root = parse(doc.getAllLines().join('\n')),
+      interp = createInterpreter(root, ctx);
+  interp.on('error', (err) => {
     termapi.error('[ERROR]: ' + err.message);
     termapi.focus();
   });
-  interp.on('end', function() {
+  interp.on('end', () => {
     termapi.focus();
   });
   interp.run();
 });
 
-termapi.on('line', function(command) {
+termapi.on('line', (command) => {
   if (command) {
     buffer.push(command);
     // see if we're going into a nested block
@@ -90,14 +89,14 @@ termapi.on('line', function(command) {
       return;
     }
     // execute the code in the buffer
-    var root = parser.parse(buffer.join('\n') + '\n'),
-        interp = interpreter.create(root, ctx);
-    interp.on('error', function(err) {
+    let root = parse(buffer.join('\n') + '\n'),
+        interp = createInterpreter(root, ctx);
+    interp.on('error', (err) => {
       termapi.error('[ERROR]: ' + err.message);
       // reset the command buffer
       buffer = [];
     });
-    interp.on('end', function(err) {
+    interp.on('end', () => {
       // add command to the editor
       doc.insertLines(doc.getLength() - 1, buffer);
       // reset the command buffer

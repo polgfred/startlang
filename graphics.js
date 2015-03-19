@@ -33,11 +33,11 @@ function applyTransforms(el) {
   el.transform(mat);
 }
 
+// keep a reference to the canvas element
+export const paper = Snap('#canvas');
+
 // all shapes have these basic utilities in common
 export const SShape = {
-  // keep a reference to the canvas element
-  paper: Snap('#canvas'),
-
   repr(el) {
     return '*' + el.type + ':' + el.id + '*';
   },
@@ -180,26 +180,26 @@ Snap.plugin(function(_, Element, Paper) {
 
 util._extend(globals, {
   rect: function(x, y, w, h) {
-    return defaults(SShape.paper.rect(x, y, w, h));
+    return defaults(paper.rect(x, y, w, h));
   },
 
   circle: function(x, y, r) {
-    return defaults(SShape.paper.circle(x, y, r));
+    return defaults(paper.circle(x, y, r));
   },
 
   ellipse: function(x, y, rx, ry) {
-    return defaults(SShape.paper.ellipse(x, y, rx, ry));
+    return defaults(paper.ellipse(x, y, rx, ry));
   },
 
   line: function(x1, y1, x2, y2) {
-    return defaults(SShape.paper.line(x1, y1, x2, y2));
+    return defaults(paper.line(x1, y1, x2, y2));
   },
 
   polyline: function(...coords) {
-    return defaults(SShape.paper.polyline(...coords));
+    return defaults(paper.polyline(...coords));
   },
 
   polygon: function(...coords) {
-    return defaults(SShape.paper.polygon(...coords));
+    return defaults(paper.polygon(...coords));
   }
 });

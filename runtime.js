@@ -653,9 +653,9 @@ export const globals = {
 
   print(...values) {
     if (values.length > 0) {
-      values.forEach((value) => {
+      for (let v of values) {
         console.log(handle(value).repr(value));
-      });
+      }
     } else {
       console.log();
     }
@@ -671,6 +671,6 @@ export const globals = {
 globals.array = globals.list;
 globals.table = globals.map;
 
-export function create() {
+export function createRuntime() {
   return new SRuntime();
 }

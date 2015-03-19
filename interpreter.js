@@ -311,6 +311,6 @@ export class SInterpreter extends EventEmitter {
   }
 }
 
-export function create(root, ctx) {
+export function createInterpreter(root, ctx) {
   return new SInterpreter(root, ctx);
 }
