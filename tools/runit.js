@@ -1,8 +1,8 @@
-var fs = require('fs'),
-    util = require('util'),
-    parser = require('./parser'),
-    runtime = require('./runtime'),
-    interpreter = require('./interpreter');
+import { readFileSync } from 'fs';
+import { inspect } from 'util';
+import { parse } from '../parser';
+import { createRuntime, globals, handle } from '../runtime';
+import { createInterpreter } from '../interpreter';
 
 var options = {}, parserOptions = {};
 
@@ -11,8 +11,10 @@ var inspectOpts = {
   depth: null
 };
 
+var source, root, ctx, interp;
+
 function output(obj) {
-  console.log(util.inspect(obj, inspectOpts));
+  console.log(inspect(obj, inspectOpts));
 }
 
 if (process.argv.indexOf('--ast') != -1) {
@@ -34,13 +36,13 @@ if (process.argv.indexOf('--meta') != -1) {
 }
 
 try {
-  source = fs.readFileSync(process.argv[2], 'utf-8');
+  source = readFileSync(process.argv[2], 'utf-8');
 } catch (e) {
   source = process.argv[2] + '\n';
 }
 
 try {
-  root = parser.parse(source, parserOptions);
+  root = parse(source, parserOptions);
   if (options.ast) {
     output(root);
     process.exit();
@@ -50,8 +52,8 @@ try {
   throw e;
 }
 
-ctx = runtime.create();
-interp = interpreter.create(root, ctx);
+ctx = createRuntime();
+interp = createInterpreter(root, ctx);
 
 interp.on('end', function() {
   if (options.ns) {

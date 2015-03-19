@@ -630,7 +630,7 @@ export const globals = {
   print(...values) {
     if (values.length > 0) {
       for (let v of values) {
-        console.log(handle(value).repr(value));
+        console.log(handle(v).repr(v));
       }
     } else {
       console.log();
