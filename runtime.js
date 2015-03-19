@@ -417,7 +417,7 @@ export const SString = extendObject(SBase, {
   },
 
   binaryops: extendObject(SBase.binaryops, {
-    '&': (left, right) => left + handle(right).repr(right)
+    '$': (left, right) => left + handle(right).repr(right)
   })
 });
 
@@ -542,7 +542,7 @@ export const SList = extendObject(SContainer, {
   },
 
   binaryops: extendObject(SContainer.binaryops, {
-    '&': checkOp((left, right) => left.concat(right))
+    '$': checkOp((left, right) => left.concat(right))
   })
 });
 
@@ -609,7 +609,7 @@ export const SMap = extendObject(SContainer, {
   },
 
   binaryops: extendObject(SContainer.binaryops, {
-    '&': checkOp((left, right) => left.merge(right))
+    '$': checkOp((left, right) => left.merge(right))
   })
 });
 

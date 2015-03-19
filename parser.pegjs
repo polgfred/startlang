@@ -76,7 +76,7 @@
       return first;
     } else {
       var next = rest.shift(),
-          node = buildNode('binaryOp', { op: '&', left: first, right: next });
+          node = buildNode('binaryOp', { op: '$', left: first, right: next });
       return buildString(node, rest);
     }
   }
@@ -258,7 +258,7 @@ AddExpr
 AddOp
   = '+'
   / '-'
-  / '&'
+  / '$'
 
 MultExpr
   = first:PowExpr rest:( __ op:MultOp __ e:PowExpr { return [op, e]; } )* {
