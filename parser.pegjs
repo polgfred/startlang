@@ -170,7 +170,7 @@ Begin
     }
 
 Params
-  = '(' __ first:Symbol rest:( __ ',' __ sym:Symbol { return sym; } )* __ ')' {
+  = '(' __ first:Symbol rest:( __ ',' __ EOL? __ sym:Symbol { return sym; } )* __ ')' {
       return [first].concat(rest);
     }
 
@@ -217,7 +217,7 @@ Flow
 // Values
 
 Values
-  = first:Value rest:( __ ',' __ val:Value { return val; } )* {
+  = first:Value rest:( __ ',' __ EOL? __ val:Value { return val; } )* {
       return [first].concat(rest);
     }
 
