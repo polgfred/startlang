@@ -71,6 +71,16 @@
     }
   }
 
+  function buildUnaryOpRight(ops, last) {
+    if (ops.length == 0) {
+      return last;
+    } else {
+      var next = ops.pop(),
+          node = buildNode('unaryOp', { op: next, right: last });
+      return buildUnaryOpRight(ops, node);
+    }
+  }
+
   function buildString(first, rest) {
     if (rest.length == 0) {
       return first;
@@ -221,8 +231,8 @@ CondExpr
   / ConjExpr
 
 NotExpr
-  = NotOp __ comp:RelExpr {
-      return buildNode('logicalOp', { op: 'not', right: comp });
+  = op:NotOp __ right:RelExpr {
+      return buildNode('logicalOp', { op: op, right: right });
     }
 
 NotOp
@@ -301,8 +311,8 @@ PowOp
   = '**'
 
 UnaryExpr
-  = op:UnaryOp __ right:CallExpr {
-      return buildNode('unaryOp', { op: op, right: right });
+  = ops:( op:UnaryOp __ { return op; } )* right:CallExpr {
+      return buildUnaryOpRight(ops, right);
     }
   / CallExpr
 
@@ -443,7 +453,7 @@ WB
   = ![a-z_]i
 
 __
-  = [ \t]* ( '--' [^\n]* )?
+  = [ \t]* ( ';' [^\n]* )?
 
 EOL
   = ( __ '\n' )+
