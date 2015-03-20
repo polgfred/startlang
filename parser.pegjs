@@ -213,32 +213,35 @@ Values
 
 Value
   = CondExpr
-  / MathExpr
 
 // Conditions
 
 CondExpr
-  = first:NotExpr rest:( __ op:CondOp __ e:NotExpr { return [op, e]; } )* {
+  = NotExpr
+  / ConjExpr
+
+NotExpr
+  = NotOp __ comp:RelExpr {
+      return buildNode('logicalOp', { op: 'not', right: comp });
+    }
+
+NotOp
+  = 'not' WB { return 'not'; }
+
+ConjExpr
+  = first:RelExpr rest:( __ op:ConjOp __ e:RelExpr { return [op, e]; } )* {
       return buildLogicalOp(first, rest);
     }
 
-CondOp
+ConjOp
   = 'and' WB { return 'and'; }
   / 'or'  WB { return 'or';  }
 
-NotExpr
-  = 'not' WB __ comp:RelExpr {
-      return buildNode('logicalOp', { op: 'not', right: comp });
-    }
-  / RelExpr
-
 RelExpr
-  = left:MathExpr __ op:RelOp __ right:MathExpr {
+  = left:ConcatExpr __ op:RelOp __ right:ConcatExpr {
       return buildNode('binaryOp', { op: op, left: left, right: right });
     }
-  / '(' __ cond:CondExpr __ ')' {
-      return cond;
-    }
+  / ConcatExpr
 
 RelOp
   = '='
@@ -248,10 +251,17 @@ RelOp
   / '>='
   / '>'
 
-// Math
+// Concatenation
 
-MathExpr
-  = BitExpr
+ConcatExpr
+  = first:BitExpr rest:( __ op:ConcatOp __ e:BitExpr { return [op, e]; } )* {
+      return buildBinaryOp(first, rest);
+    }
+
+ConcatOp
+  = '$'
+
+// Math
 
 BitExpr
   = first:AddExpr rest:( __ op:BitOp __ e:AddExpr { return [op, e]; } )* {
@@ -271,7 +281,6 @@ AddExpr
 AddOp
   = '+'
   / '-'
-  / '$'
 
 MultExpr
   = first:PowExpr rest:( __ op:MultOp __ e:PowExpr { return [op, e]; } )* {
@@ -292,14 +301,15 @@ PowOp
   = '**'
 
 UnaryExpr
-  = op:AddOp __ right:NumberFormat {
-      // handle +/- number in the parser
-      return buildNode('literal', { value: parseFloat(op + right) });
-    }
-  / op:AddOp __ right:CallExpr {
+  = op:UnaryOp __ right:CallExpr {
       return buildNode('unaryOp', { op: op, right: right });
     }
   / CallExpr
+
+UnaryOp
+  = '+'
+  / '-'
+  / '~'
 
 // Invocation
 

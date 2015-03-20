@@ -8,11 +8,11 @@ if not a = 1 then
   print "0 should not see this"
 end
 
-if not (a = 1 and not b = 3) then
+if not (a = 1 and (not b = 3)) then
   print "0 should not see this"
 end
 
-if a = 1 and b = 2 and not c = 4 then
+if a = 1 and b = 2 and (not c = 4) then
   print "1 should see this"
 end
 

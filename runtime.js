@@ -287,8 +287,11 @@ export const SNumber = extendObject(SBase, {
   }),
 
   unaryops: {
-    '+': (right) => + right,
-    '-': (right) => - right
+    // math
+    '+': (right) => +right,
+    '-': (right) => -right,
+    // bitwise
+    '~': (right) => ~right
   },
 
   binaryops: extendObject(SBase.binaryops, {
