@@ -213,7 +213,7 @@ Values
 
 Value
   = CondExpr
-  / AddExpr
+  / MathExpr
 
 // Conditions
 
@@ -233,7 +233,7 @@ NotExpr
   / RelExpr
 
 RelExpr
-  = left:AddExpr __ op:RelOp __ right:AddExpr {
+  = left:MathExpr __ op:RelOp __ right:MathExpr {
       return buildNode('binaryOp', { op: op, left: left, right: right });
     }
   / '(' __ cond:CondExpr __ ')' {
@@ -248,7 +248,20 @@ RelOp
   / '>='
   / '>'
 
-// Arithmetic
+// Math
+
+MathExpr
+  = BitExpr
+
+BitExpr
+  = first:AddExpr rest:( __ op:BitOp __ e:AddExpr { return [op, e]; } )* {
+      return buildBinaryOp(first, rest);
+    }
+
+BitOp
+  = '&'
+  / '|'
+  / '^'
 
 AddExpr
   = first:MultExpr rest:( __ op:AddOp __ e:MultExpr { return [op, e]; } )* {
@@ -266,17 +279,17 @@ MultExpr
     }
 
 MultOp
-  = '*'
+  = '*' !'*' { return '*'; } // don't match **
   / '/'
   / '%'
 
 PowExpr
-  = rest:(e:UnaryExpr __ op:PowOp __ { return [op, e]; } )* last:UnaryExpr {
+  = rest:( e:UnaryExpr __ op:PowOp __ { return [op, e]; } )* last:UnaryExpr {
       return buildBinaryOpRight(rest, last);
     }
 
 PowOp
-  = '^'
+  = '**'
 
 UnaryExpr
   = op:AddOp __ right:NumberFormat {

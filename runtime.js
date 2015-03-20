@@ -298,7 +298,11 @@ export const SNumber = extendObject(SBase, {
     '*': checkMathOp((left, right) => left * right),
     '/': checkMathOp((left, right) => left / right),
     '%': checkMathOp((left, right) => left % right),
-    '^': checkMathOp((left, right) => Math.pow(left, right))
+    '**': checkMathOp((left, right) => Math.pow(left, right)),
+    // bitwise
+    '&': checkMathOp((left, right) => left & right),
+    '|': checkMathOp((left, right) => left | right),
+    '^': checkMathOp((left, right) => left ^ right)
   })
 });
 
