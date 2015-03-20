@@ -211,10 +211,6 @@ export class SInterpreter extends EventEmitter {
     });
   }
 
-  deleteNode(node) {
-    return this.ctx.del(node.name);
-  }
-
   indexNode(node) {
     let len = node.indexes.length, indexes = [];
     // collect indexes and lookup value
@@ -242,22 +238,6 @@ export class SInterpreter extends EventEmitter {
         return this.visit(node.value).then((vres) => {
           return this.ctx.setindex(node.name, indexes, vres.rv);
         });
-      } else {
-        return this.visit(node.indexes[count]).then((ires) => {
-          indexes[count] = ires.rv;
-          return loop(count + 1);
-        });
-      }
-    }
-    return loop(0);
-  }
-
-  deleteIndexNode(node) {
-    let len = node.indexes.length, indexes = [];
-    // collect indexes and delete value
-    let loop = (count) => {
-      if (count == len) {
-        return this.ctx.delindex(node.name, indexes);
       } else {
         return this.visit(node.indexes[count]).then((ires) => {
           indexes[count] = ires.rv;

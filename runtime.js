@@ -75,11 +75,6 @@ export class SRuntime {
     this.ns = this.ns.set(name, value);
   }
 
-  del(name) {
-    // always in the current ns only
-    this.ns = this.ns.delete(name);
-  }
-
   getindex(name, indexes) {
     let max = indexes.length - 1;
     return next(this.get(name), 0);
@@ -100,18 +95,6 @@ export class SRuntime {
       let h = handle(b), idx = indexes[i];
       return (i == max) ?
                 h.setindex(b, idx, value) :
-                h.setindex(b, idx, next(h.getindex(b, idx), i + 1));
-    }
-  }
-
-  delindex(name, indexes) {
-    let max = indexes.length - 1;
-    this.set(name, next(this.get(name), 0));
-
-    function next(b, i) {
-      let h = handle(b), idx = indexes[i];
-      return (i == max) ?
-                h.delindex(b, idx) :
                 h.setindex(b, idx, next(h.getindex(b, idx), i + 1));
     }
   }
@@ -189,10 +172,6 @@ export const SBase = {
   },
 
   setindex() {
-    throw new Error('object does not support []');
-  },
-
-  delindex() {
     throw new Error('object does not support []');
   },
 
@@ -365,10 +344,6 @@ export const SString = extendObject(SBase, {
     return s.substr(0, index) + value + s.substr(index + 1);
   },
 
-  delindex(s, index) {
-    return s.substr(0, index) + s.substr(index + 1);
-  },
-
   methods: {
     len(s) {
       return s.length;
@@ -442,10 +417,6 @@ export const SContainer = extendObject(SBase, {
 
   setindex(c, index, value) {
     return c.set(index, value);
-  },
-
-  delindex(c, index) {
-    return c.delete(index);
   },
 
   binaryops: {

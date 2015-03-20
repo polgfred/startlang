@@ -50,7 +50,7 @@ let t.likes = "computers"
 
 if t != u then print "5b should see this"
 
-delete t.likes
+remove t, "likes"
 let t.age = 41
 
 if t != u then print "5c should see this"

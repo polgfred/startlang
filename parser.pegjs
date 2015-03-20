@@ -24,15 +24,10 @@
     return node;
   }
 
-  // special token to signal buildIndex that we have a DeleteIndex call
-  var $remove = {};
-
   // take a base name, dimensions, and (optionally) a value, and construct an indexish node
   function buildIndex(name, indexes, value) {
     if (value === undefined) {
       return buildNode('index', { name: name, indexes: indexes });
-    } else if (value === $remove) {
-      return buildNode('deleteIndex', { name: name, indexes: indexes });
     } else {
       return buildNode('letIndex', { name: name, indexes: indexes, value: value });
     }
@@ -176,7 +171,6 @@ Params
 
 Statement
   = Let
-  / Delete
   / Call
   / Flow
 
@@ -186,15 +180,6 @@ Let
         return buildNode('let', { name: name, value: value });
       } else {
         return buildIndex(name, indexes, value);
-      }
-    }
-
-Delete
-  = __ 'delete' WB __ name:Symbol __ indexes:Dimensions? {
-      if (!indexes) {
-        return buildNode('delete', { name: name });
-      } else {
-        return buildIndex(name, indexes, $remove);
       }
     }
 
@@ -442,7 +427,6 @@ Reserved
   / 'next'     WB
   / 'return'   WB
   / 'let'      WB
-  / 'delete'   WB
   / 'and'      WB
   / 'or'       WB
   / 'not'      WB
