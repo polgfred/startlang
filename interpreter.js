@@ -35,7 +35,7 @@ export class SInterpreter extends EventEmitter {
     // push a frame onto the stack
     //this.frames.push({ node: node, ns: this.ctx.ns, stack: this.ctx.stack });
     // give the caller a chance to exit or pause
-    this.emit('enter', node, control);
+    //this.emit('enter', node, control);
     if (control.exit) {
       control = {};
       // return a special error to exit the program
