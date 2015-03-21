@@ -115,50 +115,50 @@ Control
 // Control structures each have a single-line form and a block form
 
 If
-  = __ 'if' WB __ cond:Value __ 'then' WB __ tbody:Statement __ 'else' WB __ fbody:Statement {
+  = 'if' WB __ cond:Value __ 'then' WB __ tbody:Statement __ 'else' WB __ fbody:Statement {
       return buildNode('if', { cond: cond, tbody: tbody, fbody: fbody });
     }
-  / __ 'if' WB __ cond:Value __ 'then' WB __ tbody:Statement {
+  / 'if' WB __ cond:Value __ 'then' WB __ tbody:Statement {
       return buildNode('if', { cond: cond, tbody: tbody });
     }
-  / __ 'if' WB __ cond:Value __ 'then' EOL
+  / 'if' WB __ cond:Value __ 'then' EOL
     tbody:Block
     __ 'else' EOL
     fbody:Block
     __ 'end' {
       return buildNode('if', { cond: cond, tbody: tbody, fbody: fbody });
     }
-  / __ 'if' WB __ cond:Value __ 'then' EOL
+  / 'if' WB __ cond:Value __ 'then' EOL
     tbody:Block
     __ 'end' {
       return buildNode('if', { cond: cond, tbody: tbody });
     }
 
 For
-  = __ 'for' WB __ sym:Symbol __ 'in' WB __ range:Value __ 'do' WB __ body:Statement {
+  = 'for' WB __ sym:Symbol __ 'in' WB __ range:Value __ 'do' WB __ body:Statement {
       return buildNode('for', { name: sym, range: range, body: body });
     }
-  / __ 'for' WB __ sym:Symbol __ 'in' WB __ range:Value __ 'do' EOL
+  / 'for' WB __ sym:Symbol __ 'in' WB __ range:Value __ 'do' EOL
     body:Block
     __ 'end' {
       return buildNode('for', { name: sym, range: range, body: body });
     }
 
 While
-  = __ 'while' WB __ cond:Value __ 'do' WB __ body:Statement {
+  = 'while' WB __ cond:Value __ 'do' WB __ body:Statement {
       return buildNode('while', { cond: cond, body: body });
     }
-  / __ 'while' WB __ cond:Value __ 'do' EOL
+  / 'while' WB __ cond:Value __ 'do' EOL
     body:Block
     __ 'end' {
       return buildNode('while', { cond: cond, body: body });
     }
 
 Begin
-  = __ 'begin' WB __ sym:Symbol __ params:Params? __ 'do' WB __ body:Statement {
+  = 'begin' WB __ sym:Symbol __ params:Params? __ 'do' WB __ body:Statement {
       return buildNode('begin', { name: sym, params: params, body: body });
     }
-  / __ 'begin' WB __ sym:Symbol __ params:Params? __ 'do' EOL
+  / 'begin' WB __ sym:Symbol __ params:Params? __ 'do' EOL
     body:Block
     __ 'end' {
       return buildNode('begin', { name: sym, params: params, body: body });
@@ -175,7 +175,7 @@ Statement
   / Flow
 
 Let
-  = __ 'let' WB __ name:Symbol __ indexes:Dimensions? __ '=' __ value:Value {
+  = 'let' WB __ name:Symbol __ indexes:Dimensions? __ '=' __ value:Value {
       if (!indexes) {
         return buildNode('let', { name: name, value: value });
       } else {
@@ -189,13 +189,13 @@ Call
     }
 
 Flow
-  = __ 'break' WB {
+  = 'break' WB {
       return buildNode('break');
     }
-  / __ 'next' WB {
+  / 'next' WB {
       return buildNode('next');
     }
-  / __ 'return' WB __ result:Value? {
+  / 'return' WB __ result:Value? {
       return buildNode('return', { result: result });
     }
 
