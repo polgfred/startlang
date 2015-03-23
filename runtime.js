@@ -2,6 +2,8 @@ import util from 'util';
 import immutable from 'immutable';
 import { extendObject } from './utils';
 
+export let handlerKey = Symbol('START_HANDLER');
+
 // ensures its operands are of the same type
 export function checkOp(fn) {
   return function(left, right) {
@@ -211,10 +213,7 @@ export const SBoolean = extendObject(SBase, {
   }
 });
 
-Object.defineProperty(Boolean.prototype, '@@__handler__@@', {
-  value: SBoolean,
-  enumerable: false
-});
+Boolean.prototype[handlerKey] = SBoolean;
 
 export const SNumber = extendObject(SBase, {
   repr(n) {
@@ -294,10 +293,7 @@ export const SNumber = extendObject(SBase, {
   })
 });
 
-Object.defineProperty(Number.prototype, '@@__handler__@@', {
-  value: SNumber,
-  enumerable: false
-});
+Number.prototype[handlerKey] = SNumber;
 
 export const SRange = extendObject(SBase, {
   repr(r) {
@@ -324,10 +320,7 @@ export const SRange = extendObject(SBase, {
   }
 });
 
-Object.defineProperty(immutable.Range.prototype, '@@__handler__@@', {
-  value: SRange,
-  enumerable: false
-});
+immutable.Range.prototype[handlerKey] = SRange;
 
 export const SString = extendObject(SBase, {
   repr(s) {
@@ -409,10 +402,7 @@ export const SString = extendObject(SBase, {
   })
 });
 
-Object.defineProperty(String.prototype, '@@__handler__@@', {
-  value: SString,
-  enumerable: false
-});
+String.prototype[handlerKey] = SString;
 
 // Containers
 
@@ -530,10 +520,7 @@ export const SList = extendObject(SContainer, {
   })
 });
 
-Object.defineProperty(immutable.List.prototype, '@@__handler__@@', {
-  value: SList,
-  enumerable: false
-});
+immutable.List.prototype[handlerKey] = SList;
 
 // Maps (Tables, Hashes)
 
@@ -597,10 +584,7 @@ export const SMap = extendObject(SContainer, {
   })
 });
 
-Object.defineProperty(immutable.Map.prototype, '@@__handler__@@', {
-  value: SMap,
-  enumerable: false
-});
+immutable.Map.prototype[handlerKey] = SMap;
 
 // find a protocol handler for this object
 export function handle(obj) {
@@ -611,7 +595,7 @@ export function handle(obj) {
 
   // if protocol handler is a function call it with the object -- this allows
   // for duck type polymorphism on objects
-  let handler = obj['@@__handler__@@']
+  let handler = obj[handlerKey];
   return typeof handler == 'function' ? handler(obj) : handler;
 }
 

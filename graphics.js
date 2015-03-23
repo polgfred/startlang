@@ -1,6 +1,6 @@
 import util from 'util';
 import Snap from 'snapsvg';
-import { globals } from './runtime';
+import { globals, handlerKey } from './runtime';
 import { extendObject } from './utils';
 
 function number(s) {
@@ -164,12 +164,7 @@ Snap.plugin(function(_, Element, Paper) {
     polygon: SPolygon
   };
 
-  Object.defineProperty(Element.prototype, '@@__handler__@@', {
-    enumerable: false,
-    value: function(obj) {
-      return handlerMap[obj.type];
-    }
-  });
+  Element.prototype[handlerKey] = (obj) => handlerMap[obj.type];
 });
 
 util._extend(globals, {
