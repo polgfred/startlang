@@ -40,4 +40,4 @@ for x in range(8, 13) do
   print "compare(`x`, 10) is `compare(x, 10)`"
 end
 
---this is a comment
+; this is a comment
