@@ -19,7 +19,7 @@ var termapi = terminal.data('term');
 
 function refresh() {
   return new Promise((resolve) => {
-    setTimeout(resolve, 0);
+    setImmediate(resolve);
   });
 }
 
@@ -39,6 +39,7 @@ globals.print = function(...values) {
 
 globals.clear = function() {
   termapi.clear();
+  paper.clear();
   // yield to UI for redraw
   return refresh();
 };
@@ -49,8 +50,7 @@ let ctx = createRuntime(),
     session = editor.getSession(),
     doc = session.getDocument(),
     buffer = [],
-    level = 1,
-    prefix = '>>>>>>>>>>';
+    level = 1;
 
 // hook up the run button
 $('#runner').click(() => {
@@ -77,12 +77,12 @@ termapi.on('line', (command) => {
     // see if we're going into a nested block
     if (/(?:do|then|else)\s*$/.test(command)) {
       level++;
-      termapi.prompt = prefix.substr(0, level) + ' ';
+      termapi.prompt = '>'.repeat(level) + ' ';
     }
     // see if we're exiting a nested block
     if (/end\s*$/.test(command)) {
       level--;
-      termapi.prompt = prefix.substr(0, level) + ' ';
+      termapi.prompt = '>'.repeat(level) + ' ';
     }
     // if we're nested, don't evaluate
     if (level > 1) {

@@ -14,4 +14,5 @@ for x1 in range(-360,355,5) do
   let y2 = 5*todeg*sin(torad*x2/2)
   let seg = line(360+x1,360-y1,360+x2,360-y2)
   stroke seg, "blue"
+  refresh
 end

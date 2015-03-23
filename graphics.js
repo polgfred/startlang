@@ -168,6 +168,12 @@ Snap.plugin(function(_, Element, Paper) {
 });
 
 util._extend(globals, {
+  refresh: function() {
+    return new Promise((resolve) => {
+      setImmediate(resolve);
+    });
+  },
+
   rect: function(x, y, w, h) {
     return defaults(paper.rect(x, y, w, h));
   },
