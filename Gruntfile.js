@@ -26,7 +26,11 @@ module.exports = function(grunt) {
       }
     },
     copy: {
-      files: {
+      polyfill: {
+        src: 'node_modules/babel/browser-polyfill.js',
+        dest: 'dist/web/browser-polyfill.js'
+      },
+      static: {
         expand: true,
         src: [ 'web/main.html', 'web/main.css' ],
         dest: 'dist/'
