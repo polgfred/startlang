@@ -111,23 +111,29 @@ export class SRuntime {
     return handle(left).binaryops[op](left, right);
   }
 
-  getfn(name) {
-    return this.fn.get(name);
+  getfn(name, obj) {
+    // look for a user-defined function
+    let fn = this.fn.get(name);
+    if (fn) {
+      return fn;
+    }
+    // look for a built-in function by first argument, or in global map
+    fn = (obj != null && handle(obj).methods[name]) || globals[name];
+    if (fn) {
+      return (args, assn) => {
+        return this.syscall(fn, args, assn);
+      };
+    }
+    throw new Error('object not found or not a function');
   }
 
   setfn(name, body) {
     this.fn = this.fn.set(name, body);
   }
 
-  syscall(name, args, assn) {
-    // look for a function by first argument, or in global map
-    let fn = (args.length > 0 && handle(args[0]).methods[name]) || globals[name];
-    if (!fn) {
-      throw new Error('object not found or not a function');
-    }
-
+  syscall(fn, args, assn) {
     // call a runtime function
-    let res = fn.apply(null, args);
+    let res = fn(...args);
     if (res) {
       let repl = res['@@__assign__@@'];
       if (repl) {

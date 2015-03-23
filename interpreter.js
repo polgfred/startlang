@@ -169,15 +169,15 @@ export class SInterpreter extends EventEmitter {
     let len = node.args ? node.args.length : 0, args = [], assn = [];
     // loop to collect arguments and call the function
     let loop = (count) => {
-      if (count == len) {
-        let fn = this.ctx.getfn(node.name);
-        return fn ? fn(args) : this.ctx.syscall(node.name, args, assn);
-      } else {
+      if (count < len) {
         return this.visit(node.args[count]).then((ares) => {
           args[count] = ares.rv;
           assn[count] = ares.lv;
           return loop(count + 1);
         });
+      } else {
+        let fn = this.ctx.getfn(node.name, args[0]);
+        return fn(args, assn);
       }
     }
     return loop(0);
