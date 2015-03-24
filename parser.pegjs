@@ -135,14 +135,25 @@ If
     }
 
 For
-  = 'for' WB __ sym:Symbol __ 'in' WB __ range:Value __ 'do' WB __ body:Statement {
+  = 'for' WB __ sym:Symbol __ 'in' WB __ range:Range __ 'do' WB __ body:Statement {
       return buildNode('for', { name: sym, range: range, body: body });
     }
-  / 'for' WB __ sym:Symbol __ 'in' WB __ range:Value __ 'do' EOL
+  / 'for' WB __ sym:Symbol __ 'in' WB __ range:Range __ 'do' EOL
     body:Block
     __ 'end' {
       return buildNode('for', { name: sym, range: range, body: body });
     }
+
+Range
+  = from:Value __ ',' __ to:Value by:( __ ',' __ v:Value { return v; } )? {
+      // handle 'for i in 1,10,2' as a shorthand for range(...)
+      var args = [ from, to ];
+      if (by != null) {
+        args.push(by);
+      }
+      return buildNode('call', { name: 'range', args: args });
+    }
+  / Value
 
 While
   = 'while' WB __ cond:Value __ 'do' WB __ body:Statement {
