@@ -295,6 +295,7 @@ export const SNumber = extendObject(SBase, {
 
 Number.prototype[handlerKey] = SNumber;
 
+// this type basically exists to implement for-loops lazily
 export const SRange = extendObject(SBase, {
   repr(r) {
     return `[ ${r._start} .. ${r._end} / ${r._step} ]`;
@@ -306,12 +307,6 @@ export const SRange = extendObject(SBase, {
       more: r._step > 0 ? current <= r._end : current >= r._end,
       next: () => SRange.enumerate(r, current + r._step)
     };
-  },
-
-  methods: {
-    len(r) {
-      return Math.ceil((r._end - r._start) / r._step);
-    }
   },
 
   binaryops: {
@@ -348,17 +343,17 @@ export const SString = extendObject(SBase, {
       return s.length;
     },
 
-    find(s, search) {
+    first(s, search) {
       let pos = s.indexOf(search);
       return pos >= 0 ? pos : null;
     },
 
-    findlast(s, search) {
+    last(s, search) {
       let pos = s.lastIndexOf(search);
       return pos >= 0 ? pos : null;
     },
 
-    range(s, at, length) {
+    copy(s, at, length) {
       return s.substr(at, length);
     },
 
@@ -366,26 +361,23 @@ export const SString = extendObject(SBase, {
       return { '@@__assign__@@': s.substr(0, at) + more + s.substr(at) };
     },
 
-    remove(s, at, length) {
+    delete(s, at, length) {
       return {
         '@@__assign__@@': s.substr(0, at) + s.substr(at + length),
         '@@__result__@@': s.substr(at, length)
       };
     },
 
-    replace(s, at, length, more) {
-      return {
-        '@@__assign__@@': s.substr(0, at) + more + s.substr(at + length),
-        '@@__result__@@': s.substr(at, length)
-      };
-    },
-
-    sub(s, search, to) {
+    replace(s, search, to) {
       return { '@@__assign__@@': s.replace(search, to) };
     },
 
+    reverse(s) {
+      return { '@@__assign__@@': s.split('').reverse().join('') };
+    },
+
     split(s, delim) {
-      return s.split(delim || ' ');
+      return immutable.List(s.split(delim || ' '));
     },
 
     upper(s) {
@@ -424,20 +416,8 @@ export const SContainer = extendObject(SBase, {
 // Lists
 
 export const SList = extendObject(SContainer, {
-  create(dims) {
-    // optimize for the usual case
-    if (dims.length == 0) {
-      return immutable.List();
-    }
-    // create an n-dimensional nested list
-    let subList = ([ next, ...rest ]) => {
-      return immutable.List().withMutations((sub) => {
-        for (let i = 0; i < next; ++i) {
-          sub.set(i, rest.length > 0 ? subList(rest) : null);
-        }
-      });
-    }
-    return subList(dims);
+  create(items) {
+    return immutable.List(items);
   },
 
   repr(l) {
@@ -457,17 +437,17 @@ export const SList = extendObject(SContainer, {
       return l.size;
     },
 
-    find(l, search) {
+    first(l, search) {
       let pos = l.indexOf(search);
       return pos >= 0 ? pos : null;
     },
 
-    findlast(l, search) {
+    last(l, search) {
       let pos = l.lastIndexOf(search);
       return pos >= 0 ? pos : null;
     },
 
-    range(l, at, length) {
+    copy(l, at, length) {
       return l.slice(at, at + length);
     },
 
@@ -475,30 +455,15 @@ export const SList = extendObject(SContainer, {
       return { '@@__assign__@@': l.splice(at, 0, ...values) };
     },
 
-    remove(l, at, length) {
+    delete(l, at, length) {
       return {
         '@@__assign__@@': l.splice(at, length),
         '@@__result__@@': l.slice(at, at + length)
       };
     },
 
-    replace(l, at, length, ...values) {
-      return {
-        '@@__assign__@@': l.splice(at, length, ...values),
-        '@@__result__@@': l.slice(at, at + length)
-      };
-    },
-
     join(l, delim) {
       return l.join(delim || ' ');
-    },
-
-    push(l, ...values) {
-      return { '@@__assign__@@': l.push(...values) };
-    },
-
-    pop(l) {
-      return { '@@__assign__@@': l.pop(), '@@__result__@@': l.last() };
     },
 
     reverse(l) {
@@ -525,8 +490,12 @@ immutable.List.prototype[handlerKey] = SList;
 // Maps (Tables, Hashes)
 
 export const SMap = extendObject(SContainer, {
-  create() {
-    return immutable.Map();
+  create(pairs) {
+    return immutable.Map().withMutations((n) => {
+      for (let i = 0; i < pairs.length; i += 2) {
+        n.set(pairs[i], pairs[i + 1]);
+      }
+    });
   },
 
   repr(m) {
@@ -547,15 +516,7 @@ export const SMap = extendObject(SContainer, {
       return immutable.List(m.keySeq());
     },
 
-    range(m, ...keys) {
-      return immutable.Map().withMutations((n) => {
-        for (let i = 0; i < keys.length; ++i) {
-          n.set(keys[i], m.get(keys[i]));
-        }
-      });
-    },
-
-    insert(m, ...pairs) {
+    put(m, ...pairs) {
       return {
         '@@__assign__@@': m.withMutations((n) => {
           for (let i = 0; i < pairs.length; i += 2) {
@@ -565,7 +526,7 @@ export const SMap = extendObject(SContainer, {
       };
     },
 
-    remove(m, ...keys) {
+    delete(m, ...keys) {
       let o = m.asMutable();
       return {
         '@@__result__@@': immutable.Map().withMutations((n) => {
@@ -600,12 +561,12 @@ export function handle(obj) {
 }
 
 export const globals = {
-  list(...dims) {
-    return SList.create(dims);
+  list(...items) {
+    return SList.create(items);
   },
 
-  map() {
-    return SMap.create();
+  map(...pairs) {
+    return SMap.create(pairs);
   },
 
   swap(a, b) {
