@@ -1,6 +1,6 @@
 import util from 'util';
 import Snap from 'snapsvg';
-import { globals, handlerKey } from './runtime';
+import { globals, handlerKey, SBase } from './runtime';
 import { extendObject } from './utils';
 
 function number(s) {
@@ -33,7 +33,7 @@ function applyTransforms(el) {
 export const paper = Snap('#canvas');
 
 // all shapes have these basic utilities in common
-export const SShape = {
+export const SShape = extendObject(SBase, {
   repr(el) {
     return '*' + el.type + ':' + el.id + '*';
   },
@@ -92,7 +92,7 @@ export const SShape = {
       el.remove();
     }
   }
-};
+});
 
 export const SRect = extendObject(SShape, {
   methods: extendObject(SShape.methods, {
