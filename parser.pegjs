@@ -142,7 +142,10 @@ While
     }
 
 Begin
-  = 'begin' WB __ sym:Symbol __ params:Params? __ 'do' WB __ body:EndBody {
+  = 'begin' WB __ sym:Symbol __ 'do' WB __ body:EndBody {
+      return buildNode('begin', { name: sym, params: null, body: body });
+    }
+  / 'begin' WB __ sym:Symbol __ '(' EOL? __ params:Params? __ ')' __ 'do' WB __ body:EndBody {
       return buildNode('begin', { name: sym, params: params, body: body });
     }
 
@@ -159,7 +162,7 @@ EndBody
     }
 
 Params
-  = '(' __ first:Symbol rest:( __ ',' __ EOL? __ sym:Symbol { return sym; } )* __ ')' {
+  = first:Symbol rest:( __ ',' __ EOL? __ sym:Symbol { return sym; } )* {
       return [first].concat(rest);
     }
 

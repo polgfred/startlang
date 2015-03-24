@@ -33,11 +33,22 @@ let a = 0
 
 while a < 5 do print inc(a)
 
-begin foo(a, b) do return a + b
+begin foo1 do return 42
 
-begin bar(a, b) do
+print foo1()
+
+begin foo2() do
+  return 42
+end
+
+print foo2()
+
+begin foo3(a, b) do return a + b
+
+print foo3(2, 3)
+
+begin foo4(a, b) do
   return a * b
 end
 
-print foo(2, 3)
-print bar(2, 3)
+print foo4(2, 3)
