@@ -28,21 +28,14 @@ if (a + 2) = b then
   print "3 should not see this"
 end
 
-let g = list()
-insert g, 0, 1, 2, 3, 4, 5
-let h = list()
-insert h, 0, 1, 2, 3, 4, 5
+let g = list(0, 1, 2, 3, 4, 5)
+let h = list(0, 1, 2, 3, 4, 5)
 
 if g = h then print "4a should see this"
 if g != h then print "4b should not see this"
 
-let t = map()
-let t["name"] = "Fred"
-let t["age"] = 40
-
-let u = map()
-let u.name = "Fred"
-let u.age = 40
+let t = map("name", "Fred", "age", 40)
+let u = map("name", "Fred", "age", 40)
 
 if t = u then print "5a should see this"
 
@@ -50,7 +43,7 @@ let t.likes = "computers"
 
 if t != u then print "5b should see this"
 
-remove t, "likes"
+delete t, "likes"
 let t.age = 41
 
 if t != u then print "5c should see this"

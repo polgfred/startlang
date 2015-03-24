@@ -15,7 +15,7 @@ end
 
 print "hi"
 
-for x in range(0, 10) do
+for x in 0, 10 do
   let z = 1
   loop
   print z

@@ -8,7 +8,7 @@ let pi = 4*atan(1)
 let torad = pi/180
 let todeg = 180/pi
 
-for x1 in range(-360,355,5) do
+for x1 in -360,355,5 do
   let x2 = x1+5
   let y1 = 5*todeg*sin(torad*x1/2)
   let y2 = 5*todeg*sin(torad*x2/2)
