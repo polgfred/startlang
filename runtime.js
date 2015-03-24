@@ -1,4 +1,3 @@
-import util from 'util';
 import immutable from 'immutable';
 import { extendObject } from './utils';
 

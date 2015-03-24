@@ -1,4 +1,3 @@
-import util from 'util';
 import Snap from 'snapsvg';
 import { globals, handlerKey, SBase } from './runtime';
 import { extendObject } from './utils';
@@ -167,7 +166,7 @@ Snap.plugin(function(_, Element, Paper) {
   Element.prototype[handlerKey] = (obj) => handlerMap[obj.type];
 });
 
-util._extend(globals, {
+Object.assign(globals, {
   refresh: function() {
     return new Promise((resolve) => {
       setImmediate(resolve);
