@@ -320,7 +320,7 @@ UnaryOp
 // Invocation
 
 CallExpr
-  = name:Symbol __ '(' __ args:Values? __ ')' {
+  = name:Symbol __ '(' __ EOL? __ args:Values? __ ')' {
       return buildNode('call', { name: name, args: args });
     }
   / IndexExpr
