@@ -112,35 +112,16 @@ Control
   / While
   / Begin
 
-// Control structures each have a single-line form and a block form
-
 If
-  = 'if' WB __ cond:Value __ 'then' WB __ tbody:Statement __ 'else' WB __ fbody:Statement {
+  = 'if' WB __ cond:Value __ 'then' WB __ tbody:MiddleBody __ 'else' WB __ fbody:EndBody {
       return buildNode('if', { cond: cond, tbody: tbody, fbody: fbody });
     }
-  / 'if' WB __ cond:Value __ 'then' WB __ tbody:Statement {
-      return buildNode('if', { cond: cond, tbody: tbody });
-    }
-  / 'if' WB __ cond:Value __ 'then' EOL
-    tbody:Block
-    __ 'else' EOL
-    fbody:Block
-    __ 'end' {
-      return buildNode('if', { cond: cond, tbody: tbody, fbody: fbody });
-    }
-  / 'if' WB __ cond:Value __ 'then' EOL
-    tbody:Block
-    __ 'end' {
+  / 'if' WB __ cond:Value __ 'then' WB __ tbody:EndBody {
       return buildNode('if', { cond: cond, tbody: tbody });
     }
 
 For
-  = 'for' WB __ sym:Symbol __ 'in' WB __ range:Range __ 'do' WB __ body:Statement {
-      return buildNode('for', { name: sym, range: range, body: body });
-    }
-  / 'for' WB __ sym:Symbol __ 'in' WB __ range:Range __ 'do' EOL
-    body:Block
-    __ 'end' {
+  = 'for' WB __ sym:Symbol __ 'in' WB __ range:Range __ 'do' WB __ body:EndBody {
       return buildNode('for', { name: sym, range: range, body: body });
     }
 
@@ -156,23 +137,25 @@ Range
   / Value
 
 While
-  = 'while' WB __ cond:Value __ 'do' WB __ body:Statement {
-      return buildNode('while', { cond: cond, body: body });
-    }
-  / 'while' WB __ cond:Value __ 'do' EOL
-    body:Block
-    __ 'end' {
+  = 'while' WB __ cond:Value __ 'do' WB __ body:EndBody {
       return buildNode('while', { cond: cond, body: body });
     }
 
 Begin
-  = 'begin' WB __ sym:Symbol __ params:Params? __ 'do' WB __ body:Statement {
+  = 'begin' WB __ sym:Symbol __ params:Params? __ 'do' WB __ body:EndBody {
       return buildNode('begin', { name: sym, params: params, body: body });
     }
-  / 'begin' WB __ sym:Symbol __ params:Params? __ 'do' EOL
-    body:Block
-    __ 'end' {
-      return buildNode('begin', { name: sym, params: params, body: body });
+
+MiddleBody
+  = Statement
+  / EOL b:Block {
+      return b;
+    }
+
+EndBody
+  = Statement
+  / EOL b:Block __ 'end' {
+      return b;
     }
 
 Params

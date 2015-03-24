@@ -1,0 +1,43 @@
+let a = 1
+
+if a = 1 then print "yes" else print "no"
+
+if a = 1 then print "yes" else
+  print "no"
+end
+
+if a = 1 then
+  print "yes"
+else print "no"
+
+if a = 1 then
+  print "yes"
+else
+  print "no"
+end
+
+for i in 1, 5 do print i
+
+for i in 1, 5 do
+  print i
+end
+
+let a = 0
+
+while a < 5 do
+  inc a
+  print a
+end
+
+let a = 0
+
+while a < 5 do print inc(a)
+
+begin foo(a, b) do return a + b
+
+begin bar(a, b) do
+  return a * b
+end
+
+print foo(2, 3)
+print bar(2, 3)
