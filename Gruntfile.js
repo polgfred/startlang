@@ -7,22 +7,13 @@ module.exports = function(grunt) {
           reload: true
         }
       },
+      copy: {
+        files: [ 'web/main.html', 'web/main.css' ],
+        tasks: [ 'copy:static' ]
+      },
       peg: {
         files: [ 'parser.pegjs' ],
         tasks: [ 'peg' ]
-      },
-      bundle: {
-        files: [ '*.js', 'web/*.js', '!Gruntfile.js', '!web/bundle.js' ],
-        tasks: [ 'copy', 'browserify', 'extract_sourcemap' ]
-      }
-    },
-    peg: {
-      options: {
-        trackLineAndColumn: true
-      },
-      parser: {
-        src: 'parser.pegjs',
-        dest: 'parser.js'
       }
     },
     copy: {
@@ -36,11 +27,21 @@ module.exports = function(grunt) {
         dest: 'dist/'
       }
     },
+    peg: {
+      options: {
+        trackLineAndColumn: true
+      },
+      parser: {
+        src: 'parser.pegjs',
+        dest: 'parser.js'
+      }
+    },
     browserify: {
       dist: {
         files: { 'dist/web/bundle.js': 'web/main.js' }
       },
       options: {
+        watch: true,
         transform: [
           [ 'babelify', { ignore: 'parser.js' } ]
         ],
@@ -49,11 +50,6 @@ module.exports = function(grunt) {
           basedir: 'dist/web'
         }
       }
-    },
-    extract_sourcemap: {
-      dist: {
-        files: { 'dist/web': [ 'dist/web/bundle.js' ] }
-      }
     }
   });
 
@@ -61,8 +57,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-browserify');
   grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-contrib-watch');
-  grunt.loadNpmTasks('grunt-extract-sourcemap');
   grunt.loadNpmTasks('grunt-peg');
 
-  grunt.registerTask('default', [ 'watch' ]);
+  grunt.registerTask('default', [ 'copy', 'peg', 'browserify', 'watch' ]);
 };
