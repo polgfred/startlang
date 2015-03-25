@@ -167,12 +167,23 @@ Params
     }
 
 Statement
-  = Let
+  = Flow
+  / Let
   / Call
-  / Flow
+
+Flow
+  = 'break' WB {
+      return buildNode('break');
+    }
+  / 'next' WB {
+      return buildNode('next');
+    }
+  / 'return' WB __ result:Value? {
+      return buildNode('return', { result: result });
+    }
 
 Let
-  = 'let' WB __ name:Symbol __ indexes:Dimensions? __ '=' __ value:Value {
+  = ( 'let' WB __ )? name:Symbol __ indexes:Dimensions? __ '=' __ value:Value {
       if (!indexes) {
         return buildNode('let', { name: name, value: value });
       } else {
@@ -186,17 +197,6 @@ Call
     }
   / name:Symbol __ args:Values? {
       return buildNode('call', { name: name, args: args });
-    }
-
-Flow
-  = 'break' WB {
-      return buildNode('break');
-    }
-  / 'next' WB {
-      return buildNode('next');
-    }
-  / 'return' WB __ result:Value? {
-      return buildNode('return', { result: result });
     }
 
 // Values
