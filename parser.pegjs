@@ -335,7 +335,7 @@ Dimension
   = '[' __ v:Value __ ']' {
       return v;
     }
-  / '.' sym:Symbol {
+  / '.' __ sym:Symbol {
       return buildNode('literal', { value: sym });
     }
 
