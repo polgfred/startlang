@@ -3,6 +3,11 @@
 {
   // build an object for this node
   function buildNode(type, attrs) {
+    // if we're a block with one statement, just return the statement itself
+    if (type == 'block' && attrs.elems.length == 1) {
+      return attrs.elems[0];
+    }
+
     // show the type first
     var node = { type: type };
 
