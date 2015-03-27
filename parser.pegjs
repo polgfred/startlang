@@ -212,30 +212,27 @@ Values
     }
 
 Value
-  = CondExpr
+  = ConjExpr
 
 // Conditions
 
-CondExpr
-  = NotExpr
-  / ConjExpr
-
-NotExpr
-  = op:NotOp __ right:RelExpr {
-      return buildNode('logicalOp', { op: op, right: right });
-    }
-
-NotOp
-  = 'not' WB { return 'not'; }
-
 ConjExpr
-  = first:RelExpr rest:( __ op:ConjOp __ e:RelExpr { return [op, e]; } )* {
+  = first:NotExpr rest:( __ op:ConjOp __ e:NotExpr { return [op, e]; } )* {
       return buildLogicalOp(first, rest);
     }
 
 ConjOp
   = 'and' WB { return 'and'; }
   / 'or'  WB { return 'or';  }
+
+NotExpr
+  = op:NotOp __ right:RelExpr {
+      return buildNode('logicalOp', { op: op, right: right });
+    }
+  / RelExpr
+
+NotOp
+  = 'not' WB { return 'not'; }
 
 RelExpr
   = left:ConcatExpr __ op:RelOp __ right:ConcatExpr {
