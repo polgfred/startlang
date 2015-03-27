@@ -2,8 +2,8 @@ begin f1 do
   print "in f1"
 end
 
-let x = 50
-let y = (x + 1)
+x = 50
+y = (x + 1)
 
 begin john do
   for i in 1, 10, 2 do

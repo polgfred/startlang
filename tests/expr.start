@@ -1,6 +1,6 @@
-let a = 1
-let b = 2
-let c = 3
+a = 1
+b = 2
+c = 3
 
 if a = 1 then print "0 should see this"
 
@@ -8,43 +8,43 @@ if not a = 1 then
   print "0 should not see this"
 end
 
-if not (a = 1 and (not b = 3)) then
+if not (a = 1 and not b = 3) then
   print "0 should not see this"
 end
 
-if a = 1 and b = 2 and (not c = 4) then
+if a = 1 and b = 2 and not c = 4 then
   print "1 should see this"
 end
 
-let x = 0
-let y = 1
-let z = 3
+x = 0
+y = 1
+z = 3
 
-if (x = -2 * a + b and (y = 1 or z = 2)) or f = 2 then
+if (x = -2*a+b and (y = 1 or z = 2)) or f = 2 then
   print "2 should see this"
 end
 
-if (a + 2) = b then
+if a+2 = b then
   print "3 should not see this"
 end
 
-let g = list(0, 1, 2, 3, 4, 5)
-let h = list(0, 1, 2, 3, 4, 5)
+g = list(0,1,2,3,4,5)
+h = list(0,1,2,3,4,5)
 
 if g = h then print "4a should see this"
 if g != h then print "4b should not see this"
 
-let t = map("name", "Fred", "age", 40)
-let u = map("name", "Fred", "age", 40)
+t = map("name","Fred","age",40)
+u = map("name","Fred","age",40)
 
 if t = u then print "5a should see this"
 
-let t.likes = "computers"
+t.likes = "computers"
 
 if t != u then print "5b should see this"
 
 delete t, "likes"
-let t.age = 41
+t.age = 41
 
 if t != u then print "5c should see this"
 

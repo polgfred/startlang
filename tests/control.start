@@ -1,4 +1,4 @@
-let a = 1
+a = 1
 
 if a = 1 then print "yes" else print "no"
 
@@ -22,14 +22,14 @@ for i in 1, 5 do
   print i
 end
 
-let a = 0
+a = 0
 
 while a < 5 do
   inc a
   print a
 end
 
-let a = 0
+a = 0
 
 while a < 5 do print inc(a)
 

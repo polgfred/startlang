@@ -1,17 +1,17 @@
-let upper = 1000
-let check = sqrt(upper)
-let primes = list(upper)
+upper = 1000
+check = sqrt(upper)
+primes = list(upper)
 
-for i in 0, 2 do let primes[i] = 0
-for i in 2, upper do let primes[i] = 1
+for i in 0,1 do primes[i] = false
+for i in 2,upper-1 do primes[i] = true
 
-let i = 0
+i = 0
 while i <= check do
-  while i <= check and primes[i] = 0 do inc i
-  for j in i * 2, upper, i do let primes[j] = 0
+  while i <= check and not primes[i] do inc i
+  for j in i*2,upper-1,i do primes[j] = false
   inc i
 end
 
-for i in 0, upper do
-  if primes[i] = 1 then print "`i` is prime"
+for i in 0,upper-1 do
+  if primes[i] then print "`i` is prime"
 end

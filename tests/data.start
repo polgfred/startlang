@@ -1,22 +1,20 @@
 begin shmoop do
-  let z = 10
+  z = 10
   print z
 end
 
 begin loop do
-  let y = x * 2
-
-  if y + 7 > 18 then print "`y + 7` is ""greater"" than 18"
-
-  let z = 5
+  y = x*2
+  if y+7 > 18 then print "`y+7` is ""greater"" than 18"
+  z = 5
   shmoop
   print z
 end
 
 print "hi"
 
-for x in 0, 10 do
-  let z = 1
+for x in 0,10 do
+  z = 1
   loop
   print z
 end

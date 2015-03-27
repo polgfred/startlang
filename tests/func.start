@@ -1,8 +1,4 @@
-let a = list()
-let a[0] = 0
-let a[1] = 1
-let a[2] = 2
-let a[3] = 3
+a = list(0,1,2,3)
 
 print len(a)
 
@@ -16,28 +12,20 @@ begin lily(foo, bar) do
   print "`foo` and `bar` are friends"
 end
 
-let foo = 123
+foo = 123
 print "foo is `foo`"
 
-lily 1 + 2, 3 + 4
-lily 5 + 6, 7 + 8
+lily 1+2, 3+4
+lily 5+6, 7+8
 
 print "foo is still `foo`"
 
 begin compare(first, second) do
-  if first > second then
-    return 1
-  else
-    if first < second then
-      return -1
-    else
-      return 0
-    end
+  if first > second then return 1 else
+    if first < second then return -1 else return 0
   end
 end
 
-for x in 8, 13 do
+for x in 8,13 do
   print "compare(`x`, 10) is `compare(x, 10)`"
 end
-
-; this is a comment
