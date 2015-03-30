@@ -1,6 +1,7 @@
 import $ from 'jquery';
 import ace from 'brace';
-import 'brace/mode/pascal';
+import 'brace/theme/textmate';
+import { default as StartMode } from './start_mode';
 import { parse } from '../parser';
 import { createRuntime, globals, handle } from '../runtime';
 import { createInterpreter } from '../interpreter';
@@ -12,7 +13,7 @@ editor.setTheme('ace/theme/textmate');
 editor.setShowFoldWidgets(false);
 editor.getSession().setTabSize(2);
 editor.getSession().setUseSoftTabs(true);
-editor.getSession().setMode('ace/mode/pascal');
+editor.getSession().setMode(new StartMode());
 
 export const terminal = $('#terminal').term({ prompt: '> ' });
 var termapi = terminal.data('term');

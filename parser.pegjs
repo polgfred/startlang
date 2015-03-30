@@ -423,6 +423,7 @@ Reserved
   / 'end'      WB
   / 'for'      WB
   / 'in'       WB
+  / 'do'       WB
   / 'while'    WB
   / 'begin'    WB
   / 'break'    WB
