@@ -10,53 +10,44 @@ class StartHighlightRules extends TextHighlightRules {
     this.$rules = {
       start: [
         {
-          token: 'keyword.control.start',
-          regex: /\b(?:if|else|end|for|in|do|while|begin|break|next|return|let)\b/
+          token: 'keyword',
+          regex: /\b(?:if|then|else|end|for|in|do|while|begin|break|next|return|let|and|or|not)\b/
         }, {
-          token: 'keyword.start',
-          regex: /\b(?:and|or|not)\b/
-        }, {
-          token: 'constant.language.start',
+          token: 'constant.language',
           regex: /\b(?:none|true|false|infinity)\b/
         }, {
-          token: 'punctuation.operator.start',
-          regex: /(?:,|\+|\-|\/|\*|\*\*|%|=|!=|<|<=|>|>=|&|\||~)/
+          token: 'keyword.operator',
+          regex: /[,+\-*/%!=<>&|~()\[\]]/
         }, {
-          token: 'punctuation.paren.start',
-          regex: /(?:\(|\[|\)|\])/
-        }, {
-          token: 'identifier.start',
-          regex: /\b(?:\w+)\b/
-        }, {
-          token: 'constant.numeric.start',
+          token: 'constant.numeric',
           regex: /\b(?:\d+(\.\d+)?([eE][\-+]?\d+)?)\b/
         }, {
-          token: 'comment.start',
+          token: 'comment',
           regex: /;.*(?=$)/
         }, {
-          token: 'constant.string.start',
+          token: 'string',
           regex: /"/,
           push: 'string'
         }, {
-          token: 'punctuation.quote.start',
+          token: 'keyword.operator',
           regex: /`/,
           next: 'pop'
         }
       ],
       string: [
         {
-          token: 'constant.string.start',
+          token: 'string',
           regex: /""/
         }, {
-          token: 'punctuation.quote.start',
+          token: 'keyword.operator',
           regex: /`/,
           push: 'start'
         }, {
-          token: 'constant.string.start',
+          token: 'string',
           regex: /"/,
           next: 'pop'
         }, {
-          defaultToken: 'constant.string.start'
+          defaultToken: 'string'
         }
       ]
     };

@@ -419,6 +419,7 @@ Reserved
   / 'false'    WB
   / 'infinity' WB
   / 'if'       WB
+  / 'then'     WB
   / 'else'     WB
   / 'end'      WB
   / 'for'      WB
