@@ -16,8 +16,14 @@ class StartHighlightRules extends TextHighlightRules {
           token: 'constant.language',
           regex: /\b(?:none|true|false|infinity)\b/
         }, {
+          token: 'support.function',
+          regex: /\b(?:list|map|swap|print|sleep|abs|acos|asin|atan|ceil|cos|exp|floor|log|round|sin|sqrt|tan|pow|max|min|random|range|len|first|last|copy|insert|delete|replace|reverse|split|upper|lower|join|sort|keys|put)\b/
+        }, {
+          token: 'support.function',
+          regex: /\b(?:refresh|rect|circle|ellipse|line|polyline|polygon|move|fill|stroke|opacity|rotate|scale|clone|remove)\b/
+        }, {
           token: 'keyword.operator',
-          regex: /[,+\-*/%!=<>&|~()\[\]]/
+          regex: /[,+\-*/%!=<>&|~]/
         }, {
           token: 'constant.numeric',
           regex: /\b(?:\d+(\.\d+)?([eE][\-+]?\d+)?)\b/
