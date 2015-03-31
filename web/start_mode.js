@@ -11,16 +11,16 @@ class StartHighlightRules extends TextHighlightRules {
       start: [
         {
           token: 'keyword',
-          regex: /\b(?:if|then|else|end|for|in|do|while|begin|break|next|return|let|and|or|not)\b/
+          regex: /\b(?:and|b(egin|reak)|do|e(lse|nd)|for|i[fn]|let|n(ext|ot)|or|return|then|while)\b/
         }, {
           token: 'constant.language',
-          regex: /\b(?:none|true|false|infinity)\b/
+          regex: /\b(?:false|infinity|none|true)\b/
         }, {
           token: 'support.function',
-          regex: /\b(?:list|map|swap|print|sleep|abs|acos|asin|atan|ceil|cos|exp|floor|log|round|sin|sqrt|tan|pow|max|min|random|range|len|first|last|copy|insert|delete|replace|reverse|split|upper|lower|join|sort|keys|put)\b/
+          regex: /\b(?:a(bs|cos|sin|tan)|c(eil|o(py|s))|delete|exp|f(irst|loor)|insert|join|keys|l(ast|en|ist|o(g|wer))|m(a[px]|in)|p(ow|rint|ut)|r(a(ndom|nge)|e(place|verse)|ound)|s(in|leep|ort|plit|qrt|wap)|tan|upper)\b/
         }, {
           token: 'support.function',
-          regex: /\b(?:refresh|rect|circle|ellipse|line|polyline|polygon|move|fill|stroke|opacity|rotate|scale|clone|remove)\b/
+          regex: /\b(?:c(ircle|lone)|ellipse|fill|line|move|opacity|poly(gon|line)|r(e(ct|fresh|move)|otate)|s(cale|troke))\b/
         }, {
           token: 'keyword.operator',
           regex: /[,+\-*/%!=<>&|~]/
