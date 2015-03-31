@@ -252,14 +252,6 @@ export const SNumber = extendObject(SBase, {
     };
     return ns;
   }, {
-    inc(n) {
-      return { '@@__assign__@@': n + 1 };
-    },
-
-    dec(n) {
-      return { '@@__assign__@@': n - 1 };
-    },
-
     random(n) {
       return Math.random() * n;
     },
