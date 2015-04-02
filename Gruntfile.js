@@ -37,8 +37,11 @@ module.exports = function(grunt) {
       }
     },
     browserify: {
-      dist: {
+      web: {
         files: { 'dist/web/bundle.js': 'web/main.js' }
+      },
+      worker: {
+        files: { 'dist/web/start_worker.js': 'web/start_worker.js' }
       },
       options: {
         watch: true,

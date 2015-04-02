@@ -2,6 +2,7 @@ import ace, { acequire } from 'brace';
 
 let { Mode: TextMode } = acequire('ace/mode/text');
 let { TextHighlightRules } = acequire('ace/mode/text_highlight_rules');
+let { WorkerClient } = acequire('ace/worker/worker_client');
 
 class StartHighlightRules extends TextHighlightRules {
   constructor() {
@@ -69,5 +70,23 @@ export default class Mode extends TextMode {
     this.HighlightRules = StartHighlightRules;
 
     this.lineCommentStart = [';'];
+  }
+
+  createWorker(session) {
+    // only way i could figure out to interact with the npm-brace way of loading worker scripts
+    var mod = { src: 'importScripts("' + location.href.replace('main.html', 'start_worker.js') + '")' },
+        worker = new WorkerClient(['ace'], mod, 'StartWorker', 'start_worker.js');
+
+    worker.attachToDocument(session.getDocument());
+
+    worker.on('lint', function(results) {
+      session.setAnnotations(results.data);
+    });
+
+    worker.on('terminate', function() {
+      session.clearAnnotations();
+    });
+
+    return worker;
   }
 }
