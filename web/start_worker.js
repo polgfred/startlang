@@ -21,7 +21,7 @@ export class StartWorker extends Mirror {
     } catch (e) {
       if (e instanceof ParseError) {
         this.sender.emit('lint', [{
-          row: e.line - 1,
+          row: Math.min(e.line, this.doc.getLength()) - 1,
           column: e.column,
           text: e.message,
           type: 'error'
@@ -31,19 +31,13 @@ export class StartWorker extends Mirror {
   }
 }
 
-self.console = function() {
-  postMessage({ type: 'log', data: [].slice.call(arguments, 0) });
-};
+let sender = null,
+    worker = null;
 
-self.console.log = self.console;
-
-self.sender = self.main = null;
-
-self.onmessage = function (e) {
-  var msg = e.data;
+self.onmessage = function ({ data: msg }) {
   if (msg.init) {
-    self.sender = new Sender();
-    self.main = new StartWorker(sender);
+    sender = new Sender();
+    worker = new StartWorker(sender);
   } else if (msg.event && sender) {
     sender._signal(msg.event, msg.data);
   }

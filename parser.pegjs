@@ -211,7 +211,7 @@ Values
       return [first].concat(rest);
     }
 
-Value
+Value 'a value'
   = ConjExpr
 
 // Conditions
@@ -350,7 +350,7 @@ PrimaryExpr
 
 // Strings
 
-String
+String 'a string'
   = '"' rest:StringSegment* '"' {
       // if the first segment isn't a string literal, make it one
       var first = (rest.length > 0 && rest[0].type == 'literal' && typeof rest[0].value == 'string') ?
@@ -394,7 +394,7 @@ Boolean
       return buildNode('literal', { value: false });
     }
 
-Number
+Number 'a number'
   = 'infinity' WB {
       return buildNode('literal', { value: Infinity });
     }
@@ -410,7 +410,7 @@ Digits
 
 // Symbols
 
-Symbol
+Symbol 'a name'
   = $( !Reserved [a-z_]i [a-z0-9_]i* )
 
 Reserved
@@ -440,8 +440,8 @@ Reserved
 WB
   = ![a-z_]i
 
-__
+__ 'whitespace'
   = [ \t]* ( ';' [^\n]* )?
 
-EOL
+EOL 'end of line'
   = ( __ '\n' )+
