@@ -46,7 +46,7 @@ module.exports = function(grunt) {
       options: {
         watch: true,
         transform: [
-          [ 'babelify', { ignore: 'parser.js' } ]
+          [ 'babelify', { ignore: [ 'parser.js', 'web/worker_support.js' ] } ]
         ],
         browserifyOptions: {
           debug: true,

@@ -1,24 +1,8 @@
-import { EventEmitter } from 'events';
+import { oop, EventEmitter, Mirror } from './worker_support';
+import { parse, SyntaxError as ParseError } from '../parser';
 
-self.console = function() {
-  postMessage({ type: 'log', data: [].slice.call(arguments, 0) });
-};
-
-self.console.log = self.console;
-
-self.onmessage = function (e) {
-  var msg = e.data;
-  if (msg.init) {
-    self.sender = new Sender();
-    self.main = new StartWorker(sender);
-  } else if (msg.event && sender) {
-    console.log(JSON.stringify(msg.data));
-    sender.emit(msg.event, msg.data);
-  }
-};
-
-class Sender extends EventEmitter {
-  notify(name, data) {
+class Sender {
+  emit(name, data) {
     postMessage({
       type: "event",
       name: name,
@@ -27,18 +11,40 @@ class Sender extends EventEmitter {
   }
 }
 
-class Mirror {
-  constructor(sender) {
-    this.sender = sender;
-
-    sender.on('change', (e) => {
-      this.onUpdate();
-    });
-  }
-}
+oop.implement(Sender.prototype, EventEmitter);
 
 export class StartWorker extends Mirror {
   onUpdate() {
-    this.sender.notify('lint', [{ row:0,column:0,text:'An error!',type:'error' }]);
+    try {
+      parse(this.doc.getValue() + '\n');
+      this.sender.emit('lint', []);
+    } catch (e) {
+      if (e instanceof ParseError) {
+        this.sender.emit('lint', [{
+          row: e.line - 1,
+          column: e.column,
+          text: e.message,
+          type: 'error'
+        }]);
+      }
+    }
   }
 }
+
+self.console = function() {
+  postMessage({ type: 'log', data: [].slice.call(arguments, 0) });
+};
+
+self.console.log = self.console;
+
+self.sender = self.main = null;
+
+self.onmessage = function (e) {
+  var msg = e.data;
+  if (msg.init) {
+    self.sender = new Sender();
+    self.main = new StartWorker(sender);
+  } else if (msg.event && sender) {
+    sender._signal(msg.event, msg.data);
+  }
+};
