@@ -62,5 +62,6 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-peg');
 
+  grunt.registerTask('once', [ 'copy', 'peg', 'browserify' ]);
   grunt.registerTask('default', [ 'copy', 'peg', 'browserify', 'watch' ]);
 };
