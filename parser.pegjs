@@ -197,10 +197,10 @@ Let
     }
 
 Call
-  = name:Symbol __ '(' __ EOL? __ args:Values? __ ')' {
+  = name:Symbol __ args:Values? {
       return buildNode('call', { name: name, args: args });
     }
-  / name:Symbol __ args:Values? {
+  / name:Symbol __ '(' __ EOL? __ args:Values? __ ')' {
       return buildNode('call', { name: name, args: args });
     }
 

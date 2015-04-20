@@ -1,7 +1,6 @@
 import { EventEmitter } from 'events';
 
-let hasOwnProperty = Object.prototype.hasOwnProperty, // cache this for performance
-    control = {}; // shared control object for the enter event
+let hasOwnProperty = Object.prototype.hasOwnProperty; // cache this for performance
 
 export class ScriptExit extends Error {}
 
@@ -34,14 +33,10 @@ export class SInterpreter extends EventEmitter {
     }
     // push a frame onto the stack
     //this.frames.push({ node: node, ns: this.ctx.ns, stack: this.ctx.stack });
-    // give the caller a chance to exit or pause
-    //this.emit('enter', node, control);
-    if (control.exit) {
-      control = {};
+    if (node.exit) {
       // return a special error to exit the program
       return Promise.reject(new ScriptExit());
-    } else if (control.pause) {
-      control = {};
+    } else if (node.type == 'while') {
       // return a promise to resume execution when resume() is called
       return new Promise((resolve) => {
         this.resume = () => {

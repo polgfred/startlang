@@ -1,15 +1,15 @@
 var fs = require('fs'),
     util = require('util'),
     readline = require('readline'),
-    parser = require('./parser'),
-    runtime = require('./runtime'),
-    interpreter = require('./interpreter');
+    parser = require('../parser'),
+    runtime = require('../runtime'),
+    interpreter = require('../interpreter');
 
 function output(obj) {
   console.log(util.inspect(obj, { colors: true, depth: null }));
 }
 
-var ctx = runtime.create();
+var ctx = runtime.createRuntime();
 
 var rl = readline.createInterface({
   input: process.stdin,
@@ -22,7 +22,7 @@ rl.prompt();
 rl.on('line', function(line) {
   try {
     var root = parser.parse(line + '\n'),
-        interp = interpreter.create(root, ctx);
+        interp = interpreter.createInterpreter(root, ctx);
 
     interp.on('error', function(err) {
       console.log('Error: ' + err.message);
