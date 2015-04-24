@@ -1,15 +1,15 @@
-var fs = require('fs'),
-    util = require('util'),
-    readline = require('readline'),
-    parser = require('../parser'),
-    runtime = require('../runtime'),
-    interpreter = require('../interpreter');
+import { default as readline } from 'readline';
+
+import { inspect } from 'util';
+import { parse } from '../parser';
+import { createRuntime } from '../runtime';
+import { createInterpreter } from '../interpreter';
 
 function output(obj) {
-  console.log(util.inspect(obj, { colors: true, depth: null }));
+  console.log(inspect(obj, { colors: true, depth: null }));
 }
 
-var ctx = runtime.createRuntime();
+var ctx = createRuntime();
 
 var rl = readline.createInterface({
   input: process.stdin,
@@ -21,8 +21,8 @@ rl.prompt();
 
 rl.on('line', function(line) {
   try {
-    var root = parser.parse(line + '\n'),
-        interp = interpreter.createInterpreter(root, ctx);
+    var root = parse(line + '\n'),
+        interp = createInterpreter(root, ctx);
 
     interp.on('error', function(err) {
       console.log('Error: ' + err.message);

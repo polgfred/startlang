@@ -1,7 +1,7 @@
 import { readFileSync } from 'fs';
 import { inspect } from 'util';
 import { parse } from '../parser';
-import { createRuntime, globals, handle } from '../runtime';
+import { createRuntime } from '../runtime';
 import { createInterpreter } from '../interpreter';
 
 var options = {}, parserOptions = {};
