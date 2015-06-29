@@ -26,9 +26,8 @@ module.exports = function(grunt) {
         dest: 'dist/web/browser-polyfill.js'
       },
       static: {
-        expand: true,
-        src: [ 'web/main.html', 'web/main.css' ],
-        dest: 'dist/'
+        src: 'web/main.html',
+        dest: 'dist/web/main.html'
       }
     },
     peg: {
@@ -49,13 +48,10 @@ module.exports = function(grunt) {
       web: {
         files: { 'dist/web/bundle.js': 'web/main.js' }
       },
-      worker: {
-        files: { 'dist/web/start_worker.js': 'web/start_worker.js' }
-      },
       options: {
         watch: true,
         transform: [
-          [ 'babelify', { ignore: [ 'parser.js', 'web/worker_support.js' ] } ]
+          [ 'babelify', { ignore: [ 'parser.js' ] } ]
         ],
         browserifyOptions: {
           debug: true,
