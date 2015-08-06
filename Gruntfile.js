@@ -40,6 +40,9 @@ module.exports = function(grunt) {
       }
     },
     sass: {
+      options: {
+        precision: 10
+      },
       web: {
         files: { 'dist/web/bundle.css': 'web/main.scss' }
       }
