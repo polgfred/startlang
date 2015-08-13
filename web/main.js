@@ -1,8 +1,6 @@
 import $ from 'jquery';
 
-// bizarre module definitions, but ok
-const Blockly = require('blockly')(window);
-require('blockly/lib/en_compressed.js')(null, Blockly);
+import Blockly from 'node-blockly';
 
 import { parse } from '../parser';
 import { createRuntime, globals, handle } from '../runtime';
@@ -41,7 +39,6 @@ globals.clear = function() {
 Blockly.inject($('#editor')[0], {
   toolbox:
     '<xml>' +
-      '<block type="logic_compare"></block>' +
       '<block type="logic_operation"></block>' +
       '<block type="logic_boolean"></block>' +
     '</xml>'
