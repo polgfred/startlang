@@ -8,6 +8,7 @@
     "test": "tests"
   },
   "dependencies": {
+    "blockly": "0.0.6",
     "bootstrap": "^3.3.5",
     "bootstrap-sass": "^3.3.5",
     "classnames": "^2.1.2",
