@@ -8,12 +8,16 @@ module.exports = function(grunt) {
         }
       },
       copy: {
-        files: [ 'web/main.html', 'web/main.css' ],
+        files: [ 'web/main.html' ],
         tasks: [ 'copy:static' ]
       },
       peg: {
         files: [ 'parser.pegjs' ],
         tasks: [ 'peg' ]
+      },
+      sass: {
+        files: [ 'web/main.scss' ],
+        tasks: [ 'sass' ]
       }
     },
     copy: {
@@ -34,6 +38,11 @@ module.exports = function(grunt) {
       parser: {
         src: 'parser.pegjs',
         dest: 'parser.js'
+      }
+    },
+    sass: {
+      web: {
+        files: { 'dist/web/bundle.css': 'web/main.scss' }
       }
     },
     browserify: {
@@ -59,9 +68,10 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-babel');
   grunt.loadNpmTasks('grunt-browserify');
   grunt.loadNpmTasks('grunt-contrib-copy');
+  grunt.loadNpmTasks('grunt-contrib-sass');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-peg');
 
-  grunt.registerTask('once', [ 'copy', 'peg', 'browserify' ]);
-  grunt.registerTask('default', [ 'copy', 'peg', 'browserify', 'watch' ]);
+  grunt.registerTask('once', [ 'copy', 'peg', 'sass', 'browserify' ]);
+  grunt.registerTask('default', [ 'copy', 'peg', 'sass', 'browserify', 'watch' ]);
 };

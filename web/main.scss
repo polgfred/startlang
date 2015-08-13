@@ -50,27 +50,27 @@ body {
   margin: 10px auto 0;
   overflow: scroll;
   padding: 10px;
-}
 
-#terminal .terminal-output-line,
-#terminal .terminal-output-error {
-  font-weight: bold;
-}
+  .terminal-output-line,
+  .terminal-output-error {
+    font-weight: bold;
+  }
 
-#terminal .terminal-output-error {
-  color: #f00;
-}
+  .terminal-output-error {
+    color: #f00;
+  }
 
-#terminal .terminal-output-line::before {
-}
+  .terminal-output-line::before {
+  }
 
-#terminal .terminal-text {
-  border: 0;
-  font-family: monospace;
-  font-size: 14px;
-  outline: none;
-  padding: 0;
-  width: calc(100% - 20px);
+  .terminal-text {
+    border: 0;
+    font-family: monospace;
+    font-size: 14px;
+    outline: none;
+    padding: 0;
+    width: calc(100% - 20px);
+  }
 }
 
 #runner {
@@ -84,8 +84,8 @@ body {
   right: 10px;
   top: 10px;
   z-index: 10;
-}
 
-#runner:active {
-  background-color: #ddd;
+  &:active {
+    background-color: #ddd;
+  }
 }
