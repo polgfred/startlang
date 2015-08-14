@@ -36,13 +36,7 @@ globals.clear = function() {
 
 // wire it up
 
-Blockly.inject($('#editor')[0], {
-  toolbox:
-    '<xml>' +
-      '<block type="logic_operation"></block>' +
-      '<block type="logic_boolean"></block>' +
-    '</xml>'
-});
+Blockly.inject($('#editor')[0], { toolbox: $('#toolbox')[0] });
 
 let ctx = createRuntime();
 
