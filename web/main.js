@@ -1,6 +1,7 @@
 import $ from 'jquery';
 
 import Blockly from 'node-blockly';
+import '../blocks';
 
 import { parse } from '../parser';
 import { createRuntime, globals, handle } from '../runtime';
