@@ -183,6 +183,25 @@
             </value>
           </block>
         </category>
+        <category name="Tables">
+          <block type="tables_create_empty"></block>
+          <block type="tables_size"></block>
+          <block type="tables_isEmpty"></block>
+          <block type="tables_getIndex">
+            <value name="VALUE">
+              <block type="variables_get">
+                <field name="VAR">table</field>
+              </block>
+            </value>
+          </block>
+          <block type="tables_setIndex">
+            <value name="TABLE">
+              <block type="variables_get">
+                <field name="VAR">table</field>
+              </block>
+            </value>
+          </block>
+        </category>
         <sep></sep>
         <category name="Variables" custom="VARIABLE"></category>
         <category name="Functions" custom="PROCEDURE"></category>
