@@ -13,6 +13,7 @@
     "classnames": "^2.1.2",
     "immutable": "^3.6.4",
     "jquery": "^2.1.3",
+    "lodash": "^3.10.1",
     "node-blockly": "git://github.com/polgfred/node-blockly#master",
     "react": "^0.13.3",
     "react-bootstrap": "^0.23.5",

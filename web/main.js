@@ -1,7 +1,8 @@
 import $ from 'jquery';
 
-import Blockly from 'node-blockly';
-import '../blocks';
+import Blockly from '../blockly_wrapper';
+import Astgen from '../astgen';
+global.Astgen = Astgen;
 
 import { parse } from '../parser';
 import { createRuntime, globals, handle } from '../runtime';
@@ -38,6 +39,7 @@ globals.clear = function() {
 // wire it up
 
 Blockly.inject($('#editor')[0], { toolbox: $('#toolbox')[0] });
+Blockly.Xml.domToWorkspace(Blockly.getMainWorkspace(), $('#expr')[0]);
 
 let ctx = createRuntime();
 

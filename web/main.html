@@ -12,7 +12,7 @@
     <div id="sidebar">
       <div id="editor"></div>
 
-      <xml id="toolbox" style="display: none">
+      <xml id="toolbox" style="display:none;">
         <category name="Logic">
           <block type="controls_if0"></block>
           <block type="controls_if_else0"></block>
@@ -57,7 +57,7 @@
           <block type="math_arithmetic"></block>
           <block type="math_single"></block>
           <block type="math_trig"></block>
-          <block type="math_constant"></block>
+          <!--block type="math_constant"></block-->
           <block type="math_number_property"></block>
           <block type="math_change">
             <value name="DELTA">
@@ -207,6 +207,37 @@
         <category name="Variables" custom="VARIABLE"></category>
         <category name="Functions" custom="PROCEDURE"></category>
       </xml>
+
+      <xml id="expr" style="display:none;">
+        <block type="logic_operation" id="16" x="81" y="51">
+          <field name="OP">AND</field>
+          <value name="A">
+            <block type="logic_compare" id="24">
+              <field name="OP">EQ</field>
+              <value name="A">
+                <block type="math_number" id="86">
+                  <field name="NUM">1</field>
+                </block>
+              </value>
+              <value name="B">
+                <block type="math_number" id="87">
+                  <field name="NUM">0</field>
+                </block>
+              </value>
+            </block>
+          </value>
+          <value name="B">
+            <block type="logic_negate" id="59">
+              <value name="BOOL">
+                <block type="logic_boolean" id="67">
+                  <field name="BOOL">TRUE</field>
+                </block>
+              </value>
+            </block>
+          </value>
+        </block>
+      </xml>
+
     </div>
 
     <script src="browser-polyfill.js"></script>
