@@ -133,6 +133,10 @@ export default class Astgen {
     //case 'LOG10':
   }
 
+  math_round(block) {
+    return this.math_single(block);
+  }
+
   math_trig(block) {
     return this.math_single(block);
   }
@@ -200,6 +204,52 @@ export default class Astgen {
         }),
         right: delta
       })
+    });
+  }
+
+  // math_on_list(block) {
+  //
+  // }
+
+  math_modulo(block) {
+    return buildNode('binaryOp', block, {
+      op: '%',
+      left: this.handleBlock(block, 'DIVIDEND'),
+      right: this.handleBlock(block, 'DIVISOR')
+    });
+  }
+
+  math_constrain(block) {
+    function valueOrDefault(name, default_) {
+      return block.getInputTargetBlock(name) ?
+              this.handleBlock(block, name) :
+              wrapLiteral(default_);
+    }
+
+    return buildNode('call', block, {
+      name: 'constrain',
+      args: [
+        this.handleBlock(block, 'VALUE'),
+        valueOrDefault.call(this, 'LOW', 0),
+        valueOrDefault.call(this, 'HIGH', Infinity)
+      ]
+    });
+  }
+
+  math_random_int(block) {
+    return buildNode('call', block, {
+      name: 'randrange',
+      args: [
+        this.handleBlock(block, 'FROM'),
+        this.handleBlock(block, 'TO')
+      ]
+    });
+  }
+
+  math_random_float(block) {
+    return buildNode('call', block, {
+      name: 'random',
+      args: []
     });
   }
 
