@@ -24,13 +24,13 @@
           </block>
         </category>
         <category name="Loops">
-          <block type="controls_repeat_ext">
+          <!--block type="controls_repeat_ext">
             <value name="TIMES">
               <block type="math_number">
                 <field name="NUM">10</field>
               </block>
             </value>
-          </block>
+          </block-->
           <block type="controls_whileUntil"></block>
           <block type="controls_for">
             <value name="FROM">
@@ -208,7 +208,7 @@
         <category name="Functions" custom="PROCEDURE"></category>
       </xml>
 
-      <xml id="expr" style="display:none;">
+      <xml id="expr0" style="display:none;">
         <block type="logic_operation" id="16" x="81" y="51">
           <field name="OP">AND</field>
           <value name="A">
@@ -238,6 +238,62 @@
         </block>
       </xml>
 
+      <xml id="expr" style="display:none;">
+        <block type="controls_whileUntil" id="34" x="20" y="29">
+          <field name="MODE">WHILE</field>
+          <value name="BOOL">
+            <block type="logic_compare" id="42">
+              <field name="OP">LT</field>
+              <value name="A">
+                <block type="variables_get" id="45">
+                  <field name="VAR">x</field>
+                </block>
+              </value>
+              <value name="B">
+                <block type="math_number" id="63">
+                  <field name="NUM">10</field>
+                </block>
+              </value>
+            </block>
+          </value>
+          <statement name="DO">
+            <block type="text_print" id="24">
+              <value name="TEXT">
+                <block type="logic_operation" id="1">
+                  <field name="OP">AND</field>
+                  <value name="A">
+                    <block type="logic_compare" id="2">
+                      <field name="OP">EQ</field>
+                      <value name="A">
+                        <block type="math_number" id="3">
+                          <field name="NUM">1</field>
+                        </block>
+                      </value>
+                      <value name="B">
+                        <block type="math_number" id="4">
+                          <field name="NUM">0</field>
+                        </block>
+                      </value>
+                    </block>
+                  </value>
+                  <value name="B">
+                    <block type="logic_negate" id="5">
+                      <value name="BOOL">
+                        <block type="logic_boolean" id="6">
+                          <field name="BOOL">TRUE</field>
+                        </block>
+                      </value>
+                    </block>
+                  </value>
+                </block>
+              </value>
+              <next>
+                <block type="text_print" id="81"></block>
+              </next>
+            </block>
+          </statement>
+        </block>
+      </xml>
     </div>
 
     <script src="browser-polyfill.js"></script>
