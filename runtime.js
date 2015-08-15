@@ -344,19 +344,17 @@ export const SString = extendObject(SBase, {
       return pos >= 0 ? pos : null;
     },
 
-    copy(s, at, length) {
+    chars(s, at, length) {
+      // adjust for 1-based indexes and negative offsets
+      at = at > 0 ? at - 1 : Math.max(0, s.length + at);
       return s.substr(at, length);
     },
 
-    insert(s, at, more) {
-      return { '@@__assign__@@': s.substr(0, at) + more + s.substr(at) };
-    },
-
-    delete(s, at, length) {
-      return {
-        '@@__assign__@@': s.substr(0, at) + s.substr(at + length),
-        '@@__result__@@': s.substr(at, length)
-      };
+    copy(s, start, end) {
+      // adjust for 1-based indexes and negative offsets
+      start = start > 0 ? start - 1 : Math.max(0, s.length + start);
+      end = end > 0 ? end - 1 : Math.max(0, s.length + end);
+      return s.substring(start, end);
     },
 
     replace(s, search, to) {

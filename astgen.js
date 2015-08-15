@@ -16,8 +16,8 @@ function buildNode(type, block, attrs) {
 }
 
 function wrapLiteral(val, block) {
-  // if it's already a literal, pass it through
-  return val.type == 'literal' ? val : buildNode('literal', block, {
+  // if it's already a node, pass it through
+  return val.type ? val : buildNode('literal', block, {
     value: val
   });
 }
@@ -26,7 +26,7 @@ export default class Astgen {
   handleValue(block, name) {
     // just dispatch on block type
     let target = name ? block.getInputTargetBlock(name) : block;
-    return this[target.type](target);
+    return target && this[target.type](target);
   }
 
   handleStatements(block, name) {
@@ -272,9 +272,7 @@ export default class Astgen {
 
   math_constrain(block) {
     function valueOrDefault(name, default_) {
-      return block.getInputTargetBlock(name) ?
-              this.handleValue(block, name) :
-              wrapLiteral(default_);
+      return this.handleValue(block, name) || wrapLiteral(default_);
     }
 
     return buildNode('call', block, {
@@ -310,12 +308,141 @@ export default class Astgen {
     return wrapLiteral(block.getFieldValue('TEXT'), block);
   }
 
+  text_join(block) {
+    let str = wrapLiteral(this.handleValue(block, 'ADD0'), block);
+
+    for (let i = 1; i < block.itemCount_; ++i) {
+      str = buildNode('binaryOp', block, {
+        op: '$',
+        left: str,
+        right: wrapLiteral(this.handleValue(block, 'ADD' + i), block)
+      });
+    }
+
+    return str;
+  }
+
+  text_append(block) {
+    let name = block.getFieldValue('VAR');
+
+    return buildNode('let', block, {
+      name: name,
+      value: buildNode('binaryOp', block, {
+        op: '$',
+        left: buildNode('var', block, {
+          name: name,
+        }),
+        right: this.handleValue(block, 'TEXT')
+      })
+    });
+  }
+
+  text_length(block) {
+    return buildNode('call', block, {
+      name: 'len',
+      args: [ this.handleValue(block, 'VALUE') ]
+    });
+  }
+
+  text_isEmpty(block) {
+    return buildNode('binaryOp', block, {
+      op: '=',
+      left: this.text_length(block),
+      right: wrapLiteral(0, block)
+    });
+  }
+
+  text_indexOf(block) {
+    let mode = block.getFieldValue('END').toLowerCase();
+
+    return buildNode('call', block, {
+      name: mode,
+      args: [
+        this.handleValue(block, 'VALUE'),
+        this.handleValue(block, 'FIND')
+      ]
+    });
+  }
+
+  text_getPosition(block, suffix) {
+    suffix = suffix || '';
+    let where = block.getFieldValue('WHERE' + suffix);
+    let at = this.handleValue(block, 'AT' + suffix);
+
+    switch (where) {
+      case 'FIRST':
+        return wrapLiteral(1, block);
+      case 'LAST':
+        return wrapLiteral(-1, block);
+      case 'FROM_START':
+        return at;
+      case 'FROM_END':
+        if (at.type == 'literal') {
+          at.value = -at.value;
+        } else {
+          at = buildNode('unaryOp', block, {
+            op: '-',
+            right: at
+          });
+        }
+        return at;
+    }
+  }
+
+  text_charAt(block) {
+    return buildNode('call', block, {
+      name: 'chars',
+      args: [
+        this.handleValue(block, 'VALUE'),
+        this.text_getPosition(block),
+        wrapLiteral(1, block)
+      ]
+    });
+  }
+
+  text_getSubstring(block) {
+    return buildNode('call', block, {
+      name: 'copy',
+      args: [
+        this.handleValue(block, 'STRING'),
+        this.text_getPosition(block, '1'),
+        this.text_getPosition(block, '2')
+      ]
+    });
+  }
+
+  text_changeCase(block) {
+    let CASES = {
+      'UPPERCASE': 'upper',
+      'LOWERCASE': 'lower',
+      'TITLECASE': 'title'
+    };
+
+    return buildNode('call', block, {
+      name: CASES[block.getFieldValue('CASE')],
+      args: [ this.handleValue(block, 'TEXT') ]
+    });
+  }
+
+  text_trim(block) {
+    let TRIMS = {
+      'LEFT':   'ltrim',
+      'RIGHT':  'rtrim',
+      'BOTH':   'trim'
+    };
+
+    return buildNode('call', block, {
+      name: TRIMS[block.getFieldValue('MODE')],
+      args: [ this.handleValue(block, 'TEXT') ]
+    });
+  }
+
   text_print(block) {
+    let text = this.handleValue(block, 'TEXT');
+
     return buildNode('call', block, {
       name: 'print',
-      args: block.getInputTargetBlock('TEXT') ?
-              [ this.handleValue(block, 'TEXT') ] :
-              []
+      args: text ? [ text ] : []
     });
   }
 
