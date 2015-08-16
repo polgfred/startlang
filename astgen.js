@@ -48,8 +48,18 @@ export default class Astgen {
   // loops
 
   controls_whileUntil(block) {
-    return buildNode(block.getFieldValue('MODE').toLowerCase(), block, {
-      cond: this.handleValue(block, 'BOOL'),
+    let cond = this.handleValue(block, 'BOOL');
+
+    if (block.getFieldValue('MODE') == 'UNTIL') {
+      // reverse the condition
+      cond = buildNode('logicalOp', block, {
+        op: 'not',
+        right: cond
+      });
+    }
+
+    return buildNode('while', block, {
+      cond: cond,
       body: this.handleStatements(block, 'DO')
     });
   }
