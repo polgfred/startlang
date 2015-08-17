@@ -281,16 +281,16 @@ export default class Astgen {
   }
 
   math_constrain(block) {
-    function valueOrDefault(name, default_) {
+    let valueOrDefault = (name, default_) => {
       return this.handleValue(block, name) || wrapLiteral(default_);
-    }
+    };
 
     return buildNode('call', block, {
       name: 'constrain',
       args: [
         this.handleValue(block, 'VALUE'),
-        valueOrDefault.call(this, 'LOW', 0),
-        valueOrDefault.call(this, 'HIGH', Infinity)
+        valueOrDefault('LOW', 0),
+        valueOrDefault('HIGH', Infinity)
       ]
     });
   }
