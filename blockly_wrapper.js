@@ -146,11 +146,8 @@ Blockly.Blocks['tables_create_with'] = {
         } else {
           input.setAlign(Blockly.ALIGN_RIGHT);
         }
-        if (!this.savedKeys[i]) {
-          this.savedKeys[i] = 'key' + (i+1);
-        }
         input.appendField(Blockly.Msg.TABLES_CREATE_WITH_INPUT_KEY)
-             .appendField(new Blockly.FieldTextInput(this.savedKeys[i]), 'KEY' + i)
+             .appendField(new Blockly.FieldTextInput(this.savedKeys[i] || 'key' + (i+1)), 'KEY' + i)
              .appendField(Blockly.Msg.TABLES_CREATE_WITH_INPUT_AS);
       }
     }
