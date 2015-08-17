@@ -14,8 +14,7 @@
 
       <xml id="toolbox" style="display:none;">
         <category name="Logic">
-          <block type="controls_if0"></block>
-          <block type="controls_if_else0"></block>
+          <block type="controls_if"></block>
           <block type="logic_compare"></block>
           <block type="logic_operation"></block>
           <block type="logic_negate"></block>
@@ -238,7 +237,7 @@
         </block>
       </xml>
 
-      <xml id="expr" style="display:none;">
+      <xml id="expr1" style="display:none;">
         <block type="controls_whileUntil" id="34" x="20" y="29">
           <field name="MODE">WHILE</field>
           <value name="BOOL">
@@ -290,6 +289,69 @@
               <next>
                 <block type="text_print" id="81"></block>
               </next>
+            </block>
+          </statement>
+        </block>
+      </xml>
+
+      <xml id="expr" style="display:none;">
+        <block type="controls_if" id="1" x="39" y="28">
+          <mutation elseif="1" else="1"></mutation>
+          <value name="IF0">
+            <block type="logic_compare" id="2">
+              <field name="OP">LT</field>
+              <value name="A">
+                <block type="variables_get" id="34">
+                  <field name="VAR">a</field>
+                </block>
+              </value>
+              <value name="B">
+                <block type="variables_get" id="43">
+                  <field name="VAR">b</field>
+                </block>
+              </value>
+            </block>
+          </value>
+          <statement name="DO0">
+            <block type="text_print" id="5">
+              <value name="TEXT">
+                <block type="text" id="6">
+                  <field name="TEXT">&lt;</field>
+                </block>
+              </value>
+            </block>
+          </statement>
+          <value name="IF1">
+            <block type="logic_compare" id="7">
+              <field name="OP">GT</field>
+              <value name="A">
+                <block type="variables_get" id="50">
+                  <field name="VAR">a</field>
+                </block>
+              </value>
+              <value name="B">
+                <block type="variables_get" id="57">
+                  <field name="VAR">b</field>
+                </block>
+              </value>
+            </block>
+          </value>
+          <statement name="DO1">
+            <block type="text_print" id="10">
+              <value name="TEXT">
+                <block type="text" id="11">
+                  <field name="TEXT">&gt;</field>
+                </block>
+              </value>
+            </block>
+          </statement>
+          <statement name="ELSE">
+            <block type="text_print" id="12">
+              <value name="TEXT">
+                <block type="text" id="13">
+                  <field name="TEXT">=</field>
+                </block>
+              </value>
             </block>
           </statement>
         </block>

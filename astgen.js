@@ -98,19 +98,28 @@ export default class Astgen {
 
   // logic
 
-  controls_if0(block) {
-    return buildNode('if', block, {
-      cond: this.handleValue(block, 'IF'),
-      tbody: this.handleStatements(block, 'DO')
+  controls_if(block) {
+    let top = buildNode('if', block, {
+      cond: this.handleValue(block, 'IF0'),
+      tbody: this.handleStatements(block, 'DO0')
     });
-  }
 
-  controls_if_else0(block) {
-    return buildNode('if', block, {
-      cond: this.handleValue(block, 'IF'),
-      tbody: this.handleStatements(block, 'DO'),
-      fbody: this.handleStatements(block, 'ELSE')
-    });
+    let current = top;
+
+    for (let i = 1; i <= block.elseifCount_; ++i) {
+      current.fbody = buildNode('if', block, {
+        cond: this.handleValue(block, 'IF' + i),
+        tbody: this.handleStatements(block, 'DO' + i)
+      });
+
+      current = current.fbody;
+    }
+
+    if (block.elseCount_) {
+      current.fbody = this.handleStatements(block, 'ELSE');
+    }
+
+    return top;
   }
 
   logic_compare(block) {
