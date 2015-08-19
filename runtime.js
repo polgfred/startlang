@@ -234,14 +234,11 @@ export const SNumber = extendObject(SBase, {
     'atan',
     'ceil',
     'cos',
-    'exp',
     'floor',
-    'log',
     'round',
     'sin',
     'sqrt',
     'tan',
-    'pow',
     'max',
     'min'
   ].reduce((ns, method) => {
@@ -256,6 +253,24 @@ export const SNumber = extendObject(SBase, {
     };
     return ns;
   }, {
+    log(n, base) {
+      if (base == null) {
+        return Math.log(n);
+      } else if (base == 10) {
+        return Math.log10(n);
+      } else {
+        return Math.log10(n) / Math.log10(base);
+      }
+    },
+
+    exp(n, base) {
+      if (base == null) {
+        return Math.exp(n);
+      } else {
+        return Math.pow(base, n);
+      }
+    },
+
     random() {
       return Math.random();
     },
@@ -284,7 +299,6 @@ export const SNumber = extendObject(SBase, {
     '*': checkMathOp((left, right) => left * right),
     '/': checkMathOp((left, right) => left / right),
     '%': checkMathOp((left, right) => left % right),
-    '**': checkMathOp((left, right) => Math.pow(left, right)),
     // bitwise
     '&': checkMathOp((left, right) => left & right),
     '|': checkMathOp((left, right) => left | right),
@@ -438,12 +452,6 @@ export const SList = extendObject(SContainer, {
     last(l, search) {
       let pos = l.lastIndexOf(search);
       return pos + 1;
-    },
-
-    elems(l, start, length) {
-      // adjust for 1-based indexes and negative offsets
-      start = adjustIndex(start, l.length);
-      return l.slice(start, length);
     },
 
     copy(l, start, end) {

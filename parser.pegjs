@@ -280,22 +280,14 @@ AddOp
   / '-'
 
 MultExpr
-  = first:PowExpr rest:( __ op:MultOp __ e:PowExpr { return [op, e]; } )* {
+  = first:UnaryExpr rest:( __ op:MultOp __ e:UnaryExpr { return [op, e]; } )* {
       return buildBinaryOp(first, rest);
     }
 
 MultOp
-  = '*' !'*' { return '*'; } // don't match **
+  = '*'
   / '/'
   / '%'
-
-PowExpr
-  = rest:( e:UnaryExpr __ op:PowOp __ { return [op, e]; } )* last:UnaryExpr {
-      return buildBinaryOpRight(rest, last);
-    }
-
-PowOp
-  = '**'
 
 UnaryExpr
   = ops:( op:UnaryOp __ { return op; } )* right:CallExpr {

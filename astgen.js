@@ -253,15 +253,26 @@ export default class Astgen {
       'ADD':      '+',
       'MINUS':    '-',
       'MULTIPLY': '*',
-      'DIVIDE':   '/',
-      'POWER':    '**'
+      'DIVIDE':   '/'
     };
 
-    return buildNode('binaryOp', block, {
-      op: OPERATORS[block.getFieldValue('OP')],
-      left: this.handleValue(block, 'A'),
-      right: this.handleValue(block, 'B')
-    });
+    let op = block.getFieldValue('OP');
+
+    if (op == 'POWER') {
+      return buildNode('call', block, {
+        name: 'exp',
+        args: [
+          this.handleValue(block, 'B'),
+          this.handleValue(block, 'A')
+        ]
+      });
+    } else {
+      return buildNode('binaryOp', block, {
+        op: OPERATORS[op],
+        left: this.handleValue(block, 'A'),
+        right: this.handleValue(block, 'B')
+      });
+    }
   }
 
   math_single(block) {
@@ -275,27 +286,28 @@ export default class Astgen {
     let func = block.getFieldValue('OP');
     let num = this.handleValue(block, 'NUM');
 
-    if (func == 'NEG') {
-      if (num.type == 'literal') {
-        // be nice and just replace the block with its negative value
-        num.value = -num.value;
-        return num;
-      } else {
+    switch (func) {
+      case 'NEG':
         return buildNode('unaryOp', block, {
           op: '-',
           right: num
         });
-      }
-    } else {
-      return buildNode('call', block, {
-        name: FUNCS[func] || func.toLowerCase(),
-        args: [ num ]
-      });
+      case 'LOG10':
+        return buildNode('call', block, {
+          name: 'log',
+          args: [ num, wrapLiteral(10, block) ]
+        });
+      case 'POW10':
+        return buildNode('call', block, {
+          name: 'exp',
+          args: [ num, wrapLiteral(10, block) ]
+        });
+      default:
+        return buildNode('call', block, {
+          name: FUNCS[func] || func.toLowerCase(),
+          args: [ num ]
+        });
     }
-
-    //handle some oddball cases
-    //case 'POW10':
-    //case 'LOG10':
   }
 
   math_round(block) {
