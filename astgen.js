@@ -22,8 +22,14 @@ function wrapLiteral(val, block) {
   });
 }
 
-
 export default class Astgen {
+  constructor() {
+    // keep track of nested statement blocks so we can inject setup
+    // code as necessary
+    this.blocks = [];
+    this.temps = {};
+  }
+
   handleValue(block, name) {
     // just dispatch on block type
     let target = name ? block.getInputTargetBlock(name) : block;
@@ -32,21 +38,55 @@ export default class Astgen {
 
   handleStatements(block, name) {
     let elems = [];
-    let target = name ? block.getInputTargetBlock(name) : block;
 
-    // statement blocks are chained together
-    while (target) {
-      elems.push(this[target.type](target));
-      target = target.nextConnection && target.nextConnection.targetBlock();
+    // push the current statement block onto the stack
+    this.blocks.push(elems);
+
+    try {
+      let target = name ? block.getInputTargetBlock(name) : block;
+
+      while (target) {
+        let stmt = this[target.type](target);
+        // if we get nothing back, don't create a statement
+        if (stmt) {
+          elems.push(stmt);
+        }
+        // statement blocks are chained together
+        target = target.nextConnection && target.nextConnection.targetBlock();
+      }
+    } finally {
+      this.blocks.pop();
     }
 
-    // if there was more one, wrap it in a block node
+    // if there was only one, just return the first, otherwise
+    // wrap it in a block node
     return elems.length == 1 ? elems[0] : buildNode('block', block, {
       elems: elems
     });
   }
 
-  getPosition(block, suffix) {
+  makeTemporary(value, block, prefix) {
+    // get next available temp var with this prefix
+    let temp =  'temp_' + prefix + '_' +
+                (this.temps[prefix] = (this.temps[prefix] || 0) + 1);
+
+    // inject a let node into the closest available statements block
+    let elem = buildNode('let', block, {
+      name: temp,
+      value: value
+    });
+    this.blocks[this.blocks.length - 1].push(elem);
+
+    // return a var node for the temporary
+    return buildNode('var', block, {
+      name: temp
+    });
+  }
+
+  getPosition(val, block, suffix) {
+    // - assumes val is a var node -- caller should ensure that makeTemporary
+    //   is called if it might be an arbitrary value expression
+    // - assumes val can have len() called on it (a string or list)
     suffix = suffix || '';
     let where = block.getFieldValue('WHERE' + suffix);
     let at = this.handleValue(block, 'AT' + suffix);
@@ -68,6 +108,17 @@ export default class Astgen {
           });
         }
         return at;
+      case 'RANDOM':
+        return buildNode('call', block, {
+          name: 'randrange',
+          args: [
+            wrapLiteral(1, block),
+            buildNode('call', block, {
+              name: 'len',
+              args: [ val ]
+            })
+          ]
+        });
     }
   }
 
@@ -415,31 +466,25 @@ export default class Astgen {
   text_charAt(block) {
     let val = this.handleValue(block, 'VALUE');
 
-    if (val.type == 'var') {
-      // if string is a var, use the simpler index node
-      return buildNode('index', block, {
-        name: val.name,
-        indexes: [ this.getPosition(block) ]
-      });
-    } else {
-      return buildNode('call', block, {
-        name: 'chars',
-        args: [
-          this.handleValue(block, 'VALUE'),
-          this.getPosition(block),
-          wrapLiteral(1, block)
-        ]
-      });
+    if (val.type != 'var') {
+      val = this.makeTemporary(val, block, 'string');
     }
+
+    return buildNode('index', block, {
+      name: val.name,
+      indexes: [ this.getPosition(val, block) ]
+    });
   }
 
   text_getSubstring(block) {
+    let val = this.handleValue(block, 'VALUE');
+
     return buildNode('call', block, {
       name: 'copy',
       args: [
         this.handleValue(block, 'STRING'),
-        this.getPosition(block, '1'),
-        this.getPosition(block, '2')
+        this.getPosition(val, block, '1'),
+        this.getPosition(val, block, '2')
       ]
     });
   }
@@ -529,24 +574,101 @@ export default class Astgen {
   }
 
   lists_getIndex(block) {
+    let mode = block.getFieldValue('MODE');
     let val = this.handleValue(block, 'VALUE');
 
-    if (val.type == 'var') {
-      // if list is a var, use the simpler index node
-      return buildNode('index', block, {
-        name: val.name,
-        indexes: [ this.getPosition(block) ]
-      });
-    } else {
-      return buildNode('call', block, {
-        name: 'elems',
-        args: [
-          this.handleValue(block, 'VALUE'),
-          this.getPosition(block),
-          wrapLiteral(1, block)
-        ]
-      });
+    if (val.type != 'var') {
+      if (mode == 'REMOVE') {
+        // removing from a temporary does nothing
+        return;
+      } else {
+        // we want the get but not the remove
+        mode = 'GET';
+      }
+
+      // get a temporary so we can index it
+      val = this.makeTemporary(val, block, 'list');
     }
+
+    let pos = this.getPosition(val, block);
+
+    switch (mode) {
+      case 'GET':
+        // simple index node
+        return buildNode('index', block, {
+          name: val.name,
+          indexes: [ pos ]
+        });
+
+      case 'GET_REMOVE':
+      case 'REMOVE':
+        if (pos.type == 'literal') {
+          return buildNode('call', block, {
+            name: 'remove',
+            args: [ val, pos, wrapLiteral(pos.value + 1, block) ]
+          });
+        } else {
+          if (pos.type != 'var') {
+            // get a temporary for the start position
+            pos = this.makeTemporary(pos, block, 'pos');
+          }
+
+          return buildNode('call', block, {
+            name: 'remove',
+            args: [
+              val,
+              pos,
+              buildNode('binaryOp', block, {
+                op: '+',
+                left: pos,
+                right: wrapLiteral(1, block)
+              })
+            ]
+          });
+        }
+    }
+  }
+
+  lists_setIndex(block) {
+    let mode = block.getFieldValue('MODE');
+    let val = this.handleValue(block, 'LIST');
+    let to = this.handleValue(block, 'TO');
+
+    if (val.type != 'var') {
+      // changing a temporary does nothing
+      return;
+    }
+
+    let pos = this.getPosition(val, block);
+
+    switch (mode) {
+      case 'SET':
+        // simple letIndex node
+        return buildNode('letIndex', block, {
+          name: val.name,
+          indexes: [ pos ],
+          value: to
+        });
+
+      case 'INSERT':
+        return buildNode('call', block, {
+          name: 'insert',
+          args: [ val, pos, to ]
+        });
+    }
+  }
+
+  lists_getSublist(block) {
+    let val = this.handleValue(block, 'VALUE');
+
+    return buildNode('call', block, {
+      name: 'copy',
+      args: [
+        this.handleValue(block, 'LIST'),
+        this.getPosition(val, block, '1'),
+        this.getPosition(val, block, '2')
+      ]
+    });
   }
 
   // variables
@@ -567,6 +689,6 @@ export default class Astgen {
 
 global.runit = function() {
   let block = Blockly.getMainWorkspace().getTopBlocks()[0];
-  let root = new Astgen().handleValue(block);
+  let root = new Astgen().handleStatements(block);
   return JSON.stringify(root, null, 2);
 };

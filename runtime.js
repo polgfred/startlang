@@ -256,8 +256,12 @@ export const SNumber = extendObject(SBase, {
     };
     return ns;
   }, {
-    random(n) {
-      return Math.random() * n;
+    random() {
+      return Math.random();
+    },
+
+    randrange(low, high) {
+      return Math.floor(Math.random() * (high - low + 1)) + low;
     },
 
     range(start, end, step) {
@@ -347,12 +351,6 @@ export const SString = extendObject(SBase, {
     last(s, search) {
       let pos = s.lastIndexOf(search);
       return pos + 1;
-    },
-
-    chars(s, start, length) {
-      // adjust for 1-based indexes and negative offsets
-      start = adjustIndex(start, s.length);
-      return s.substr(start, length);
     },
 
     copy(s, start, end) {
