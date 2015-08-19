@@ -22,6 +22,7 @@ function wrapLiteral(val, block) {
   });
 }
 
+
 export default class Astgen {
   handleValue(block, name) {
     // just dispatch on block type
@@ -43,6 +44,31 @@ export default class Astgen {
     return elems.length == 1 ? elems[0] : buildNode('block', block, {
       elems: elems
     });
+  }
+
+  getPosition(block, suffix) {
+    suffix = suffix || '';
+    let where = block.getFieldValue('WHERE' + suffix);
+    let at = this.handleValue(block, 'AT' + suffix);
+
+    switch (where) {
+      case 'FIRST':
+        return wrapLiteral(1, block);
+      case 'LAST':
+        return wrapLiteral(-1, block);
+      case 'FROM_START':
+        return at;
+      case 'FROM_END':
+        if (at.type == 'literal') {
+          at.value = -at.value;
+        } else {
+          at = buildNode('unaryOp', block, {
+            op: '-',
+            right: at
+          });
+        }
+        return at;
+    }
   }
 
   // loops
@@ -99,6 +125,7 @@ export default class Astgen {
   // logic
 
   controls_if(block) {
+    // the top-level if block
     let top = buildNode('if', block, {
       cond: this.handleValue(block, 'IF0'),
       tbody: this.handleStatements(block, 'DO0')
@@ -107,6 +134,7 @@ export default class Astgen {
     let current = top;
 
     for (let i = 1; i <= block.elseifCount_; ++i) {
+      // create a nested if block inside the else block
       current.fbody = buildNode('if', block, {
         cond: this.handleValue(block, 'IF' + i),
         tbody: this.handleStatements(block, 'DO' + i)
@@ -116,6 +144,7 @@ export default class Astgen {
     }
 
     if (block.elseCount_) {
+      // create the final else block
       current.fbody = this.handleStatements(block, 'ELSE');
     }
 
@@ -383,40 +412,25 @@ export default class Astgen {
     });
   }
 
-  text_getPosition(block, suffix) {
-    suffix = suffix || '';
-    let where = block.getFieldValue('WHERE' + suffix);
-    let at = this.handleValue(block, 'AT' + suffix);
-
-    switch (where) {
-      case 'FIRST':
-        return wrapLiteral(1, block);
-      case 'LAST':
-        return wrapLiteral(-1, block);
-      case 'FROM_START':
-        return at;
-      case 'FROM_END':
-        if (at.type == 'literal') {
-          at.value = -at.value;
-        } else {
-          at = buildNode('unaryOp', block, {
-            op: '-',
-            right: at
-          });
-        }
-        return at;
-    }
-  }
-
   text_charAt(block) {
-    return buildNode('call', block, {
-      name: 'chars',
-      args: [
-        this.handleValue(block, 'VALUE'),
-        this.text_getPosition(block),
-        wrapLiteral(1, block)
-      ]
-    });
+    let val = this.handleValue(block, 'VALUE');
+
+    if (val.type == 'var') {
+      // if string is a var, use the simpler index node
+      return buildNode('index', block, {
+        name: val.name,
+        indexes: [ this.getPosition(block) ]
+      });
+    } else {
+      return buildNode('call', block, {
+        name: 'chars',
+        args: [
+          this.handleValue(block, 'VALUE'),
+          this.getPosition(block),
+          wrapLiteral(1, block)
+        ]
+      });
+    }
   }
 
   text_getSubstring(block) {
@@ -424,8 +438,8 @@ export default class Astgen {
       name: 'copy',
       args: [
         this.handleValue(block, 'STRING'),
-        this.text_getPosition(block, '1'),
-        this.text_getPosition(block, '2')
+        this.getPosition(block, '1'),
+        this.getPosition(block, '2')
       ]
     });
   }
@@ -463,6 +477,76 @@ export default class Astgen {
       name: 'print',
       args: text ? [ text ] : []
     });
+  }
+
+  // lists
+
+  lists_create_empty(block) {
+    return buildNode('call', block, {
+      name: 'list',
+      args: []
+    });
+  }
+
+  lists_create_with(block) {
+    let args = [];
+
+    for (let i = 0; i < block.itemCount_; ++i) {
+      args[i] = this.handleValue(block, 'ADD' + i);
+    }
+
+    return buildNode('call', block, {
+      name: 'list',
+      args: args
+    });
+  }
+
+  lists_length(block) {
+    return buildNode('call', block, {
+      name: 'len',
+      args: [ this.handleValue(block, 'VALUE') ]
+    });
+  }
+
+  lists_isEmpty(block) {
+    return buildNode('binaryOp', block, {
+      op: '=',
+      left: this.lists_length(block),
+      right: wrapLiteral(0, block)
+    });
+  }
+
+  lists_indexOf(block) {
+    let mode = block.getFieldValue('END').toLowerCase();
+
+    return buildNode('call', block, {
+      name: mode,
+      args: [
+        this.handleValue(block, 'VALUE'),
+        this.handleValue(block, 'FIND')
+      ]
+    });
+  }
+
+  lists_getIndex(block) {
+    let val = this.handleValue(block, 'VALUE');
+
+    if (val.type == 'var') {
+      // if list is a var, use the simpler index node
+      return buildNode('index', block, {
+        name: val.name,
+        indexes: [ this.getPosition(block) ]
+      });
+    } else {
+      return buildNode('call', block, {
+        name: 'elems',
+        args: [
+          this.handleValue(block, 'VALUE'),
+          this.getPosition(block),
+          wrapLiteral(1, block)
+        ]
+      });
+    }
   }
 
   // variables

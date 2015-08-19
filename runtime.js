@@ -30,6 +30,10 @@ export function checkMathOp(fn) {
   };
 }
 
+export function adjustIndex(index, size) {
+  return index > 0 ? index - 1 : Math.max(0, size + index);
+}
+
 // Environment
 
 export class SRuntime {
@@ -322,10 +326,11 @@ export const SString = extendObject(SBase, {
   },
 
   getindex(s, index) {
-    return s.charAt(index);
+    return s.charAt(adjustIndex(index, s.length));
   },
 
   setindex(s, index, value) {
+    index = adjustIndex(index, s.length);
     return s.substr(0, index) + value + s.substr(index + 1);
   },
 
@@ -336,25 +341,26 @@ export const SString = extendObject(SBase, {
 
     first(s, search) {
       let pos = s.indexOf(search);
-      return pos >= 0 ? pos : null;
+      return pos + 1;
     },
 
     last(s, search) {
       let pos = s.lastIndexOf(search);
-      return pos >= 0 ? pos : null;
+      return pos + 1;
     },
 
-    chars(s, at, length) {
+    chars(s, start, length) {
       // adjust for 1-based indexes and negative offsets
-      at = at > 0 ? at - 1 : Math.max(0, s.length + at);
-      return s.substr(at, length);
+      start = adjustIndex(start, s.length);
+      return s.substr(start, length);
     },
 
     copy(s, start, end) {
       // adjust for 1-based indexes and negative offsets
-      start = start > 0 ? start - 1 : Math.max(0, s.length + start);
-      end = end > 0 ? end - 1 : Math.max(0, s.length + end);
-      return s.substring(start, end);
+      start = adjustIndex(start, s.length);
+      end = adjustIndex(end, s.length);
+      // inclusive
+      return s.substring(start, end + 1);
     },
 
     replace(s, search, to) {
@@ -388,14 +394,6 @@ String.prototype[handlerKey] = SString;
 // Containers
 
 export const SContainer = extendObject(SBase, {
-  getindex(c, index) {
-    return c.get(index);
-  },
-
-  setindex(c, index, value) {
-    return c.set(index, value);
-  },
-
   binaryops: {
     '=' : (left, right) =>  left.equals(right),
     '!=': (left, right) => !left.equals(right)
@@ -413,6 +411,14 @@ export const SList = extendObject(SContainer, {
     return '[ ' + l.map((el) => handle(el).repr(el)).join(', ') + ' ]';
   },
 
+  getindex(l, index) {
+    return l.get(adjustIndex(index, l.size));
+  },
+
+  setindex(l, index, value) {
+    return l.set(adjustIndex(index, l.size), value);
+  },
+
   enumerate(l, index = 0) {
     return {
       value: l.get(index),
@@ -428,26 +434,42 @@ export const SList = extendObject(SContainer, {
 
     first(l, search) {
       let pos = l.indexOf(search);
-      return pos >= 0 ? pos : null;
+      return pos + 1;
     },
 
     last(l, search) {
       let pos = l.lastIndexOf(search);
-      return pos >= 0 ? pos : null;
+      return pos + 1;
     },
 
-    copy(l, at, length) {
-      return l.slice(at, at + length);
+    elems(l, start, length) {
+      // adjust for 1-based indexes and negative offsets
+      start = adjustIndex(start, l.length);
+      return l.slice(start, length);
     },
 
-    insert(l, at, ...values) {
-      return { '@@__assign__@@': l.splice(at, 0, ...values) };
+    copy(l, start, end) {
+      // adjust for 1-based indexes and negative offsets
+      start = adjustIndex(start, l.size);
+      end = adjustIndex(end, l.size);
+      // inclusive
+      return l.slice(start, end + 1);
     },
 
-    delete(l, at, length) {
+    insert(l, start, ...values) {
+      // adjust for 1-based indexes and negative offsets
+      start = adjustIndex(start, s.size);
+      return { '@@__assign__@@': l.splice(start, 0, ...values) };
+    },
+
+    remove(l, start, end) {
+      // adjust for 1-based indexes and negative offsets
+      start = adjustIndex(start, s.size);
+      end = adjustIndex(end, s.size);
+      // inclusive
       return {
-        '@@__assign__@@': l.splice(at, length),
-        '@@__result__@@': l.slice(at, at + length)
+        '@@__assign__@@': l.splice(start, end - start + 1),
+        '@@__result__@@': l.slice(start, end + 1)
       };
     },
 
@@ -490,6 +512,14 @@ export const SMap = extendObject(SContainer, {
   repr(m) {
     let pairs = m.map((val, key) => handle(key).repr(key) + ': ' + handle(val).repr(val));
     return '[ ' + pairs.join(', ') + ' ]';
+  },
+
+  getindex(m, index) {
+    return m.get(index);
+  },
+
+  setindex(m, index, value) {
+    return m.set(index, value);
   },
 
   enumerate(m) {
