@@ -273,10 +273,25 @@ export default class Astgen {
     }
 
     let func = block.getFieldValue('OP');
-    return buildNode('call', block, {
-      name: FUNCS[func] || func.toLowerCase(),
-      args: [ this.handleValue(block, 'NUM') ]
-    });
+    let num = this.handleValue(block, 'NUM');
+
+    if (func == 'NEG') {
+      if (num.type == 'literal') {
+        // be nice and just replace the block with its negative value
+        num.value = -num.value;
+        return num;
+      } else {
+        return buildNode('unaryOp', block, {
+          op: '-',
+          right: num
+        });
+      }
+    } else {
+      return buildNode('call', block, {
+        name: FUNCS[func] || func.toLowerCase(),
+        args: [ num ]
+      });
+    }
 
     //handle some oddball cases
     //case 'POW10':
