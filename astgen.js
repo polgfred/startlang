@@ -671,6 +671,29 @@ export default class Astgen {
     });
   }
 
+  lists_split(block) {
+    let mode = block.getFieldValue('MODE');
+
+    switch (mode) {
+      case 'SPLIT':
+        return buildNode('call', block, {
+          name: 'split',
+          args: [
+            this.handleValue(block, 'INPUT'),
+            this.handleValue(block, 'DELIM')
+          ]
+        });
+      case 'JOIN':
+        return buildNode('call', block, {
+          name: 'join',
+          args: [
+            this.handleValue(block, 'INPUT'),
+            this.handleValue(block, 'DELIM')
+          ]
+        });
+    }
+  }
+
   // variables
 
   variables_get(block) {
