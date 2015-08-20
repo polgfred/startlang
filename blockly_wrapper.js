@@ -83,11 +83,11 @@ Blockly.Blocks['lists_transformers'] = {
       return TOOLTIPS[mode];
     });
   },
-  updateOrder_: function(isSort) {
+  updateOrder_: function(isOrder) {
     let ORDERS =
         [['smallest first', 'ASC'],
          ['largest first',  'DESC']];
-    if (isSort) {
+    if (isOrder) {
       this.removeInput('TAIL');
       this.appendDummyInput('TAIL')
           .appendField(new Blockly.FieldDropdown(ORDERS), 'ORDER');
@@ -95,6 +95,16 @@ Blockly.Blocks['lists_transformers'] = {
       this.removeInput('TAIL');
       this.appendDummyInput('TAIL')
     }
+  },
+  mutationToDom: function() {
+    let container = document.createElement('mutation');
+    let isOrder = (this.getField('ORDER') != null);
+    container.setAttribute('order', isOrder);
+    return container;
+  },
+  domToMutation: function(xmlElement) {
+    let isOrder = (xmlElement.getAttribute('order') != 'false');
+    this.updateOrder_(isOrder);
   }
 };
 
