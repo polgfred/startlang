@@ -656,24 +656,19 @@ export default class Astgen {
     let mode = block.getFieldValue('MODE');
     let val = this.handleValue(block, 'VALUE');
 
-    if (val.type != 'var') {
-      if (mode == 'REMOVE') {
-        // removing from a temporary does nothing
-        return;
-      } else {
-        // we want the get but not the remove
-        mode = 'GET';
-      }
-
-      // get a temporary so we can index it
-      val = this.makeTemporary(val, block, 'list');
+    if (mode == 'REMOVE' && val.type != 'var') {
+      // removing from a temporary does nothing
+      return;
     }
 
     let pos = this.getPosition(val, block);
 
     switch (mode) {
       case 'GET':
-        // simple index node
+        if (val.type != 'var') {
+          // get a temporary so we can index it
+          val = this.makeTemporary(val, block, 'list');
+        }
         return buildNode('index', block, {
           name: val.name,
           indexes: [ pos ]
@@ -681,29 +676,10 @@ export default class Astgen {
 
       case 'GET_REMOVE':
       case 'REMOVE':
-        if (pos.type == 'literal') {
-          return buildNode('call', block, {
-            name: 'remove',
-            args: [ val, pos, wrapLiteral(pos.value + 1, block) ]
-          });
-        } else {
-          if (pos.type != 'var') {
-            // get a temporary for the start position
-            pos = this.makeTemporary(pos, block, 'pos');
-          }
-          return buildNode('call', block, {
-            name: 'remove',
-            args: [
-              val,
-              pos,
-              buildNode('binaryOp', block, {
-                op: '+',
-                left: pos,
-                right: wrapLiteral(1, block)
-              })
-            ]
-          });
-        }
+        return buildNode('call', block, {
+          name: 'remove',
+          args: [ val, pos ]
+        });
     }
   }
 
@@ -713,7 +689,7 @@ export default class Astgen {
     let to = this.handleValue(block, 'TO');
 
     if (val.type != 'var') {
-      // changing a temporary does nothing
+      // changing a temporary has no effect
       return;
     }
 
@@ -721,7 +697,6 @@ export default class Astgen {
 
     switch (mode) {
       case 'SET':
-        // simple letIndex node
         return buildNode('letIndex', block, {
           name: val.name,
           indexes: [ pos ],

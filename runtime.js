@@ -480,13 +480,21 @@ export const SList = extendObject(SContainer, {
 
     remove(l, start, end) {
       // adjust for 1-based indexes and negative offsets
-      start = adjustIndex(start, s.size);
-      end = adjustIndex(end, s.size);
-      // inclusive
-      return {
-        '@@__assign__@@': l.splice(start, end - start + 1),
-        '@@__result__@@': l.slice(start, end + 1)
-      };
+      start = adjustIndex(start, l.size);
+      if (end == null) {
+        // remove and return a single element
+        return {
+          '@@__result__@@': l.get(start),
+          '@@__assign__@@': l.splice(start, 1)
+        }
+      } else {
+        end = adjustIndex(end, l.size);
+        // inclusive
+        return {
+          '@@__result__@@': l.slice(start, end + 1),
+          '@@__assign__@@': l.splice(start, end - start + 1)
+        };
+      }
     },
 
     join(l, delim) {
@@ -597,16 +605,20 @@ export const SMap = extendObject(SContainer, {
       };
     },
 
-    delete(m, ...keys) {
-      let o = m.asMutable();
+    remove(m, ...keys) {
+      // remove and return one or more values
+      let o = [];
+
       return {
-        '@@__result__@@': immutable.Map().withMutations((n) => {
-          for (let i = 0; i < keys.length; ++i) {
-            n.set(keys[i], m.get(keys[i]));
-            o.delete(keys[i]);
-          }
-        }),
-        '@@__assign__@@': o.asImmutable()
+        '@@__assign__@@':
+          m.withMutations((n) => {
+            for (let i = 0; i < keys.length; ++i) {
+              o.push(m.get(keys[i]));
+              n.delete(keys[i]);
+            }
+          }),
+        '@@__result__@@':
+          o.length == 1 ? o[0] : immutable.List(o)
       };
     }
   },
@@ -636,7 +648,7 @@ export const globals = {
     return SList.create(items);
   },
 
-  map(...pairs) {
+  table(...pairs) {
     return SMap.create(pairs);
   },
 
