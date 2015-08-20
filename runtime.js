@@ -405,6 +405,11 @@ String.prototype[handlerKey] = SString;
 
 // Containers
 
+function compareElements(left, right) {
+  let h = handle(left);
+  return h.binaryops['<'](left, right) ? -1 : (h.binaryops['>'](left, right) ? 1 : 0);
+}
+
 export const SContainer = extendObject(SBase, {
   binaryops: {
     '=' : (left, right) =>  left.equals(right),
@@ -487,12 +492,30 @@ export const SList = extendObject(SContainer, {
       return { '@@__assign__@@': l.reverse() };
     },
 
+    sum(l) {
+      return l.reduce((total, item) => {
+        if (handle(item) != SNumber) {
+          throw new Error('list must contain only numbers');
+        }
+        return total + item;
+      }, 0);
+    },
+
+    min(l) {
+      return l.min(compareElements);
+    },
+
+    max(l) {
+      return l.max(compareElements);
+    },
+
+    avg(l) {
+      return SList.methods.sum(l) / l.size;
+    },
+
     sort(l) {
       return {
-        '@@__assign__@@': l.sort((left, right) => {
-          let h = handle(left);
-          return h.binaryops['<'](left, right) ? -1 : (h.binaryops['>'](left, right) ? 1 : 0);
-        })
+        '@@__assign__@@': l.sort(compareElements)
       };
     }
   },

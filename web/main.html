@@ -66,7 +66,6 @@
             </value>
           </block>
           <block type="math_round"></block>
-          <block type="math_on_list"></block>
           <block type="math_modulo"></block>
           <block type="math_constrain">
             <value name="LOW">
@@ -146,6 +145,14 @@
           </block>
           <block type="lists_length"></block>
           <block type="lists_isEmpty"></block>
+          <block type="lists_functions"></block>
+          <block type="lists_transformers">
+            <value name="LIST">
+              <block type="variables_get">
+                <field name="VAR">list</field>
+              </block>
+            </value>
+          </block>
           <block type="lists_indexOf">
             <value name="VALUE">
               <block type="variables_get">

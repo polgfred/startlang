@@ -14,6 +14,90 @@ Blockly.Msg.LOGIC_NULL_TOOLTIP = 'Returns nothing.';
 
 Blockly.Msg.CONTROLS_IF_MSG_THEN = 'then';
 
+Blockly.Msg.MATH_ONLIST_OPERATOR_MIN = 'minimum of list';
+Blockly.Msg.MATH_ONLIST_OPERATOR_MAX = 'maximum of list';
+Blockly.Msg.MATH_ONLIST_TOOLTIP_MIN = 'Return the smallest item in the list.';
+Blockly.Msg.MATH_ONLIST_TOOLTIP_MAX = 'Return the largest item in the list.';
+
+Blockly.Msg.MATH_ONLIST_OPERATOR_SORT = 'sort items of list';
+Blockly.Msg.MATH_ONLIST_OPERATOR_REVERSE = 'reverse items of list';
+Blockly.Msg.MATH_ONLIST_OPERATOR_SHUFFLE = 'shuffle items of list';
+
+Blockly.Msg.MATH_ONLIST_TOOLTIP_SORT = 'Sort the items in the list from smallest to largest.';
+Blockly.Msg.MATH_ONLIST_TOOLTIP_REVERSE = 'Reverse the positions of the items in the list.';
+Blockly.Msg.MATH_ONLIST_TOOLTIP_SHUFFLE = 'Shuffle the items of the list into a random order.';
+
+Blockly.Blocks['lists_functions'] = {
+  init: function() {
+    var OPERATORS =
+        [[Blockly.Msg.MATH_ONLIST_OPERATOR_SUM, 'SUM'],
+         [Blockly.Msg.MATH_ONLIST_OPERATOR_MIN, 'MIN'],
+         [Blockly.Msg.MATH_ONLIST_OPERATOR_MAX, 'MAX'],
+         [Blockly.Msg.MATH_ONLIST_OPERATOR_AVERAGE, 'AVERAGE'],
+         [Blockly.Msg.MATH_ONLIST_OPERATOR_RANDOM, 'RANDOM']];
+    this.setHelpUrl(Blockly.Msg.MATH_ONLIST_HELPURL);
+    this.setColour(Blockly.Blocks.lists.HUE);
+    this.setOutput(true);
+    this.appendValueInput('LIST')
+        .setCheck('Array')
+        .appendField(new Blockly.FieldDropdown(OPERATORS), 'OP');
+    this.setTooltip(() => {
+      var mode = this.getFieldValue('OP');
+      var TOOLTIPS = {
+        'SUM': Blockly.Msg.MATH_ONLIST_TOOLTIP_SUM,
+        'MIN': Blockly.Msg.MATH_ONLIST_TOOLTIP_MIN,
+        'MAX': Blockly.Msg.MATH_ONLIST_TOOLTIP_MAX,
+        'AVERAGE': Blockly.Msg.MATH_ONLIST_TOOLTIP_AVERAGE,
+        'RANDOM': Blockly.Msg.MATH_ONLIST_TOOLTIP_RANDOM
+      };
+      return TOOLTIPS[mode];
+    });
+  }
+};
+
+Blockly.Blocks['lists_transformers'] = {
+  init: function() {
+    var OPERATORS =
+        [[Blockly.Msg.MATH_ONLIST_OPERATOR_SORT, 'SORT'],
+         [Blockly.Msg.MATH_ONLIST_OPERATOR_REVERSE, 'REVERSE'],
+         [Blockly.Msg.MATH_ONLIST_OPERATOR_SHUFFLE, 'SHUFFLE']];
+    this.setHelpUrl(Blockly.Msg.MATH_ONLIST_HELPURL);
+    this.setColour(Blockly.Blocks.lists.HUE);
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.appendValueInput('LIST')
+        .setCheck('Array')
+        .appendField(new Blockly.FieldDropdown(OPERATORS, (value) => {
+          this.updateOrder_(value == 'SORT');
+        }), 'OP');
+    this.appendDummyInput('TAIL');
+    this.setInputsInline(true);
+    this.updateOrder_(true);
+    this.setTooltip(() => {
+      var mode = this.getFieldValue('OP');
+      var TOOLTIPS = {
+        'SORT': Blockly.Msg.MATH_ONLIST_TOOLTIP_SORT,
+        'REVERSE': Blockly.Msg.MATH_ONLIST_TOOLTIP_REVERSE,
+        'SHUFFLE': Blockly.Msg.MATH_ONLIST_TOOLTIP_SHUFFLE
+      };
+      return TOOLTIPS[mode];
+    });
+  },
+  updateOrder_: function(isSort) {
+    var ORDERS =
+        [['smallest first', 'ASC'],
+         ['largest first',  'DESC']];
+    if (isSort) {
+      this.removeInput('TAIL');
+      this.appendDummyInput('TAIL')
+          .appendField(new Blockly.FieldDropdown(ORDERS), 'ORDER');
+    } else {
+      this.removeInput('TAIL');
+      this.appendDummyInput('TAIL')
+    }
+  }
+};
+
 Blockly.Blocks.tables = {};
 
 Blockly.Blocks.tables.HUE = 20;
