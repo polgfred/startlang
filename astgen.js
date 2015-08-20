@@ -17,9 +17,11 @@ function buildNode(type, block, attrs) {
 
 function wrapLiteral(val, block) {
   // if it's already a node, pass it through
-  return val.type ? val : buildNode('literal', block, {
-    value: val
-  });
+  return val != null && val.type != null ?
+            val :
+            buildNode('literal', block, {
+              value: val
+            });
 }
 
 export default class Astgen {
@@ -586,7 +588,7 @@ export default class Astgen {
     let args = [];
 
     for (let i = 0; i < block.itemCount_; ++i) {
-      args[i] = this.handleValue(block, 'ADD' + i);
+      args[i] = this.handleValue(block, 'ADD' + i) || wrapLiteral(null, block);
     }
 
     return buildNode('call', block, {
@@ -765,7 +767,7 @@ export default class Astgen {
 
     for (let i = 0; i < block.itemCount_; ++i) {
       args.push(wrapLiteral(block.getFieldValue('KEY' + i), block));
-      args.push(this.handleValue(block, 'VALUE' + i));
+      args.push(this.handleValue(block, 'VALUE' + i) || wrapLiteral(null, block));
     }
 
     return buildNode('call', block, {
