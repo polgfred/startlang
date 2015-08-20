@@ -34,8 +34,7 @@ Blockly.Blocks['lists_functions'] = {
         [[Blockly.Msg.MATH_ONLIST_OPERATOR_SUM, 'SUM'],
          [Blockly.Msg.MATH_ONLIST_OPERATOR_MIN, 'MIN'],
          [Blockly.Msg.MATH_ONLIST_OPERATOR_MAX, 'MAX'],
-         [Blockly.Msg.MATH_ONLIST_OPERATOR_AVERAGE, 'AVERAGE'],
-         [Blockly.Msg.MATH_ONLIST_OPERATOR_RANDOM, 'RANDOM']];
+         [Blockly.Msg.MATH_ONLIST_OPERATOR_AVERAGE, 'AVERAGE']];
     this.setHelpUrl(Blockly.Msg.MATH_ONLIST_HELPURL);
     this.setColour(Blockly.Blocks.lists.HUE);
     this.setOutput(true);
@@ -48,8 +47,7 @@ Blockly.Blocks['lists_functions'] = {
         'SUM': Blockly.Msg.MATH_ONLIST_TOOLTIP_SUM,
         'MIN': Blockly.Msg.MATH_ONLIST_TOOLTIP_MIN,
         'MAX': Blockly.Msg.MATH_ONLIST_TOOLTIP_MAX,
-        'AVERAGE': Blockly.Msg.MATH_ONLIST_TOOLTIP_AVERAGE,
-        'RANDOM': Blockly.Msg.MATH_ONLIST_TOOLTIP_RANDOM
+        'AVERAGE': Blockly.Msg.MATH_ONLIST_TOOLTIP_AVERAGE
       };
       return TOOLTIPS[mode];
     });

@@ -271,12 +271,8 @@ export const SNumber = extendObject(SBase, {
       }
     },
 
-    random() {
-      return Math.random();
-    },
-
-    randrange(low, high) {
-      return Math.floor(Math.random() * (high - low + 1)) + low;
+    rand(n1, n2) {
+      return Math.floor(Math.random() * (n2 - n1 + 1)) + n1;
     },
 
     range(start, end, step) {
@@ -410,6 +406,11 @@ function compareElements(left, right) {
   return h.binaryops['<'](left, right) ? -1 : (h.binaryops['>'](left, right) ? 1 : 0);
 }
 
+function compareElementsReversed(left, right) {
+  let h = handle(left);
+  return h.binaryops['<'](left, right) ? 1 : (h.binaryops['>'](left, right) ? -1 : 0);
+}
+
 export const SContainer = extendObject(SBase, {
   binaryops: {
     '=' : (left, right) =>  left.equals(right),
@@ -488,10 +489,6 @@ export const SList = extendObject(SContainer, {
       return l.join(delim || ' ');
     },
 
-    reverse(l) {
-      return { '@@__assign__@@': l.reverse() };
-    },
-
     sum(l) {
       return l.reduce((total, item) => {
         if (handle(item) != SNumber) {
@@ -516,6 +513,28 @@ export const SList = extendObject(SContainer, {
     sort(l) {
       return {
         '@@__assign__@@': l.sort(compareElements)
+      };
+    },
+
+    rsort(l) {
+      return {
+        '@@__assign__@@': l.sort(compareElementsReversed)
+      };
+    },
+
+    reverse(l) {
+      return { '@@__assign__@@': l.reverse() };
+    },
+
+    shuffle(l) {
+      return {
+        '@@__assign__@@': immutable.List().withMutations((m) => {
+          for (let i = 0; i < l.size; ++i) {
+            let j = Math.floor(Math.random() * i);
+            m.set(i, m.get(j));
+            m.set(j, l.get(i));
+          }
+        })
       };
     }
   },
@@ -615,6 +634,10 @@ export const globals = {
 
   map(...pairs) {
     return SMap.create(pairs);
+  },
+
+  rand() {
+    return Math.random();
   },
 
   swap(a, b) {

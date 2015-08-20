@@ -110,7 +110,7 @@ export default class Astgen {
         return at;
       case 'RANDOM':
         return buildNode('call', block, {
-          name: 'randrange',
+          name: 'rand',
           args: [
             wrapLiteral(1, block),
             buildNode('call', block, {
@@ -413,7 +413,7 @@ export default class Astgen {
 
   math_random_int(block) {
     return buildNode('call', block, {
-      name: 'randrange',
+      name: 'rand',
       args: [
         this.handleValue(block, 'FROM'),
         this.handleValue(block, 'TO')
@@ -423,7 +423,7 @@ export default class Astgen {
 
   math_random_float(block) {
     return buildNode('call', block, {
-      name: 'random',
+      name: 'rand',
       args: []
     });
   }
@@ -585,6 +585,36 @@ export default class Astgen {
       op: '=',
       left: this.lists_length(block),
       right: wrapLiteral(0, block)
+    });
+  }
+
+  lists_functions(block) {
+    let OPERATORS = {
+      'SUM': 'sum',
+      'MIN': 'min',
+      'MAX': 'max',
+      'AVERAGE': 'avg'
+    };
+
+    return buildNode('call', block, {
+      name: OPERATORS[block.getFieldValue('OP')],
+      args: [ this.handleValue(block, 'LIST') ]
+    });
+  }
+
+  lists_transformers(block) {
+    let op = block.getFieldValue('OP');
+    let order = block.getFieldValue('ORDER');
+
+    if (op == 'SORT' && order == 'DESC') {
+      op = 'rsort';
+    } else {
+      op = op.toLowerCase();
+    }
+
+    return buildNode('call', block, {
+      name: op,
+      args: [ this.handleValue(block, 'LIST') ]
     });
   }
 
