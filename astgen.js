@@ -511,7 +511,7 @@ export default class Astgen {
   text_charAt(block) {
     let val = this.handleValue(block, 'VALUE');
 
-    if (val.type != 'literal' && val.type != 'var') {
+    if (val.type != 'var') {
       val = this.makeTemporary(val, block, 'string');
     }
 
