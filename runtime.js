@@ -271,8 +271,12 @@ export const SNumber = extendObject(SBase, {
       }
     },
 
-    rand(n1, n2) {
-      return Math.floor(Math.random() * (n2 - n1 + 1)) + n1;
+    rand(lo, hi) {
+      return Math.floor(Math.random() * (hi - lo + 1)) + lo;
+    },
+
+    constrain(n, lo, hi) {
+      return Math.min(Math.max(n, lo), hi);
     },
 
     range(start, end, step) {
