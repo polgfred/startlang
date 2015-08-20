@@ -90,25 +90,47 @@ export default class Astgen {
     suffix = suffix || '';
     let where = block.getFieldValue('WHERE' + suffix);
     let at = this.handleValue(block, 'AT' + suffix);
+    // we'll need this in a couple places
+    let len = buildNode('call', block, {
+                name: 'len',
+                args: [ val ]
+              });
 
     switch (where) {
       case 'FIRST':
         return wrapLiteral(1, block);
       case 'LAST':
-        return wrapLiteral(-1, block);
+        return len;
       case 'FROM_START':
         return at;
       case 'FROM_END':
+        // 1-based positioning, need to adjust at by 1
         if (at.type == 'literal') {
-          at.value = -at.value;
+          // we can subtract up front
+          --at.value;
+          if (at.value == 0) {
+            // at is 0, so len is already what we need
+            return len;
+          } else {
+            // len - at
+            return buildNode('binaryOp', block, {
+              name: '-',
+              args: [ len, at ]
+            });
+          }
         } else {
-          at = buildNode('unaryOp', block, {
-            op: '-',
-            right: at
+          // have to emit code to adjust the result by 1
+          return buildNode('binaryOp', block, {
+            op: '+',
+            left: buildNode('binaryOp', block, {
+              name: '-',
+              args: [ len, at ]
+            }),
+            right: wrapLiteral(1, block)
           });
         }
-        return at;
       case 'RANDOM':
+        // build a rand() expression over the range from 1 to len
         return buildNode('call', block, {
           name: 'rand',
           args: [
@@ -384,10 +406,6 @@ export default class Astgen {
     });
   }
 
-  // math_on_list(block) {
-  //
-  // }
-
   math_modulo(block) {
     return buildNode('binaryOp', block, {
       op: '%',
@@ -493,7 +511,7 @@ export default class Astgen {
   text_charAt(block) {
     let val = this.handleValue(block, 'VALUE');
 
-    if (val.type != 'var') {
+    if (val.type != 'literal' && val.type != 'var') {
       val = this.makeTemporary(val, block, 'string');
     }
 
@@ -504,12 +522,16 @@ export default class Astgen {
   }
 
   text_getSubstring(block) {
-    let val = this.handleValue(block, 'VALUE');
+    let val = this.handleValue(block, 'STRING');
+
+    if (val.type != 'literal' && val.type != 'var') {
+      val = this.makeTemporary(val, block, 'string');
+    }
 
     return buildNode('call', block, {
       name: 'copy',
       args: [
-        this.handleValue(block, 'STRING'),
+        val,
         this.getPosition(val, block, '1'),
         this.getPosition(val, block, '2')
       ]
@@ -669,7 +691,6 @@ export default class Astgen {
             // get a temporary for the start position
             pos = this.makeTemporary(pos, block, 'pos');
           }
-
           return buildNode('call', block, {
             name: 'remove',
             args: [
@@ -716,12 +737,16 @@ export default class Astgen {
   }
 
   lists_getSublist(block) {
-    let val = this.handleValue(block, 'VALUE');
+    let val = this.handleValue(block, 'LIST');
+
+    if (val.type != 'var') {
+      val = this.makeTemporary(val, block, 'list');
+    }
 
     return buildNode('call', block, {
       name: 'copy',
       args: [
-        this.handleValue(block, 'LIST'),
+        val,
         this.getPosition(val, block, '1'),
         this.getPosition(val, block, '2')
       ]
