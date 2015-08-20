@@ -686,7 +686,6 @@ export default class Astgen {
   lists_setIndex(block) {
     let mode = block.getFieldValue('MODE');
     let val = this.handleValue(block, 'LIST');
-    let to = this.handleValue(block, 'TO');
 
     if (val.type != 'var') {
       // changing a temporary has no effect
@@ -694,6 +693,7 @@ export default class Astgen {
     }
 
     let pos = this.getPosition(val, block);
+    let to = this.handleValue(block, 'TO');
 
     switch (mode) {
       case 'SET':
@@ -749,6 +749,93 @@ export default class Astgen {
           ]
         });
     }
+  }
+
+  // tables
+
+  tables_create_empty(block) {
+    return buildNode('call', block, {
+      name: 'table',
+      args: []
+    });
+  }
+
+  tables_create_with(block) {
+    let args = [];
+
+    for (let i = 0; i < block.itemCount_; ++i) {
+      args.push(wrapLiteral(block.getFieldValue('KEY' + i), block));
+      args.push(this.handleValue(block, 'VALUE' + i));
+    }
+
+    return buildNode('call', block, {
+      name: 'table',
+      args: args
+    });
+  }
+
+  tables_size(block) {
+    return buildNode('call', block, {
+      name: 'len',
+      args: [ this.handleValue(block, 'VALUE') ]
+    });
+  }
+
+  tables_isEmpty(block) {
+    return buildNode('binaryOp', block, {
+      op: '=',
+      left: this.tables_size(block),
+      right: wrapLiteral(0, block)
+    });
+  }
+
+  tables_getIndex(block) {
+    let mode = block.getFieldValue('MODE');
+    let val = this.handleValue(block, 'VALUE');
+
+    if (mode == 'REMOVE' && val.type != 'var') {
+      // removing from a temporary has no effect
+      return;
+    }
+
+    let at = this.handleValue(block, 'AT');
+
+    switch (mode) {
+      case 'GET':
+        if (val.type != 'var') {
+          // get a temporary so we can index it
+          val = this.makeTemporary(val, block, 'table');
+        }
+        return buildNode('index', block, {
+          name: val.name,
+          indexes: [ at ]
+        });
+
+      case 'GET_REMOVE':
+      case 'REMOVE':
+        return buildNode('call', block, {
+          name: 'remove',
+          args: [ val, at ]
+        });
+    }
+  }
+
+  tables_setIndex(block) {
+    let val = this.handleValue(block, 'TABLE');
+
+    if (val.type != 'var') {
+      // changing a temporary has no effect
+      return;
+    }
+
+    let at = this.handleValue(block, 'AT');
+    let to = this.handleValue(block, 'TO');
+
+    return buildNode('letIndex', block, {
+      name: val.name,
+      indexes: [ at ],
+      value: to
+    });
   }
 
   // variables
