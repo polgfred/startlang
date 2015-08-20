@@ -23,13 +23,14 @@ Blockly.Msg.MATH_ONLIST_OPERATOR_SORT = 'sort items of list';
 Blockly.Msg.MATH_ONLIST_OPERATOR_REVERSE = 'reverse items of list';
 Blockly.Msg.MATH_ONLIST_OPERATOR_SHUFFLE = 'shuffle items of list';
 
-Blockly.Msg.MATH_ONLIST_TOOLTIP_SORT = 'Sort the items in the list from smallest to largest.';
+Blockly.Msg.MATH_ONLIST_TOOLTIP_SORT_ASC = 'Sort the items in the list from smallest to largest.';
+Blockly.Msg.MATH_ONLIST_TOOLTIP_SORT_DESC = 'Sort the items in the list from largest to smallest.';
 Blockly.Msg.MATH_ONLIST_TOOLTIP_REVERSE = 'Reverse the positions of the items in the list.';
 Blockly.Msg.MATH_ONLIST_TOOLTIP_SHUFFLE = 'Shuffle the items of the list into a random order.';
 
 Blockly.Blocks['lists_functions'] = {
   init: function() {
-    var OPERATORS =
+    let OPERATORS =
         [[Blockly.Msg.MATH_ONLIST_OPERATOR_SUM, 'SUM'],
          [Blockly.Msg.MATH_ONLIST_OPERATOR_MIN, 'MIN'],
          [Blockly.Msg.MATH_ONLIST_OPERATOR_MAX, 'MAX'],
@@ -42,8 +43,8 @@ Blockly.Blocks['lists_functions'] = {
         .setCheck('Array')
         .appendField(new Blockly.FieldDropdown(OPERATORS), 'OP');
     this.setTooltip(() => {
-      var mode = this.getFieldValue('OP');
-      var TOOLTIPS = {
+      let mode = this.getFieldValue('OP');
+      let TOOLTIPS = {
         'SUM': Blockly.Msg.MATH_ONLIST_TOOLTIP_SUM,
         'MIN': Blockly.Msg.MATH_ONLIST_TOOLTIP_MIN,
         'MAX': Blockly.Msg.MATH_ONLIST_TOOLTIP_MAX,
@@ -57,7 +58,7 @@ Blockly.Blocks['lists_functions'] = {
 
 Blockly.Blocks['lists_transformers'] = {
   init: function() {
-    var OPERATORS =
+    let OPERATORS =
         [[Blockly.Msg.MATH_ONLIST_OPERATOR_SORT, 'SORT'],
          [Blockly.Msg.MATH_ONLIST_OPERATOR_REVERSE, 'REVERSE'],
          [Blockly.Msg.MATH_ONLIST_OPERATOR_SHUFFLE, 'SHUFFLE']];
@@ -74,9 +75,10 @@ Blockly.Blocks['lists_transformers'] = {
     this.setInputsInline(true);
     this.updateOrder_(true);
     this.setTooltip(() => {
-      var mode = this.getFieldValue('OP');
-      var TOOLTIPS = {
-        'SORT': Blockly.Msg.MATH_ONLIST_TOOLTIP_SORT,
+      let mode = this.getFieldValue('OP');
+      let order = this.getFieldValue('ORDER');
+      let TOOLTIPS = {
+        'SORT': Blockly.Msg['MATH_ONLIST_TOOLTIP_SORT_' + order],
         'REVERSE': Blockly.Msg.MATH_ONLIST_TOOLTIP_REVERSE,
         'SHUFFLE': Blockly.Msg.MATH_ONLIST_TOOLTIP_SHUFFLE
       };
@@ -84,7 +86,7 @@ Blockly.Blocks['lists_transformers'] = {
     });
   },
   updateOrder_: function(isSort) {
-    var ORDERS =
+    let ORDERS =
         [['smallest first', 'ASC'],
          ['largest first',  'DESC']];
     if (isSort) {
@@ -159,7 +161,7 @@ Blockly.Blocks['tables_create_with'] = {
     this.setTooltip(Blockly.Msg.TABLES_CREATE_WITH_TOOLTIP);
   },
   mutationToDom: function() {
-    var container = document.createElement('mutation');
+    let container = document.createElement('mutation');
     container.setAttribute('items', this.itemCount_);
     return container;
   },
@@ -168,11 +170,11 @@ Blockly.Blocks['tables_create_with'] = {
     this.updateShape_();
   },
   decompose: function(workspace) {
-    var containerBlock = Blockly.Block.obtain(workspace, 'tables_create_with_container');
+    let containerBlock = Blockly.Block.obtain(workspace, 'tables_create_with_container');
     containerBlock.initSvg();
-    var connection = containerBlock.getInput('STACK').connection;
-    for (var i = 0; i < this.itemCount_; i++) {
-      var itemBlock = Blockly.Block.obtain(workspace, 'tables_create_with_item');
+    let connection = containerBlock.getInput('STACK').connection;
+    for (let i = 0; i < this.itemCount_; i++) {
+      let itemBlock = Blockly.Block.obtain(workspace, 'tables_create_with_item');
       itemBlock.initSvg();
       connection.connect(itemBlock.previousConnection);
       connection = itemBlock.nextConnection;
@@ -180,9 +182,9 @@ Blockly.Blocks['tables_create_with'] = {
     return containerBlock;
   },
   compose: function(containerBlock) {
-    var itemBlock = containerBlock.getInputTargetBlock('STACK');
+    let itemBlock = containerBlock.getInputTargetBlock('STACK');
     // Count number of inputs.
-    var connections = [];
+    let connections = [];
     while (itemBlock) {
       connections.push(itemBlock.valueConnection_);
       itemBlock = itemBlock.nextConnection && itemBlock.nextConnection.targetBlock();
@@ -190,17 +192,17 @@ Blockly.Blocks['tables_create_with'] = {
     this.itemCount_ = connections.length;
     this.updateShape_();
     // Reconnect any child blocks.
-    for (var i = 0; i < this.itemCount_; i++) {
+    for (let i = 0; i < this.itemCount_; i++) {
       if (connections[i]) {
         this.getInput('VALUE' + i).connection.connect(connections[i]);
       }
     }
   },
   saveConnections: function(containerBlock) {
-    var itemBlock = containerBlock.getInputTargetBlock('STACK');
-    var i = 0;
+    let itemBlock = containerBlock.getInputTargetBlock('STACK');
+    let i = 0;
     while (itemBlock) {
-      var input = this.getInput('VALUE' + i);
+      let input = this.getInput('VALUE' + i);
       itemBlock.valueConnection_ = input && input.connection.targetConnection;
       i++;
       itemBlock = itemBlock.nextConnection && itemBlock.nextConnection.targetBlock();
@@ -211,7 +213,7 @@ Blockly.Blocks['tables_create_with'] = {
     if (this.getInput('EMPTY')) {
       this.removeInput('EMPTY');
     } else {
-      var i = 0;
+      let i = 0;
       while (this.getInput('VALUE' + i)) {
         this.savedKeys[i] = this.getFieldValue('KEY' + i);
         this.removeInput('VALUE' + i);
@@ -223,8 +225,8 @@ Blockly.Blocks['tables_create_with'] = {
       this.appendDummyInput('EMPTY')
           .appendField(Blockly.Msg.TABLES_CREATE_EMPTY_TITLE);
     } else {
-      for (var i = 0; i < this.itemCount_; i++) {
-        var input = this.appendValueInput('VALUE' + i);
+      for (let i = 0; i < this.itemCount_; i++) {
+        let input = this.appendValueInput('VALUE' + i);
         if (i == 0) {
           input.appendField(Blockly.Msg.TABLES_CREATE_WITH_INPUT_WITH);
         } else {
@@ -301,15 +303,14 @@ Blockly.Blocks['tables_isEmpty'] = {
 
 Blockly.Blocks['tables_getIndex'] = {
   init: function() {
-    var MODE =
+    let MODE =
         [[Blockly.Msg.TABLES_GET_INDEX_GET, 'GET'],
          [Blockly.Msg.TABLES_GET_INDEX_GET_REMOVE, 'GET_REMOVE'],
          [Blockly.Msg.TABLES_GET_INDEX_REMOVE, 'REMOVE']];
     this.setHelpUrl(Blockly.Msg.TABLES_GET_INDEX_HELPURL);
     this.setColour(Blockly.Blocks.tables.HUE);
-    var modeMenu = new Blockly.FieldDropdown(MODE, function(value) {
-      var isStatement = (value == 'REMOVE');
-      this.sourceBlock_.updateStatement_(isStatement);
+    let modeMenu = new Blockly.FieldDropdown(MODE, (value) => {
+      this.updateStatement_(value == 'REMOVE');
     });
     this.appendValueInput('VALUE')
         .setCheck('Map')
@@ -323,25 +324,23 @@ Blockly.Blocks['tables_getIndex'] = {
     }
     this.setInputsInline(true);
     this.setOutput(true);
-    // Assign 'this' to a variable for use in the tooltip closure below.
-    var thisBlock = this;
-    this.setTooltip(function() {
-      var mode = thisBlock.getFieldValue('MODE');
+    this.setTooltip(() => {
+      let mode = this.getFieldValue('MODE');
       return Blockly.Msg['TABLES_GET_INDEX_TOOLTIP_' + mode];
     });
   },
   mutationToDom: function() {
-    var container = document.createElement('mutation');
-    var isStatement = !this.outputConnection;
+    let container = document.createElement('mutation');
+    let isStatement = !this.outputConnection;
     container.setAttribute('statement', isStatement);
     return container;
   },
   domToMutation: function(xmlElement) {
-    var isStatement = (xmlElement.getAttribute('statement') == 'true');
+    let isStatement = (xmlElement.getAttribute('statement') == 'true');
     this.updateStatement_(isStatement);
   },
   updateStatement_: function(newStatement) {
-    var oldStatement = !this.outputConnection;
+    let oldStatement = !this.outputConnection;
     if (newStatement != oldStatement) {
       this.unplug(true, true);
       if (newStatement) {
