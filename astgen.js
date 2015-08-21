@@ -455,13 +455,21 @@ export default class Astgen {
   }
 
   text_join(block) {
-    let str = wrapLiteral(this.handleValue(block, 'ADD0'), block);
+    let str = this.handleValue(block, 'ADD0');
+
+    if (!(str.type == 'literal' && typeof str.value == 'string')) {
+      str = buildNode('binaryOp', block, {
+        op: '$',
+        left: wrapLiteral('', block),
+        right: str
+      });
+    }
 
     for (let i = 1; i < block.itemCount_; ++i) {
       str = buildNode('binaryOp', block, {
         op: '$',
         left: str,
-        right: wrapLiteral(this.handleValue(block, 'ADD' + i), block)
+        right: this.handleValue(block, 'ADD' + i)
       });
     }
 
