@@ -125,10 +125,10 @@ Blockly.Msg.TABLES_CREATE_WITH_CONTAINER_TOOLTIP = 'Add or remove sections to re
 Blockly.Msg.TABLES_CREATE_WITH_ITEM_TITLE = Blockly.Msg.VARIABLES_DEFAULT_NAME;
 Blockly.Msg.TABLES_CREATE_WITH_ITEM_TOOLTIP = 'Add an item to the table.';
 Blockly.Msg.TABLES_SIZE_TITLE = 'size of %1';
-Blockly.Msg.TABLES_SIZE_TOOLTIP = '';
+Blockly.Msg.TABLES_SIZE_TOOLTIP = 'Returns the number of entries in the table.';
 Blockly.Msg.TABLES_SIZE_HELPURL = '';
 Blockly.Msg.TABLES_ISEMPTY_TITLE = '%1 is empty';
-Blockly.Msg.TABLES_ISEMPTY_TOOLTIP = '';
+Blockly.Msg.TABLES_ISEMPTY_TOOLTIP = 'Returns true if the table is empty.';
 Blockly.Msg.TABLES_ISEMPTY_HELPURL = '';
 Blockly.Msg.TABLES_GET_INDEX_GET = 'get';
 Blockly.Msg.TABLES_GET_INDEX_GET_REMOVE = 'get and remove';
@@ -145,6 +145,9 @@ Blockly.Msg.TABLES_SET_INDEX_HELPURL = '';
 Blockly.Msg.TABLES_SET_INDEX_INPUT_IN_TABLE = 'in table';
 Blockly.Msg.TABLES_SET_INDEX_INPUT_TO = 'as';
 Blockly.Msg.TABLES_SET_INDEX_TOOLTIP = 'Sets the item for the specified key in a table.';
+Blockly.Msg.TABLES_KEYS_TITLE = 'keys of %1';
+Blockly.Msg.TABLES_KEYS_TOOLTIP = 'Returns the keys of a table as a list.';
+Blockly.Msg.TABLES_KEYS_HELPURL = '';
 
 Blockly.Blocks['tables_create_empty'] = {
   init: function() {
@@ -380,6 +383,25 @@ Blockly.Blocks['tables_setIndex'] = {
     this.setPreviousStatement(true);
     this.setNextStatement(true);
     this.setTooltip(Blockly.Msg.TABLES_SET_INDEX_TOOLTIP);
+  }
+};
+
+Blockly.Blocks['tables_keys'] = {
+  init: function() {
+    this.jsonInit({
+      "message0": Blockly.Msg.TABLES_KEYS_TITLE,
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": ['Map']
+        }
+      ],
+      "output": 'Array',
+      "colour": Blockly.Blocks.tables.HUE,
+      "tooltip": Blockly.Msg.TABLES_KEYS_TOOLTIP,
+      "helpUrl": Blockly.Msg.TABLES_KEYS_HELPURL
+    });
   }
 };
 

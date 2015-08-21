@@ -848,6 +848,13 @@ export default class Astgen {
     });
   }
 
+  tables_keys(block) {
+    return buildNode('call', block, {
+      name: 'keys',
+      args: [ this.handleValue(block, 'VALUE') ]
+    });
+  }
+
   // variables
 
   variables_get(block) {
