@@ -36,7 +36,7 @@ export class SInterpreter extends EventEmitter {
     if (node.exit) {
       // return a special error to exit the program
       return Promise.reject(new ScriptExit());
-    } else if (node.type == 'while') {
+    } else if (node.pause) {
       // return a promise to resume execution when resume() is called
       return new Promise((resolve) => {
         this.resume = () => {
