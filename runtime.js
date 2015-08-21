@@ -277,10 +277,6 @@ export const SNumber = extendObject(SBase, {
 
     constrain(n, lo, hi) {
       return Math.min(Math.max(n, lo), hi);
-    },
-
-    range(start, end, step) {
-      return immutable.Range(start, end, step);
     }
   }),
 
@@ -307,28 +303,6 @@ export const SNumber = extendObject(SBase, {
 });
 
 Number.prototype[handlerKey] = SNumber;
-
-// this type basically exists to implement for-loops lazily
-export const SRange = extendObject(SBase, {
-  repr(r) {
-    return `[ ${r._start} .. ${r._end} / ${r._step} ]`;
-  },
-
-  enumerate(r, current = r._start) {
-    return {
-      value: current,
-      more: r._step > 0 ? current <= r._end : current >= r._end,
-      next: () => SRange.enumerate(r, current + r._step)
-    };
-  },
-
-  binaryops: {
-    '=' : (left, right) =>  left.equals(right),
-    '!=': (left, right) => !left.equals(right)
-  }
-});
-
-immutable.Range.prototype[handlerKey] = SRange;
 
 export const SString = extendObject(SBase, {
   repr(s) {

@@ -148,6 +148,13 @@ export default class Astgen {
 
   // loops
 
+  controls_repeat_ext(block) {
+    return buildNode('repeat', block, {
+      times: this.handleValue(block, 'TIMES'),
+      body: this.handleStatements(block, 'DO')
+    });
+  }
+
   controls_whileUntil(block) {
     let cond = this.handleValue(block, 'BOOL');
 
@@ -166,16 +173,11 @@ export default class Astgen {
   }
 
   controls_for(block) {
-    return buildNode('for', block, {
+    return buildNode('count', block, {
       name: block.getFieldValue('VAR'),
-      range: buildNode('call', block, {
-        name: 'range',
-        args: [
-          this.handleValue(block, 'FROM'),
-          this.handleValue(block, 'TO'),
-          this.handleValue(block, 'BY')
-        ]
-      }),
+      from: this.handleValue(block, 'FROM'),
+      to: this.handleValue(block, 'TO'),
+      by: this.handleValue(block, 'BY'),
       body: this.handleStatements(block, 'DO')
     });
   }

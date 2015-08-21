@@ -87,6 +87,50 @@ export class SInterpreter extends EventEmitter {
     return loop(0);
   }
 
+  repeatNode(node) {
+    return this.visit(node.times).then((tres) => {
+      // recursive loop over range
+      let loop = (count) => {
+        if (count < tres.rv) {
+          return this.visit(node.body).then((bres) => {
+            let flow = bres.flow;
+            if (flow == 'return') {
+              return bres; // propagate
+            } else if (!flow || flow == 'next') {
+              return loop(count + 1);
+            }
+          });
+        }
+      };
+      return loop(0);
+    });
+  }
+
+  countNode(node) {
+    return this.visit(node.from).then((fres) => {
+      return this.visit(node.to).then((tres) => {
+        let bp = node.by ? this.visit(node.by) : Promise.resolve({ rv: 1 });
+        return bp.then((byres) => {
+          // recursive loop over range
+          let loop = (count) => {
+            if (count <= tres.rv) {
+              this.ctx.set(node.name, count);
+              return this.visit(node.body).then((bres) => {
+                let flow = bres.flow;
+                if (flow == 'return') {
+                  return bres; // propagate
+                } else if (!flow || flow == 'next') {
+                  return loop(count + byres.rv);
+                }
+              });
+            }
+          };
+          return loop(fres.rv);
+        });
+      });
+    });
+  }
+
   forNode(node) {
     return this.visit(node.range).then((rres) => {
       // recursive loop over range

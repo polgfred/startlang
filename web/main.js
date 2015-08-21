@@ -27,7 +27,7 @@ globals.print = function(...values) {
     //termapi.echo('');
   }
   // yield to UI for redraw
-  return refresh();
+  //return refresh();
 };
 
 globals.input = function(message) {

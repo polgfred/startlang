@@ -113,6 +113,8 @@ BlockElement
 
 Control
   = If
+  / Repeat
+  / Count
   / For
   / While
   / Begin
@@ -125,21 +127,23 @@ If
       return buildNode('if', { cond: cond, tbody: tbody });
     }
 
-For
-  = 'for' WB __ sym:Symbol __ 'in' WB __ range:Range __ 'do' WB __ body:EndBody {
-      return buildNode('for', { name: sym, range: range, body: body });
+Repeat
+  = 'repeat' WB __ times:Value __ 'do' WB __ body:EndBody {
+      return buildNode('repeat', { times: times, body: body });
     }
 
-Range
-  = from:Value __ ',' __ to:Value by:( __ ',' __ v:Value { return v; } )? {
-      // handle 'for i in 1,10,2' as a shorthand for range(...)
-      var args = [ from, to ];
-      if (by != null) {
-        args.push(by);
-      }
-      return buildNode('call', { name: 'range', args: args });
+Count
+  = 'count' WB __ sym:Symbol __ 'from' WB __ from:Value __ 'to' WB __ to:Value __ 'by' WB __ by:Value __ 'do' WB __ body:EndBody {
+      return buildNode('count', { name: sym, from: from, to: to, by: by, body: body });
     }
-  / Value
+  / 'count' WB __ sym:Symbol __ 'from' WB __ from:Value __ 'to' WB __ to:Value __ 'do' WB __ body:EndBody {
+      return buildNode('count', { name: sym, from: from, to: to, body: body });
+    }
+
+For
+  = 'for' WB __ sym:Symbol __ 'in' WB __ range:Value __ 'do' WB __ body:EndBody {
+      return buildNode('for', { name: sym, range: range, body: body });
+    }
 
 While
   = 'while' WB __ cond:Value __ 'do' WB __ body:EndBody {
