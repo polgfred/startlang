@@ -1,0 +1,216 @@
+<?xml version="1.0"?>
+<xml>
+  <block id="1" type="text_print" x="20" y="17">
+    <value name="TEXT">
+      <block id="2" type="text"><field name="TEXT">Eratosthenes' Sieve!</field></block>
+    </value>
+    <next>
+      <block id="3" type="variables_set"><field name="VAR">upper</field>
+        <value name="VALUE">
+          <block id="91" type="math_number"><field name="NUM">500</field></block>
+        </value>
+        <next>
+          <block id="5" type="variables_set"><field name="VAR">check</field>
+            <value name="VALUE">
+              <block id="6" type="math_single"><field name="OP">ROOT</field>
+                <value name="NUM">
+                  <block id="7" type="variables_get"><field name="VAR">upper</field></block>
+                </value>
+              </block>
+            </value>
+            <next>
+              <block id="8" type="variables_set"><field name="VAR">primes</field>
+                <value name="VALUE">
+                  <block id="9" type="lists_create_empty"></block>
+                </value>
+                <next>
+                  <block id="10" type="controls_for"><field name="VAR">i</field>
+                    <value name="FROM">
+                      <block id="11" type="math_number"><field name="NUM">2</field></block>
+                    </value>
+                    <value name="TO">
+                      <block id="12" type="variables_get"><field name="VAR">upper</field></block>
+                    </value>
+                    <value name="BY">
+                      <block id="13" type="math_number"><field name="NUM">1</field></block>
+                    </value>
+                    <statement name="DO">
+                      <block id="14" type="lists_setIndex">
+                        <mutation at="true"></mutation>
+                        <field name="MODE">SET</field>
+                        <field name="WHERE">FROM_START</field>
+                        <value name="LIST">
+                          <block id="15" type="variables_get"><field name="VAR">primes</field></block>
+                        </value>
+                        <value name="AT">
+                          <block id="16" type="variables_get"><field name="VAR">i</field></block>
+                        </value>
+                        <value name="TO">
+                          <block id="17" type="logic_boolean"><field name="BOOL">TRUE</field></block>
+                        </value>
+                      </block>
+                    </statement>
+                    <next>
+                      <block id="18" type="variables_set"><field name="VAR">i</field>
+                        <value name="VALUE">
+                          <block id="19" type="math_number"><field name="NUM">2</field></block>
+                        </value>
+                        <next>
+                          <block id="20" type="controls_whileUntil"><field name="MODE">WHILE</field>
+                            <value name="BOOL">
+                              <block id="21" type="logic_compare"><field name="OP">LTE</field>
+                                <value name="A">
+                                  <block id="22" type="variables_get"><field name="VAR">i</field></block>
+                                </value>
+                                <value name="B">
+                                  <block id="23" type="variables_get"><field name="VAR">check</field></block>
+                                </value>
+                              </block>
+                            </value>
+                            <statement name="DO">
+                              <block id="24" type="controls_whileUntil"><field name="MODE">UNTIL</field>
+                                <value name="BOOL">
+                                  <block id="25" type="logic_operation"><field name="OP">OR</field>
+                                    <value name="A">
+                                      <block id="26" type="logic_compare"><field name="OP">GT</field>
+                                        <value name="A">
+                                          <block id="27" type="variables_get"><field name="VAR">i</field></block>
+                                        </value>
+                                        <value name="B">
+                                          <block id="28" type="variables_get"><field name="VAR">check</field></block>
+                                        </value>
+                                      </block>
+                                    </value>
+                                    <value name="B">
+                                      <block id="29" type="lists_getIndex">
+                                        <mutation at="true" statement="false"></mutation>
+                                        <field name="MODE">GET</field>
+                                        <field name="WHERE">FROM_START</field>
+                                        <value name="VALUE">
+                                          <block id="30" type="variables_get"><field name="VAR">primes</field></block>
+                                        </value>
+                                        <value name="AT">
+                                          <block id="31" type="variables_get"><field name="VAR">i</field></block>
+                                        </value>
+                                      </block>
+                                    </value>
+                                  </block>
+                                </value>
+                                <statement name="DO">
+                                  <block id="32" type="math_change"><field name="VAR">i</field>
+                                    <value name="DELTA">
+                                      <block id="33" type="math_number"><field name="NUM">1</field></block>
+                                    </value>
+                                  </block>
+                                </statement>
+                                <next>
+                                  <block id="34" type="controls_for"><field name="VAR">j</field>
+                                    <value name="FROM">
+                                      <block id="35" type="math_arithmetic"><field name="OP">MULTIPLY</field>
+                                        <value name="A">
+                                          <block id="36" type="variables_get"><field name="VAR">i</field></block>
+                                        </value>
+                                        <value name="B">
+                                          <block id="37" type="math_number"><field name="NUM">2</field></block>
+                                        </value>
+                                      </block>
+                                    </value>
+                                    <value name="TO">
+                                      <block id="38" type="variables_get"><field name="VAR">upper</field></block>
+                                    </value>
+                                    <value name="BY">
+                                      <block id="39" type="variables_get"><field name="VAR">i</field></block>
+                                    </value>
+                                    <statement name="DO">
+                                      <block id="40" type="lists_setIndex">
+                                        <mutation at="true"></mutation>
+                                        <field name="MODE">SET</field>
+                                        <field name="WHERE">FROM_START</field>
+                                        <value name="LIST">
+                                          <block id="41" type="variables_get"><field name="VAR">primes</field></block>
+                                        </value>
+                                        <value name="AT">
+                                          <block id="42" type="variables_get"><field name="VAR">j</field></block>
+                                        </value>
+                                        <value name="TO">
+                                          <block id="43" type="logic_boolean"><field name="BOOL">FALSE</field></block>
+                                        </value>
+                                      </block>
+                                    </statement>
+                                    <next>
+                                      <block id="44" type="math_change"><field name="VAR">i</field>
+                                        <value name="DELTA">
+                                          <block id="45" type="math_number"><field name="NUM">1</field></block>
+                                        </value>
+                                      </block>
+                                    </next>
+                                  </block>
+                                </next>
+                              </block>
+                            </statement>
+                            <next>
+                              <block id="46" type="controls_for"><field name="VAR">i</field>
+                                <value name="FROM">
+                                  <block id="47" type="math_number"><field name="NUM">2</field></block>
+                                </value>
+                                <value name="TO">
+                                  <block id="48" type="variables_get"><field name="VAR">upper</field></block>
+                                </value>
+                                <value name="BY">
+                                  <block id="49" type="math_number"><field name="NUM">1</field></block>
+                                </value>
+                                <statement name="DO">
+                                  <block id="50" type="controls_if">
+                                    <value name="IF0">
+                                      <block id="51" type="lists_getIndex">
+                                        <mutation at="true" statement="false"></mutation>
+                                        <field name="MODE">GET</field>
+                                        <field name="WHERE">FROM_START</field>
+                                        <value name="VALUE">
+                                          <block id="52" type="variables_get"><field name="VAR">primes</field></block>
+                                        </value>
+                                        <value name="AT">
+                                          <block id="53" type="variables_get"><field name="VAR">i</field></block>
+                                        </value>
+                                      </block>
+                                    </value>
+                                    <statement name="DO0">
+                                      <block id="54" type="text_print">
+                                        <value name="TEXT">
+                                          <block id="55" type="text_join">
+                                            <mutation items="3"></mutation>
+                                            <value name="ADD0">
+                                              <block id="56" type="text"><field name="TEXT">Yes,
+                                                </field>
+                                              </block>
+                                            </value>
+                                            <value name="ADD1">
+                                              <block id="57" type="variables_get"><field name="VAR">i</field></block>
+                                            </value>
+                                            <value name="ADD2">
+                                              <block id="58" type="text">
+                                                <field name="TEXT">
+                                                  is prime!</field></block>
+                                            </value>
+                                          </block>
+                                        </value>
+                                      </block>
+                                    </statement>
+                                  </block>
+                                </statement>
+                              </block>
+                            </next>
+                          </block>
+                        </next>
+                      </block>
+                    </next>
+                  </block>
+                </next>
+              </block>
+            </next>
+          </block>
+        </next>
+      </block>
+    </next>
+  </block>
+</xml>
