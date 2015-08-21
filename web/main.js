@@ -30,6 +30,10 @@ globals.print = function(...values) {
   return refresh();
 };
 
+globals.input = function(message) {
+  return prompt(message);
+};
+
 globals.clear = function() {
   //termapi.clear();
   paper.clear();

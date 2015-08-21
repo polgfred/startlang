@@ -652,6 +652,14 @@ export const globals = {
     return SMap.create(pairs);
   },
 
+  num(value) {
+    let result = parseFloat(value);
+    if (result != result) {
+      throw new Error('result is not a number');
+    }
+    return result;
+  },
+
   rand() {
     return Math.random();
   },

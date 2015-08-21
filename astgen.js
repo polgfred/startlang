@@ -574,6 +574,22 @@ export default class Astgen {
     });
   }
 
+  text_prompt_ext(block) {
+    let input = buildNode('call', block, {
+      name: 'input',
+      args: [ this.handleValue(block, 'TEXT') ]
+    });
+
+    if (block.getFieldValue('TYPE') == 'NUMBER') {
+      input = buildNode('call', block, {
+        name: 'num',
+        args: [ input ]
+      });
+    }
+
+    return input;
+  }
+
   text_print(block) {
     let text = this.handleValue(block, 'TEXT');
 
