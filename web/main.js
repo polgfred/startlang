@@ -35,6 +35,7 @@ globals.input = function(message) {
 };
 
 globals.clear = function() {
+  console.clear();
   //termapi.clear();
   paper.clear();
   // yield to UI for redraw
@@ -53,6 +54,7 @@ let ctx = createRuntime(),
 $('#runner').click(() => {
   // wipe stuff clean and make a fresh program context
   ctx = createRuntime();
+  console.clear();
   // termapi.clear();
   paper.clear();
   // execute the code in the buffer

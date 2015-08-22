@@ -93,7 +93,7 @@ Blockly.Blocks['lists_transformers'] = {
           .appendField(new Blockly.FieldDropdown(ORDERS), 'ORDER');
     } else {
       this.removeInput('TAIL');
-      this.appendDummyInput('TAIL')
+      this.appendDummyInput('TAIL');
     }
   },
   mutationToDom: function() {
