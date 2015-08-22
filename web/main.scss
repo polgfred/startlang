@@ -1,9 +1,15 @@
 @import '../node_modules/bootstrap-sass/assets/stylesheets/bootstrap';
 
+@mixin fontify {
+  font-family: 'Palanquin';
+  font-weight: 400;
+}
+
 body {
   background: #aaa;
   margin: 0;
   padding: 0;
+  @include fontify;
 }
 
 #canvas {
@@ -35,17 +41,39 @@ body {
   border-width: 0;
   box-shadow: 2px 2px 6px rgba(0,0,0,0.5);
   display: block;
-  font-family: monospace;
   margin: 10px 0 0;
+  @include fontify;
 }
 
 #editor {
   font-size: 14px;
   height: calc(100vh - 20px);
+
+  .blocklyText {
+    @include fontify;
+  }
+}
+
+.blocklyToolboxDiv {
+  .blocklyTreeRow {
+    line-height: 20px;
+    height: 24px;
+  }
+  .blocklyTreeLabel {
+    @include fontify;
+  }
+}
+
+.blocklyWidgetDiv {
+  .blocklyHtmlInput {
+    @include fontify;
+  }
 }
 
 #runner {
   background-color: #eee;
+  font-family: inherit;
+  font-weight: 400;
   font-size: 16px;
   height: 40px;
   margin: 10px;

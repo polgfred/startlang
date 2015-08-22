@@ -68,8 +68,7 @@ Blockly.inject('editor', {
   }
 });
 
-let ctx = createRuntime(),
-    gen = new Astgen();
+let ctx = createRuntime();
 
 // hook up the run button
 $('#runner').click(() => {
@@ -80,7 +79,7 @@ $('#runner').click(() => {
   paper.clear();
   // execute the code in the buffer
   let block = Blockly.getMainWorkspace().getTopBlocks()[0],
-      root = gen.handleStatements(block),
+      root = new Astgen().handleStatements(block),
       interp = createInterpreter(root, ctx);
   interp.on('error', (err) => {
     console.error('[ERROR]: ' + err.message);
