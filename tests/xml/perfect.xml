@@ -1,0 +1,137 @@
+<?xml version="1.0"?>
+<xml xmlns="http://www.w3.org/1999/xhtml">
+  <block id="1" type="variables_set" x="-444" y="-286"><field name="VAR">upper</field>
+    <value name="VALUE">
+      <block id="2" type="text_prompt_ext">
+        <mutation type="NUMBER"></mutation>
+        <field name="TYPE">NUMBER</field>
+        <value name="TEXT">
+          <block id="3" type="text"><field name="TEXT">How high?</field></block>
+        </value>
+      </block>
+    </value>
+    <next>
+      <block id="4" type="controls_for"><field name="VAR">number</field>
+        <value name="FROM">
+          <block id="5" type="math_number"><field name="NUM">2</field></block>
+        </value>
+        <value name="TO">
+          <block id="6" type="variables_get"><field name="VAR">upper</field></block>
+        </value>
+        <value name="BY">
+          <block id="7" type="math_number"><field name="NUM">1</field></block>
+        </value>
+        <statement name="DO">
+          <block id="8" type="variables_set"><field name="VAR">total</field>
+            <value name="VALUE">
+              <block id="9" type="math_number"><field name="NUM">1</field></block>
+            </value>
+            <next>
+              <block id="10" type="controls_for"><field name="VAR">i</field>
+                <value name="FROM">
+                  <block id="11" type="math_number"><field name="NUM">2</field></block>
+                </value>
+                <value name="TO">
+                  <block id="12" type="math_single"><field name="OP">ROOT</field>
+                    <value name="NUM">
+                      <block id="13" type="variables_get"><field name="VAR">number</field></block>
+                    </value>
+                  </block>
+                </value>
+                <value name="BY">
+                  <block id="14" type="math_number"><field name="NUM">1</field></block>
+                </value>
+                <statement name="DO">
+                  <block id="15" type="variables_set"><field name="VAR">j</field>
+                    <value name="VALUE">
+                      <block id="16" type="math_arithmetic"><field name="OP">DIVIDE</field>
+                        <value name="A">
+                          <block id="17" type="variables_get"><field name="VAR">number</field></block>
+                        </value>
+                        <value name="B">
+                          <block id="18" type="variables_get"><field name="VAR">i</field></block>
+                        </value>
+                      </block>
+                    </value>
+                    <next>
+                      <block id="19" type="controls_if">
+                        <value name="IF0">
+                          <block id="20" type="math_number_property">
+                            <mutation divisor_input="false"></mutation>
+                            <field name="PROPERTY">WHOLE</field>
+                            <value name="NUMBER_TO_CHECK">
+                              <block id="21" type="variables_get"><field name="VAR">j</field></block>
+                            </value>
+                          </block>
+                        </value>
+                        <statement name="DO0">
+                          <block id="22" type="math_change"><field name="VAR">total</field>
+                            <value name="DELTA">
+                              <block id="23" type="variables_get"><field name="VAR">i</field></block>
+                            </value>
+                            <next>
+                              <block id="24" type="controls_if">
+                                <value name="IF0">
+                                  <block id="25" type="logic_compare"><field name="OP">NEQ</field>
+                                    <value name="A">
+                                      <block id="26" type="variables_get"><field name="VAR">i</field></block>
+                                    </value>
+                                    <value name="B">
+                                      <block id="27" type="variables_get"><field name="VAR">j</field></block>
+                                    </value>
+                                  </block>
+                                </value>
+                                <statement name="DO0">
+                                  <block id="28" type="math_change"><field name="VAR">total</field>
+                                    <value name="DELTA">
+                                      <block id="29" type="variables_get"><field name="VAR">j</field></block>
+                                    </value>
+                                  </block>
+                                </statement>
+                              </block>
+                            </next>
+                          </block>
+                        </statement>
+                      </block>
+                    </next>
+                  </block>
+                </statement>
+                <next>
+                  <block id="30" type="controls_if">
+                    <value name="IF0">
+                      <block id="31" type="logic_compare"><field name="OP">EQ</field>
+                        <value name="A">
+                          <block id="32" type="variables_get"><field name="VAR">total</field></block>
+                        </value>
+                        <value name="B">
+                          <block id="33" type="variables_get"><field name="VAR">number</field></block>
+                        </value>
+                      </block>
+                    </value>
+                    <statement name="DO0">
+                      <block id="34" type="text_print">
+                        <value name="TEXT">
+                          <block id="35" type="text_join">
+                            <mutation items="2"></mutation>
+                            <value name="ADD0">
+                              <block id="36" type="variables_get"><field name="VAR">number</field></block>
+                            </value>
+                            <value name="ADD1">
+                              <block id="37" type="text">
+                                <field name="TEXT">
+                                  is perfect!</field></block>
+                            </value>
+                          </block>
+                        </value>
+                      </block>
+                    </statement>
+                  </block>
+                </next>
+              </block>
+            </next>
+          </block>
+        </statement>
+      </block>
+    </next>
+  </block>
+</xml>
