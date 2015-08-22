@@ -44,8 +44,29 @@ globals.clear = function() {
 
 // wire it up
 
-Blockly.inject($('#editor')[0], { toolbox: $('#toolbox')[0] });
-//Blockly.Xml.domToWorkspace(Blockly.getMainWorkspace(), $('#expr')[0]);
+Blockly.inject('editor', {
+  toolbox: $('#toolbox')[0],
+  collapse: true,
+  comments: true,
+  disable: true,
+  readOnly: false,
+  scrollbars: true,
+  trashcan: true,
+  grid: {
+    spacing: 25,
+    length: 3,
+    colour: '#ccc',
+    snap: true
+  },
+  zoom: {
+    enabled: true,
+    controls: true,
+    wheel: true,
+    maxScale: 2,
+    minScale: .1,
+    scaleSpeed: 1.1
+  }
+});
 
 let ctx = createRuntime(),
     gen = new Astgen();
