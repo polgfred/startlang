@@ -237,11 +237,11 @@ Blockly.Blocks['tables_create_with'] = {
           .appendField(Blockly.Msg.TABLES_CREATE_EMPTY_TITLE);
     } else {
       for (let i = 0; i < this.itemCount_; i++) {
-        let input = this.appendValueInput('VALUE' + i);
+        let input = this.appendValueInput('VALUE' + i)
+                        .setAlign(Blockly.ALIGN_RIGHT);
         if (i == 0) {
-          input.appendField(Blockly.Msg.TABLES_CREATE_WITH_INPUT_WITH);
-        } else {
-          input.setAlign(Blockly.ALIGN_RIGHT);
+          input.appendField(Blockly.Msg.TABLES_CREATE_WITH_INPUT_WITH)
+
         }
         input.appendField(Blockly.Msg.TABLES_CREATE_WITH_INPUT_KEY)
              .appendField(new Blockly.FieldTextInput(this.savedKeys[i] || 'key' + (i+1)), 'KEY' + i)
