@@ -875,6 +875,10 @@ export default class Astgen {
 
   // graphics
 
+  colour_picker(block) {
+    return wrapLiteral(block.getFieldValue('COLOUR'));
+  }
+
   graphics_create_rect(block) {
     return buildNode('call', block, {
       name: 'rect',
@@ -883,6 +887,72 @@ export default class Astgen {
         this.handleValue(block, 'Y'),
         this.handleValue(block, 'WIDTH'),
         this.handleValue(block, 'HEIGHT')
+      ]
+    });
+  }
+
+  graphics_create_circle(block) {
+    return buildNode('call', block, {
+      name: 'circle',
+      args: [
+        this.handleValue(block, 'X'),
+        this.handleValue(block, 'Y'),
+        this.handleValue(block, 'RADIUS')
+      ]
+    });
+  }
+
+  graphics_create_ellipse(block) {
+    return buildNode('call', block, {
+      name: 'ellipse',
+      args: [
+        this.handleValue(block, 'X'),
+        this.handleValue(block, 'Y'),
+        this.handleValue(block, 'XRADIUS'),
+        this.handleValue(block, 'YRADIUS')
+      ]
+    });
+  }
+
+  graphics_create_line(block) {
+    return buildNode('call', block, {
+      name: 'line',
+      args: [
+        this.handleValue(block, 'X1'),
+        this.handleValue(block, 'Y1'),
+        this.handleValue(block, 'X2'),
+        this.handleValue(block, 'Y2')
+      ]
+    });
+  }
+
+  graphics_move_shape(block) {
+    return buildNode('call', block, {
+      name: 'move',
+      args: [
+        this.handleValue(block, 'SHAPE'),
+        this.handleValue(block, 'X'),
+        this.handleValue(block, 'Y')
+      ]
+    });
+  }
+
+  graphics_outline_shape(block) {
+    return buildNode('call', block, {
+      name: 'stroke',
+      args: [
+        this.handleValue(block, 'SHAPE'),
+        this.handleValue(block, 'COLOR')
+      ]
+    });
+  }
+
+  graphics_fill_shape(block) {
+    return buildNode('call', block, {
+      name: 'fill',
+      args: [
+        this.handleValue(block, 'SHAPE'),
+        this.handleValue(block, 'COLOR')
       ]
     });
   }

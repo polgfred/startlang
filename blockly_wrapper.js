@@ -4,6 +4,8 @@ import _ from 'lodash';
 
 export default Blockly = require('node-blockly/lib/blockly_compressed');
 
+Blockly.HSV_VALUE = 0.6;
+
 Blockly.Msg = _.extend(require('node-blockly/lib/i18n/en'), Blockly.Msg);
 Blockly.Msg = Blockly.Msg();
 
@@ -173,7 +175,7 @@ Blockly.Blocks['tables_create_empty'] = {
   init: function() {
     this.appendDummyInput()
         .appendField(Blockly.Msg.TABLES_CREATE_EMPTY_TITLE);
-    this.setOutput(true, "Map");
+    this.setOutput(true, 'Map');
     this.setColour(Blockly.Blocks.tables.HUE);
     this.setTooltip(Blockly.Msg.TABLES_CREATE_EMPTY_TOOLTIP);
     this.setHelpUrl(Blockly.Msg.TABLES_CREATE_EMPTY_HELPURL);
@@ -297,18 +299,18 @@ Blockly.Blocks['tables_create_with_item'] = {
 Blockly.Blocks['tables_size'] = {
   init: function() {
     this.jsonInit({
-      "message0": Blockly.Msg.TABLES_SIZE_TITLE,
-      "args0": [
+      'message0': Blockly.Msg.TABLES_SIZE_TITLE,
+      'args0': [
         {
-          "type": "input_value",
-          "name": "VALUE",
-          "check": ['Map']
+          'type': 'input_value',
+          'name': 'VALUE',
+          'check': ['Map']
         }
       ],
-      "output": 'Number',
-      "colour": Blockly.Blocks.tables.HUE,
-      "tooltip": Blockly.Msg.TABLES_SIZE_TOOLTIP,
-      "helpUrl": Blockly.Msg.TABLES_SIZE_HELPURL
+      'output': 'Number',
+      'colour': Blockly.Blocks.tables.HUE,
+      'tooltip': Blockly.Msg.TABLES_SIZE_TOOLTIP,
+      'helpUrl': Blockly.Msg.TABLES_SIZE_HELPURL
     });
   }
 };
@@ -316,18 +318,18 @@ Blockly.Blocks['tables_size'] = {
 Blockly.Blocks['tables_isEmpty'] = {
   init: function() {
     this.jsonInit({
-      "message0": Blockly.Msg.TABLES_ISEMPTY_TITLE,
-      "args0": [
+      'message0': Blockly.Msg.TABLES_ISEMPTY_TITLE,
+      'args0': [
         {
-          "type": "input_value",
-          "name": "VALUE",
-          "check": ['Map']
+          'type': 'input_value',
+          'name': 'VALUE',
+          'check': ['Map']
         }
       ],
-      "output": 'Boolean',
-      "colour": Blockly.Blocks.tables.HUE,
-      "tooltip": Blockly.Msg.TABLES_ISEMPTY_TOOLTIP,
-      "helpUrl": Blockly.Msg.TABLES_ISEMPTY_HELPURL
+      'output': 'Boolean',
+      'colour': Blockly.Blocks.tables.HUE,
+      'tooltip': Blockly.Msg.TABLES_ISEMPTY_TOOLTIP,
+      'helpUrl': Blockly.Msg.TABLES_ISEMPTY_HELPURL
     });
   }
 };
@@ -409,18 +411,18 @@ Blockly.Blocks['tables_setIndex'] = {
 Blockly.Blocks['tables_keys'] = {
   init: function() {
     this.jsonInit({
-      "message0": Blockly.Msg.TABLES_KEYS_TITLE,
-      "args0": [
+      'message0': Blockly.Msg.TABLES_KEYS_TITLE,
+      'args0': [
         {
-          "type": "input_value",
-          "name": "VALUE",
-          "check": ['Map']
+          'type': 'input_value',
+          'name': 'VALUE',
+          'check': ['Map']
         }
       ],
-      "output": 'Array',
-      "colour": Blockly.Blocks.tables.HUE,
-      "tooltip": Blockly.Msg.TABLES_KEYS_TOOLTIP,
-      "helpUrl": Blockly.Msg.TABLES_KEYS_HELPURL
+      'output': 'Array',
+      'colour': Blockly.Blocks.tables.HUE,
+      'tooltip': Blockly.Msg.TABLES_KEYS_TOOLTIP,
+      'helpUrl': Blockly.Msg.TABLES_KEYS_HELPURL
     });
   }
 };
@@ -431,7 +433,7 @@ Blockly.Blocks['tables_keys'] = {
 // TODO: graphics (SVG)
 //    create a rectangle with x, y, width, height
 //    create a circle with x, y, radius
-//    create an oval with x, y, x-radius, y-radius
+//    create an ellipse with x, y, x-radius, y-radius
 //    create a line with x1, y1, x2, y2
 //    create a polygon with n-sides/coords
 //    move %1 to x, y
@@ -447,16 +449,166 @@ Blockly.Blocks['graphics_create_rect'] = {
   init: function() {
     this.jsonInit({
       'id': 'graphics_create_rect',
-      'message0': 'create rectangle with x %1 y %2 width %3 height %4',
+      'message0': 'rectangle with x %1 y %2 width %3 height %4',
       'args0': [
         { 'type': 'input_value', 'name': 'X', 'check': 'Number', 'align': 'RIGHT' },
         { 'type': 'input_value', 'name': 'Y', 'check': 'Number', 'align': 'RIGHT' },
         { 'type': 'input_value', 'name': 'WIDTH', 'check': 'Number', 'align': 'RIGHT' },
         { 'type': 'input_value', 'name': 'HEIGHT', 'check': 'Number', 'align': 'RIGHT' }
       ],
-      'inputsInline': false,
+      'colour': Blockly.Blocks.colour.HUE,
+      'inputsInline': true,
       'output': 'Shape',
-      'tooltip': '',
+      'tooltip': 'Display a rectangle with the upper left corner at (x, y), having the specified width and height.',
+      'helpUrl': ''
+    });
+  }
+};
+
+Blockly.Blocks['graphics_create_circle'] = {
+  init: function() {
+    this.jsonInit({
+      'id': 'graphics_create_circle',
+      'message0': 'circle with x %1 y %2 radius %3',
+      'args0': [
+        { 'type': 'input_value', 'name': 'X', 'check': 'Number', 'align': 'RIGHT' },
+        { 'type': 'input_value', 'name': 'Y', 'check': 'Number', 'align': 'RIGHT' },
+        { 'type': 'input_value', 'name': 'RADIUS', 'check': 'Number', 'align': 'RIGHT' }
+      ],
+      'colour': Blockly.Blocks.colour.HUE,
+      'inputsInline': true,
+      'output': 'Shape',
+      'tooltip': 'Display a circle with the center at (x, y), having the specified radius.',
+      'helpUrl': ''
+    });
+  }
+};
+
+Blockly.Blocks['graphics_create_ellipse'] = {
+  init: function() {
+    this.jsonInit({
+      'id': 'graphics_create_ellipse',
+      'message0': 'ellipse with x %1 y %2 x-radius %3 y-radius %4',
+      'args0': [
+        { 'type': 'input_value', 'name': 'X', 'check': 'Number', 'align': 'RIGHT' },
+        { 'type': 'input_value', 'name': 'Y', 'check': 'Number', 'align': 'RIGHT' },
+        { 'type': 'input_value', 'name': 'XRADIUS', 'check': 'Number', 'align': 'RIGHT' },
+        { 'type': 'input_value', 'name': 'YRADIUS', 'check': 'Number', 'align': 'RIGHT' }
+      ],
+      'colour': Blockly.Blocks.colour.HUE,
+      'inputsInline': true,
+      'output': 'Shape',
+      'tooltip': 'Display an ellipse (oval) with the center at (x, y), having the specified radii.',
+      'helpUrl': ''
+    });
+  }
+};
+
+Blockly.Blocks['graphics_create_line'] = {
+  init: function() {
+    this.jsonInit({
+      'id': 'graphics_create_line',
+      'message0': 'line from x1 %1 y1 %2 to x2 %3 y2 %4',
+      'args0': [
+        { 'type': 'input_value', 'name': 'X1', 'check': 'Number', 'align': 'RIGHT' },
+        { 'type': 'input_value', 'name': 'Y1', 'check': 'Number', 'align': 'RIGHT' },
+        { 'type': 'input_value', 'name': 'X2', 'check': 'Number', 'align': 'RIGHT' },
+        { 'type': 'input_value', 'name': 'Y2', 'check': 'Number', 'align': 'RIGHT' }
+      ],
+      'colour': Blockly.Blocks.colour.HUE,
+      'inputsInline': true,
+      'output': 'Shape',
+      'tooltip': 'Display a line from (x1, y1) to (x2, y2).',
+      'helpUrl': ''
+    });
+  }
+};
+
+Blockly.Blocks['graphics_move_shape'] = {
+  init: function() {
+    this.jsonInit({
+      'id': 'graphics_move_shape',
+      'message0': 'move shape %1 to x %2 y %3',
+      'args0': [
+        {
+          'type': 'input_value',
+          'name': 'SHAPE',
+          'check': 'Shape'
+        },
+        {
+          'type': 'input_value',
+          'name': 'X',
+          'check': 'Number',
+          'align': 'RIGHT'
+        },
+        {
+          'type': 'input_value',
+          'name': 'Y',
+          'check': 'Number',
+          'align': 'RIGHT'
+        }
+      ],
+      'inputsInline': true,
+      'previousStatement': null,
+      'nextStatement': null,
+      'colour': Blockly.Blocks.colour.HUE,
+      'tooltip': 'Move a shape to the coordinates (x, y).',
+      'helpUrl': ''
+    });
+  }
+};
+
+Blockly.Blocks['graphics_outline_shape'] = {
+  init: function() {
+    this.jsonInit({
+      'id': 'graphics_outline_shape',
+      'message0': 'outline shape %1 with color %2',
+      'args0': [
+        {
+          'type': 'input_value',
+          'name': 'SHAPE',
+          'check': 'Shape'
+        },
+        {
+          'type': 'input_value',
+          'name': 'COLOR',
+          'check': 'Color',
+          'align': 'RIGHT'
+        }
+      ],
+      'inputsInline': true,
+      'previousStatement': null,
+      'nextStatement': null,
+      'colour': Blockly.Blocks.colour.HUE,
+      'tooltip': 'Outline a shape with the specified color.',
+      'helpUrl': ''
+    });
+  }
+};
+
+Blockly.Blocks['graphics_fill_shape'] = {
+  init: function() {
+    this.jsonInit({
+      'id': 'graphics_fill_shape',
+      'message0': 'fill shape %1 with color %2',
+      'args0': [
+        {
+          'type': 'input_value',
+          'name': 'SHAPE',
+          'check': 'Shape'
+        },
+        {
+          'type': 'input_value',
+          'name': 'COLOR',
+          'check': 'Color',
+          'align': 'RIGHT'
+        }
+      ],
+      'inputsInline': true,
+      'previousStatement': null,
+      'nextStatement': null,
+      'colour': Blockly.Blocks.colour.HUE,
+      'tooltip': 'Fill a shape with the specified color.',
       'helpUrl': ''
     });
   }
