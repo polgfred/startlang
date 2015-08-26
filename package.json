@@ -19,7 +19,7 @@
     "react": "^0.13.3",
     "react-bootstrap": "^0.23.5",
     "react-cursor": "^1.0.0",
-    "snapsvg": "git://github.com/adobe-webplatform/Snap.svg.git#dev"
+    "snapsvg": "^0.4.1"
   },
   "devDependencies": {
     "babelify": "^6.2.0",

@@ -425,6 +425,43 @@ Blockly.Blocks['tables_keys'] = {
   }
 };
 
+
+// TODO: graphics (canvas) ?
+
+// TODO: graphics (SVG)
+//    create a rectangle with x, y, width, height
+//    create a circle with x, y, radius
+//    create an ellipse with x, y, x-radius, y-radius
+//    create a line with x1, y1, x2, y2
+//    create a polygon with n-sides/coords
+//    move %1 to x, y
+//    fill %1 with color
+//    outline %1 with color
+//    change the opacity of %1 to percent
+//    rotate %1 by degrees
+//    stretch %1 by scale-x, scale-y
+//    make a copy of %1
+//    remove %1 from the screen
+
+Blockly.Blocks['graphics_create_rect'] = {
+  init: function() {
+    this.jsonInit({
+      'id': 'graphics_create_rect',
+      'message0': 'create rectangle with x %1 y %2 width %3 height %4',
+      'args0': [
+        { 'type': 'input_value', 'name': 'X', 'check': 'Number', 'align': 'RIGHT' },
+        { 'type': 'input_value', 'name': 'Y', 'check': 'Number', 'align': 'RIGHT' },
+        { 'type': 'input_value', 'name': 'WIDTH', 'check': 'Number', 'align': 'RIGHT' },
+        { 'type': 'input_value', 'name': 'HEIGHT', 'check': 'Number', 'align': 'RIGHT' }
+      ],
+      'inputsInline': false,
+      'output': 'Shape',
+      'tooltip': '',
+      'helpUrl': ''
+    });
+  }
+};
+
 // code-generation
 
 Blockly.Start = _.extend(new Blockly.Generator('Start'), {

@@ -873,6 +873,20 @@ export default class Astgen {
     });
   }
 
+  // graphics
+
+  graphics_create_rect(block) {
+    return buildNode('call', block, {
+      name: 'rect',
+      args: [
+        this.handleValue(block, 'X'),
+        this.handleValue(block, 'Y'),
+        this.handleValue(block, 'WIDTH'),
+        this.handleValue(block, 'HEIGHT')
+      ]
+    });
+  }
+
   // variables
 
   variables_get(block) {
