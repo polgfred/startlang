@@ -28,6 +28,16 @@ Blockly.Msg.MATH_ONLIST_TOOLTIP_SORT_DESC = 'Sort the items in the list from lar
 Blockly.Msg.MATH_ONLIST_TOOLTIP_REVERSE = 'Reverse the positions of the items in the list.';
 Blockly.Msg.MATH_ONLIST_TOOLTIP_SHUFFLE = 'Shuffle the items of the list into a random order.';
 
+// damned brits
+Blockly.Msg.COLOUR_PICKER_TOOLTIP = 'Choose a color from the palette.';
+Blockly.Msg.COLOUR_RANDOM_TITLE = 'random color';
+Blockly.Msg.COLOUR_RANDOM_TOOLTIP = 'Choose a color at random.';
+Blockly.Msg.COLOUR_RGB_TITLE = 'color with';
+Blockly.Msg.COLOUR_RGB_TOOLTIP = 'Create a color with the specified amount of red, green, and blue. All values must be between 0 and 100.';
+Blockly.Msg.COLOUR_BLEND_COLOUR1 = 'color 1';
+Blockly.Msg.COLOUR_BLEND_COLOUR2 = 'color 2';
+Blockly.Msg.COLOUR_BLEND_TOOLTIP = 'Blends two colors together with a given ratio (0.0 - 1.0).';
+
 Blockly.Blocks['lists_functions'] = {
   init: function() {
     let OPERATORS =
