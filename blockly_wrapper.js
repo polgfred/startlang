@@ -431,7 +431,7 @@ Blockly.Blocks['tables_keys'] = {
 // TODO: graphics (SVG)
 //    create a rectangle with x, y, width, height
 //    create a circle with x, y, radius
-//    create an ellipse with x, y, x-radius, y-radius
+//    create an oval with x, y, x-radius, y-radius
 //    create a line with x1, y1, x2, y2
 //    create a polygon with n-sides/coords
 //    move %1 to x, y
