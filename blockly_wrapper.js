@@ -28,6 +28,16 @@ Blockly.Msg.MATH_ONLIST_TOOLTIP_SORT_DESC = 'Sort the items in the list from lar
 Blockly.Msg.MATH_ONLIST_TOOLTIP_REVERSE = 'Reverse the positions of the items in the list.';
 Blockly.Msg.MATH_ONLIST_TOOLTIP_SHUFFLE = 'Shuffle the items of the list into a random order.';
 
+// TODO: time
+//    the current time
+//    the beginning/end of this year/month/day/hour/minute/second
+//    %1 years/months/days/hours/minutes/seconds from now
+//    %1 years/months/days/hours/minutes/seconds from %2
+//    the year/month/day/hour/minute/second part of %1
+//    the number of years/months/days/hours/minutes/seconds between %1 and %2
+//    create time from text with format
+//    create time from fields
+
 // damned brits
 Blockly.Msg.COLOUR_PICKER_TOOLTIP = 'Choose a color from the palette.';
 Blockly.Msg.COLOUR_RANDOM_TITLE = 'random color';
