@@ -1,12 +1,11 @@
 import $ from 'jquery';
 
+// import { parse } from '../lang/parser';
+import { createRuntime, globals, handle } from '../lang/runtime';
+import { createInterpreter } from '../lang/interpreter';
+import { paper } from '../lang/graphics';
+import Builder from '../lang/builder';
 import Blockly from '../blockly_wrapper';
-import Astgen from '../astgen';
-
-// import { parse } from '../parser';
-import { createRuntime, globals, handle } from '../runtime';
-import { createInterpreter } from '../interpreter';
-import { paper } from '../graphics';
 
 function refresh() {
   return new Promise((resolve) => {
@@ -79,7 +78,7 @@ $('#runner').click(() => {
   paper.clear();
   // execute the code in the buffer
   let block = Blockly.getMainWorkspace().getTopBlocks()[0],
-      root = new Astgen().handleStatements(block),
+      root = new Builder().handleStatements(block),
       interp = createInterpreter(root, ctx);
   interp.on('error', (err) => {
     console.error('[ERROR]: ' + err.message);

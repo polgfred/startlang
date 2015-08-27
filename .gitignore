@@ -1,4 +1,4 @@
-node_modules
-parser.js
 .sass-cache/
+node_modules
+lang/parser.js
 dist/

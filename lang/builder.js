@@ -1,4 +1,4 @@
-import Blockly from './blockly_wrapper';
+import Blockly from '../blockly_wrapper';
 
 function buildNode(type, block, attrs) {
   // if we're a block with one statement, just return the statement itself
@@ -24,7 +24,7 @@ function wrapLiteral(val, block) {
             });
 }
 
-export default class Astgen {
+export default class Builder {
   constructor() {
     // keep track of nested statement blocks so we can inject setup
     // code as necessary

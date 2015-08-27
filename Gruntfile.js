@@ -12,7 +12,7 @@ module.exports = function(grunt) {
         tasks: [ 'copy:static' ]
       },
       peg: {
-        files: [ 'parser.pegjs' ],
+        files: [ 'lang/parser.pegjs' ],
         tasks: [ 'peg' ]
       },
       sass: {
@@ -35,8 +35,8 @@ module.exports = function(grunt) {
         trackLineAndColumn: true
       },
       parser: {
-        src: 'parser.pegjs',
-        dest: 'parser.js'
+        src: 'lang/parser.pegjs',
+        dest: 'lang/parser.js'
       }
     },
     sass: {
