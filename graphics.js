@@ -66,7 +66,7 @@ export const SShape = extendObject(SBase, {
       if (rot == 0) {
         el.removeData('rot');
       } else {
-        el.data('rot', rot);
+        el.data('rot', Snap.deg(rot));
       }
       applyTransforms(el);
     },

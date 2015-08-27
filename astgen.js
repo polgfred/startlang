@@ -274,6 +274,10 @@ export default class Astgen {
     return wrapLiteral(parseFloat(block.getFieldValue('NUM')), block);
   }
 
+  math_angle(block) {
+    return wrapLiteral(parseFloat(block.getFieldValue('ANGLE')) * Math.PI / 180, block);
+  }
+
   math_arithmetic(block) {
     let OPERATORS = {
       'ADD':      '+',
@@ -989,6 +993,27 @@ export default class Astgen {
       args: [
         this.handleValue(block, 'SHAPE'),
         this.handleValue(block, 'COLOR')
+      ]
+    });
+  }
+
+  graphics_rotate_shape(block) {
+    return buildNode('call', block, {
+      name: 'rotate',
+      args: [
+        this.handleValue(block, 'SHAPE'),
+        this.handleValue(block, 'ANGLE')
+      ]
+    });
+  }
+
+  graphics_scale_shape(block) {
+    return buildNode('call', block, {
+      name: 'scale',
+      args: [
+        this.handleValue(block, 'SHAPE'),
+        this.handleValue(block, 'MULTX'),
+        this.handleValue(block, 'MULTY')
       ]
     });
   }

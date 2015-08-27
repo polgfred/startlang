@@ -55,6 +55,7 @@
         </category>
         <category name="Math">
           <block type="math_number"></block>
+          <block type="math_angle"></block>
           <block type="math_arithmetic"></block>
           <block type="math_single"></block>
           <block type="math_trig"></block>
@@ -351,6 +352,16 @@
               </block>
             </value>
           </block>
+          <block type="graphics_outline_shape">
+            <value name="SHAPE">
+              <block type="variables_get">
+                <field name="VAR">shape</field>
+              </block>
+            </value>
+            <value name="COLOR">
+              <block type="colour_picker"></block>
+            </value>
+          </block>
           <block type="graphics_fill_shape">
             <value name="SHAPE">
               <block type="variables_get">
@@ -361,14 +372,33 @@
               <block type="colour_picker"></block>
             </value>
           </block>
-          <block type="graphics_outline_shape">
+          <block type="graphics_rotate_shape">
             <value name="SHAPE">
               <block type="variables_get">
                 <field name="VAR">shape</field>
               </block>
             </value>
-            <value name="COLOR">
-              <block type="colour_picker"></block>
+            <value name="ANGLE">
+              <block type="math_angle">
+                <field name="ANGLE">90</field>
+              </block>
+            </value>
+          </block>
+          <block type="graphics_scale_shape">
+            <value name="SHAPE">
+              <block type="variables_get">
+                <field name="VAR">shape</field>
+              </block>
+            </value>
+            <value name="MULTX">
+              <block type="math_number">
+                <field name="NUM">1</field>
+              </block>
+            </value>
+            <value name="MULTY">
+              <block type="math_number">
+                <field name="NUM">1</field>
+              </block>
             </value>
           </block>
         </category>
