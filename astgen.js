@@ -879,6 +879,42 @@ export default class Astgen {
     return wrapLiteral(block.getFieldValue('COLOUR'));
   }
 
+  colour_random(block) {
+    let rand = buildNode('call', block, {
+      name: 'rand',
+      args: []
+    });
+
+    return buildNode('call', block, {
+      name: 'rgb',
+      args: [ rand, rand, rand ]
+    });
+  }
+
+  colour_rgb(block) {
+    let convert = (val) => {
+      if (val.type == 'literal') {
+        val.value /= 100;
+        return val;
+      } else {
+        return buildNode('binaryOp', block, {
+          op: '/',
+          left: val,
+          right: wrapLiteral(100, block)
+        });
+      }
+    };
+
+    return buildNode('call', block, {
+      name: 'rgb',
+      args: [
+        convert(this.handleValue(block, 'RED')),
+        convert(this.handleValue(block, 'GREEN')),
+        convert(this.handleValue(block, 'BLUE'))
+      ]
+    });
+  }
+
   graphics_create_rect(block) {
     return buildNode('call', block, {
       name: 'rect',

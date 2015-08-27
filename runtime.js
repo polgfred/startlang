@@ -277,6 +277,12 @@ export const SNumber = extendObject(SBase, {
 
     constrain(n, lo, hi) {
       return Math.min(Math.max(n, lo), hi);
+    },
+
+    rgb(r, g, b) {
+      return '#' + ('0' + Math.round(255 * r).toString(16)).substr(-2) +
+                   ('0' + Math.round(255 * g).toString(16)).substr(-2) +
+                   ('0' + Math.round(255 * b).toString(16)).substr(-2);
     }
   }),
 
