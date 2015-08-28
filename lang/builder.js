@@ -277,7 +277,7 @@ export default class Builder {
   }
 
   math_angle(block) {
-    return wrapLiteral(parseFloat(block.getFieldValue('ANGLE')) * Math.PI / 180, block);
+    return wrapLiteral(parseFloat(block.getFieldValue('ANGLE')), block);
   }
 
   math_arithmetic(block) {

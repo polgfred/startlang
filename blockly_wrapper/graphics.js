@@ -11,176 +11,209 @@ let Blockly = require('node-blockly/lib/blockly_compressed');
 
 Blockly.Blocks['graphics_create_rect'] = {
   init: function() {
-    this.jsonInit({
-      id: 'graphics_create_rect',
-      message0: 'rectangle with x %1 y %2 width %3 height %4',
-      args0: [
-        { type: 'input_value', name: 'X', check: 'Number', align: 'RIGHT' },
-        { type: 'input_value', name: 'Y', check: 'Number', align: 'RIGHT' },
-        { type: 'input_value', name: 'WIDTH', check: 'Number', align: 'RIGHT' },
-        { type: 'input_value', name: 'HEIGHT', check: 'Number', align: 'RIGHT' }
-      ],
-      colour: Blockly.Blocks.colour.HUE,
-      inputsInline: true,
-      output: 'Shape',
-      tooltip: 'Display a rectangle with the upper left corner at (x, y), having the specified width and height.',
-      helpUrl: ''
-    });
+    this.setColour(Blockly.Blocks.graphics.HUE);
+    this.appendValueInput('X')
+        .setCheck('Number')
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField('box with')
+        .appendField('x');
+    this.appendValueInput('Y')
+        .setCheck('Number')
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField('y');
+    this.appendValueInput('WIDTH')
+        .setCheck('Number')
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField('width');
+    this.appendValueInput('HEIGHT')
+        .setCheck('Number')
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField('height');
+    this.setInputsInline(true);
+    this.setOutput(true, 'Shape');
+    this.setTooltip('Display a rectangle with the upper left corner at (x, y), having the specified width and height.');
+    this.setHelpUrl('');
   }
 };
 
 Blockly.Blocks['graphics_create_circle'] = {
   init: function() {
-    this.jsonInit({
-      id: 'graphics_create_circle',
-      message0: 'circle with x %1 y %2 radius %3',
-      args0: [
-        { type: 'input_value', name: 'X', check: 'Number', align: 'RIGHT' },
-        { type: 'input_value', name: 'Y', check: 'Number', align: 'RIGHT' },
-        { type: 'input_value', name: 'RADIUS', check: 'Number', align: 'RIGHT' }
-      ],
-      colour: Blockly.Blocks.colour.HUE,
-      inputsInline: true,
-      output: 'Shape',
-      tooltip: 'Display a circle with the center at (x, y), having the specified radius.',
-      helpUrl: ''
-    });
+    this.setColour(Blockly.Blocks.graphics.HUE);
+    this.appendValueInput('X')
+        .setCheck('Number')
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField('circle with')
+        .appendField('x');
+    this.appendValueInput('Y')
+        .setCheck('Number')
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField('y');
+    this.appendValueInput('RADIUS')
+        .setCheck('Number')
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField('radius');
+    this.setInputsInline(true);
+    this.setOutput(true, 'Shape');
+    this.setTooltip('Display a circle with the center at (x, y), having the specified radius.');
+    this.setHelpUrl('');
   }
 };
 
 Blockly.Blocks['graphics_create_ellipse'] = {
   init: function() {
-    this.jsonInit({
-      id: 'graphics_create_ellipse',
-      message0: 'ellipse with x %1 y %2 x-radius %3 y-radius %4',
-      args0: [
-        { type: 'input_value', name: 'X', check: 'Number', align: 'RIGHT' },
-        { type: 'input_value', name: 'Y', check: 'Number', align: 'RIGHT' },
-        { type: 'input_value', name: 'XRADIUS', check: 'Number', align: 'RIGHT' },
-        { type: 'input_value', name: 'YRADIUS', check: 'Number', align: 'RIGHT' }
-      ],
-      colour: Blockly.Blocks.colour.HUE,
-      inputsInline: true,
-      output: 'Shape',
-      tooltip: 'Display an ellipse (oval) with the center at (x, y), having the specified radii.',
-      helpUrl: ''
-    });
+    this.setColour(Blockly.Blocks.graphics.HUE);
+    this.appendValueInput('X')
+        .setCheck('Number')
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField('ellipse with')
+        .appendField('x');
+    this.appendValueInput('Y')
+        .setCheck('Number')
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField('y');
+    this.appendValueInput('XRADIUS')
+        .setCheck('Number')
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField('x-radius');
+    this.appendValueInput('YRADIUS')
+        .setCheck('Number')
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField('y-radius');
+    this.setInputsInline(true);
+    this.setOutput(true, 'Shape');
+    this.setTooltip('Display an ellipse (oval) with the center at (x, y), having the specified radii.');
+    this.setHelpUrl('');
   }
 };
 
 Blockly.Blocks['graphics_create_line'] = {
   init: function() {
-    this.jsonInit({
-      id: 'graphics_create_line',
-      message0: 'line from x1 %1 y1 %2 to x2 %3 y2 %4',
-      args0: [
-        { type: 'input_value', name: 'X1', check: 'Number', align: 'RIGHT' },
-        { type: 'input_value', name: 'Y1', check: 'Number', align: 'RIGHT' },
-        { type: 'input_value', name: 'X2', check: 'Number', align: 'RIGHT' },
-        { type: 'input_value', name: 'Y2', check: 'Number', align: 'RIGHT' }
-      ],
-      colour: Blockly.Blocks.colour.HUE,
-      inputsInline: true,
-      output: 'Shape',
-      tooltip: 'Display a line from (x1, y1) to (x2, y2).',
-      helpUrl: ''
-    });
+    this.setColour(Blockly.Blocks.graphics.HUE);
+    this.appendValueInput('X1')
+        .setCheck('Number')
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField('line from')
+        .appendField('x1');
+    this.appendValueInput('Y1')
+        .setCheck('Number')
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField('y1');
+    this.appendValueInput('X2')
+        .setCheck('Number')
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField('to')
+        .appendField('x2');
+    this.appendValueInput('Y2')
+        .setCheck('Number')
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField('y2');
+    this.setInputsInline(true);
+    this.setOutput(true, 'Shape');
+    this.setTooltip('Display a line from (x1, y1) to (x2, y2).');
+    this.setHelpUrl('');
   }
 };
 
 Blockly.Blocks['graphics_move_shape'] = {
   init: function() {
-    this.jsonInit({
-      id: 'graphics_move_shape',
-      message0: 'move shape %1 to x %2 y %3',
-      args0: [
-        { type: 'input_value', name: 'SHAPE', check: 'Shape' },
-        { type: 'input_value', name: 'X', check: 'Number', align: 'RIGHT' },
-        { type: 'input_value', name: 'Y', check: 'Number', align: 'RIGHT' }
-      ],
-      inputsInline: true,
-      previousStatement: null,
-      nextStatement: null,
-      colour: Blockly.Blocks.colour.HUE,
-      tooltip: 'Move a shape to the coordinates (x, y).',
-      helpUrl: ''
-    });
+    this.setColour(Blockly.Blocks.graphics.HUE);
+    this.appendValueInput('SHAPE')
+        .setCheck('Shape')
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField('move')
+    this.appendValueInput('X')
+        .setCheck('Number')
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField('to')
+        .appendField('x');
+    this.appendValueInput('Y')
+        .setCheck('Number')
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField('y');
+    this.setInputsInline(true);
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setTooltip('Move a shape to the coordinates (x, y).');
+    this.setHelpUrl('');
   }
 };
 
 Blockly.Blocks['graphics_outline_shape'] = {
   init: function() {
-    this.jsonInit({
-      id: 'graphics_outline_shape',
-      message0: 'outline shape %1 with color %2',
-      args0: [
-        { type: 'input_value', name: 'SHAPE', check: 'Shape' },
-        { type: 'input_value', name: 'COLOR', check: 'Colour', align: 'RIGHT' }
-      ],
-      inputsInline: true,
-      previousStatement: null,
-      nextStatement: null,
-      colour: Blockly.Blocks.colour.HUE,
-      tooltip: 'Outline a shape with the specified color.',
-      helpUrl: ''
-    });
+    this.setColour(Blockly.Blocks.graphics.HUE);
+    this.appendValueInput('SHAPE')
+        .setCheck('Shape')
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField('outline')
+    this.appendValueInput('COLOR')
+        .setCheck('Colour')
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField('with color');
+    this.setInputsInline(true);
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setTooltip('Outline a shape with the specified color.');
+    this.setHelpUrl('');
   }
 };
 
 Blockly.Blocks['graphics_fill_shape'] = {
   init: function() {
-    this.jsonInit({
-      id: 'graphics_fill_shape',
-      message0: 'fill shape %1 with color %2',
-      args0: [
-        { type: 'input_value', name: 'SHAPE', check: 'Shape' },
-        { type: 'input_value', name: 'COLOR', check: 'Colour', align: 'RIGHT' }
-      ],
-      inputsInline: true,
-      previousStatement: null,
-      nextStatement: null,
-      colour: Blockly.Blocks.colour.HUE,
-      tooltip: 'Fill a shape with the specified color.',
-      helpUrl: ''
-    });
+    this.setColour(Blockly.Blocks.graphics.HUE);
+    this.appendValueInput('SHAPE')
+        .setCheck('Shape')
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField('fill')
+    this.appendValueInput('COLOR')
+        .setCheck('Colour')
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField('with color');
+    this.setInputsInline(true);
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setTooltip('Fill a shape with the specified color.');
+    this.setHelpUrl('');
   }
 };
 
 Blockly.Blocks['graphics_rotate_shape'] = {
   init: function() {
-    this.jsonInit({
-      id: 'graphics_rotate_shape',
-      message0: 'rotate shape %1 by %2',
-      args0: [
-        { type: 'input_value', name: 'SHAPE', check: 'Shape' },
-        { type: 'input_value', name: 'ANGLE', check: 'Number', align: 'RIGHT' }
-      ],
-      inputsInline: true,
-      previousStatement: null,
-      nextStatement: null,
-      colour: Blockly.Blocks.colour.HUE,
-      tooltip: 'Rotate a shape by the specified number of degrees.',
-      helpUrl: ''
-    });
+    this.setColour(Blockly.Blocks.graphics.HUE);
+    this.appendValueInput('SHAPE')
+        .setCheck('Shape')
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField('rotate')
+    this.appendValueInput('ANGLE')
+        .setCheck('Number')
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField('by angle');
+    this.setInputsInline(true);
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setTooltip('Rotate a shape by the specified angle.');
+    this.setHelpUrl('');
   }
 };
 
 Blockly.Blocks['graphics_scale_shape'] = {
   init: function() {
-    this.jsonInit({
-      id: 'graphics_scale_shape',
-      message0: 'scale shape %1 by width %2 height %3',
-      args0: [
-        { type: 'input_value', name: 'SHAPE', check: 'Shape' },
-        { type: 'input_value', name: 'MULTX', check: 'Number', align: 'RIGHT' },
-        { type: 'input_value', name: 'MULTY', check: 'Number', align: 'RIGHT' }
-      ],
-      inputsInline: true,
-      previousStatement: null,
-      nextStatement: null,
-      colour: Blockly.Blocks.colour.HUE,
-      tooltip: 'Scale a shape by some magnitude in both directions.',
-      helpUrl: ''
-    });
+    this.setColour(Blockly.Blocks.graphics.HUE);
+    this.appendValueInput('SHAPE')
+        .setCheck('Shape')
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField('scale');
+    this.appendValueInput('MULTX')
+        .setCheck('number')
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField('width by');
+    this.appendValueInput('MULTY')
+        .setCheck('number')
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField('height by');
+    this.setInputsInline(true);
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setTooltip('Scale a shape by the specified magnitude.');
+    this.setHelpUrl('');
   }
 };
