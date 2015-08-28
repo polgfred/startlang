@@ -115,7 +115,7 @@ Blockly.Blocks['graphics_outline_shape'] = {
       message0: 'outline shape %1 with color %2',
       args0: [
         { type: 'input_value', name: 'SHAPE', check: 'Shape' },
-        { type: 'input_value', name: 'COLOR', check: 'Color', align: 'RIGHT' }
+        { type: 'input_value', name: 'COLOR', check: 'Colour', align: 'RIGHT' }
       ],
       inputsInline: true,
       previousStatement: null,
@@ -134,7 +134,7 @@ Blockly.Blocks['graphics_fill_shape'] = {
       message0: 'fill shape %1 with color %2',
       args0: [
         { type: 'input_value', name: 'SHAPE', check: 'Shape' },
-        { type: 'input_value', name: 'COLOR', check: 'Color', align: 'RIGHT' }
+        { type: 'input_value', name: 'COLOR', check: 'Colour', align: 'RIGHT' }
       ],
       inputsInline: true,
       previousStatement: null,
@@ -169,7 +169,7 @@ Blockly.Blocks['graphics_scale_shape'] = {
   init: function() {
     this.jsonInit({
       id: 'graphics_scale_shape',
-      message0: 'scale shape %1 by x times %2 y times %3',
+      message0: 'scale shape %1 by width %2 height %3',
       args0: [
         { type: 'input_value', name: 'SHAPE', check: 'Shape' },
         { type: 'input_value', name: 'MULTX', check: 'Number', align: 'RIGHT' },

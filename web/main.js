@@ -5,8 +5,8 @@ import $ from 'jquery';
 // import { parse } from '../lang/parser';
 import { createRuntime, globals, handle } from '../lang/runtime';
 import { createInterpreter } from '../lang/interpreter';
+import { createBuilder } from '../lang/builder';
 import { paper } from '../lang/graphics';
-import Builder from '../lang/builder';
 import Blockly from '../blockly_wrapper';
 
 function refresh() {
@@ -80,7 +80,7 @@ $('#runner').click(() => {
   paper.clear();
   // execute the code in the buffer
   let block = Blockly.getMainWorkspace().getTopBlocks()[0],
-      root = new Builder().handleStatements(block),
+      root = createBuilder().handleStatements(block),
       interp = createInterpreter(root, ctx);
   interp.on('error', (err) => {
     console.error('[ERROR]: ' + err.message);

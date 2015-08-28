@@ -1036,8 +1036,6 @@ export default class Builder {
   }
 }
 
-global.runit = function() {
-  let block = Blockly.getMainWorkspace().getTopBlocks()[0];
-  let root = new Astgen().handleStatements(block);
-  return JSON.stringify(root, null, 2);
-};
+export function createBuilder() {
+  return new Builder();
+}
