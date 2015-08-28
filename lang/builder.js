@@ -607,6 +607,15 @@ export default class Builder {
     });
   }
 
+  // time
+
+  time_sleep(block) {
+    return buildNode('call', block, {
+      name: 'sleep',
+      args: [ this.handleValue(block, 'SECONDS') ]
+    });
+  }
+
   // lists
 
   lists_create_empty(block) {
