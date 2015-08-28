@@ -1,3 +1,5 @@
+'use strict';
+
 import $ from 'jquery';
 
 // import { parse } from '../lang/parser';

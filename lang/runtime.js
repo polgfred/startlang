@@ -1,3 +1,5 @@
+'use strict';
+
 import immutable from 'immutable';
 import { extendObject } from './utils';
 

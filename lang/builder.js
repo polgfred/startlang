@@ -1,3 +1,5 @@
+'use strict';
+
 import Blockly from '../blockly_wrapper';
 
 function buildNode(type, block, attrs) {

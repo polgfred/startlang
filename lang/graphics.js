@@ -1,3 +1,5 @@
+'use strict';
+
 import Snap from 'snapsvg';
 import { globals, handlerKey, SBase } from './runtime';
 import { extendObject } from './utils';

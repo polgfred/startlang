@@ -1,3 +1,5 @@
+'use strict';
+
 import { EventEmitter } from 'events';
 
 let hasOwnProperty = Object.prototype.hasOwnProperty; // cache this for performance
