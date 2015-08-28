@@ -1,5 +1,6 @@
 'use strict';
 
+import moment from 'moment';
 import immutable from 'immutable';
 import { extendObject } from './utils';
 
@@ -385,6 +386,61 @@ export const SString = extendObject(SBase, {
 
 String.prototype[handlerKey] = SString;
 
+function checkTimeUnit(unit) {
+  if (moment.normalizeUnits(unit) == null) {
+    throw new Error('unrecognized time unit');
+  }
+}
+
+export const STime = extendObject(SBase, {
+  create(args) {
+    if (args.length == 0) {
+      return moment();
+    } else {
+      args[1]--; // adjust the month to be 0-based
+      return moment(args);
+    }
+  },
+
+  repr(t) {
+    return t.format('l LTS');
+  },
+
+  methods: {
+    part(t, unit) {
+      checkTimeUnit(unit);
+      return t.get(unit);
+    },
+
+    add(t, n, unit) {
+      checkTimeUnit(unit);
+      return moment(t).add(n, unit);
+    },
+
+    sub(t, n, unit) {
+      checkTimeUnit(unit);
+      return moment(t).subtract(n, unit);
+    },
+
+    startof(t, unit) {
+      checkTimeUnit(unit);
+      return moment(t).startOf(unit);
+    },
+
+    endof(t, unit) {
+      checkTimeUnit(unit);
+      return moment(t).endOf(unit);
+    },
+
+    diff(t1, t2, unit) {
+      checkTimeUnit(unit);
+      return t2.diff(t1, unit);
+    }
+  }
+});
+
+moment.fn[handlerKey] = STime;
+
 // Containers
 
 function compareElements(left, right) {
@@ -626,6 +682,10 @@ export function handle(obj) {
 }
 
 export const globals = {
+  time(...args) {
+    return STime.create(args);
+  },
+
   list(...items) {
     return SList.create(items);
   },

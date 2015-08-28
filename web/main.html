@@ -144,6 +144,52 @@
               </block>
             </value>
           </block>
+          <block type="time_create_empty"></block>
+          <block type="time_create_with">
+            <value name="YEARS">
+              <block type="math_number">
+                <field name="NUM">2015</field>
+              </block>
+            </value>
+            <value name="MONTHS">
+              <block type="math_number">
+                <field name="NUM">12</field>
+              </block>
+            </value>
+            <value name="DAYS">
+              <block type="math_number">
+                <field name="NUM">1</field>
+              </block>
+            </value>
+            <value name="HOURS">
+              <block type="math_number">
+                <field name="NUM">0</field>
+              </block>
+            </value>
+            <value name="MINUTES">
+              <block type="math_number">
+                <field name="NUM">0</field>
+              </block>
+            </value>
+            <value name="SECONDS">
+              <block type="math_number">
+                <field name="NUM">0</field>
+              </block>
+            </value>
+          </block>
+          <block type="time_getPart"></block>
+          <block type="time_addSubtract">
+            <value name="VALUE">
+              <block type="math_number">
+                <field name="NUM">1</field>
+              </block>
+            </value>
+            <value name="TIME">
+              <block type="variables_get">
+                <field name="VAR">time</field>
+              </block>
+            </value>
+          </block>
         </category>
         <sep></sep>
         <category name="Lists">
