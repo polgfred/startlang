@@ -217,3 +217,15 @@ Blockly.Blocks['graphics_scale_shape'] = {
     this.setHelpUrl('');
   }
 };
+
+Blockly.Blocks['graphics_refresh'] = {
+  init: function() {
+    this.setColour(Blockly.Blocks.graphics.HUE);
+    this.appendDummyInput()
+        .appendField('refresh display');
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setTooltip('Force pending graphics updates to the screen.');
+    this.setHelpUrl('');
+  }
+};

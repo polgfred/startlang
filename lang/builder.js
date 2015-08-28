@@ -1029,6 +1029,13 @@ export default class Builder {
     });
   }
 
+  graphics_refresh(block) {
+    return buildNode('call', block, {
+      name: 'refresh',
+      args: []
+    });
+  }
+
   // variables
 
   variables_get(block) {
