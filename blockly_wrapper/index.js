@@ -26,5 +26,5 @@ Blockly.Blocks.time = {};
 Blockly.Blocks.colour = {};
 Blockly.Blocks.graphics = {};
 Blockly.Blocks.time.HUE = 0;
-Blockly.Blocks.colour.HUE = 45;
-Blockly.Blocks.graphics.HUE = 45;
+Blockly.Blocks.colour.HUE = 180;
+Blockly.Blocks.graphics.HUE = 180;
