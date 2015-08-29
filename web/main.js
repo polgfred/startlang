@@ -82,6 +82,7 @@ $('#runner').click(() => {
   let block = Blockly.getMainWorkspace().getTopBlocks()[0],
       root = createBuilder().handleStatements(block),
       interp = createInterpreter(root, ctx);
+  console.log(root);
   interp.on('error', (err) => {
     console.error('[ERROR]: ' + err.message);
   });

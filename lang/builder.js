@@ -616,6 +616,82 @@ export default class Builder {
     });
   }
 
+  // time
+
+  time_sleep(block) {
+    return buildNode('call', block, {
+      name: 'sleep',
+      args: [ this.handleValue(block, 'SECONDS') ]
+    });
+  }
+
+  time_create_empty(block) {
+    return buildNode('call', block, {
+      name: 'time',
+      args: []
+    });
+  }
+
+  time_create_with(block) {
+    return buildNode('call', block, {
+      name: 'time',
+      args: [
+        this.handleValue(block, 'YEAR'),
+        this.handleValue(block, 'MONTH'),
+        this.handleValue(block, 'DAY'),
+        this.handleValue(block, 'HOUR'),
+        this.handleValue(block, 'MINUTE'),
+        this.handleValue(block, 'SECOND')
+      ]
+    });
+  }
+
+  time_getPart(block) {
+    return buildNode('call', block, {
+      name: 'part',
+      args: [
+        this.handleValue(block, 'TIME'),
+        wrapLiteral(block.getFieldValue('UNIT').toLowerCase(), block)
+      ]
+    });
+  }
+
+  time_addSubtract(block) {
+    let mode = block.getFieldValue('MODE').toLowerCase();
+
+    return buildNode('call', block, {
+      name: mode,
+      args: [
+        this.handleValue(block, 'TIME'),
+        this.handleValue(block, 'VALUE'),
+        wrapLiteral(block.getFieldValue('UNIT').toLowerCase(), block)
+      ]
+    });
+  }
+
+  time_startEnd(block) {
+    let mode = block.getFieldValue('MODE').toLowerCase();
+
+    return buildNode('call', block, {
+      name: `${mode}of`,
+      args: [
+        this.handleValue(block, 'TIME'),
+        wrapLiteral(block.getFieldValue('UNIT').toLowerCase(), block)
+      ]
+    });
+  }
+
+  time_diff(block) {
+    return buildNode('call', block, {
+      name: 'diff',
+      args: [
+        this.handleValue(block, 'TIME1'),
+        this.handleValue(block, 'TIME2'),
+        wrapLiteral(block.getFieldValue('UNIT').toLowerCase(), block)
+      ]
+    });
+  }
+
   // lists
 
   lists_create_empty(block) {

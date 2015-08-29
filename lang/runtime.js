@@ -409,34 +409,44 @@ export const STime = extendObject(SBase, {
   methods: {
     part(t, unit) {
       checkTimeUnit(unit);
-      return t.get(unit);
+      let val = t.get(unit);
+      if (unit == 'month' || unit == 'day') {
+        val++;
+      }
+      return val;
     },
 
     add(t, n, unit) {
       checkTimeUnit(unit);
-      return moment(t).add(n, unit);
+      return { '@@__assign__@@': moment(t).add(n, unit) };
     },
 
     sub(t, n, unit) {
       checkTimeUnit(unit);
-      return moment(t).subtract(n, unit);
+      return { '@@__assign__@@': moment(t).subtract(n, unit) };
     },
 
     startof(t, unit) {
       checkTimeUnit(unit);
-      return moment(t).startOf(unit);
+      return { '@@__assign__@@': moment(t).startOf(unit) };
     },
 
     endof(t, unit) {
       checkTimeUnit(unit);
-      return moment(t).endOf(unit);
+      return { '@@__assign__@@': moment(t).endOf(unit) };
     },
 
     diff(t1, t2, unit) {
       checkTimeUnit(unit);
       return t2.diff(t1, unit);
     }
-  }
+  },
+
+  binaryops: extendObject(SBase.binaryops, {
+    // comparison operators need to cast to number first
+    '=' : (left, right) => +left  == +right,
+    '!=': (left, right) => +left !== +right
+  })
 });
 
 moment.fn[handlerKey] = STime;

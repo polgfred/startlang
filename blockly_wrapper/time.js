@@ -2,30 +2,6 @@
 
 let Blockly = require('node-blockly/lib/blockly_compressed');
 
-// TODO: time
-//    the current time
-//    the beginning/end of this year/month/day/hour/minute/second
-//    %1 years/months/days/hours/minutes/seconds from now
-//    %1 years/months/days/hours/minutes/seconds from %2
-//    the year/month/day/hour/minute/second part of %1
-//    the number of years/months/days/hours/minutes/seconds between %1 and %2
-//    create time from text with format
-//    create time from fields
-
-
-function unitDropdown(plural) {
-  let suffix = plural ? 's' : '';
-
-  return new Blockly.FieldDropdown([
-    [ `year${suffix}`,    'YEAR'    ],
-    [ `month${suffix}`,   'MONTH'   ],
-    [ `day${suffix}`,     'DAY'     ],
-    [ `hour${suffix}`,    'HOUR'    ],
-    [ `minute${suffix}`,  'MINUTE'  ],
-    [ `second${suffix}`,  'SECOND'  ]
-  ]);
-}
-
 Blockly.Blocks['time_sleep'] = {
   init: function() {
     this.setColour(Blockly.Blocks.time.HUE);
@@ -57,28 +33,28 @@ Blockly.Blocks['time_create_empty'] = {
 Blockly.Blocks['time_create_with'] = {
   init: function() {
     this.setColour(Blockly.Blocks.time.HUE);
-    this.appendValueInput('YEARS')
+    this.appendValueInput('YEAR')
         .setCheck('Number')
         .setAlign(Blockly.ALIGN_RIGHT)
         .appendField('time with')
         .appendField('years');
-    this.appendValueInput('MONTHS')
+    this.appendValueInput('MONTH')
         .setCheck('Number')
         .setAlign(Blockly.ALIGN_RIGHT)
         .appendField('months');
-    this.appendValueInput('DAYS')
+    this.appendValueInput('DAY')
         .setCheck('Number')
         .setAlign(Blockly.ALIGN_RIGHT)
         .appendField('days');
-    this.appendValueInput('HOURS')
+    this.appendValueInput('HOUR')
         .setCheck('Number')
         .setAlign(Blockly.ALIGN_RIGHT)
         .appendField('hours');
-    this.appendValueInput('MINUTES')
+    this.appendValueInput('MINUTE')
         .setCheck('Number')
         .setAlign(Blockly.ALIGN_RIGHT)
         .appendField('minutes');
-    this.appendValueInput('SECONDS')
+    this.appendValueInput('SECOND')
         .setCheck('Number')
         .setAlign(Blockly.ALIGN_RIGHT)
         .appendField('seconds');
@@ -90,11 +66,22 @@ Blockly.Blocks['time_create_with'] = {
 
 Blockly.Blocks['time_getPart'] = {
   init: function() {
+    let UNITS = [
+      [ 'year',        'YEAR'        ],
+      [ 'month',       'MONTH'       ],
+      [ 'date',        'DATE'        ],
+      [ 'day',         'DAY'         ],
+      [ 'hour',        'HOUR'        ],
+      [ 'minute',      'MINUTE'      ],
+      [ 'second',      'SECOND'      ],
+      [ 'millisecond', 'MILLISECOND' ]
+    ];
+
     this.setColour(Blockly.Blocks.time.HUE);
     this.appendValueInput('TIME')
         .setCheck('Time')
         .appendField('extract')
-        .appendField(unitDropdown(), 'UNIT')
+        .appendField(new Blockly.FieldDropdown(UNITS), 'UNIT')
         .appendField('from');
     this.setInputsInline(true);
     this.setOutput(true, 'Number');
@@ -109,14 +96,25 @@ Blockly.Blocks['time_addSubtract'] = {
       [ 'add',      'ADD' ],
       [ 'subtract', 'SUB' ]
     ];
+    let UNITS = [
+      [ 'years',        'YEAR'        ],
+      [ 'months',       'MONTH'       ],
+      [ 'days',         'DAY'         ],
+      [ 'hours',        'HOUR'        ],
+      [ 'minutes',      'MINUTE'      ],
+      [ 'seconds',      'SECOND'      ],
+      [ 'milliseconds', 'MILLISECOND' ]
+    ];
+
     this.setColour(Blockly.Blocks.time.HUE);
+    this.timeInput = this.appendValueInput('TIME')
+        .setCheck('Time')
+        .appendField('to', 'FROM_TO');
     this.appendValueInput('VALUE')
         .setCheck('Number')
         .appendField(new Blockly.FieldDropdown(MODES, this.updateMode_.bind(this)), 'MODE');
-    this.timeInput = this.appendValueInput('TIME')
-        .setCheck('Time')
-        .appendField(unitDropdown(true), 'UNIT')
-        .appendField('to', 'FROM_TO');
+    this.appendDummyInput()
+        .appendField(new Blockly.FieldDropdown(UNITS), 'UNIT');
     this.setInputsInline(true);
     this.setPreviousStatement(true);
     this.setNextStatement(true);
@@ -132,5 +130,66 @@ Blockly.Blocks['time_addSubtract'] = {
   updateMode_: function(mode) {
     this.timeInput.removeField('FROM_TO');
     this.timeInput.appendField(mode == 'ADD' ? 'to' : 'from', 'FROM_TO');
+  }
+};
+
+Blockly.Blocks['time_startEnd'] = {
+  init: function() {
+    let MODES = [
+      [ 'beginning',  'START' ],
+      [ 'end',        'END'   ]
+    ];
+    let UNITS = [
+      [ 'year',        'YEAR'        ],
+      [ 'month',       'MONTH'       ],
+      [ 'day',         'DAY'         ],
+      [ 'hour',        'HOUR'        ],
+      [ 'minute',      'MINUTE'      ],
+      [ 'second',      'SECOND'      ],
+      [ 'millisecond', 'MILLISECOND' ]
+    ];
+
+    this.setColour(Blockly.Blocks.time.HUE);
+    this.appendValueInput('TIME')
+        .setCheck('Time')
+        .appendField('round');
+    this.appendDummyInput()
+        .appendField('to')
+        .appendField(new Blockly.FieldDropdown(MODES), 'MODE')
+        .appendField('of')
+        .appendField(new Blockly.FieldDropdown(UNITS), 'UNIT');
+    this.setInputsInline(true);
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setTooltip(() => ``);
+    this.setHelpUrl('');
+  }
+};
+
+Blockly.Blocks['time_diff'] = {
+  init: function() {
+    let UNITS = [
+      [ 'years',        'YEAR'        ],
+      [ 'months',       'MONTH'       ],
+      [ 'days',         'DAY'         ],
+      [ 'hours',        'HOUR'        ],
+      [ 'minutes',      'MINUTE'      ],
+      [ 'seconds',      'SECOND'      ],
+      [ 'milliseconds', 'MILLISECOND' ]
+    ];
+
+    this.setColour(Blockly.Blocks.time.HUE);
+    this.appendValueInput('TIME1')
+        .setCheck('Time')
+        .appendField('number of')
+        .appendField(new Blockly.FieldDropdown(UNITS), 'UNIT')
+        .appendField('between');
+    this.appendValueInput('TIME2')
+        .setCheck('Time')
+        .appendField('and');
+    this.setInputsInline(true);
+    this.setOutput(true, 'Number');
+    this.setTooltip(() => ``);
+    this.setHelpUrl('');
   }
 };

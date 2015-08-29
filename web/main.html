@@ -137,41 +137,34 @@
           </block>
         </category>
         <category name="Time">
-          <block type="time_sleep">
-            <value name="SECONDS">
-              <block type="math_number">
-                <field name="NUM">1</field>
-              </block>
-            </value>
-          </block>
           <block type="time_create_empty"></block>
           <block type="time_create_with">
-            <value name="YEARS">
+            <value name="YEAR">
               <block type="math_number">
                 <field name="NUM">2015</field>
               </block>
             </value>
-            <value name="MONTHS">
+            <value name="MONTH">
               <block type="math_number">
                 <field name="NUM">12</field>
               </block>
             </value>
-            <value name="DAYS">
+            <value name="DAY">
               <block type="math_number">
                 <field name="NUM">1</field>
               </block>
             </value>
-            <value name="HOURS">
+            <value name="HOUR">
               <block type="math_number">
                 <field name="NUM">0</field>
               </block>
             </value>
-            <value name="MINUTES">
+            <value name="MINUTE">
               <block type="math_number">
                 <field name="NUM">0</field>
               </block>
             </value>
-            <value name="SECONDS">
+            <value name="SECOND">
               <block type="math_number">
                 <field name="NUM">0</field>
               </block>
@@ -187,6 +180,21 @@
             <value name="TIME">
               <block type="variables_get">
                 <field name="VAR">time</field>
+              </block>
+            </value>
+          </block>
+          <block type="time_startEnd">
+            <value name="TIME">
+              <block type="variables_get">
+                <field name="VAR">time</field>
+              </block>
+            </value>
+          </block>
+          <block type="time_diff"></block>
+          <block type="time_sleep">
+            <value name="SECONDS">
+              <block type="math_number">
+                <field name="NUM">1</field>
               </block>
             </value>
           </block>
