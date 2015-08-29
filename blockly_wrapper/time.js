@@ -200,7 +200,7 @@ Blockly.Blocks['time_startEnd'] = {
     this.setTooltip(() => {
       let mode = this.getFieldValue('MODE') == 'START' ? 'beginning' : 'end';
       let unit = this.getFieldValue('UNIT').toLowerCase();
-      return `Rounds the specified time to the ${mode} of the nearest ${unit}.`;
+      return `Rounds the specified time to the ${mode} of the enclosing ${unit}.`;
     });
     this.setHelpUrl('');
   }
