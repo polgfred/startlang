@@ -13,7 +13,7 @@ Blockly.Blocks['time_sleep'] = {
     this.setInputsInline(true);
     this.setPreviousStatement(true);
     this.setNextStatement(true);
-    this.setTooltip('Pause the program for the specified time.');
+    this.setTooltip('Pause the program for some number of seconds.');
     this.setHelpUrl('');
   }
 };
@@ -59,7 +59,7 @@ Blockly.Blocks['time_create_with'] = {
         .setAlign(Blockly.ALIGN_RIGHT)
         .appendField('seconds');
     this.setOutput(true, 'Time');
-    this.setTooltip('Creates a time with the specified units.');
+    this.setTooltip('Create a time with the specified units.');
     this.setHelpUrl('');
   }
 };
@@ -82,86 +82,10 @@ Blockly.Blocks['time_getPart'] = {
         .setCheck('Time')
         .appendField('extract')
         .appendField(new Blockly.FieldDropdown(UNITS), 'UNIT')
-        .appendField('from');
+        .appendField('from time');
     this.setInputsInline(true);
     this.setOutput(true, 'Number');
     this.setTooltip(() => `Extracts the ${this.getFieldValue('UNIT').toLowerCase()} from the specified time.`);
-    this.setHelpUrl('');
-  }
-};
-
-Blockly.Blocks['time_addSubtract'] = {
-  init: function() {
-    let MODES = [
-      [ 'add',      'ADD' ],
-      [ 'subtract', 'SUB' ]
-    ];
-    let UNITS = [
-      [ 'years',        'YEAR'        ],
-      [ 'months',       'MONTH'       ],
-      [ 'days',         'DAY'         ],
-      [ 'hours',        'HOUR'        ],
-      [ 'minutes',      'MINUTE'      ],
-      [ 'seconds',      'SECOND'      ],
-      [ 'milliseconds', 'MILLISECOND' ]
-    ];
-
-    this.setColour(Blockly.Blocks.time.HUE);
-    this.timeInput = this.appendValueInput('TIME')
-        .setCheck('Time')
-        .appendField('to', 'FROM_TO');
-    this.appendValueInput('VALUE')
-        .setCheck('Number')
-        .appendField(new Blockly.FieldDropdown(MODES, this.updateMode_.bind(this)), 'MODE');
-    this.appendDummyInput()
-        .appendField(new Blockly.FieldDropdown(UNITS), 'UNIT');
-    this.setInputsInline(true);
-    this.setPreviousStatement(true);
-    this.setNextStatement(true);
-    this.setTooltip(() => ``);
-    this.setHelpUrl('');
-  },
-  setFieldValue: function(value, name) {
-    this.constructor.superClass_.setFieldValue.call(this, value, name);
-    if (name == 'MODE') {
-      this.updateMode_(value);
-    }
-  },
-  updateMode_: function(mode) {
-    this.timeInput.removeField('FROM_TO');
-    this.timeInput.appendField(mode == 'ADD' ? 'to' : 'from', 'FROM_TO');
-  }
-};
-
-Blockly.Blocks['time_startEnd'] = {
-  init: function() {
-    let MODES = [
-      [ 'beginning',  'START' ],
-      [ 'end',        'END'   ]
-    ];
-    let UNITS = [
-      [ 'year',        'YEAR'        ],
-      [ 'month',       'MONTH'       ],
-      [ 'day',         'DAY'         ],
-      [ 'hour',        'HOUR'        ],
-      [ 'minute',      'MINUTE'      ],
-      [ 'second',      'SECOND'      ],
-      [ 'millisecond', 'MILLISECOND' ]
-    ];
-
-    this.setColour(Blockly.Blocks.time.HUE);
-    this.appendValueInput('TIME')
-        .setCheck('Time')
-        .appendField('round');
-    this.appendDummyInput()
-        .appendField('to')
-        .appendField(new Blockly.FieldDropdown(MODES), 'MODE')
-        .appendField('of')
-        .appendField(new Blockly.FieldDropdown(UNITS), 'UNIT');
-    this.setInputsInline(true);
-    this.setPreviousStatement(true);
-    this.setNextStatement(true);
-    this.setTooltip(() => ``);
     this.setHelpUrl('');
   }
 };
@@ -189,7 +113,95 @@ Blockly.Blocks['time_diff'] = {
         .appendField('and');
     this.setInputsInline(true);
     this.setOutput(true, 'Number');
-    this.setTooltip(() => ``);
+    this.setTooltip(() => {
+      let unit = this.getFieldValue('UNIT').toLowerCase();
+      return `Calculates the number of ${unit}s between two times.`;
+    });
+    this.setHelpUrl('');
+  }
+};
+
+Blockly.Blocks['time_addSubtract'] = {
+  init: function() {
+    let MODES = [
+      [ 'add',      'ADD' ],
+      [ 'subtract', 'SUB' ]
+    ];
+    let UNITS = [
+      [ 'years',        'YEAR'        ],
+      [ 'months',       'MONTH'       ],
+      [ 'days',         'DAY'         ],
+      [ 'hours',        'HOUR'        ],
+      [ 'minutes',      'MINUTE'      ],
+      [ 'seconds',      'SECOND'      ],
+      [ 'milliseconds', 'MILLISECOND' ]
+    ];
+
+    this.setColour(Blockly.Blocks.time.HUE);
+    this.timeInput = this.appendValueInput('TIME')
+        .setCheck('Time')
+        .appendField('to time', 'FROM_TO');
+    this.appendValueInput('VALUE')
+        .setCheck('Number')
+        .appendField(new Blockly.FieldDropdown(MODES, this.updateMode_.bind(this)), 'MODE');
+    this.appendDummyInput()
+        .appendField(new Blockly.FieldDropdown(UNITS), 'UNIT');
+    this.setInputsInline(true);
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setTooltip(() => {
+      let mode = this.getFieldValue('MODE') == 'ADD' ? 'Add' : 'Subtract';
+      let from_to = this.getFieldValue('MODE') == 'ADD' ? 'to' : 'from';
+      let unit = this.getFieldValue('UNIT').toLowerCase();
+      return `${mode}s some number of ${unit}s ${from_to} the specified time.`;
+    });
+    this.setHelpUrl('');
+  },
+  setFieldValue: function(value, name) {
+    this.constructor.superClass_.setFieldValue.call(this, value, name);
+    if (name == 'MODE') {
+      this.updateMode_(value);
+    }
+  },
+  updateMode_: function(mode) {
+    this.timeInput.removeField('FROM_TO');
+    this.timeInput.appendField(`${mode == 'ADD' ? 'to' : 'from'} time`, 'FROM_TO');
+  }
+};
+
+Blockly.Blocks['time_startEnd'] = {
+  init: function() {
+    let MODES = [
+      [ 'beginning',  'START' ],
+      [ 'end',        'END'   ]
+    ];
+    let UNITS = [
+      [ 'year',        'YEAR'        ],
+      [ 'month',       'MONTH'       ],
+      [ 'day',         'DAY'         ],
+      [ 'hour',        'HOUR'        ],
+      [ 'minute',      'MINUTE'      ],
+      [ 'second',      'SECOND'      ],
+      [ 'millisecond', 'MILLISECOND' ]
+    ];
+
+    this.setColour(Blockly.Blocks.time.HUE);
+    this.appendValueInput('TIME')
+        .setCheck('Time')
+        .appendField('round time');
+    this.appendDummyInput()
+        .appendField('to')
+        .appendField(new Blockly.FieldDropdown(MODES), 'MODE')
+        .appendField('of')
+        .appendField(new Blockly.FieldDropdown(UNITS), 'UNIT');
+    this.setInputsInline(true);
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setTooltip(() => {
+      let mode = this.getFieldValue('MODE') == 'START' ? 'beginning' : 'end';
+      let unit = this.getFieldValue('UNIT').toLowerCase();
+      return `Rounds the specified time to the ${mode} of the nearest ${unit}.`;
+    });
     this.setHelpUrl('');
   }
 };
