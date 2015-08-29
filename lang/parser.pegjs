@@ -201,11 +201,20 @@ Let
     }
 
 Call
-  = name:Symbol __ args:Values? {
+  // if we match non-parenthesized args optionally right away, it will
+  // never get past the first rule, so...
+  //  1- try to match non-parenthesized arguments first *if present*
+  //      - this fixes the case of "print (1+2)/3"
+  //  2- try to match zero or more parenthesized arguments
+  //  3- match a bare call with no parens or args
+  = name:Symbol __ args:Values {
       return buildNode('call', { name: name, args: args });
     }
   / name:Symbol __ '(' __ EOL? __ args:Values? __ ')' {
       return buildNode('call', { name: name, args: args });
+    }
+  / name:Symbol {
+      return buildNode('call', { name: name, args: null });
     }
 
 // Values

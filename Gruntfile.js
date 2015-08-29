@@ -31,9 +31,6 @@ module.exports = function(grunt) {
       }
     },
     peg: {
-      options: {
-        trackLineAndColumn: true
-      },
       parser: {
         src: 'lang/parser.pegjs',
         dest: 'lang/parser.js'
