@@ -79,8 +79,7 @@ $('#runner').click(() => {
   // termapi.clear();
   paper.clear();
   // execute the code in the buffer
-  let block = Blockly.getMainWorkspace().getTopBlocks()[0],
-      root = createBuilder().handleStatements(block),
+  let root = createBuilder().fromWorkspace(Blockly.getMainWorkspace()),
       interp = createInterpreter(root, ctx);
   console.log(root);
   interp.on('error', (err) => {
@@ -99,7 +98,9 @@ $(window).on('unload', function() {
 });
 
 window.restore = function() {
-  Blockly.Xml.domToWorkspace(Blockly.getMainWorkspace(), Blockly.Xml.textToDom(localStorage['save']));
+  let ws = Blockly.getMainWorkspace();
+  ws.clear();
+  Blockly.Xml.domToWorkspace(ws, Blockly.Xml.textToDom(localStorage['save']));
 };
 
 $(window).on('load', function() {

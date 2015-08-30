@@ -1,10 +1,9 @@
 'use strict';
 
 import { EventEmitter } from 'events';
+import { ScriptExit } from './runtime';
 
 let hasOwnProperty = Object.prototype.hasOwnProperty; // cache this for performance
-
-export class ScriptExit extends Error {}
 
 export class SInterpreter extends EventEmitter {
   constructor(root, ctx) {

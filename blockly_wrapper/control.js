@@ -14,13 +14,13 @@ Blockly.Blocks['control_start'] = {
   }
 };
 
-Blockly.Blocks['control_end'] = {
+Blockly.Blocks['control_exit'] = {
   init: function() {
     this.setColour(Blockly.Blocks.control.HUE);
     this.appendDummyInput()
-        .appendField('end program');
+        .appendField('exit program');
     this.setPreviousStatement(true);
-    this.setTooltip('This causes the program to terminate.');
+    this.setTooltip('This causes the program to terminate immediately.');
     this.setHelpUrl('');
   }
 };

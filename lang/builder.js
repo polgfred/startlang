@@ -47,6 +47,7 @@ export default class Builder {
     this.blocks.push(elems);
 
     try {
+      // just dispatch on block type
       let target = name ? block.getInputTargetBlock(name) : block;
 
       while (target) {
@@ -70,15 +71,15 @@ export default class Builder {
   }
 
   makeTemporary(value, block, prefix) {
-    // get next available temp var with this prefix
-    let temp =  'temp_' + prefix + '_' +
+    // get next available temp var with this prefix and make an assignment
+    let temp = 'temp_' + prefix + '_' +
                 (this.temps[prefix] = (this.temps[prefix] || 0) + 1);
-
-    // inject a let node into the closest available statements block
     let elem = buildNode('let', block, {
       name: temp,
       value: value
     });
+
+    // append it to the nearest statements block
     this.blocks[this.blocks.length - 1].push(elem);
 
     // return a var node for the temporary
@@ -146,6 +147,25 @@ export default class Builder {
           ]
         });
     }
+  }
+
+  fromWorkspace(ws) {
+    for (let block of ws.getTopBlocks()) {
+      if (block.type == 'control_start') {
+        return this.handleStatements(block);
+      }
+    }
+  }
+
+  control_start(block) {
+    // marker node for start of program, pass control to the next block
+  }
+
+  control_exit(block) {
+    return buildNode('call', block, {
+      name: 'exit',
+      args: []
+    });
   }
 
   // loops

@@ -4,6 +4,8 @@ import moment from 'moment';
 import immutable from 'immutable';
 import { extendObject } from './utils';
 
+export class ScriptExit extends Error {}
+
 export let handlerKey = Symbol('START_HANDLER');
 
 // ensures its operands are of the same type
@@ -692,6 +694,10 @@ export function handle(obj) {
 }
 
 export const globals = {
+  exit() {
+    throw new ScriptExit();
+  },
+
   time(...args) {
     return STime.create(args);
   },
