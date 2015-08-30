@@ -5,6 +5,7 @@
 import util from 'util';
 
 import './msg';
+import './control';
 import './math';
 import './time';
 import './lists';
@@ -22,9 +23,11 @@ export default Blockly = require('node-blockly/lib/blockly_compressed');
 Blockly.Blocks = util._extend(Blockly.Blocks, require('node-blockly/lib/blocks_compressed')(Blockly));
 
 // setup our color scheme
+Blockly.Blocks.control = {};
 Blockly.Blocks.time = {};
 Blockly.Blocks.colour = {};
 Blockly.Blocks.graphics = {};
+Blockly.Blocks.control.HUE = 290;
 Blockly.Blocks.time.HUE = 0;
 Blockly.Blocks.colour.HUE = 180;
 Blockly.Blocks.graphics.HUE = 180;

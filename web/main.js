@@ -98,8 +98,10 @@ $(window).on('unload', function() {
   localStorage['save'] = Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(Blockly.getMainWorkspace()));
 });
 
+window.restore = function() {
+  Blockly.Xml.domToWorkspace(Blockly.getMainWorkspace(), Blockly.Xml.textToDom(localStorage['save']));
+};
+
 $(window).on('load', function() {
-  if (localStorage['save']) {
-    Blockly.Xml.domToWorkspace(Blockly.getMainWorkspace(), Blockly.Xml.textToDom(localStorage['save']));
-  }
+  Blockly.Xml.domToWorkspace(Blockly.getMainWorkspace(), $('#new_workspace')[0]);
 });
