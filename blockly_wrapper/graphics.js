@@ -15,7 +15,7 @@ Blockly.Blocks['graphics_create_rect'] = {
     this.appendValueInput('X')
         .setCheck('Number')
         .setAlign(Blockly.ALIGN_RIGHT)
-        .appendField('box with')
+        .appendField('box at')
         .appendField('x');
     this.appendValueInput('Y')
         .setCheck('Number')
@@ -42,7 +42,7 @@ Blockly.Blocks['graphics_create_circle'] = {
     this.appendValueInput('X')
         .setCheck('Number')
         .setAlign(Blockly.ALIGN_RIGHT)
-        .appendField('circle with')
+        .appendField('circle at')
         .appendField('x');
     this.appendValueInput('Y')
         .setCheck('Number')
@@ -65,7 +65,7 @@ Blockly.Blocks['graphics_create_ellipse'] = {
     this.appendValueInput('X')
         .setCheck('Number')
         .setAlign(Blockly.ALIGN_RIGHT)
-        .appendField('ellipse with')
+        .appendField('ellipse at')
         .appendField('x');
     this.appendValueInput('Y')
         .setCheck('Number')
