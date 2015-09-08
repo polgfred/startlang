@@ -8,9 +8,9 @@ function buildNode(type, block, attrs) {
     return attrs.elems[0];
   }
 
-  var node = { type: type }; // block: block
+  let node = { type: type }; // block: block
 
-  for (var p in attrs) {
+  for (let p in attrs) {
     node[p] = attrs[p];
   }
 

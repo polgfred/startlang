@@ -2,46 +2,10 @@
 
 import $ from 'jquery';
 
-// import { parse } from '../lang/parser';
-import { createRuntime, globals, handle } from '../lang/runtime';
 import { createInterpreter } from '../lang/interpreter';
 import { createBuilder } from '../lang/builder';
-import { paper } from '../lang/graphics';
+import { createRuntime } from '../lang/graphics';
 import Blockly from '../blockly_wrapper';
-
-function refresh() {
-  return new Promise((resolve) => {
-    setImmediate(resolve);
-  });
-}
-
-// override print to output to the terminal
-
-globals.print = function(...values) {
-  if (values.length > 0) {
-    for (let v of values) {
-      console.log('[PRINT]', handle(v).repr(v));
-      //termapi.echo(handle(v).repr(v));
-    }
-  } else {
-    console.log('[PRINT]');
-    //termapi.echo('');
-  }
-  // yield to UI for redraw
-  //return refresh();
-};
-
-globals.input = function(message) {
-  return prompt(message);
-};
-
-globals.clear = function() {
-  console.clear();
-  //termapi.clear();
-  paper.clear();
-  // yield to UI for redraw
-  return refresh();
-};
 
 // wire it up
 
@@ -77,7 +41,6 @@ $('#runner').click(() => {
   ctx = createRuntime();
   console.clear();
   // termapi.clear();
-  paper.clear();
   // execute the code in the buffer
   let root = createBuilder().fromWorkspace(Blockly.getMainWorkspace()),
       interp = createInterpreter(root, ctx);

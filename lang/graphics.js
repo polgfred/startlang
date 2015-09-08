@@ -1,96 +1,137 @@
 'use strict';
 
-import Snap from 'snapsvg';
-import { globals, handlerKey, SBase } from './runtime';
+import React from 'react';
+import immutable from 'immutable';
+import { SRuntime, SBase, handle, handlerKey } from './runtime';
 import { extendObject } from './utils';
 
-function number(s) {
-  return parseInt(s, 10);
-}
+let graphicsDisplay = document.getElementById('display');
 
-function defaults(el) {
-  return el.attr({ fill: '', stroke: '' });
-}
-
-function applyTransforms(el) {
-  let rot = el.data('rot'),
-      skew = el.data('skew'),
-      mat = new Snap.Matrix();
-  if (rot || skew) {
-    let bb = el.getBBox(true); // without transforms
-    if (rot) {
-      // rotate from the center of the object
-      mat.rotate(rot, bb.cx, bb.cy);
-    }
-    if (skew) {
-      // apply the scaling factor
-      mat.scale(skew[0], skew[1], bb.cx, bb.cy);
-    }
+export class SGRuntime extends SRuntime {
+  constructor() {
+    super();
+    this.gfx = immutable.List();
+    this.updateDisplay();
   }
-  el.transform(mat);
+
+  pushShape(data) {
+    let shape = new Shape({
+      type: data.type,
+      attrs: immutable.Map(data.attrs).set('key', `${this.gfx.size}`),
+      transforms: immutable.List(data.transforms)
+    });
+
+    this.gfx = this.gfx.push(shape);
+    this.updateDisplay();
+    return shape;
+  }
+
+  updateDisplay() {
+    React.render(<Graphics data={this.gfx} />, graphicsDisplay);
+  }
 }
 
-// keep a reference to the canvas element
-export const paper = Snap('#canvas');
+function refresh() {
+  return new Promise((resolve) => {
+    setImmediate(resolve);
+  });
+}
+
+SGRuntime.prototype.globals = extendObject(SRuntime.prototype.globals, {
+  print(...values) {
+    if (values.length > 0) {
+      for (let v of values) {
+        console.log('[PRINT]', handle(v).repr(v));
+        //termapi.echo(handle(v).repr(v));
+      }
+    } else {
+      console.log('[PRINT]');
+      //termapi.echo('');
+    }
+    // yield to UI for redraw
+    return refresh();
+  },
+
+  input(message) {
+    return prompt(message);
+  },
+
+  clear() {
+    console.clear();
+    return refresh();
+  },
+
+  refresh() {
+    return refresh();
+  },
+
+  rect(x, y, width, height) {
+    return this.pushShape({
+      type: 'rect',
+      attrs: { x, y, width, height }
+    });
+  },
+
+  circle(cx, cy, r) {
+    return this.pushShape({
+      type: 'circle',
+      attrs: { cx, cy, r }
+    });
+  },
+
+  ellipse(cx, cy, rx, ry) {
+    return this.pushShape({
+      type: 'ellipse',
+      attrs: { cx, cy, rx, ry }
+    });
+  },
+
+  line(x1, y1, x2, y2) {
+  },
+
+  polyline(...coords) {
+  },
+
+  polygon(...coords) {
+  }
+});
+
+function setAttribute(ctx, shape, name, value) {
+  let index = parseInt(shape.attrs.get('key'));
+  let shape2 = shape.set('attrs', shape.attrs.set(name, value));
+  ctx.gfx = ctx.gfx.set(index, shape2);
+  ctx.updateDisplay();
+}
 
 // all shapes have these basic utilities in common
 export const SShape = extendObject(SBase, {
-  repr(el) {
-    return '*' + el.type + ':' + el.id + '*';
+  repr(shape) {
+    return `*${shape.type}*`;
   },
 
   methods: {
-    fill(el, color = null) {
-      if (color == null) {
-        el.attr('fill', '');
-      } else {
-        el.attr('fill', color);
-      }
+    fill(shape, color = 'none') {
+      setAttribute(this, shape, 'fill', color);
     },
 
-    stroke(el, color = null) {
-      if (color == null) {
-        el.attr('stroke', '');
-      } else {
-        el.attr('stroke', color);
-      }
+    stroke(el, color = 'none') {
+      setAttribute(this, shape, 'stroke', color);
     },
 
-    opacity(el, opac = 1) {
-      if (opac == 1) {
-        el.attr('opacity', null);
-      } else {
-        el.attr('opacity', opac);
-      }
+    opacity(el, value = 1) {
+      setAttribute(this, shape, 'opacity', value);
     },
 
     rotate(el, rot = 0) {
-      if (rot == 0) {
-        el.removeData('rot');
-      } else {
-        el.data('rot', rot);
-      }
-      applyTransforms(el);
     },
 
     scale(el, sx = 1, sy = sx) {
-      if (sx == 1 && sy == 1) {
-        el.removeData('skew');
-      } else {
-        el.data('skew', [sx, sy]);
-      }
-      applyTransforms(el);
     },
 
     clone(el) {
-      let el2 = el.clone();
-      // copy transform data
-      el2.data(el.data());
-      return el2;
     },
 
     remove(el) {
-      el.remove();
     }
   }
 });
@@ -98,8 +139,6 @@ export const SShape = extendObject(SBase, {
 export const SRect = extendObject(SShape, {
   methods: extendObject(SShape.methods, {
     move(el, x, y) {
-      el.attr({ x: x, y: y });
-      applyTransforms(el);
     }
   })
 });
@@ -107,8 +146,6 @@ export const SRect = extendObject(SShape, {
 export const SCircle = extendObject(SShape, {
   methods: extendObject(SShape.methods, {
     move(el, x, y) {
-      el.attr({ cx: x, cy: y });
-      applyTransforms(el);
     }
   })
 });
@@ -116,8 +153,6 @@ export const SCircle = extendObject(SShape, {
 export const SEllipse = extendObject(SShape, {
   methods: extendObject(SShape.methods, {
     move(el, x, y) {
-      el.attr({ cx: x, cy: y });
-      applyTransforms(el);
     }
   })
 });
@@ -125,11 +160,6 @@ export const SEllipse = extendObject(SShape, {
 export const SLine = extendObject(SShape, {
   methods: extendObject(SShape.methods, {
     move(el, x, y) {
-      let attr = el.attr(),
-          dx = x - number(attr.x1),
-          dy = y - number(attr.y1);
-      el.attr({ x1: x, y1: y, x2: number(attr.x2) + dx, y2: number(attr.y2) + dy });
-      applyTransforms(el);
     }
   })
 });
@@ -138,64 +168,39 @@ export const SLine = extendObject(SShape, {
 export const SPolygon = extendObject(SShape, {
   methods: extendObject(SShape.methods, {
     move(el, x, y) {
-      let op = el.attr('points'),
-          dx = x - number(op[0]),
-          dy = y - number(op[1]),
-          np = [];
-      np[0] = x;
-      np[1] = y;
-      for (let i = 2; i < op.length; i += 2) {
-        np[i + 0] = number(op[i]) + dx;
-        np[i + 1] = number(op[i + 1]) + dy;
-      }
-      el.attr('points', np);
-      applyTransforms(el);
     }
   })
 });
 
-// hook into Snap so we can inject a handler property
-Snap.plugin(function(_, Element, Paper) {
-  let handlerMap = {
-    rect: SRect,
-    circle: SCircle,
-    ellipse: SEllipse,
-    line: SLine,
-    polyline: SPolygon,
-    polygon: SPolygon
-  };
-
-  Element.prototype[handlerKey] = (obj) => handlerMap[obj.type];
+let Shape = immutable.Record({
+  type: null, // rect, circle, ellipse, etc.
+  attrs: immutable.Map(),
+  transforms: immutable.List()
 });
 
-Object.assign(globals, {
-  refresh: function() {
-    return new Promise((resolve) => {
-      setImmediate(resolve);
+let handlerMap = {
+  rect: SRect,
+  circle: SCircle,
+  ellipse: SEllipse,
+  line: SLine,
+  polyline: SPolygon,
+  polygon: SPolygon
+};
+
+Shape.prototype[handlerKey] = (obj) => handlerMap[obj.type];
+
+// react bindings
+
+let Graphics = React.createClass({
+  render() {
+    let shapes = this.props.data.map(function(shape) {
+      return React.createElement(shape.type, shape.attrs.toJS());
     });
-  },
 
-  rect: function(x, y, w, h) {
-    return defaults(paper.rect(x, y, w, h));
-  },
-
-  circle: function(x, y, r) {
-    return defaults(paper.circle(x, y, r));
-  },
-
-  ellipse: function(x, y, rx, ry) {
-    return defaults(paper.ellipse(x, y, rx, ry));
-  },
-
-  line: function(x1, y1, x2, y2) {
-    return defaults(paper.line(x1, y1, x2, y2));
-  },
-
-  polyline: function(...coords) {
-    return defaults(paper.polyline(...coords));
-  },
-
-  polygon: function(...coords) {
-    return defaults(paper.polygon(...coords));
+    return <svg id="canvas">{shapes}</svg>;
   }
 });
+
+export function createRuntime() {
+  return new SGRuntime();
+}

@@ -128,7 +128,7 @@ export class SRuntime {
       return fn;
     }
     // look for a built-in function by first argument, or in global map
-    fn = (obj != null && handle(obj).methods[name]) || globals[name];
+    fn = (obj != null && handle(obj).methods[name]) || this.globals[name];
     if (fn) {
       return (args, assn) => {
         return this.syscall(fn, args, assn);
@@ -143,7 +143,7 @@ export class SRuntime {
 
   syscall(fn, args, assn) {
     // call a runtime function
-    let res = fn(...args);
+    let res = fn.call(this, ...args);
     if (res) {
       let repl = res['@@__assign__@@'];
       if (repl) {
@@ -175,6 +175,59 @@ export class SRuntime {
     return res;
   }
 }
+
+SRuntime.prototype.globals = {
+  exit() {
+    throw new ScriptExit();
+  },
+
+  time(...args) {
+    return STime.create(args);
+  },
+
+  list(...items) {
+    return SList.create(items);
+  },
+
+  table(...pairs) {
+    return SMap.create(pairs);
+  },
+
+  num(value) {
+    let result = parseFloat(value);
+    if (result != result) {
+      throw new Error('result is not a number');
+    }
+    return result;
+  },
+
+  rand() {
+    return Math.random();
+  },
+
+  swap(a, b) {
+    return {
+      '@@__assign__@@': [ b, a ],
+      '@@__result__@@': null
+    };
+  },
+
+  print(...values) {
+    if (values.length > 0) {
+      for (let v of values) {
+        console.log(handle(v).repr(v));
+      }
+    } else {
+      console.log();
+    }
+  },
+
+  sleep(seconds) {
+    return new Promise((resolve) => {
+      setTimeout(resolve, seconds * 1000);
+    });
+  }
+};
 
 // Handler defaults
 
@@ -692,59 +745,6 @@ export function handle(obj) {
   let handler = obj[handlerKey];
   return typeof handler == 'function' ? handler(obj) : handler;
 }
-
-export const globals = {
-  exit() {
-    throw new ScriptExit();
-  },
-
-  time(...args) {
-    return STime.create(args);
-  },
-
-  list(...items) {
-    return SList.create(items);
-  },
-
-  table(...pairs) {
-    return SMap.create(pairs);
-  },
-
-  num(value) {
-    let result = parseFloat(value);
-    if (result != result) {
-      throw new Error('result is not a number');
-    }
-    return result;
-  },
-
-  rand() {
-    return Math.random();
-  },
-
-  swap(a, b) {
-    return {
-      '@@__assign__@@': [ b, a ],
-      '@@__result__@@': null
-    };
-  },
-
-  print(...values) {
-    if (values.length > 0) {
-      for (let v of values) {
-        console.log(handle(v).repr(v));
-      }
-    } else {
-      console.log();
-    }
-  },
-
-  sleep(seconds) {
-    return new Promise((resolve) => {
-      setTimeout(resolve, seconds * 1000);
-    });
-  }
-};
 
 export function createRuntime() {
   return new SRuntime();
