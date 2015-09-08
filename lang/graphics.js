@@ -17,7 +17,8 @@ export class SGRuntime extends SRuntime {
   pushShape(data) {
     let shape = new Shape({
       type: data.type,
-      attrs: immutable.Map(data.attrs).set('key', `${this.gfx.size}`),
+      key: `${data.type}${Math.floor(Math.random() * (2<<29))}`,
+      attrs: immutable.Map(data.attrs),
       transforms: immutable.List(data.transforms)
     });
 
@@ -26,8 +27,16 @@ export class SGRuntime extends SRuntime {
     return shape;
   }
 
+  updateShape(shape, name, value) {
+    // cache this lookup eventually
+    let pos = this.gfx.findIndex((sh) => sh.key == shape.key);
+    let shape2 = shape.set('attrs', shape.attrs.set(name, value));
+    this.gfx = this.gfx.set(pos, shape2);
+    this.updateDisplay();
+  }
+
   updateDisplay() {
-    React.render(<Graphics data={this.gfx} />, graphicsDisplay);
+    React.render(<RGraphics data={this.gfx} />, graphicsDisplay);
   }
 }
 
@@ -96,13 +105,6 @@ SGRuntime.prototype.globals = extendObject(SRuntime.prototype.globals, {
   }
 });
 
-function setAttribute(ctx, shape, name, value) {
-  let index = parseInt(shape.attrs.get('key'));
-  let shape2 = shape.set('attrs', shape.attrs.set(name, value));
-  ctx.gfx = ctx.gfx.set(index, shape2);
-  ctx.updateDisplay();
-}
-
 // all shapes have these basic utilities in common
 export const SShape = extendObject(SBase, {
   repr(shape) {
@@ -110,16 +112,16 @@ export const SShape = extendObject(SBase, {
   },
 
   methods: {
-    fill(shape, color = 'none') {
-      setAttribute(this, shape, 'fill', color);
+    fill(shape, color) {
+      this.updateShape(shape, 'fill', color || 'none');
     },
 
-    stroke(el, color = 'none') {
-      setAttribute(this, shape, 'stroke', color);
+    stroke(el, color) {
+      this.updateShape(shape, 'stroke', color || 'none');
     },
 
     opacity(el, value = 1) {
-      setAttribute(this, shape, 'opacity', value);
+      this.updateShape(shape, 'opacity', value);
     },
 
     rotate(el, rot = 0) {
@@ -174,6 +176,7 @@ export const SPolygon = extendObject(SShape, {
 
 let Shape = immutable.Record({
   type: null, // rect, circle, ellipse, etc.
+  key: null,  // identifier for lookup
   attrs: immutable.Map(),
   transforms: immutable.List()
 });
@@ -191,10 +194,13 @@ Shape.prototype[handlerKey] = (obj) => handlerMap[obj.type];
 
 // react bindings
 
-let Graphics = React.createClass({
+let RGraphics = React.createClass({
   render() {
     let shapes = this.props.data.map(function(shape) {
-      return React.createElement(shape.type, shape.attrs.toJS());
+      // add the key to the element attrs
+      let attrs = shape.attrs.toJS();
+      attrs.key = shape.key;
+      return React.createElement(shape.type, attrs);
     });
 
     return <svg id="canvas">{shapes}</svg>;
