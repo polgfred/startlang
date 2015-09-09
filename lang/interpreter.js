@@ -82,7 +82,7 @@ export class SInterpreter extends EventEmitter {
           return eres.flow ? eres : loop(count + 1);
         });
       }
-    }
+    };
     return loop(0);
   }
 
@@ -145,7 +145,7 @@ export class SInterpreter extends EventEmitter {
             }
           });
         }
-      }
+      };
       // convert the range to an enumeration
       return loop(this.ctx.enumerate(rres.rv));
     });
@@ -166,7 +166,7 @@ export class SInterpreter extends EventEmitter {
           });
         }
       });
-    }
+    };
     return loop();
   }
 
@@ -216,7 +216,7 @@ export class SInterpreter extends EventEmitter {
         this.ctx.pop();
         throw err;
       });
-    }
+    };
     return this.ctx.setfn(node.name, fn);
   }
 
@@ -240,7 +240,7 @@ export class SInterpreter extends EventEmitter {
           return this.ctx.syscall(node.name, args, assn);
         }
       }
-    }
+    };
     return loop(0);
   }
 
@@ -272,41 +272,37 @@ export class SInterpreter extends EventEmitter {
     });
   }
 
-  indexNode(node) {
-    let len = node.indexes.length, indexes = [];
-    // collect indexes and lookup value
+  visitIndexes(indexes) {
+    let len = indexes.length, res = [];
+    // collect indexes
     let loop = (count) => {
       if (count == len) {
-        return {
-          rv: this.ctx.getindex(node.name, indexes),
-          lv: { name: node.name, indexes: indexes }
-        };
+        return res;
       } else {
-        return this.visit(node.indexes[count]).then((ires) => {
-          indexes[count] = ires.rv;
+        return this.visit(indexes[count]).then((ires) => {
+          res[count] = ires.rv;
           return loop(count + 1);
         });
       }
-    }
+    };
     return loop(0);
   }
 
+  indexNode(node) {
+    return this.visitIndexes(node.indexes).then((rres) => {
+      return {
+        rv: this.ctx.getindex(node.name, rres),
+        lv: { name: node.name, indexes: rres }
+      };
+    });
+  }
+
   letIndexNode(node) {
-    let len = node.indexes.length, indexes = [];
-    // collect indexes and set value
-    let loop = (count) => {
-      if (count == len) {
-        return this.visit(node.value).then((vres) => {
-          return this.ctx.setindex(node.name, indexes, vres.rv);
-        });
-      } else {
-        return this.visit(node.indexes[count]).then((ires) => {
-          indexes[count] = ires.rv;
-          return loop(count + 1);
-        });
-      }
-    }
-    return loop(0);
+    return this.visit(node.value).then((vres) => {
+      return this.visitIndexes(node.indexes).then((rres) => {
+        return this.ctx.setindex(node.name, rres, vres.rv);
+      });
+    });
   }
 
   logicalOpNode(node) {
