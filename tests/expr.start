@@ -34,8 +34,8 @@ h = list(0,1,2,3,4,5)
 if g = h then print "4a should see this"
 if g != h then print "4b should not see this"
 
-t = map("name","Fred","age",40)
-u = map("name","Fred","age",40)
+t = table("name","Fred","age",40)
+u = table("name","Fred","age",40)
 
 if t = u then print "5a should see this"
 
@@ -43,7 +43,7 @@ t.likes = "computers"
 
 if t != u then print "5b should see this"
 
-delete t, "likes"
+remove t, "likes"
 t.age = 41
 
 if t != u then print "5c should see this"
