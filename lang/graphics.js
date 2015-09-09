@@ -15,9 +15,10 @@ export class SGRuntime extends SRuntime {
   }
 
   pushShape(data) {
+    let rnd = Math.floor(Math.random() * (2 << 23));
     let shape = new Shape({
       type: data.type,
-      key: `${data.type}${Math.floor(Math.random() * (2<<29))}`,
+      key: ('000000' + rnd.toString(16)).substr(-6),
       attrs: immutable.Map(data.attrs),
       transforms: immutable.List(data.transforms)
     });
