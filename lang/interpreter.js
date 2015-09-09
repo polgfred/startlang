@@ -174,9 +174,9 @@ export class SInterpreter extends EventEmitter {
     return this.visit(node.value).then((vres) => {
       if (node.name) {
         this.ctx.set(node.name, vres.rv);
-        this.ctx.pushw({ rv: vres.rv, lv: { name: node.name } });
+        this.ctx.pushw(vres.rv, { name: node.name });
       } else {
-        this.ctx.pushw(vres);
+        this.ctx.pushw(vres.rv, vres.lv);
       }
       return this.visit(node.body).then((bres) => {
         this.ctx.popw();
