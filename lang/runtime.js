@@ -45,18 +45,28 @@ export class SRuntime {
   constructor() {
     this.fn = immutable.Map();
     this.ns = immutable.Map();
-    this.stack = immutable.Stack();
+    this.st = immutable.Stack();
+    this.wst = immutable.Stack();
   }
 
   // push and pop new objects onto the ns stack
   push() {
-    this.stack = this.stack.push(this.ns);
+    this.st = this.st.push(this.ns);
     this.ns = immutable.Map();
   }
 
   pop() {
-    this.ns = this.stack.first();
-    this.stack = this.stack.pop();
+    this.ns = this.st.first();
+    this.st = this.st.pop();
+  }
+
+  // push and pop values onto the with stack
+  pushw(val) {
+    this.wst = this.wst.push(val);
+  }
+
+  popw() {
+    this.wst = this.wst.pop();
   }
 
   get(name) {
@@ -67,7 +77,7 @@ export class SRuntime {
     }
 
     // look up the stack (should we do this?)
-    let iter = this.stack.values();
+    let iter = this.st.values();
     while (true) {
       let next = iter.next();
       if (next.done) {
@@ -121,28 +131,44 @@ export class SRuntime {
     return handle(left).binaryops[op](left, right);
   }
 
-  getfn(name, obj) {
-    // look for a user-defined function
-    let fn = this.fn.get(name);
-    if (fn) {
-      return fn;
-    }
-    // look for a built-in function by first argument, or in global map
-    fn = (obj != null && handle(obj).methods[name]) || this.globals[name];
-    if (fn) {
-      return (args, assn) => {
-        return this.syscall(fn, args, assn);
-      };
-    }
-    throw new Error('object not found or not a function');
+  getfn(name) {
+    return this.fn.get(name);
   }
 
   setfn(name, body) {
     this.fn = this.fn.set(name, body);
   }
 
-  syscall(fn, args, assn) {
-    // call a runtime function
+  syscall(name, args, assn) {
+    // this is pretty much the workhorse that glues the runtime API and the
+    // interpreter together. it's long and kind of ugly, but it gets called
+    // a lot, so it needs to be crazy fast.
+
+    // first try to find the function to call
+    let fn;
+    let withFlag = false;
+    let wobj = this.wst.first();
+    if (wobj) {
+      // try to look up a method of the object on the with stack
+      fn = handle(wobj.rv).methods[name];
+      if (fn) {
+        // if we found one, prepend the with obj onto the arg list
+        withFlag = true;
+        args.unshift(wobj.rv);
+        assn.unshift(wobj.lv);
+      }
+    }
+    if (!fn) {
+      // try to look up a method of the first argument, or a global function
+      fn = (args.length > 0 && handle(args[0]).methods[name]) ||
+            this.globals[name];
+    }
+    if (!fn) {
+      // couldn't find it
+      throw new Error('object not found or not a function');
+    }
+
+    // make the call
     let res = fn.call(this, ...args);
     if (res) {
       let repl = res['@@__assign__@@'];
@@ -164,6 +190,14 @@ export class SRuntime {
               } else {
                 this.set(a.name, r);
               }
+            }
+            if (i == 0 && withFlag) {
+              // we're in with-mode, so set the top of the with stack
+              // to the replaced value
+              this.wst = this.wst.withMutations((m) => {
+                m.pop();
+                m.push({ rv: r, lv: wobj.lv });
+              });
             }
           }
         }
@@ -335,12 +369,6 @@ export const SNumber = extendObject(SBase, {
 
     constrain(n, lo, hi) {
       return Math.min(Math.max(n, lo), hi);
-    },
-
-    rgb(r, g, b) {
-      return '#' + ('0' + Math.round(255 * r).toString(16)).substr(-2) +
-                   ('0' + Math.round(255 * g).toString(16)).substr(-2) +
-                   ('0' + Math.round(255 * b).toString(16)).substr(-2);
     }
   }),
 
@@ -577,7 +605,7 @@ export const SList = extendObject(SContainer, {
 
     insert(l, start, ...values) {
       // adjust for 1-based indexes and negative offsets
-      start = adjustIndex(start, s.size);
+      start = adjustIndex(start, l.size);
       return { '@@__assign__@@': l.splice(start, 0, ...values) };
     },
 

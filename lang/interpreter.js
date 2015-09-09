@@ -32,8 +32,6 @@ export class SInterpreter extends EventEmitter {
     if (node.type == 'literal') {
       return Promise.resolve({ rv: node.value });
     }
-    // push a frame onto the stack
-    //this.frames.push({ node: node, ns: this.ctx.ns, stack: this.ctx.stack });
     if (node.exit) {
       // return a special error to exit the program
       return Promise.reject(new ScriptExit());
@@ -172,6 +170,23 @@ export class SInterpreter extends EventEmitter {
     return loop();
   }
 
+  withNode(node) {
+    return this.visit(node.value).then((vres) => {
+      if (node.name) {
+        this.ctx.set(node.name, vres.rv);
+        this.ctx.pushw({ rv: vres.rv, lv: { name: node.name } });
+      } else {
+        this.ctx.pushw(vres);
+      }
+      return this.visit(node.body).then((bres) => {
+        this.ctx.popw();
+      });
+    }, (err) => {
+      this.ctx.popw();
+      throw err;
+    });
+  }
+
   ifNode(node) {
     return this.visit(node.cond).then((cres) => {
       if (cres.rv) {
@@ -216,8 +231,14 @@ export class SInterpreter extends EventEmitter {
           return loop(count + 1);
         });
       } else {
-        let fn = this.ctx.getfn(node.name, args[0]);
-        return fn(args, assn);
+        // look for a user-defined function first
+        let fn = this.ctx.getfn(node.name);
+        if (fn) {
+          return fn(args);
+        } else {
+          // try to call a runtime API function
+          return this.ctx.syscall(node.name, args, assn);
+        }
       }
     }
     return loop(0);

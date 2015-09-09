@@ -117,6 +117,7 @@ Control
   / Count
   / For
   / While
+  / With
   / Begin
 
 If
@@ -148,6 +149,14 @@ For
 While
   = 'while' WB __ cond:Value __ 'do' WB __ body:EndBody {
       return buildNode('while', { cond: cond, body: body });
+    }
+
+With
+  = 'with' WB __ sym:Symbol __ '=' __ value:Value __ 'do' WB __ body:EndBody {
+      return buildNode('with', { name: sym, value: value, body: body });
+    }
+  / 'with' WB __ value:Value __ 'do' WB __ body:EndBody {
+      return buildNode('with', { name: null, value: value, body: body });
     }
 
 Begin

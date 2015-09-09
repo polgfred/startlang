@@ -74,6 +74,12 @@ SGRuntime.prototype.globals = extendObject(SRuntime.prototype.globals, {
     return refresh();
   },
 
+  rgb(r, g, b) {
+    return '#' + ('0' + Math.round(255 * r).toString(16)).substr(-2) +
+                 ('0' + Math.round(255 * g).toString(16)).substr(-2) +
+                 ('0' + Math.round(255 * b).toString(16)).substr(-2);
+  },
+
   rect(x, y, width, height) {
     return this.pushShape({
       type: 'rect',
