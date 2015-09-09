@@ -169,19 +169,20 @@ export class SRuntime {
 
     // make the call
     let res = fn.call(this, ...args);
+    let repl, i, r, a;
     if (res) {
-      let repl = res['@@__assign__@@'];
+      repl = res['@@__assign__@@'];
       if (repl) {
         // if this result contains replacement args, assign them
         if (!Array.isArray(repl)) {
           repl = [ repl ];
         }
         // loop over replacement args
-        for (let i = 0; i < repl.length; ++i) {
-          let r = repl[i];
+        for (i = 0; i < repl.length; ++i) {
+          r = repl[i];
           if (typeof r != 'undefined') {
             // we have a replacement for this slot
-            let a = assn[i];
+            a = assn[i];
             if (a) {
               // this slot can be assigned to
               if (a.indexes) {
