@@ -224,7 +224,7 @@ SRuntime.prototype.globals = {
   },
 
   table(...pairs) {
-    return SMap.create(pairs);
+    return STable.create(pairs);
   },
 
   num(value) {
@@ -689,9 +689,9 @@ export const SList = extendObject(SContainer, {
 
 immutable.List.prototype[handlerKey] = SList;
 
-// Maps (Tables, Hashes)
+// Tables
 
-export const SMap = extendObject(SContainer, {
+export const STable = extendObject(SContainer, {
   create(pairs) {
     return immutable.Map().withMutations((n) => {
       for (let i = 0; i < pairs.length; i += 2) {
@@ -700,35 +700,35 @@ export const SMap = extendObject(SContainer, {
     });
   },
 
-  repr(m) {
-    let pairs = m.map((val, key) => handle(key).repr(key) + ': ' + handle(val).repr(val));
+  repr(t) {
+    let pairs = t.map((val, key) => handle(key).repr(key) + ': ' + handle(val).repr(val));
     return '[ ' + pairs.join(', ') + ' ]';
   },
 
-  getindex(m, index) {
-    return m.get(index);
+  getindex(t, index) {
+    return t.get(index);
   },
 
-  setindex(m, index, value) {
-    return m.set(index, value);
+  setindex(t, index, value) {
+    return t.set(index, value);
   },
 
-  enumerate(m) {
-    return SList.enumerate(m.keySeq());
+  enumerate(t) {
+    return SList.enumerate(t.keySeq());
   },
 
   methods: {
-    len(m) {
-      return m.size;
+    len(t) {
+      return t.size;
     },
 
-    keys(m) {
-      return immutable.List(m.keySeq());
+    keys(t) {
+      return immutable.List(t.keySeq());
     },
 
-    put(m, ...pairs) {
+    put(t, ...pairs) {
       return {
-        '@@__assign__@@': m.withMutations((n) => {
+        '@@__assign__@@': t.withMutations((n) => {
           for (let i = 0; i < pairs.length; i += 2) {
             n.set(pairs[i], pairs[i + 1]);
           }
@@ -736,15 +736,15 @@ export const SMap = extendObject(SContainer, {
       };
     },
 
-    remove(m, ...keys) {
+    remove(t, ...keys) {
       // remove and return one or more values
       let o = [];
 
       return {
         '@@__assign__@@':
-          m.withMutations((n) => {
+          t.withMutations((n) => {
             for (let i = 0; i < keys.length; ++i) {
-              o.push(m.get(keys[i]));
+              o.push(t.get(keys[i]));
               n.delete(keys[i]);
             }
           }),
@@ -759,7 +759,7 @@ export const SMap = extendObject(SContainer, {
   })
 });
 
-immutable.Map.prototype[handlerKey] = SMap;
+immutable.Map.prototype[handlerKey] = STable;
 
 // find a protocol handler for this object
 export function handle(obj) {
