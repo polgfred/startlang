@@ -215,6 +215,20 @@ SRuntime.prototype.globals = {
     throw new ScriptExit();
   },
 
+  // types/casts
+
+  num(value) {
+    let n = parseFloat(value);
+    if (n != n) {
+      throw new Error('cannot convert value to a number');
+    }
+    return n;
+  },
+
+  str(value) {
+    return handle(value).repr(value);
+  },
+
   time(...args) {
     return STime.create(args);
   },
@@ -227,13 +241,7 @@ SRuntime.prototype.globals = {
     return STable.create(pairs);
   },
 
-  num(value) {
-    let result = parseFloat(value);
-    if (result != result) {
-      throw new Error('result is not a number');
-    }
-    return result;
-  },
+  // some basic utilities
 
   rand() {
     return Math.random();
