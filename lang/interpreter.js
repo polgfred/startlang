@@ -86,19 +86,23 @@ export class SInterpreter extends EventEmitter {
     return loop(0);
   }
 
+  loopBody(body, loop, next) {
+    return this.visit(body).then((bres) => {
+      let flow = bres.flow;
+      if (flow == 'return') {
+        return bres; // propagate
+      } else if (!flow || flow == 'next') {
+        return loop(next);
+      }
+    });
+  }
+
   repeatNode(node) {
     return this.visit(node.times).then((tres) => {
       // recursive loop over range
       let loop = (count) => {
         if (count < tres.rv) {
-          return this.visit(node.body).then((bres) => {
-            let flow = bres.flow;
-            if (flow == 'return') {
-              return bres; // propagate
-            } else if (!flow || flow == 'next') {
-              return loop(count + 1);
-            }
-          });
+          return this.loopBody(node.body, loop, count + 1);
         }
       };
       return loop(0);
@@ -109,19 +113,12 @@ export class SInterpreter extends EventEmitter {
     return this.visit(node.from).then((fres) => {
       return this.visit(node.to).then((tres) => {
         let bp = node.by ? this.visit(node.by) : Promise.resolve({ rv: 1 });
-        return bp.then((byres) => {
+        return bp.then((bres) => {
           // recursive loop over range
           let loop = (count) => {
             if (count <= tres.rv) {
               this.ctx.set(node.name, count);
-              return this.visit(node.body).then((bres) => {
-                let flow = bres.flow;
-                if (flow == 'return') {
-                  return bres; // propagate
-                } else if (!flow || flow == 'next') {
-                  return loop(count + byres.rv);
-                }
-              });
+              return this.loopBody(node.body, loop, count + bres.rv);
             }
           };
           return loop(fres.rv);
@@ -136,14 +133,7 @@ export class SInterpreter extends EventEmitter {
       let loop = (iter) => {
         if (iter.more) {
           this.ctx.set(node.name, iter.value);
-          return this.visit(node.body).then((bres) => {
-            let flow = bres.flow;
-            if (flow == 'return') {
-              return bres; // propagate
-            } else if (!flow || flow == 'next') {
-              return loop(iter.next());
-            }
-          });
+          return this.loopBody(node.body, loop, iter.next());
         }
       };
       // convert the range to an enumeration
@@ -156,14 +146,7 @@ export class SInterpreter extends EventEmitter {
     let loop = () => {
       return this.visit(node.cond).then((cres) => {
         if (cres.rv) {
-          return this.visit(node.body).then((bres) => {
-            let flow = bres.flow;
-            if (flow == 'return') {
-              return bres; // propagate
-            } else if (!flow || flow == 'next') {
-              return loop();
-            }
-          });
+          return this.loopBody(node.body, loop);
         }
       });
     };
