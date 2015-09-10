@@ -266,8 +266,8 @@ export class SInterpreter extends EventEmitter {
   }
 
   letIndexNode(node) {
-    return this.visit(node.value).then((vres) => {
-      return this.visitIndexes(node.indexes).then((rres) => {
+    return this.visitIndexes(node.indexes).then((rres) => {
+      return this.visit(node.value).then((vres) => {
         this.ctx.setindex(node.name, rres, vres.rv);
         // return the rv/lv pair for this assignment
         return {
