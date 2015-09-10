@@ -7,10 +7,12 @@ colors = list("black",
 
 box = rect(0, 0, 10, 10)
 
-for t in 0, 72 do
-  move box, t*5, t*5
-  rotate box, t*5
-  scale box, t/2
-  fill box, colors[floor(t/6) % len(colors)]
+count t from 0 to 72 do
+  with box do
+    move t*5, t*5
+    rotate t*5
+    scale t/2
+    fill colors[floor(t/6) % len(colors)]
+  end
   sleep 0.05
 end

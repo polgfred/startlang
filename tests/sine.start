@@ -8,7 +8,7 @@ pi = 4*atan(1)
 torad = pi/180
 todeg = 180/pi
 
-for x1 in -360,355,5 do
+count x1 from -360 to 355 by 5 do
   x2 = x1+5
   y1 = 5*todeg*sin(torad*x1/2)
   y2 = 5*todeg*sin(torad*x2/2)
