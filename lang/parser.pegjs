@@ -152,8 +152,8 @@ While
     }
 
 With
-  = 'with' WB __ sym:Symbol __ '=' __ value:Value __ 'do' WB __ body:EndBody {
-      return buildNode('with', { name: sym, value: value, body: body });
+  = 'with' WB __ sym:Symbol __ indexes:Dimensions? __ '=' __ value:Value __ 'do' WB __ body:EndBody {
+      return buildNode('with', { name: sym, indexes: indexes, value: value, body: body });
     }
   / 'with' WB __ value:Value __ 'do' WB __ body:EndBody {
       return buildNode('with', { name: null, value: value, body: body });

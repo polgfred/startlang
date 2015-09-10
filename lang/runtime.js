@@ -61,8 +61,8 @@ export class SRuntime {
   }
 
   // push and pop values onto the with stack
-  pushw(warg, wassn) {
-    this.wst = this.wst.push([ warg, wassn ]);
+  pushw(val) {
+    this.wst = this.wst.push(val);
   }
 
   popw() {
@@ -145,16 +145,16 @@ export class SRuntime {
     // a lot, so it needs to be crazy fast.
 
     // first try to find the function to call
-    let fn, wobj, wassn, wflag = false;
+    let fn, wflag = false;
     if (!this.wst.isEmpty()) {
-      [ wobj, wassn ] = this.wst.first();
+      let { rv: wrv, lv: wlv } = this.wst.first();
       // try to look up a method of the object on the with stack
-      fn = handle(wobj).methods[name];
+      fn = handle(wrv).methods[name];
       if (fn) {
         // if we found one, prepend the with obj onto the arg list
         wflag = true;
-        args.unshift(wobj);
-        assn.unshift(wassn);
+        args.unshift(wrv);
+        assn.unshift(wlv);
       }
     }
     if (!fn) {
@@ -196,7 +196,7 @@ export class SRuntime {
               // to the replaced value
               this.wst = this.wst.withMutations((m) => {
                 m.pop();
-                m.push([ r, wassn ]);
+                m.push({ rv: r, lv: a });
               });
             }
           }
@@ -601,6 +601,10 @@ export const SList = extendObject(SContainer, {
       end = adjustIndex(end, l.size);
       // inclusive
       return l.slice(start, end + 1);
+    },
+
+    add(l, ...values) {
+      return { '@@__assign__@@': l.push(...values) };
     },
 
     insert(l, start, ...values) {

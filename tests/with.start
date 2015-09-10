@@ -1,0 +1,55 @@
+with list() do
+  add(1)
+  add(2)
+  let l = add(3)
+end
+
+print l
+
+l = list(list())
+
+with l[1] do
+  add(1)
+  add(2)
+  add(3)
+end
+
+print l
+
+with l = list() do
+  add(1)
+  add(2)
+  add(3)
+end
+
+print l
+
+l = list()
+
+with l[1] = list() do
+  add(1)
+  add(2)
+  add(3)
+end
+
+print l
+
+t = table("x", list())
+
+with t["x"] do
+  add(1)
+  add(2)
+  add(3)
+end
+
+print t
+
+t = table()
+
+with t["x"] = table() do
+  put("a", 1)
+  put("b", 2)
+  put("c", 3)
+end
+
+print t

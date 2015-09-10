@@ -170,23 +170,6 @@ export class SInterpreter extends EventEmitter {
     return loop();
   }
 
-  withNode(node) {
-    return this.visit(node.value).then((vres) => {
-      if (node.name) {
-        this.ctx.set(node.name, vres.rv);
-        this.ctx.pushw(vres.rv, { name: node.name });
-      } else {
-        this.ctx.pushw(vres.rv, vres.lv);
-      }
-      return this.visit(node.body).then((bres) => {
-        this.ctx.popw();
-      });
-    }, (err) => {
-      this.ctx.popw();
-      throw err;
-    });
-  }
-
   ifNode(node) {
     return this.visit(node.cond).then((cres) => {
       if (cres.rv) {
@@ -268,7 +251,9 @@ export class SInterpreter extends EventEmitter {
 
   letNode(node) {
     return this.visit(node.value).then((vres) => {
-      return this.ctx.set(node.name, vres.rv);
+      this.ctx.set(node.name, vres.rv);
+      // return the rv/lv pair for this assignment
+      return { rv: vres.rv, lv: { name: node.name } };
     });
   }
 
@@ -300,8 +285,30 @@ export class SInterpreter extends EventEmitter {
   letIndexNode(node) {
     return this.visit(node.value).then((vres) => {
       return this.visitIndexes(node.indexes).then((rres) => {
-        return this.ctx.setindex(node.name, rres, vres.rv);
+        this.ctx.setindex(node.name, rres, vres.rv);
+        // return the rv/lv pair for this assignment
+        return {
+          rv: vres.rv,
+          lv: { name: node.name, indexes: rres }
+        };
       });
+    });
+  }
+
+  withNode(node) {
+    let v = node.name ?
+      // treat this as a let/letIndex and let it do its thing
+      (node.indexes ? this.letIndexNode(node) : this.letNode(node)) :
+      // value will have an lv if it's a var/index
+      this.visit(node.value);
+    return v.then((vres) => {
+      this.ctx.pushw(vres);
+      return this.visit(node.body).then((bres) => {
+        this.ctx.popw();
+      });
+    }, (err) => {
+      this.ctx.popw();
+      throw err;
     });
   }
 
