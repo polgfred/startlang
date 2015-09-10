@@ -288,6 +288,9 @@ export class SInterpreter extends EventEmitter {
       this.ctx.pushw(vres);
       return this.visit(node.body).then((bres) => {
         this.ctx.popw();
+        if (bres.flow == 'return') {
+          return bres; // propagate
+        }
       });
     }, (err) => {
       this.ctx.popw();

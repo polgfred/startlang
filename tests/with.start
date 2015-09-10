@@ -53,3 +53,15 @@ with t["x"] = table() do
 end
 
 print t
+
+begin fred do
+  with l = list() do
+    add(1)
+    return l
+    print "shouldn't get here1"
+    add(2)
+  end
+  print "shouldn't get here2"
+end
+
+print fred()
