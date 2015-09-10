@@ -436,10 +436,16 @@ Reserved
   / 'then'     WB
   / 'else'     WB
   / 'end'      WB
+  / 'repeat'   WB
+  / 'do'       WB
+  / 'count'    WB
+  / 'from'     WB
+  / 'to'       WB
+  / 'by'       WB
   / 'for'      WB
   / 'in'       WB
-  / 'do'       WB
   / 'while'    WB
+  / 'with'     WB
   / 'begin'    WB
   / 'break'    WB
   / 'next'     WB
