@@ -27,8 +27,7 @@ export class SInterpreter extends EventEmitter {
 
   // main node visitor
   visit(node) {
-    // optimize literals: skip conversion, frames, events, and error handling,
-    // and extract the value directly from the node without a function call
+    // optimize literals: extract the value directly without a function call
     if (node.type == 'literal') {
       return Promise.resolve({ rv: node.value });
     }
@@ -58,8 +57,6 @@ export class SInterpreter extends EventEmitter {
       if (result == null || !hasOwnProperty.call(result, 'rv')) {
         result = { rv: result };
       }
-      // notify caller that we're exiting
-      this.emit('exit', node, result);
       return result;
     }).catch((err) => {
       // attach the node where the error occured
