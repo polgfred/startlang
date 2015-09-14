@@ -3,7 +3,6 @@
 import React from 'react';
 import immutable from 'immutable';
 import { SRuntime, SBase, handle, handlerKey } from './runtime';
-import { extendObject } from './utils';
 
 let graphicsDisplay = document.getElementById('display');
 
@@ -47,7 +46,9 @@ function refresh() {
   });
 }
 
-SGRuntime.prototype.globals = extendObject(SRuntime.prototype.globals, {
+SGRuntime.prototype.globals = {
+  __proto__: SRuntime.prototype.globals,
+
   print(...values) {
     if (values.length > 0) {
       for (let v of values) {
@@ -110,10 +111,12 @@ SGRuntime.prototype.globals = extendObject(SRuntime.prototype.globals, {
 
   polygon(...coords) {
   }
-});
+};
 
 // all shapes have these basic utilities in common
-export const SShape = extendObject(SBase, {
+export const SShape = {
+  __proto__: SBase,
+
   repr(shape) {
     return `*${shape.type}*`;
   },
@@ -143,43 +146,63 @@ export const SShape = extendObject(SBase, {
     remove(el) {
     }
   }
-});
+};
 
-export const SRect = extendObject(SShape, {
-  methods: extendObject(SShape.methods, {
+export const SRect = {
+  __proto__: SShape,
+
+  methods: {
+    __proto__: SShape.methods,
+
     move(el, x, y) {
     }
-  })
-});
+  }
+};
 
-export const SCircle = extendObject(SShape, {
-  methods: extendObject(SShape.methods, {
+export const SCircle = {
+  __proto__: SShape,
+
+  methods: {
+    __proto__: SShape.methods,
+
     move(el, x, y) {
     }
-  })
-});
+  }
+};
 
-export const SEllipse = extendObject(SShape, {
-  methods: extendObject(SShape.methods, {
+export const SEllipse = {
+  __proto__: SShape,
+
+  methods: {
+    __proto__: SShape.methods,
+
     move(el, x, y) {
     }
-  })
-});
+  }
+};
 
-export const SLine = extendObject(SShape, {
-  methods: extendObject(SShape.methods, {
+export const SLine = {
+  __proto__: SShape,
+
+  methods: {
+    __proto__: SShape.methods,
+
     move(el, x, y) {
     }
-  })
-});
+  }
+};
 
 // used for both polylines and polygons, as it just moves points
-export const SPolygon = extendObject(SShape, {
-  methods: extendObject(SShape.methods, {
+export const SPolygon = {
+  __proto__: SShape,
+
+  methods: {
+    __proto__: SShape.methods,
+
     move(el, x, y) {
     }
-  })
-});
+  }
+};
 
 let Shape = immutable.Record({
   type: null, // rect, circle, ellipse, etc.

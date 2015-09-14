@@ -2,7 +2,6 @@
 
 import moment from 'moment';
 import immutable from 'immutable';
-import { extendObject } from './utils';
 
 export class ScriptExit extends Error {}
 
@@ -309,21 +308,27 @@ export const SBase = {
 
 // Handler definitions
 
-export const SNone = extendObject(SBase, {
+export const SNone = {
+  __proto__: SBase,
+
   repr() {
     return '*none*';
   }
-});
+};
 
-export const SBoolean = extendObject(SBase, {
+export const SBoolean = {
+  __proto__: SBase,
+
   repr(b) {
     return b ? '*true*' : '*false*';
   }
-});
+};
 
 Boolean.prototype[handlerKey] = SBoolean;
 
-export const SNumber = extendObject(SBase, {
+export const SNumber = {
+  __proto__: SBase,
+
   repr(n) {
     if (isFinite(n)) {
       return String(n);
@@ -393,7 +398,9 @@ export const SNumber = extendObject(SBase, {
     '~': (right) => ~right
   },
 
-  binaryops: extendObject(SBase.binaryops, {
+  binaryops: {
+    __proto__: SBase.binaryops,
+
     // math
     '+': checkMathOp((left, right) => left + right),
     '-': checkMathOp((left, right) => left - right),
@@ -404,12 +411,14 @@ export const SNumber = extendObject(SBase, {
     '&': checkMathOp((left, right) => left & right),
     '|': checkMathOp((left, right) => left | right),
     '^': checkMathOp((left, right) => left ^ right)
-  })
-});
+  }
+};
 
 Number.prototype[handlerKey] = SNumber;
 
-export const SString = extendObject(SBase, {
+export const SString = {
+  __proto__: SBase,
+
   repr(s) {
     return s;
   },
@@ -475,10 +484,12 @@ export const SString = extendObject(SBase, {
     }
   },
 
-  binaryops: extendObject(SBase.binaryops, {
+  binaryops: {
+    __proto__: SBase.binaryops,
+
     '$': (left, right) => left + handle(right).repr(right)
-  })
-});
+  }
+};
 
 String.prototype[handlerKey] = SString;
 
@@ -488,7 +499,9 @@ function checkTimeUnit(unit) {
   }
 }
 
-export const STime = extendObject(SBase, {
+export const STime = {
+  __proto__: SBase,
+
   create(args) {
     if (args.length == 0) {
       return moment();
@@ -538,12 +551,14 @@ export const STime = extendObject(SBase, {
     }
   },
 
-  binaryops: extendObject(SBase.binaryops, {
+  binaryops: {
+    __proto__: SBase.binaryops,
+
     // comparison operators need to cast to number first
     '=' : (left, right) => +left  == +right,
     '!=': (left, right) => +left !== +right
-  })
-});
+  }
+};
 
 moment.fn[handlerKey] = STime;
 
@@ -559,16 +574,20 @@ function compareElementsReversed(left, right) {
   return h.binaryops['<'](left, right) ? 1 : (h.binaryops['>'](left, right) ? -1 : 0);
 }
 
-export const SContainer = extendObject(SBase, {
+export const SContainer = {
+  __proto__: SBase,
+
   binaryops: {
     '=' : (left, right) =>  left.equals(right),
     '!=': (left, right) => !left.equals(right)
   }
-});
+};
 
 // Lists
 
-export const SList = extendObject(SContainer, {
+export const SList = {
+  __proto__: SContainer,
+
   create(items) {
     return immutable.List(items);
   },
@@ -695,16 +714,20 @@ export const SList = extendObject(SContainer, {
     }
   },
 
-  binaryops: extendObject(SContainer.binaryops, {
+  binaryops: {
+    __proto__: SContainer.binaryops,
+
     '$': checkOp((left, right) => left.concat(right))
-  })
-});
+  }
+};
 
 immutable.List.prototype[handlerKey] = SList;
 
 // Tables
 
-export const STable = extendObject(SContainer, {
+export const STable = {
+  __proto__: SContainer,
+
   create(pairs) {
     return immutable.Map().withMutations((n) => {
       for (let i = 0; i < pairs.length; i += 2) {
@@ -767,10 +790,12 @@ export const STable = extendObject(SContainer, {
     }
   },
 
-  binaryops: extendObject(SContainer.binaryops, {
+  binaryops: {
+    __proto__: SContainer.binaryops,
+
     '$': checkOp((left, right) => left.merge(right))
-  })
-});
+  }
+};
 
 immutable.Map.prototype[handlerKey] = STable;
 
