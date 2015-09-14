@@ -1,5 +1,6 @@
 'use strict';
 
+import readline from 'readline';
 import moment from 'moment';
 import immutable from 'immutable';
 
@@ -256,6 +257,20 @@ SRuntime.prototype.globals = {
       [assignKey]: [ b, a ],
       [resultKey]: null
     };
+  },
+
+  input(message) {
+    return new Promise((resolve) => {
+      let rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout
+      });
+
+      rl.question(message, function(answer) {
+        rl.close();
+        resolve(answer);
+      });
+    });
   },
 
   print(...values) {
