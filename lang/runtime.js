@@ -39,6 +39,11 @@ export function adjustIndex(index, size) {
   return index > 0 ? index - 1 : Math.max(0, size + index);
 }
 
+// for runtime API functions to indicate that their result may be assigned
+// back to lvalued arguments
+let assignKey = Symbol('START_ASSIGN'),
+    resultKey = Symbol('START_RESULT');
+
 // Environment
 
 export class SRuntime {
@@ -171,7 +176,7 @@ export class SRuntime {
     let res = fn.call(this, ...args);
     let repl, i, r, a;
     if (res) {
-      repl = res['@@__assign__@@'];
+      repl = res[assignKey];
       if (repl) {
         // if this result contains replacement args, assign them
         if (!Array.isArray(repl)) {
@@ -202,7 +207,7 @@ export class SRuntime {
           }
         }
         // grab an explicit result, or the first replacement
-        res = res['@@__result__@@'] || repl[0];
+        res = res[resultKey] || repl[0];
       }
     }
 
@@ -249,8 +254,8 @@ SRuntime.prototype.globals = {
 
   swap(a, b) {
     return {
-      '@@__assign__@@': [ b, a ],
-      '@@__result__@@': null
+      [assignKey]: [ b, a ],
+      [resultKey]: null
     };
   },
 
@@ -450,11 +455,11 @@ export const SString = extendObject(SBase, {
     },
 
     replace(s, search, to) {
-      return { '@@__assign__@@': s.replace(search, to) };
+      return { [assignKey]: s.replace(search, to) };
     },
 
     reverse(s) {
-      return { '@@__assign__@@': s.split('').reverse().join('') };
+      return { [assignKey]: s.split('').reverse().join('') };
     },
 
     split(s, delim) {
@@ -509,22 +514,22 @@ export const STime = extendObject(SBase, {
 
     add(t, n, unit) {
       checkTimeUnit(unit);
-      return { '@@__assign__@@': moment(t).add(n, unit) };
+      return { [assignKey]: moment(t).add(n, unit) };
     },
 
     sub(t, n, unit) {
       checkTimeUnit(unit);
-      return { '@@__assign__@@': moment(t).subtract(n, unit) };
+      return { [assignKey]: moment(t).subtract(n, unit) };
     },
 
     startof(t, unit) {
       checkTimeUnit(unit);
-      return { '@@__assign__@@': moment(t).startOf(unit) };
+      return { [assignKey]: moment(t).startOf(unit) };
     },
 
     endof(t, unit) {
       checkTimeUnit(unit);
-      return { '@@__assign__@@': moment(t).endOf(unit) };
+      return { [assignKey]: moment(t).endOf(unit) };
     },
 
     diff(t1, t2, unit) {
@@ -612,13 +617,13 @@ export const SList = extendObject(SContainer, {
     },
 
     add(l, ...values) {
-      return { '@@__assign__@@': l.push(...values) };
+      return { [assignKey]: l.push(...values) };
     },
 
     insert(l, start, ...values) {
       // adjust for 1-based indexes and negative offsets
       start = adjustIndex(start, l.size);
-      return { '@@__assign__@@': l.splice(start, 0, ...values) };
+      return { [assignKey]: l.splice(start, 0, ...values) };
     },
 
     remove(l, start, end) {
@@ -627,15 +632,15 @@ export const SList = extendObject(SContainer, {
       if (end == null) {
         // remove and return a single element
         return {
-          '@@__result__@@': l.get(start),
-          '@@__assign__@@': l.splice(start, 1)
+          [resultKey]: l.get(start),
+          [assignKey]: l.splice(start, 1)
         }
       } else {
         end = adjustIndex(end, l.size);
         // inclusive
         return {
-          '@@__result__@@': l.slice(start, end + 1),
-          '@@__assign__@@': l.splice(start, end - start + 1)
+          [resultKey]: l.slice(start, end + 1),
+          [assignKey]: l.splice(start, end - start + 1)
         };
       }
     },
@@ -666,24 +671,20 @@ export const SList = extendObject(SContainer, {
     },
 
     sort(l) {
-      return {
-        '@@__assign__@@': l.sort(compareElements)
-      };
+      return { [assignKey]: l.sort(compareElements) };
     },
 
     rsort(l) {
-      return {
-        '@@__assign__@@': l.sort(compareElementsReversed)
-      };
+      return { [assignKey]: l.sort(compareElementsReversed) };
     },
 
     reverse(l) {
-      return { '@@__assign__@@': l.reverse() };
+      return { [assignKey]: l.reverse() };
     },
 
     shuffle(l) {
       return {
-        '@@__assign__@@': immutable.List().withMutations((m) => {
+        [assignKey]: immutable.List().withMutations((m) => {
           for (let i = 0; i < l.size; ++i) {
             let j = Math.floor(Math.random() * i);
             m.set(i, m.get(j));
@@ -740,7 +741,7 @@ export const STable = extendObject(SContainer, {
 
     put(t, ...pairs) {
       return {
-        '@@__assign__@@': t.withMutations((n) => {
+        [assignKey]: t.withMutations((n) => {
           for (let i = 0; i < pairs.length; i += 2) {
             n.set(pairs[i], pairs[i + 1]);
           }
@@ -753,14 +754,14 @@ export const STable = extendObject(SContainer, {
       let o = [];
 
       return {
-        '@@__assign__@@':
+        [assignKey]:
           t.withMutations((n) => {
             for (let i = 0; i < keys.length; ++i) {
               o.push(t.get(keys[i]));
               n.delete(keys[i]);
             }
           }),
-        '@@__result__@@':
+        [resultKey]:
           o.length == 1 ? o[0] : immutable.List(o)
       };
     }
