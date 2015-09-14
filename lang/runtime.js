@@ -165,7 +165,7 @@ export class SRuntime {
     if (!fn) {
       // try to look up a method of the first argument, or a global function
       fn = (args.length > 0 && handle(args[0]).methods[name]) ||
-            this.globals[name];
+            this.constructor.globals[name];
     }
     if (!fn) {
       // couldn't find it
@@ -215,7 +215,7 @@ export class SRuntime {
   }
 }
 
-SRuntime.prototype.globals = {
+SRuntime.globals = {
   exit() {
     throw new ScriptExit();
   },

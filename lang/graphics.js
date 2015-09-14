@@ -46,8 +46,8 @@ function refresh() {
   });
 }
 
-SGRuntime.prototype.globals = {
-  __proto__: SRuntime.prototype.globals,
+SGRuntime.globals = {
+  __proto__: SRuntime.globals,
 
   print(...values) {
     if (values.length > 0) {
