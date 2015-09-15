@@ -9,12 +9,10 @@
     }
 
     // show the type first
-    var node = { type: type };
+    let node = { type: type };
 
     // then the passed-in attributes
-    for (var p in attrs) {
-      node[p] = attrs[p];
-    }
+    Object.assign(node, attrs);
 
     // then the source metadata
     if (options.meta) {
@@ -32,61 +30,61 @@
   // take a base name, dimensions, and (optionally) a value, and construct an indexish node
   function buildIndex(name, indexes, value) {
     if (value === undefined) {
-      return buildNode('index', { name: name, indexes: indexes });
+      return buildNode('index', { name, indexes });
     } else {
-      return buildNode('letIndex', { name: name, indexes: indexes, value: value });
+      return buildNode('letIndex', { name, indexes, value });
     }
   }
 
   // take a chain of equal-precedence logical exprs and construct a left-folding tree
-  function buildLogicalOp(first, rest) {
+  function buildLogicalOp(left, rest) {
     if (rest.length == 0) {
-      return first;
+      return left;
     } else {
-      var next = rest.shift(),
-          node = buildNode('logicalOp', { op: next[0], left: first, right: next[1] });
+      let [ op, right ] = rest.shift(),
+          node = buildNode('logicalOp', { op, left, right });
       return buildLogicalOp(node, rest);
     }
   }
 
   // take a chain of equal-precedence binary exprs and construct a left-folding tree
-  function buildBinaryOp(first, rest) {
+  function buildBinaryOp(left, rest) {
     if (rest.length == 0) {
-      return first;
+      return left;
     } else {
-      var next = rest.shift(),
-          node = buildNode('binaryOp', { op: next[0], left: first, right: next[1] });
+      let [ op, right ] = rest.shift(),
+          node = buildNode('binaryOp', { op, left, right });
       return buildBinaryOp(node, rest);
     }
   }
 
   // same, but fold right
-  function buildBinaryOpRight(rest, last) {
+  function buildBinaryOpRight(rest, right) {
     if (rest.length == 0) {
-      return last;
+      return right;
     } else {
-      var next = rest.pop(),
-          node = buildNode('binaryOp', { op: next[0], left: next[1], right: last });
+      let [ op, left ] = rest.pop(),
+          node = buildNode('binaryOp', { op, left, right });
       return buildBinaryOpRight(rest, node);
     }
   }
 
-  function buildUnaryOpRight(ops, last) {
+  function buildUnaryOpRight(ops, right) {
     if (ops.length == 0) {
-      return last;
+      return right;
     } else {
-      var next = ops.pop(),
-          node = buildNode('unaryOp', { op: next, right: last });
+      let op = ops.pop(),
+          node = buildNode('unaryOp', { op, right });
       return buildUnaryOpRight(ops, node);
     }
   }
 
-  function buildString(first, rest) {
+  function buildString(left, rest) {
     if (rest.length == 0) {
-      return first;
+      return left;
     } else {
-      var next = rest.shift(),
-          node = buildNode('binaryOp', { op: '$', left: first, right: next });
+      let right = rest.shift(),
+          node = buildNode('binaryOp', { op: '$', left, right });
       return buildString(node, rest);
     }
   }
@@ -104,7 +102,7 @@ start
 
 Block
   = elems:( __ elem:BlockElement EOL { return elem; } )* {
-      return buildNode('block', { elems: elems });
+      return buildNode('block', { elems });
     }
 
 BlockElement
@@ -122,49 +120,49 @@ Control
 
 If
   = 'if' WB __ cond:Value __ 'then' WB __ tbody:MiddleBody __ 'else' WB __ fbody:EndBody {
-      return buildNode('if', { cond: cond, tbody: tbody, fbody: fbody });
+      return buildNode('if', { cond, tbody, fbody });
     }
   / 'if' WB __ cond:Value __ 'then' WB __ tbody:EndBody {
-      return buildNode('if', { cond: cond, tbody: tbody });
+      return buildNode('if', { cond, tbody });
     }
 
 Repeat
   = 'repeat' WB __ times:Value __ 'do' WB __ body:EndBody {
-      return buildNode('repeat', { times: times, body: body });
+      return buildNode('repeat', { times, body });
     }
 
 Count
-  = 'count' WB __ sym:Symbol __ 'from' WB __ from:Value __ 'to' WB __ to:Value __ 'by' WB __ by:Value __ 'do' WB __ body:EndBody {
-      return buildNode('count', { name: sym, from: from, to: to, by: by, body: body });
+  = 'count' WB __ name:Symbol __ 'from' WB __ from:Value __ 'to' WB __ to:Value __ 'by' WB __ by:Value __ 'do' WB __ body:EndBody {
+      return buildNode('count', { name, from, to, by, body });
     }
-  / 'count' WB __ sym:Symbol __ 'from' WB __ from:Value __ 'to' WB __ to:Value __ 'do' WB __ body:EndBody {
-      return buildNode('count', { name: sym, from: from, to: to, body: body });
+  / 'count' WB __ name:Symbol __ 'from' WB __ from:Value __ 'to' WB __ to:Value __ 'do' WB __ body:EndBody {
+      return buildNode('count', { name, from, to, body });
     }
 
 For
-  = 'for' WB __ sym:Symbol __ 'in' WB __ range:Value __ 'do' WB __ body:EndBody {
-      return buildNode('for', { name: sym, range: range, body: body });
+  = 'for' WB __ name:Symbol __ 'in' WB __ range:Value __ 'do' WB __ body:EndBody {
+      return buildNode('for', { name, range, body });
     }
 
 While
   = 'while' WB __ cond:Value __ 'do' WB __ body:EndBody {
-      return buildNode('while', { cond: cond, body: body });
+      return buildNode('while', { cond, body });
     }
 
 With
-  = 'with' WB __ sym:Symbol __ indexes:Dimensions? __ '=' __ value:Value __ 'do' WB __ body:EndBody {
-      return buildNode('with', { name: sym, indexes: indexes, value: value, body: body });
+  = 'with' WB __ name:Symbol __ indexes:Dimensions? __ '=' __ value:Value __ 'do' WB __ body:EndBody {
+      return buildNode('with', { name, indexes, value, body });
     }
   / 'with' WB __ value:Value __ 'do' WB __ body:EndBody {
-      return buildNode('with', { name: null, value: value, body: body });
+      return buildNode('with', { name: null, value, body });
     }
 
 Begin
-  = 'begin' WB __ sym:Symbol __ 'do' WB __ body:EndBody {
-      return buildNode('begin', { name: sym, params: null, body: body });
+  = 'begin' WB __ name:Symbol __ 'do' WB __ body:EndBody {
+      return buildNode('begin', { name, params: null, body });
     }
-  / 'begin' WB __ sym:Symbol __ '(' EOL? __ params:Params? __ ')' __ 'do' WB __ body:EndBody {
-      return buildNode('begin', { name: sym, params: params, body: body });
+  / 'begin' WB __ name:Symbol __ '(' EOL? __ params:Params? __ ')' __ 'do' WB __ body:EndBody {
+      return buildNode('begin', { name, params, body });
     }
 
 MiddleBody
@@ -180,7 +178,7 @@ EndBody
     }
 
 Params
-  = first:Symbol rest:( __ ',' __ EOL? __ sym:Symbol { return sym; } )* {
+  = first:Symbol rest:( __ ',' __ EOL? __ name:Symbol { return name; } )* {
       return [first].concat(rest);
     }
 
@@ -197,13 +195,13 @@ Flow
       return buildNode('next');
     }
   / 'return' WB __ result:Value? {
-      return buildNode('return', { result: result });
+      return buildNode('return', { result });
     }
 
 Let
   = ( 'let' WB __ )? name:Symbol __ indexes:Dimensions? __ '=' __ value:Value {
       if (!indexes) {
-        return buildNode('let', { name: name, value: value });
+        return buildNode('let', { name, value });
       } else {
         return buildIndex(name, indexes, value);
       }
@@ -217,13 +215,13 @@ Call
   //  2- try to match zero or more parenthesized arguments
   //  3- match a bare call with no parens or args
   = name:Symbol __ args:Values {
-      return buildNode('call', { name: name, args: args });
+      return buildNode('call', { name, args });
     }
   / name:Symbol __ '(' __ EOL? __ args:Values? __ ')' {
-      return buildNode('call', { name: name, args: args });
+      return buildNode('call', { name, args });
     }
   / name:Symbol {
-      return buildNode('call', { name: name, args: null });
+      return buildNode('call', { name, args: null });
     }
 
 // Values
@@ -239,7 +237,7 @@ Value 'a value'
 // Conditions
 
 ConjExpr
-  = first:NotExpr rest:( __ op:ConjOp __ e:NotExpr { return [op, e]; } )* {
+  = first:NotExpr rest:( __ op:ConjOp __ e:NotExpr { return [ op, e ]; } )* {
       return buildLogicalOp(first, rest);
     }
 
@@ -249,7 +247,7 @@ ConjOp
 
 NotExpr
   = op:NotOp __ right:RelExpr {
-      return buildNode('logicalOp', { op: op, right: right });
+      return buildNode('logicalOp', { op, right });
     }
   / RelExpr
 
@@ -258,7 +256,7 @@ NotOp
 
 RelExpr
   = left:ConcatExpr __ op:RelOp __ right:ConcatExpr {
-      return buildNode('binaryOp', { op: op, left: left, right: right });
+      return buildNode('binaryOp', { op, left, right });
     }
   / ConcatExpr
 
@@ -273,7 +271,7 @@ RelOp
 // Concatenation
 
 ConcatExpr
-  = first:BitExpr rest:( __ op:ConcatOp __ e:BitExpr { return [op, e]; } )* {
+  = first:BitExpr rest:( __ op:ConcatOp __ e:BitExpr { return [ op, e ]; } )* {
       return buildBinaryOp(first, rest);
     }
 
@@ -283,7 +281,7 @@ ConcatOp
 // Math
 
 BitExpr
-  = first:AddExpr rest:( __ op:BitOp __ e:AddExpr { return [op, e]; } )* {
+  = first:AddExpr rest:( __ op:BitOp __ e:AddExpr { return [ op, e ]; } )* {
       return buildBinaryOp(first, rest);
     }
 
@@ -293,7 +291,7 @@ BitOp
   / '^'
 
 AddExpr
-  = first:MultExpr rest:( __ op:AddOp __ e:MultExpr { return [op, e]; } )* {
+  = first:MultExpr rest:( __ op:AddOp __ e:MultExpr { return [ op, e ]; } )* {
       return buildBinaryOp(first, rest);
     }
 
@@ -302,7 +300,7 @@ AddOp
   / '-'
 
 MultExpr
-  = first:UnaryExpr rest:( __ op:MultOp __ e:UnaryExpr { return [op, e]; } )* {
+  = first:UnaryExpr rest:( __ op:MultOp __ e:UnaryExpr { return [ op, e ]; } )* {
       return buildBinaryOp(first, rest);
     }
 
@@ -326,18 +324,18 @@ UnaryOp
 
 CallExpr
   = name:Symbol __ '(' __ EOL? __ args:Values? __ ')' {
-      return buildNode('call', { name: name, args: args });
+      return buildNode('call', { name, args });
     }
   / IndexExpr
 
 // Indexes
 
 IndexExpr
-  = sym:Symbol __ indexes:Dimensions? {
+  = name:Symbol __ indexes:Dimensions? {
       if (!indexes) {
-        return buildNode('var', { name: sym });
+        return buildNode('var', { name });
       } else {
-        return buildIndex(sym, indexes);
+        return buildIndex(name, indexes);
       }
     }
   / PrimaryExpr
@@ -348,11 +346,11 @@ Dimensions
     }
 
 Dimension
-  = '[' __ v:Value __ ']' {
-      return v;
+  = '[' __ val:Value __ ']' {
+      return val;
     }
-  / '.' __ sym:Symbol {
-      return buildNode('literal', { value: sym });
+  / '.' __ name:Symbol {
+      return buildNode('literal', { value: name });
     }
 
 PrimaryExpr
@@ -367,7 +365,7 @@ PrimaryExpr
 String 'a string'
   = '"' rest:StringSegment* '"' {
       // if the first segment isn't a string literal, make it one
-      var first = (rest.length > 0 && rest[0].type == 'literal' && typeof rest[0].value == 'string') ?
+      let first = (rest.length > 0 && rest[0].type == 'literal' && typeof rest[0].value == 'string') ?
                     rest.shift() :
                     buildNode('literal', { value: '' });
 
