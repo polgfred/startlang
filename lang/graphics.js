@@ -1,10 +1,23 @@
 'use strict';
 
+import $ from 'jquery';
 import React from 'react';
 import immutable from 'immutable';
 import { SRuntime, SBase, handle, handlerKey } from './runtime';
 
-let graphicsDisplay = document.getElementById('display');
+global.$ = $;
+
+const graphicsDisplay = document.getElementById('display');
+
+// immutable record types for graphical data
+
+export const Shape = immutable.Record({
+  key: null, // identifier for lookup
+  type: null, // rect, circle, ellipse, etc.
+  transform: null, // transformation matrix
+  origin: immutable.List([ 0, 0 ]), // origin for transforms
+  attrs: immutable.Map() // svg attrs for this element
+});
 
 export class SGRuntime extends SRuntime {
   constructor() {
@@ -14,12 +27,15 @@ export class SGRuntime extends SRuntime {
   }
 
   pushShape(data) {
-    let rnd = Math.floor(Math.random() * (2 << 23));
+    let rnd = Math.floor(Math.random() * (2 << 23)),
+        key = ('000000' + rnd.toString(16)).substr(-6);
+
     let shape = new Shape({
+      key: key,
       type: data.type,
-      key: ('000000' + rnd.toString(16)).substr(-6),
-      attrs: immutable.Map(data.attrs),
-      transforms: immutable.List(data.transforms)
+      transform: data.transform,
+      origin: immutable.List(data.origin || [ 0, 0 ]),
+      attrs: immutable.Map(data.attrs)
     });
 
     this.gfx = this.gfx.push(shape);
@@ -27,11 +43,17 @@ export class SGRuntime extends SRuntime {
     return shape;
   }
 
-  updateShape(shape, name, value) {
+  updateShape(shape, attrs) {
+    shape = shape.set('attrs', shape.attrs.withMutations((m) => {
+      let keys = Object.keys(attrs);
+      for (let i = 0; i < keys.length; ++i) {
+        m.set(keys[i], attrs[keys[i]]);
+      }
+    }));
+
     // cache this lookup eventually
     let pos = this.gfx.findIndex((sh) => sh.key == shape.key);
-    let shape2 = shape.set('attrs', shape.attrs.set(name, value));
-    this.gfx = this.gfx.set(pos, shape2);
+    this.gfx = this.gfx.set(pos, shape);
     this.updateDisplay();
   }
 
@@ -135,15 +157,15 @@ export const SShape = {
 
   methods: {
     fill(sh, color) {
-      this.updateShape(sh, 'fill', color || 'none');
+      this.updateShape(sh, { fill: color || 'none' });
     },
 
     stroke(sh, color) {
-      this.updateShape(sh, 'stroke', color || 'none');
+      this.updateShape(sh, { stroke: color || 'none' });
     },
 
     opacity(sh, value = 1) {
-      this.updateShape(sh, 'opacity', value);
+      this.updateShape(sh, { opacity: value });
     },
 
     rotate(sh, rot = 0) {
@@ -216,13 +238,6 @@ export const SPolygon = {
   }
 };
 
-let Shape = immutable.Record({
-  type: null, // rect, circle, ellipse, etc.
-  key: null,  // identifier for lookup
-  attrs: immutable.Map(),
-  transforms: immutable.List()
-});
-
 let handlerMap = {
   rect: SRect,
   circle: SCircle,
@@ -238,11 +253,18 @@ Shape.prototype[handlerKey] = (obj) => handlerMap[obj.type];
 
 let RGraphics = React.createClass({
   render() {
+    let originx = Math.floor($('svg').width() / 2),
+        originy = Math.floor($('svg').height() / 2);
+
     let shapes = this.props.data.map((shape) => {
       return <RShape key={shape.key} shape={shape} />;
     });
 
-    return <svg id="canvas">{shapes}</svg>;
+    return <svg id="canvas">
+      <g transform={`translate(${originx} ${originy}) scale(1 -1)`}>
+        {shapes}
+      </g>
+    </svg>;
   }
 });
 
