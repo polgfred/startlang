@@ -238,14 +238,25 @@ Shape.prototype[handlerKey] = (obj) => handlerMap[obj.type];
 
 let RGraphics = React.createClass({
   render() {
-    let shapes = this.props.data.map(function(shape) {
-      // add the key to the element attrs
-      let attrs = shape.attrs.toJS();
-      attrs.key = shape.key;
-      return React.createElement(shape.type, attrs);
+    let shapes = this.props.data.map((shape) => {
+      return <RShape key={shape.key} shape={shape} />;
     });
 
     return <svg id="canvas">{shapes}</svg>;
+  }
+});
+
+let RShape = React.createClass({
+  render() {
+    let shape = this.props.shape;
+    return React.createElement(shape.type, shape.attrs.toJS());
+  },
+
+  shouldComponentUpdate(nextProps) {
+    // shape type doesn't change once created, so check the attrs --
+    // we check for equality because attrs is an immutable.Map() so
+    // we only care about when the top level changes
+    return this.props.shape.attrs != nextProps.shape.attrs;
   }
 });
 

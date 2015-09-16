@@ -38,6 +38,7 @@ import { createRuntime } from '../lang/graphics';
 // });
 
 const editor = ace.edit('editor');
+editor.$blockScrolling = Infinity;
 editor.setTheme('ace/theme/textmate');
 editor.setShowFoldWidgets(false);
 editor.getSession().setTabSize(2);
@@ -49,7 +50,7 @@ let ctx = createRuntime();
 // hook up the run button
 $('#runner').click(() => {
   // wipe stuff clean and make a fresh program context
-  ctx = global.ctx = createRuntime();
+  ctx = createRuntime();
   console.clear();
   // termapi.clear();
   // execute the code in the buffer
