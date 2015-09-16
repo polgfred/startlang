@@ -46,8 +46,10 @@ body {
 }
 
 #editor {
+  font-family: 'Ubuntu Mono';
   font-size: 14px;
   height: calc(100vh - 20px);
+  line-height: 18px;
 
   .blocklyText {
     @include fontify;
