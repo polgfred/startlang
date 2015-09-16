@@ -51,6 +51,10 @@ body {
   height: calc(100vh - 20px);
   line-height: 18px;
 
+  .ace_indent-guide {
+    background: none;
+  }
+
   .blocklyText {
     @include fontify;
   }
