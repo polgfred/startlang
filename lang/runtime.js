@@ -400,7 +400,7 @@ export const SNumber = {
       return Math.floor(Math.random() * (hi - lo + 1)) + lo;
     },
 
-    constrain(n, lo, hi) {
+    clamp(n, lo, hi) {
       return Math.min(Math.max(n, lo), hi);
     }
   }),

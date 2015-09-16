@@ -450,7 +450,7 @@ export default class Builder {
     };
 
     return buildNode('call', block, {
-      name: 'constrain',
+      name: 'clamp',
       args: [
         this.handleValue(block, 'VALUE'),
         valueOrDefault('LOW', 0),

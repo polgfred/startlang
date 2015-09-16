@@ -5,14 +5,12 @@ colors = list("black",
               "orange",
               "yellow")
 
-box = rect(0, 0, 10, 10)
-
-count t from 0 to 72 do
-  with box do
+with box = rect(0, 0, 10, 10) do
+  count t from 0 to 72 do
     move t*5, t*5
     rotate t*5
     scale t/2
     fill colors[floor(t/6) % len(colors)]
+    sleep 0.05
   end
-  sleep 0.05
 end
