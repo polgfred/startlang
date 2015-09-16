@@ -5,12 +5,9 @@ import React from 'react';
 import immutable from 'immutable';
 import { SRuntime, SBase, handle, handlerKey } from './runtime';
 
-global.$ = $;
-
 const graphicsDisplay = document.getElementById('display');
 
-// immutable record types for graphical data
-
+// immutable record type for shape data
 export const Shape = immutable.Record({
   key: null, // identifier for lookup
   type: null, // rect, circle, ellipse, etc.
@@ -39,7 +36,6 @@ export class SGRuntime extends SRuntime {
     });
 
     this.gfx = this.gfx.push(shape);
-    this.updateDisplay();
     return shape;
   }
 
@@ -54,18 +50,11 @@ export class SGRuntime extends SRuntime {
     // cache this lookup eventually
     let pos = this.gfx.findIndex((sh) => sh.key == shape.key);
     this.gfx = this.gfx.set(pos, shape);
-    this.updateDisplay();
   }
 
   updateDisplay() {
     React.render(<RGraphics data={this.gfx} />, graphicsDisplay);
   }
-}
-
-function refresh() {
-  return new Promise((resolve) => {
-    setImmediate(resolve);
-  });
 }
 
 SGRuntime.globals = {
@@ -81,8 +70,6 @@ SGRuntime.globals = {
       console.log('[PRINT]');
       //termapi.echo('');
     }
-    // yield to UI for redraw
-    return refresh();
   },
 
   input(message) {
@@ -91,11 +78,13 @@ SGRuntime.globals = {
 
   clear() {
     console.clear();
-    return refresh();
+    return SGRuntime.globals.repaint.call(this);
   },
 
-  refresh() {
-    return refresh();
+  repaint() {
+    // render to DOM and refresh
+    this.updateDisplay();
+    return SRuntime.globals.refresh.call(this);
   },
 
   rgb(r, g, b) {
@@ -260,10 +249,9 @@ let RGraphics = React.createClass({
       return <RShape key={shape.key} shape={shape} />;
     });
 
+    //<g transform={`translate(${originx} ${originy}) scale(1 -1)`}>
     return <svg id="canvas">
-      <g transform={`translate(${originx} ${originy}) scale(1 -1)`}>
-        {shapes}
-      </g>
+      <g>{shapes}</g>
     </svg>;
   }
 });
@@ -275,9 +263,6 @@ let RShape = React.createClass({
   },
 
   shouldComponentUpdate(nextProps) {
-    // shape type doesn't change once created, so check the attrs --
-    // we check for equality because attrs is an immutable.Map() so
-    // we only care about when the top level changes
     return this.props.shape.attrs != nextProps.shape.attrs;
   }
 });

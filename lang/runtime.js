@@ -287,6 +287,13 @@ SRuntime.globals = {
     return new Promise((resolve) => {
       setTimeout(resolve, seconds * 1000);
     });
+  },
+
+  refresh() {
+    // let the DOM catch up
+    return new Promise((resolve) => {
+      setImmediate(resolve);
+    });
   }
 };
 
