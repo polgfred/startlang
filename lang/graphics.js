@@ -104,12 +104,24 @@ SGRuntime.globals = {
   },
 
   line(x1, y1, x2, y2) {
+    return this.pushShape({
+      type: 'line',
+      attrs: { x1, y1, x2, y2 }
+    });
   },
 
-  polyline(...coords) {
+  polyline(...points) {
+    return this.pushShape({
+      type: 'polyline',
+      attrs: { points: points.join(',') }
+    });
   },
 
-  polygon(...coords) {
+  polygon(...points) {
+    return this.pushShape({
+      type: 'polygon',
+      attrs: { points: points.join(',') }
+    });
   }
 };
 
@@ -117,33 +129,33 @@ SGRuntime.globals = {
 export const SShape = {
   __proto__: SBase,
 
-  repr(shape) {
-    return `*${shape.type}*`;
+  repr(sh) {
+    return `*${sh.type}*`;
   },
 
   methods: {
-    fill(shape, color) {
-      this.updateShape(shape, 'fill', color || 'none');
+    fill(sh, color) {
+      this.updateShape(sh, 'fill', color || 'none');
     },
 
-    stroke(el, color) {
-      this.updateShape(shape, 'stroke', color || 'none');
+    stroke(sh, color) {
+      this.updateShape(sh, 'stroke', color || 'none');
     },
 
-    opacity(el, value = 1) {
-      this.updateShape(shape, 'opacity', value);
+    opacity(sh, value = 1) {
+      this.updateShape(sh, 'opacity', value);
     },
 
-    rotate(el, rot = 0) {
+    rotate(sh, rot = 0) {
     },
 
-    scale(el, sx = 1, sy = sx) {
+    scale(sh, sx = 1, sy = sx) {
     },
 
-    clone(el) {
+    clone(sh) {
     },
 
-    remove(el) {
+    remove(sh) {
     }
   }
 };
