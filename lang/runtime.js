@@ -4,8 +4,6 @@ import readline from 'readline';
 import moment from 'moment';
 import immutable from 'immutable';
 
-export class ScriptExit extends Error {}
-
 export let handlerKey = Symbol('START_HANDLER');
 
 // ensures its operands are of the same type
@@ -216,10 +214,6 @@ export class SRuntime {
 }
 
 SRuntime.globals = {
-  exit() {
-    throw new ScriptExit();
-  },
-
   // types/casts
 
   num(value) {

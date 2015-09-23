@@ -188,7 +188,10 @@ Statement
   / Call
 
 Flow
-  = 'break' WB {
+  = 'exit' WB {
+      return buildNode('exit');
+    }
+  / 'break' WB {
       return buildNode('break');
     }
   / 'next' WB {
@@ -445,6 +448,7 @@ Reserved
   / 'while'    WB
   / 'with'     WB
   / 'begin'    WB
+  / 'exit'     WB
   / 'break'    WB
   / 'next'     WB
   / 'return'   WB

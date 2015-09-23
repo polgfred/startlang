@@ -162,10 +162,7 @@ export default class Builder {
   }
 
   control_exit(block) {
-    return buildNode('call', block, {
-      name: 'exit',
-      args: []
-    });
+    return buildNode('exit', block);
   }
 
   // loops

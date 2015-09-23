@@ -1,7 +1,6 @@
 'use strict';
 
 import { EventEmitter } from 'events';
-import { ScriptExit } from './runtime';
 
 let hasOwnProperty = Object.prototype.hasOwnProperty; // cache this for performance
 
@@ -17,11 +16,7 @@ export class SInterpreter extends EventEmitter {
     return this.visit(this.root).then(() => {
       this.emit('end');
     }).catch((err) => {
-      if (err instanceof ScriptExit) {
-        this.emit('end');
-      } else {
-        this.emit('error', err);
-      }
+      this.emit('error', err);
     });
   }
 
@@ -31,10 +26,7 @@ export class SInterpreter extends EventEmitter {
     if (node.type == 'literal') {
       return Promise.resolve({ rv: node.value });
     }
-    if (node.exit) {
-      // return a special error to exit the program
-      return Promise.reject(new ScriptExit());
-    } else if (node.pause) {
+    if (node.pause) {
       // return a promise to resume execution when resume() is called
       return new Promise((resolve) => {
         this.resume = () => {
@@ -75,7 +67,7 @@ export class SInterpreter extends EventEmitter {
     let loop = (count) => {
       if (count < len) {
         return this.visit(node.elems[count]).then((eres) => {
-          // propagate break/next/return
+          // propagate a flow result
           return eres.flow ? eres : loop(count + 1);
         });
       }
@@ -86,10 +78,12 @@ export class SInterpreter extends EventEmitter {
   loopBody(body, loop, next) {
     return this.visit(body).then((bres) => {
       let flow = bres.flow;
-      if (flow == 'return') {
-        return bres; // propagate
-      } else if (!flow || flow == 'next') {
+      if (!flow || flow == 'next') {
         return loop(next);
+      } else if (flow == 'break') {
+        return; // just terminate the surrounding block
+      } else {
+        return bres; // propagate up the stack
       }
     });
   }
@@ -173,7 +167,9 @@ export class SInterpreter extends EventEmitter {
       return this.visit(node.body).then((bres) => {
         this.ctx.pop();
         if (bres.flow == 'return') {
-          return bres.rv;
+          return bres.rv; // terminate and return the result
+        } else if (bres.flow == 'exit') {
+          return bres; // propagate up the stack
         }
       }, (err) => {
         this.ctx.pop();
@@ -205,6 +201,10 @@ export class SInterpreter extends EventEmitter {
       }
     };
     return loop(0);
+  }
+
+  exitNode() {
+    return { rv: undefined, flow: 'exit' };
   }
 
   breakNode() {
@@ -285,8 +285,8 @@ export class SInterpreter extends EventEmitter {
       this.ctx.pushw(vres);
       return this.visit(node.body).then((bres) => {
         this.ctx.popw();
-        if (bres.flow == 'return') {
-          return bres; // propagate
+        if (bres.flow == 'return' || bres.flow == 'exit') {
+          return bres; // propagate up the stack
         }
       });
     }, (err) => {
