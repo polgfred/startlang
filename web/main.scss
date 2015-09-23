@@ -91,6 +91,10 @@ body {
   top: 10px;
   z-index: 10;
 
+  &:disabled {
+    color: #ccc;
+  }
+
   &:active {
     background-color: #ddd;
   }
