@@ -48,6 +48,9 @@ module.exports = function(grunt) {
       web: {
         files: { 'dist/web/bundle.js': 'web/main.js' }
       },
+      worker: {
+        files: { 'dist/web/start_worker.js': 'brace_start/start_worker.js' }
+      },
       options: {
         watch: true,
         transform: [ 'babelify' ],

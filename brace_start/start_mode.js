@@ -74,16 +74,16 @@ export default class Mode extends TextMode {
 
   createWorker(session) {
     // only way i could figure out to interact with the npm-brace way of loading worker scripts
-    var mod = { src: 'importScripts("' + location.href.replace('main.html', 'start_worker.js') + '")' },
+    var mod = { src: 'importScripts("' + location.href.replace(/main\.html.*$/, 'start_worker.js') + '")' },
         worker = new WorkerClient(['ace'], mod, 'StartWorker', 'start_worker.js');
 
     worker.attachToDocument(session.getDocument());
 
-    worker.on('lint', function(results) {
+    worker.on('lint', (results) => {
       session.setAnnotations(results.data);
     });
 
-    worker.on('terminate', function() {
+    worker.on('terminate', () => {
       session.clearAnnotations();
     });
 

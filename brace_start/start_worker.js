@@ -1,3 +1,5 @@
+'use strict';
+
 import { EventEmitter, Mirror } from './worker_support';
 import { parse, SyntaxError as ParseError } from '../lang/parser';
 
@@ -21,8 +23,8 @@ export class StartWorker extends Mirror {
     } catch (e) {
       if (e instanceof ParseError) {
         this.sender.emit('lint', [{
-          row: Math.min(e.line, this.doc.getLength()) - 1,
-          column: e.column,
+          row: Math.min(e.location.start.line, this.doc.getLength()) - 1,
+          column: e.location.start.offset,
           text: e.message,
           type: 'error'
         }]);
