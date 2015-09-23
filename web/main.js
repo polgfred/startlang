@@ -102,6 +102,7 @@ $('#runner').click(() => {
   });
 
   interp.on('end', () => {
+    ctx.updateDisplay();
     console.log('[END]');
     $('#runner').prop('disabled', false);
   });
