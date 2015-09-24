@@ -222,10 +222,10 @@ Blockly.Blocks['graphics_refresh'] = {
   init: function() {
     this.setColour(Blockly.Blocks.graphics.HUE);
     this.appendDummyInput()
-        .appendField('refresh display');
+        .appendField('repaint display');
     this.setPreviousStatement(true);
     this.setNextStatement(true);
-    this.setTooltip('Force pending graphics updates to the screen.');
+    this.setTooltip('Repaint the display with any graphics updates.');
     this.setHelpUrl('');
   }
 };
