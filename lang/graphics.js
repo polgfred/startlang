@@ -3,7 +3,7 @@
 import $ from 'jquery';
 import React from 'react';
 import immutable from 'immutable';
-import { SRuntime, SBase, handle, handlerKey } from './runtime';
+import { SRuntime, SBase, handle, handlerKey, assignKey, resultKey } from './runtime';
 
 const graphicsDisplay = document.getElementById('display');
 
@@ -50,6 +50,8 @@ export class SGRuntime extends SRuntime {
     // cache this lookup eventually
     let pos = this.gfx.findIndex((sh) => sh.key == shape.key);
     this.gfx = this.gfx.set(pos, shape);
+
+    return shape;
   }
 
   updateDisplay() {
@@ -146,15 +148,15 @@ export const SShape = {
 
   methods: {
     fill(sh, color) {
-      this.updateShape(sh, { fill: color || 'none' });
+      return { [assignKey]: [ this.updateShape(sh, { fill: color || 'none' }) ] };
     },
 
     stroke(sh, color) {
-      this.updateShape(sh, { stroke: color || 'none' });
+      return { [assignKey]: [ this.updateShape(sh, { stroke: color || 'none' }) ] };
     },
 
     opacity(sh, value = 1) {
-      this.updateShape(sh, { opacity: value });
+      return { [assignKey]: [ this.updateShape(sh, { opacity: value }) ] };
     },
 
     rotate(sh, rot = 0) {

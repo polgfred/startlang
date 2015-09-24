@@ -4,7 +4,7 @@ import readline from 'readline';
 import moment from 'moment';
 import immutable from 'immutable';
 
-export let handlerKey = Symbol('START_HANDLER');
+export const handlerKey = Symbol('START_HANDLER');
 
 // ensures its operands are of the same type
 export function checkOp(fn) {
@@ -39,8 +39,8 @@ export function adjustIndex(index, size) {
 
 // for runtime API functions to indicate that their result may be assigned
 // back to lvalued arguments
-let assignKey = Symbol('START_ASSIGN'),
-    resultKey = Symbol('START_RESULT');
+export const assignKey = Symbol('START_ASSIGN');
+export const resultKey = Symbol('START_RESULT');
 
 // Environment
 
