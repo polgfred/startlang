@@ -46,8 +46,8 @@ export const resultKey = Symbol('START_RESULT');
 
 export class SRuntime {
   constructor() {
-    this.fn = immutable.Map();
-    this.ns = immutable.Map();
+    this.fn = immutable.OrderedMap();
+    this.ns = immutable.OrderedMap();
     this.st = immutable.Stack();
     this.wst = immutable.Stack();
   }

@@ -19,7 +19,7 @@ export const Shape = immutable.Record({
 export class SGRuntime extends SRuntime {
   constructor() {
     super();
-    this.gfx = immutable.List();
+    this.gfx = immutable.OrderedMap();
     this.updateDisplay();
   }
 
@@ -35,11 +35,14 @@ export class SGRuntime extends SRuntime {
       attrs: immutable.Map(data.attrs)
     });
 
-    this.gfx = this.gfx.push(shape);
+    this.gfx = this.gfx.set(key, shape);
     return shape;
   }
 
   updateShape(shape, attrs) {
+    // retrieve current shape data, might have been modified elsewhere
+    shape = this.gfx.get(shape.key);
+
     shape = shape.set('attrs', shape.attrs.withMutations((m) => {
       let keys = Object.keys(attrs);
       for (let i = 0; i < keys.length; ++i) {
@@ -47,10 +50,7 @@ export class SGRuntime extends SRuntime {
       }
     }));
 
-    // cache this lookup eventually
-    let pos = this.gfx.findIndex((sh) => sh.key == shape.key);
-    this.gfx = this.gfx.set(pos, shape);
-
+    this.gfx = this.gfx.set(shape.key, shape);
     return shape;
   }
 
@@ -247,7 +247,7 @@ let RGraphics = React.createClass({
     let originx = Math.floor($('svg').width() / 2),
         originy = Math.floor($('svg').height() / 2);
 
-    let shapes = this.props.data.map((shape) => {
+    let shapes = this.props.data.valueSeq().map((shape) => {
       return <RShape key={shape.key} shape={shape} />;
     });
 
