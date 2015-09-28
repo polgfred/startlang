@@ -435,6 +435,18 @@
               <block type="colour_picker"></block>
             </value>
           </block>
+          <block type="graphics_opacify_shape">
+            <value name="SHAPE">
+              <block type="variables_get">
+                <field name="VAR">shape</field>
+              </block>
+            </value>
+            <value name="AMOUNT">
+              <block type="math_number">
+                <field name="NUM">1</field>
+              </block>
+            </value>
+          </block>
           <block type="graphics_rotate_shape">
             <value name="SHAPE">
               <block type="variables_get">

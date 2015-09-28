@@ -176,6 +176,27 @@ Blockly.Blocks['graphics_fill_shape'] = {
   }
 };
 
+Blockly.Blocks['graphics_opacify_shape'] = {
+  init: function() {
+    this.setColour(Blockly.Blocks.graphics.HUE);
+    this.appendValueInput('SHAPE')
+        .setCheck('Shape')
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField('set opacity of shape')
+    this.appendValueInput('AMOUNT')
+        .setCheck('Number')
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField('to');
+    this.setInputsInline(true);
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setTooltip('Set the opacity of a shape. ' +
+                    'The value can be anything from 0 (completely transparent) ' +
+                    'to 1 (completely solid).');
+    this.setHelpUrl('');
+  }
+};
+
 Blockly.Blocks['graphics_rotate_shape'] = {
   init: function() {
     this.setColour(Blockly.Blocks.graphics.HUE);

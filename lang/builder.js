@@ -1101,6 +1101,16 @@ export default class Builder {
     });
   }
 
+  graphics_opacify_shape(block) {
+    return buildNode('call', block, {
+      name: 'opacity',
+      args: [
+        this.handleValue(block, 'SHAPE'),
+        this.handleValue(block, 'AMOUNT')
+      ]
+    });
+  }
+
   graphics_rotate_shape(block) {
     return buildNode('call', block, {
       name: 'rotate',
