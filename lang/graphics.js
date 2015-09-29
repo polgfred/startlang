@@ -5,8 +5,6 @@ import React from 'react';
 import immutable from 'immutable';
 import { SRuntime, SBase, handle, handlerKey, assignKey, resultKey } from './runtime';
 
-const graphicsDisplay = document.getElementById('display');
-
 // immutable record type for shape data
 export const Shape = immutable.Record({
   key: null, // identifier for lookup
@@ -17,7 +15,7 @@ export const Shape = immutable.Record({
 });
 
 function createMatrix() {
-  return document.getElementById('canvas').createSVGMatrix();
+  return $('#canvas')[0].createSVGMatrix();
 }
 
 export class SGRuntime extends SRuntime {
@@ -34,8 +32,7 @@ export class SGRuntime extends SRuntime {
     let shape = new Shape({
       key: key,
       type: data.type,
-      attrs: immutable.Map(data.attrs),
-      transform: null
+      attrs: immutable.Map(data.attrs)
     });
 
     this.gfx = this.gfx.set(key, shape);
@@ -78,7 +75,7 @@ export class SGRuntime extends SRuntime {
   }
 
   updateDisplay() {
-    React.render(<RGraphics data={this.gfx} />, graphicsDisplay);
+    React.render(<RGraphics data={this.gfx} />, $('#display')[0]);
   }
 }
 
