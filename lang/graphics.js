@@ -214,8 +214,14 @@ export const SShape = {
       return { [assignKey]: [ this.transformShape(sh, (mat) => mat.skewY(ay)) ] };
     },
 
-    rotate(sh, rot = 0, cx = 0, cy = 0) {
-      return { [assignKey]: [ this.transformShape(sh, (mat) => mat.rotate(rot)) ] };
+    rotate(sh, a = 0, cx = 0, cy = 0) {
+      let xform = cx == 0 && cy == 0 ?
+                    (mat) => mat.rotate(a) :
+                    (mat) => mat.translate(cx, cy)
+                              .rotate(a)
+                              .translate(-cx, -cy);
+
+      return { [assignKey]: [ this.transformShape(sh, xform) ] };
     },
 
     clone(sh) {
