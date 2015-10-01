@@ -55,7 +55,7 @@ export class SRuntime {
   // push and pop new objects onto the ns stack
   push() {
     this.st = this.st.push(this.ns);
-    this.ns = immutable.Map();
+    this.ns = immutable.OrderedMap();
   }
 
   pop() {
