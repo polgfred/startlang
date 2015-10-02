@@ -6,7 +6,7 @@ import ace from 'brace';
 import 'brace/theme/textmate';
 import { default as StartMode } from '../brace_start/start_mode';
 
-import Blockly from '../blockly_wrapper';
+import Blockly from '../blockly_start';
 
 import { parse } from '../lang/parser';
 import { createInterpreter } from '../lang/interpreter';

@@ -1,6 +1,6 @@
 'use strict';
 
-import Blockly from '../blockly_wrapper';
+import Blockly from '../blockly_start';
 
 function buildNode(type, block, attrs) {
   // if we're a block with one statement, just return the statement itself
