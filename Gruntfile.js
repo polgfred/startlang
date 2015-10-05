@@ -22,7 +22,7 @@ module.exports = function(grunt) {
     },
     copy: {
       polyfill: {
-        src: 'node_modules/babel/browser-polyfill.js',
+        src: 'node_modules/babelify/node_modules/babel-core/browser-polyfill.js',
         dest: 'dist/web/browser-polyfill.js'
       },
       blockly_media: {
@@ -32,8 +32,10 @@ module.exports = function(grunt) {
         expand: true
       },
       static: {
-        src: 'web/main.html',
-        dest: 'dist/web/main.html'
+        cwd: 'web',
+        src: [ 'main.html', 'fonts/**/*' ],
+        dest: 'dist/web',
+        expand: true
       }
     },
     peg: {

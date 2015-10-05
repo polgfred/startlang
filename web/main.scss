@@ -1,5 +1,23 @@
 @import '../node_modules/bootstrap-sass/assets/stylesheets/bootstrap';
 
+@font-face {
+  font-family: 'Ubuntu Mono';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Ubuntu Mono'), local('UbuntuMono-Regular'),
+       url('fonts/ubuntu-mono-v6-latin-ext_latin-regular.woff2') format('woff2'),
+       url('fonts/ubuntu-mono-v6-latin-ext_latin-regular.woff') format('woff');
+}
+
+@font-face {
+  font-family: 'Ubuntu Condensed';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Ubuntu Condensed'), local('UbuntuCondensed-Regular'),
+       url('fonts/ubuntu-condensed-v7-latin-ext_latin-regular.woff2') format('woff2'),
+       url('fonts/ubuntu-condensed-v7-latin-ext_latin-regular.woff') format('woff');
+}
+
 @mixin fontify {
   font-family: 'Ubuntu Condensed';
   font-weight: 400;
