@@ -235,7 +235,10 @@ export const SRect = {
   methods: {
     __proto__: SShape.methods,
 
-    move(el, x, y) {
+    move(sh, x, y) {
+      sh = this.updateShape(sh, 'x', x);
+      sh = this.updateShape(sh, 'y', y);
+      return { [assignKey]: [ sh ] };
     }
   }
 };
@@ -246,7 +249,10 @@ export const SCircle = {
   methods: {
     __proto__: SShape.methods,
 
-    move(el, x, y) {
+    move(el, cx, cy) {
+      sh = this.updateShape(sh, 'cx', cx);
+      sh = this.updateShape(sh, 'cy', cy);
+      return { [assignKey]: [ sh ] };
     }
   }
 };
@@ -257,7 +263,10 @@ export const SEllipse = {
   methods: {
     __proto__: SShape.methods,
 
-    move(el, x, y) {
+    move(el, cx, cy) {
+      sh = this.updateShape(sh, 'cx', cx);
+      sh = this.updateShape(sh, 'cy', cy);
+      return { [assignKey]: [ sh ] };
     }
   }
 };
@@ -268,7 +277,10 @@ export const SLine = {
   methods: {
     __proto__: SShape.methods,
 
-    move(el, x, y) {
+    move(sh, x, y) {
+      sh = this.updateShape(sh, 'x', x);
+      sh = this.updateShape(sh, 'y', y);
+      return { [assignKey]: [ sh ] };
     }
   }
 };
