@@ -25,6 +25,12 @@ module.exports = function(grunt) {
         src: 'node_modules/babel/browser-polyfill.js',
         dest: 'dist/web/browser-polyfill.js'
       },
+      blockly_media: {
+        cwd: 'node_modules/blockly-src/media',
+        src: '**/*',
+        dest: 'dist/web/blockly-media',
+        expand: true
+      },
       static: {
         src: 'web/main.html',
         dest: 'dist/web/main.html'

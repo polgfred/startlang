@@ -25,6 +25,7 @@ if (mode == 'blocks') {
     readOnly: false,
     scrollbars: true,
     trashcan: true,
+    media: './blockly-media/',
     grid: {
       spacing: 25,
       length: 3,
