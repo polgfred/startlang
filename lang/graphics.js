@@ -249,7 +249,7 @@ export const SCircle = {
   methods: {
     __proto__: SShape.methods,
 
-    move(el, cx, cy) {
+    move(sh, cx, cy) {
       sh = this.updateShape(sh, 'cx', cx);
       sh = this.updateShape(sh, 'cy', cy);
       return { [assignKey]: [ sh ] };
@@ -263,7 +263,7 @@ export const SEllipse = {
   methods: {
     __proto__: SShape.methods,
 
-    move(el, cx, cy) {
+    move(sh, cx, cy) {
       sh = this.updateShape(sh, 'cx', cx);
       sh = this.updateShape(sh, 'cy', cy);
       return { [assignKey]: [ sh ] };
