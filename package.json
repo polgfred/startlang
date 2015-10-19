@@ -18,7 +18,8 @@
     "lodash": "^3.10.1",
     "moment": "^2.10.6",
     "node-blockly": "git://github.com/polgfred/node-blockly#20c15c84e938318a407e7e8a79ba6cb15fbe104a",
-    "react": "^0.13.3",
+    "react": "^0.14.0",
+    "react-dom": "^0.14.0",
     "react-bootstrap": "^0.25.2",
     "react-cursor": "^1.2.1"
   },

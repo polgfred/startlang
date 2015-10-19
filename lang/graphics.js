@@ -2,8 +2,12 @@
 
 import $ from 'jquery';
 import React from 'react';
+import ReactDOM from 'react-dom';
 import immutable from 'immutable';
+
 import { SRuntime, SBase, handle, handlerKey, assignKey, resultKey } from './runtime';
+import { RGraphics } from '../comp/graphics';
+import { RTerm } from '../comp/term';
 
 // immutable record type for shape data
 export const Shape = immutable.Record({
@@ -15,13 +19,33 @@ export const Shape = immutable.Record({
 });
 
 function createMatrix() {
-  return $('#canvas')[0].createSVGMatrix();
+  return $('#display svg')[0].createSVGMatrix();
 }
 
 export class SGRuntime extends SRuntime {
   constructor() {
     super();
-    this.gfx = immutable.OrderedMap();
+    this.needsInput = false;
+    this.setMode('split');
+  }
+
+  setMode(mode) {
+    this.mode = mode;
+
+    switch (mode) {
+      case 'text':
+        this.buf = immutable.List();
+        this.gfx = null;
+      case 'graphics':
+        this.buf = null;
+        this.gfx = immutable.OrderedMap();
+        break;
+      case 'split':
+        this.buf = immutable.List();
+        this.gfx = immutable.OrderedMap();
+        break;
+    }
+
     this.updateDisplay();
   }
 
@@ -74,8 +98,33 @@ export class SGRuntime extends SRuntime {
     return shape;
   }
 
+  inputReceived(input) {
+    this.buf = this.buf.push(input);
+    this.updateDisplay();
+  }
+
   updateDisplay() {
-    React.render(<RGraphics data={this.gfx} />, $('#display')[0]);
+    if (!$('#display').hasClass(`mode-${this.mode}`)) {
+      $('#display').removeClass('mode-graphics')
+                   .removeClass('mode-text')
+                   .removeClass('mode-mixed')
+                   .addClass(`mode-${this.mode}`);
+    }
+
+    if (this.buf) {
+      ReactDOM.render(
+        <RTerm buf={this.buf}
+               prompt="> "
+               needsInput={this.needsInput}
+               inputReceived={this.inputReceived.bind(this)} />,
+        $('#display .text')[0]);
+    }
+
+    if (this.gfx) {
+      ReactDOM.render(
+        <RGraphics data={this.gfx} />,
+        $('#display .graphics')[0]);
+    }
   }
 }
 
@@ -85,13 +134,13 @@ SGRuntime.globals = {
   print(...values) {
     if (values.length > 0) {
       for (let v of values) {
-        console.log('[PRINT]', handle(v).repr(v));
-        //termapi.echo(handle(v).repr(v));
+        this.buf = this.buf.push(handle(v).repr(v));
       }
     } else {
-      console.log('[PRINT]');
-      //termapi.echo('');
+      this.buf = this.buf.push('');
     }
+
+    this.updateDisplay();
   },
 
   input(message) {
@@ -307,43 +356,6 @@ let handlerMap = {
 };
 
 Shape.prototype[handlerKey] = (obj) => handlerMap[obj.type];
-
-// react bindings
-
-let RGraphics = React.createClass({
-  render() {
-    let originx = Math.floor($('svg').width() / 2),
-        originy = Math.floor($('svg').height() / 2);
-
-    let shapes = this.props.data.valueSeq().map((shape) => {
-      return <RShape key={shape.key} shape={shape} />;
-    });
-
-    //<g transform={`translate(${originx} ${originy}) scale(1 -1)`}>
-    return <svg id="canvas">
-      <g>{shapes}</g>
-    </svg>;
-  }
-});
-
-let RShape = React.createClass({
-  render() {
-    let shape = this.props.shape,
-        attrs = shape.attrs.toJS(),
-        trans = shape.transform;
-
-    if (trans) {
-      attrs.transform = `matrix(${trans.join(' ')})`;
-    }
-
-    return React.createElement(shape.type, attrs);
-  },
-
-  shouldComponentUpdate(nextProps) {
-    return this.props.shape.attrs != nextProps.shape.attrs ||
-            this.props.shape.transform != nextProps.shape.transform;
-  }
-});
 
 export function createRuntime() {
   return new SGRuntime();
