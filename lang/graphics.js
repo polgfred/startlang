@@ -25,26 +25,13 @@ function createMatrix() {
 export class SGRuntime extends SRuntime {
   constructor() {
     super();
-    this.setMode('split');
+    this.setMode('text');
   }
 
   setMode(mode) {
     this.mode = mode;
-
-    switch (mode) {
-      case 'text':
-        this.buf = immutable.List();
-        this.gfx = null;
-      case 'graphics':
-        this.buf = null;
-        this.gfx = immutable.OrderedMap();
-        break;
-      case 'split':
-        this.buf = immutable.List();
-        this.gfx = immutable.OrderedMap();
-        break;
-    }
-
+    this.buf = immutable.List();
+    this.gfx = immutable.OrderedMap();
     this.updateDisplay();
   }
 
