@@ -7,7 +7,7 @@ import RBase from './base';
 
 export default class RTerm extends RBase {
   render() {
-    return <div className="terminal">
+    return <div className="terminal" onClick={this.handleClick.bind(this)}>
       <RTermOutput buf={this.props.buf} />
       <RTermInput ref="input" />
     </div>;
@@ -20,6 +20,10 @@ export default class RTerm extends RBase {
   componentDidUpdate() {
     // scroll to the bottom anytime we're updated
     this.$().prop('scrollTop', this.$().prop('scrollHeight'));
+  }
+
+  handleClick() {
+    this.$('.terminal-text').focus();
   }
 }
 
