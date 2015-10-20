@@ -27,6 +27,16 @@
     return node;
   }
 
+  // take a series of tests, and (optionally) a final else body, and construct an if-tree
+  function buildIf(tests, fbody) {
+    let [ cond, tbody ] = tests.shift();
+    if (tests.length > 0) {
+      // insert the next-level tree into the false slot
+      fbody = buildIf(tests, fbody);
+    }
+    return buildNode('if', { cond, tbody, fbody });
+  }
+
   // take a base name, dimensions, and (optionally) a value, and construct an indexish node
   function buildIndex(name, indexes, value) {
     if (value === undefined) {
@@ -119,11 +129,16 @@ Control
   / Begin
 
 If
-  = 'if' WB __ cond:Value __ 'then' WB __ tbody:MiddleBody __ 'else' WB __ fbody:EndBody {
-      return buildNode('if', { cond, tbody, fbody });
+  // one-line if/then[/else]
+  = 'if' WB __ cond:Value __ 'then' WB __ tbody:Statement fbody:( __ 'else' WB __ s:Statement { return s; } )? {
+      return buildIf([[ cond, tbody ]], fbody);
     }
-  / 'if' WB __ cond:Value __ 'then' WB __ tbody:EndBody {
-      return buildNode('if', { cond, tbody });
+  // multi-line if/then[/else if/...][/else]
+  / 'if' WB __ cond:Value __ 'then' WB __ EOL tbody:Block
+      tests:( __ 'else' WB __ 'if' WB __ v:Value __ 'then' WB __ EOL b:Block { return [ v, b ]; } )*
+      fbody:( __ 'else' WB __ EOL b:Block { return b; } )?
+      __ 'end' {
+      return buildIf([[ cond, tbody ]].concat(tests), fbody);
     }
 
 Repeat
@@ -163,12 +178,6 @@ Begin
     }
   / 'begin' WB __ name:Symbol __ '(' EOL? __ params:Params? __ ')' __ 'do' WB __ body:EndBody {
       return buildNode('begin', { name, params, body });
-    }
-
-MiddleBody
-  = Statement
-  / EOL b:Block {
-      return b;
     }
 
 EndBody
