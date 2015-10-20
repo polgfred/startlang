@@ -2,8 +2,9 @@
 
 import $ from 'jquery';
 import React from 'react';
+import RBase from './base';
 
-export class RGraphics extends React.Component {
+export default class RGraphics extends RBase {
   render() {
     let originx = Math.floor($('svg').width() / 2),
         originy = Math.floor($('svg').height() / 2);
@@ -19,7 +20,7 @@ export class RGraphics extends React.Component {
   }
 }
 
-export class RShape extends React.Component {
+export class RShape extends RBase {
   render() {
     let shape = this.props.shape,
         attrs = shape.attrs.toJS(),

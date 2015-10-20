@@ -6,8 +6,8 @@ import ReactDOM from 'react-dom';
 import immutable from 'immutable';
 
 import { SRuntime, SBase, handle, handlerKey, assignKey, resultKey } from './runtime';
-import { RGraphics } from '../comp/graphics';
-import { RTerm } from '../comp/term';
+import RGraphics from '../comp/graphics';
+import RTerm from '../comp/term';
 
 // immutable record type for shape data
 export const Shape = immutable.Record({
@@ -25,7 +25,6 @@ function createMatrix() {
 export class SGRuntime extends SRuntime {
   constructor() {
     super();
-    this.needsInput = false;
     this.setMode('split');
   }
 
@@ -98,11 +97,6 @@ export class SGRuntime extends SRuntime {
     return shape;
   }
 
-  inputReceived(input) {
-    this.buf = this.buf.push(input);
-    this.updateDisplay();
-  }
-
   updateDisplay() {
     if (!$('#display').hasClass(`mode-${this.mode}`)) {
       $('#display').removeClass('mode-graphics')
@@ -112,18 +106,11 @@ export class SGRuntime extends SRuntime {
     }
 
     if (this.buf) {
-      ReactDOM.render(
-        <RTerm buf={this.buf}
-               prompt="> "
-               needsInput={this.needsInput}
-               inputReceived={this.inputReceived.bind(this)} />,
-        $('#display .text')[0]);
+      this.rterm = ReactDOM.render(<RTerm buf={this.buf} />, $('#display .text')[0]);
     }
 
     if (this.gfx) {
-      ReactDOM.render(
-        <RGraphics data={this.gfx} />,
-        $('#display .graphics')[0]);
+      this.rgfx = ReactDOM.render(<RGraphics data={this.gfx} />, $('#display .graphics')[0]);
     }
   }
 }
@@ -139,12 +126,17 @@ SGRuntime.globals = {
     } else {
       this.buf = this.buf.push('');
     }
-
     this.updateDisplay();
   },
 
-  input(message) {
-    return prompt(message);
+  input(prompt) {
+    return new Promise((resolve) => {
+      this.rterm.getInput(prompt, (input) => {
+        this.buf = this.buf.push(`${prompt}${input}`);
+        this.updateDisplay();
+        resolve(input);
+      });
+    });
   },
 
   clear() {
