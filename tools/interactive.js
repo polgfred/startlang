@@ -1,41 +1,55 @@
 import { default as readline } from 'readline';
 
 import { inspect } from 'util';
-import { parse } from '../parser';
-import { createRuntime } from '../runtime';
-import { createInterpreter } from '../interpreter';
+import { parse } from '../lang/parser';
+import { createRuntime } from '../lang/runtime';
+import { createInterpreter } from '../lang/interpreter';
 
-function output(obj) {
-  console.log(inspect(obj, { colors: true, depth: null }));
-}
+let ctx = createRuntime();
 
-var ctx = createRuntime();
-
-var rl = readline.createInterface({
+let rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout
 });
 
+let buf = '';
 rl.setPrompt('> ');
 rl.prompt();
 
-rl.on('line', function(line) {
+rl.on('line', (line) => {
   try {
-    var root = parse(line + '\n'),
+    if (line.substr(-1) == '\\') {
+      buf += line.substr(0, line.length-1) + '\n';
+      rl.setPrompt('| ');
+      rl.prompt();
+      return;
+    }
+
+    buf += line + '\n';
+
+    let root = parse(buf),
         interp = createInterpreter(root, ctx);
 
-    interp.on('error', function(err) {
+    interp.on('error', (err) => {
       console.log('Error: ' + err.message);
+
+      buf = '';
+      rl.setPrompt('> ');
       rl.prompt();
     });
 
-    interp.on('end', function() {
+    interp.on('end', () => {
+      buf = '';
+      rl.setPrompt('> ');
       rl.prompt();
     });
 
     interp.run();
   } catch(err) {
     console.log('Error: ' + err.message);
+
+    buf = '';
+    rl.setPrompt('> ');
     rl.prompt();
   }
 });
