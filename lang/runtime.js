@@ -19,12 +19,10 @@ export function checkOp(fn) {
 
 // the above, plus ensures that its return value is not NaN
 export function checkMathOp(fn) {
+  let checked = checkOp(fn);
+
   return function(left, right) {
-    if (handle(left) !== handle(right)) {
-      throw new Error('operands must be of the same type');
-    }
-    // forward onto the original
-    let result = fn(left, right);
+    let result = checked(left, right);
     // check for valid result
     if (result !== result) {
       throw new Error('result is not a number');
