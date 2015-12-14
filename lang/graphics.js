@@ -138,9 +138,8 @@ SGRuntime.globals = {
   },
 
   rgb(r, g, b) {
-    return '#' + ('0' + Math.round(255 * r).toString(16)).substr(-2) +
-                 ('0' + Math.round(255 * g).toString(16)).substr(-2) +
-                 ('0' + Math.round(255 * b).toString(16)).substr(-2);
+    let hex = (v) => ('0' + Math.round(255 * v).toString(16)).substr(-2);
+    return `#${hex(r)}${hex(g)}${hex(b)}`;
   },
 
   rect(x, y, width, height) {
