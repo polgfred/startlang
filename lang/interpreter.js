@@ -1,23 +1,16 @@
 'use strict';
 
-import { EventEmitter } from 'events';
-
 let hasOwnProperty = Object.prototype.hasOwnProperty; // cache this for performance
 
-export class SInterpreter extends EventEmitter {
+export class SInterpreter {
   constructor(root, ctx) {
-    super();
-    this.root = root;
-    this.ctx = ctx;
-    this.frames = [];
+    this.root = root; // root of the program ast
+    this.ctx = ctx; // the Runtime instance
   }
 
   run() {
-    return this.visit(this.root).then(() => {
-      this.emit('end');
-    }).catch((err) => {
-      this.emit('error', err);
-    });
+    // just visit the root node
+    return this.visit(this.root);
   }
 
   // main node visitor

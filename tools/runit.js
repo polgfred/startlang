@@ -4,14 +4,14 @@ import { parse } from '../lang/parser';
 import { createRuntime } from '../lang/runtime';
 import { createInterpreter } from '../lang/interpreter';
 
-var options = {}, parserOptions = {};
+let options = {}, parserOptions = {};
 
-var inspectOpts = {
+let inspectOpts = {
   colors: true,
   depth: null
 };
 
-var source, root, ctx, interp;
+let source, root, ctx, interp;
 
 function output(obj) {
   console.log(inspect(obj, inspectOpts));
@@ -47,29 +47,21 @@ try {
     output(root);
     process.exit();
   }
-} catch (e) {
-  output(e);
-  throw e;
+} catch (err) {
+  output(err);
+  throw err;
 }
 
 ctx = createRuntime();
 interp = createInterpreter(root, ctx);
 
-interp.on('end', function() {
+interp.run().then(() => {
   if (options.ns) {
     output(ctx.ns.toJS());
   }
-  if (options.frames) {
-    output(interp.frames);
-  }
-});
-
-interp.on('error', function(err) {
+}).catch((err) => {
   if (options.ns) {
     output(ctx.ns.toJS());
-  }
-  if (options.frames) {
-    output(interp.frames);
   }
   if (err) {
     console.log('an error occurred:', err.message);
@@ -79,5 +71,3 @@ interp.on('error', function(err) {
     }
   }
 });
-
-interp.run();

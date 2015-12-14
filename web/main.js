@@ -97,17 +97,14 @@ $('#runner').click(() => {
 
   console.log(root);
 
-  interp.on('error', (err) => {
-    console.error('[ERROR]: ' + err.message);
-    $('#runner').prop('disabled', false);
-  });
+  $('#runner').prop('disabled', true);
 
-  interp.on('end', () => {
+  interp.run().then(() => {
     ctx.updateDisplay();
     console.log('[END]');
     $('#runner').prop('disabled', false);
+  }).catch((err) => {
+    console.error('[ERROR]: ' + err.message);
+    $('#runner').prop('disabled', false);
   });
-
-  $('#runner').prop('disabled', true);
-  interp.run();
 });

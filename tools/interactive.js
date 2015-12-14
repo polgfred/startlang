@@ -19,7 +19,7 @@ rl.prompt();
 rl.on('line', (line) => {
   try {
     if (line.substr(-1) == '\\') {
-      buf += line.substr(0, line.length-1) + '\n';
+      buf += line.substr(0, line.length - 1) + '\n';
       rl.setPrompt('| ');
       rl.prompt();
       return;
@@ -30,22 +30,18 @@ rl.on('line', (line) => {
     let root = parse(buf),
         interp = createInterpreter(root, ctx);
 
-    interp.on('error', (err) => {
+    interp.run().then(() => {
+      buf = '';
+      rl.setPrompt('> ');
+      rl.prompt();
+    }).catch((err) => {
       console.log('Error: ' + err.message);
 
       buf = '';
       rl.setPrompt('> ');
       rl.prompt();
     });
-
-    interp.on('end', () => {
-      buf = '';
-      rl.setPrompt('> ');
-      rl.prompt();
-    });
-
-    interp.run();
-  } catch(err) {
+  } catch (err) {
     console.log('Error: ' + err.message);
 
     buf = '';
