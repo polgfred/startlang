@@ -30,19 +30,23 @@ rl.on('line', (line) => {
     let root = parse(buf),
         interp = createInterpreter(root, ctx);
 
-    interp.run().then(() => {
+    interp.run().then((result) => {
+      if (result.flow == 'exit') {
+        process.exit();
+      }
+
       buf = '';
       rl.setPrompt('> ');
       rl.prompt();
-    }).catch((err) => {
-      console.log('Error: ' + err.message);
+    }, (err) => {
+      console.log('an error occurred:', err.message);
 
       buf = '';
       rl.setPrompt('> ');
       rl.prompt();
     });
   } catch (err) {
-    console.log('Error: ' + err.message);
+    console.log('an error occurred:', err.message);
 
     buf = '';
     rl.setPrompt('> ');

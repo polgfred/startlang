@@ -11,8 +11,6 @@ let inspectOpts = {
   depth: null
 };
 
-let source, root, ctx, interp;
-
 function output(obj) {
   console.log(inspect(obj, inspectOpts));
 }
@@ -35,39 +33,42 @@ if (process.argv.indexOf('--meta') != -1) {
   parserOptions.ast = parserOptions.meta = true;
 }
 
+let source, root;
+
 try {
   source = readFileSync(process.argv[2], 'utf-8');
-} catch (e) {
+} catch (err) {
   source = process.argv[2] + '\n';
 }
 
 try {
   root = parse(source, parserOptions);
-  if (options.ast) {
-    output(root);
-    process.exit();
-  }
 } catch (err) {
-  output(err);
-  throw err;
+  console.log('an error occurred:', err.message);
+  process.exit();
 }
 
-ctx = createRuntime();
-interp = createInterpreter(root, ctx);
+if (options.ast) {
+  output(root);
+  process.exit();
+}
+
+let ctx = createRuntime(),
+    interp = createInterpreter(root, ctx);
 
 interp.run().then(() => {
   if (options.ns) {
     output(ctx.ns.toJS());
   }
-}).catch((err) => {
+}, (err) => {
   if (options.ns) {
     output(ctx.ns.toJS());
   }
-  if (err) {
-    console.log('an error occurred:', err.message);
-    output(err.node);
-    if (err.stack) {
-      console.log(err.stack);
-    }
+
+  console.log('an error occurred:', err.message);
+  output(err.node);
+
+  if (err.stack) {
+    console.log(err.stack);
   }
 });
