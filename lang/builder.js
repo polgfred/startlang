@@ -26,7 +26,7 @@ function wrapLiteral(val, block) {
             });
 }
 
-export default class Builder {
+export class Builder {
   constructor() {
     // keep track of nested statement blocks so we can inject setup
     // code as necessary
