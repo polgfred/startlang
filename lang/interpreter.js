@@ -236,13 +236,13 @@ export class SInterpreter {
     let len = indexes.length, res = [];
     // collect indexes
     let loop = (count) => {
-      if (count == len) {
-        return res;
-      } else {
+      if (count < len) {
         return this.visit(indexes[count]).then((ires) => {
           res[count] = ires.rv;
           return loop(count + 1);
         });
+      } else {
+        return res;
       }
     };
     return loop(0);
