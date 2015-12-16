@@ -148,28 +148,8 @@ export class SInterpreter {
   }
 
   beginNode(node) {
-    let len = node.params ? node.params.length : 0;
-    // implement function body (invoked from call node)
-    let fn = (args) => {
-      // push a new stack and set parameter values
-      this.ctx.push();
-      for (let i = 0; i < len; ++i) {
-        this.ctx.set(node.params[i], args[i]);
-      }
-      // capture a possible return value and then clean up
-      return this.visit(node.body).then((bres) => {
-        this.ctx.pop();
-        if (bres.flow == 'return') {
-          return bres.rv; // terminate and return the result
-        } else if (bres.flow == 'exit') {
-          return bres; // propagate up the stack
-        }
-      }, (err) => {
-        this.ctx.pop();
-        throw err;
-      });
-    };
-    return this.ctx.setfn(node.name, fn);
+    // save the begin node in the function table
+    return this.ctx.setfn(node.name, node);
   }
 
   callNode(node) {
@@ -186,7 +166,7 @@ export class SInterpreter {
         // look for a user-defined function first
         let fn = this.ctx.getfn(node.name);
         if (fn) {
-          return fn(args);
+          return this.userCall(fn, args);
         } else {
           // try to call a runtime API function
           return this.ctx.syscall(node.name, args, assn);
@@ -194,6 +174,27 @@ export class SInterpreter {
       }
     };
     return loop(0);
+  }
+
+  userCall(node, args) {
+    let len = node.params ? node.params.length : 0;
+    // push a new stack and set parameter values
+    this.ctx.push();
+    for (let i = 0; i < len; ++i) {
+      this.ctx.set(node.params[i], args[i]);
+    }
+    // capture a possible return value and then clean up
+    return this.visit(node.body).then((bres) => {
+      this.ctx.pop();
+      if (bres.flow == 'return') {
+        return bres.rv; // terminate and return the result
+      } else if (bres.flow == 'exit') {
+        return bres; // propagate up the stack
+      }
+    }, (err) => {
+      this.ctx.pop();
+      throw err;
+    });
   }
 
   exitNode() {
