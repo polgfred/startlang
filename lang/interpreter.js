@@ -32,7 +32,8 @@ export class SInterpreter {
     return this.nodeResult(node);
   }
 
-  // safely get and normalize the node's result, and handle errors
+  // safely get and normalize the node's result, or attach the node to
+  // the error object on failure
   nodeResult(node) {
     let method = node.type + 'Node';
     return new Promise((resolve) => {
@@ -43,7 +44,7 @@ export class SInterpreter {
         result = { rv: result };
       }
       return result;
-    }).catch((err) => {
+    }, (err) => {
       // attach the node where the error occured
       if (!err.node) {
         err.node = node;
