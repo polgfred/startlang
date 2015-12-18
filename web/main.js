@@ -35,7 +35,7 @@ if (mode == 'blocks') {
     zoom: {
       enabled: true,
       controls: true,
-      wheel: true,
+      wheel: false,
       maxScale: 2,
       minScale: .1,
       scaleSpeed: 1.1
