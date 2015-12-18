@@ -33,42 +33,33 @@ if (process.argv.indexOf('--meta') != -1) {
   parserOptions.ast = parserOptions.meta = true;
 }
 
-let source, root;
+let ctx, interp;
 
-try {
-  source = readFileSync(process.argv[2], 'utf-8');
-} catch (err) {
-  source = process.argv[2] + '\n';
-}
-
-try {
-  root = parse(source, parserOptions);
-} catch (err) {
-  console.log('an error occurred:', err.message);
-  process.exit();
-}
-
-if (options.ast) {
-  output(root);
-  process.exit();
-}
-
-let ctx = createRuntime(),
-    interp = createInterpreter(root, ctx);
-
-interp.run().then(() => {
-  if (options.ns) {
-    output(ctx.ns.toJS());
-  }
-}, (err) => {
-  if (options.ns) {
-    output(ctx.ns.toJS());
+Promise.resolve().then(() => {
+  return readFileSync(process.argv[2], 'utf-8');
+}).catch((err) => {
+  return process.argv[2] + '\n';
+}).then((source) => {
+  return parse(source, parserOptions);
+}).then((root) => {
+  if (options.ast) {
+    output(root);
+    process.exit();
   }
 
-  console.log('an error occurred:', err.message);
-  output(err.node);
-
+  ctx = createRuntime();
+  interp = createInterpreter(root, ctx);
+  return interp.run();
+}).catch((err) => {
   if (err.stack) {
     console.log(err.stack);
+  }
+
+  if (err.node) {
+    output(err.node);
+  }
+}).then(() => {
+  if (ctx && options.ns) {
+    output(ctx.ns.toJS());
   }
 });

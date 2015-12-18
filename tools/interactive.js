@@ -17,39 +17,31 @@ rl.setPrompt('> ');
 rl.prompt();
 
 rl.on('line', (line) => {
-  try {
-    if (line.substr(-1) == '\\') {
-      buf += line.substr(0, line.length - 1) + '\n';
-      rl.setPrompt('| ');
-      rl.prompt();
-      return;
+  if (line.substr(-1) == '\\') {
+    buf += line.substr(0, line.length - 1) + '\n';
+    rl.setPrompt('| ');
+    rl.prompt();
+    return;
+  }
+
+  buf += line + '\n';
+
+  Promise.resolve().then(() => {
+    return parse(buf);
+  }).then((root) => {
+    let interp = createInterpreter(root, ctx);
+    return interp.run();
+  }).catch((err) => {
+    if (err.stack) {
+      console.log(err.stack);
     }
-
-    buf += line + '\n';
-
-    let root = parse(buf),
-        interp = createInterpreter(root, ctx);
-
-    interp.run().then((result) => {
-      if (result.flow == 'exit') {
-        process.exit();
-      }
-
-      buf = '';
-      rl.setPrompt('> ');
-      rl.prompt();
-    }, (err) => {
-      console.log('an error occurred:', err.message);
-
-      buf = '';
-      rl.setPrompt('> ');
-      rl.prompt();
-    });
-  } catch (err) {
-    console.log('an error occurred:', err.message);
+  }).then((result) => {
+    if (result && result.flow == 'exit') {
+      process.exit();
+    }
 
     buf = '';
     rl.setPrompt('> ');
     rl.prompt();
-  }
+  });
 });
