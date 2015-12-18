@@ -10,9 +10,8 @@ function buildNode(type, block, attrs) {
 
   let node = { type: type }; // block: block
 
-  for (let p in attrs) {
-    node[p] = attrs[p];
-  }
+  // then the passed-in attributes
+  Object.assign(node, attrs);
 
   return node;
 }
