@@ -1,6 +1,14 @@
 'use strict';
 
+import immutable from 'immutable';
+
 let hasOwnProperty = Object.prototype.hasOwnProperty; // cache this for performance
+
+export class Frame extends immutable.Record({
+  node: null,
+  state: 0,
+  ws: immutable.OrderedMap()
+}) {}
 
 export class SInterpreter {
   constructor(root, ctx) {
@@ -9,12 +17,53 @@ export class SInterpreter {
   }
 
   run() {
-    // just visit the root node
-    return this.visit(this.root);
+    // push on the root node and kick off the run loop
+    this.fst = immutable.Stack();
+    this.frame = new Frame({ node: this.root });
+    return this.loop();
+  }
+
+  loop() {
+    if (this.frame) {
+      // console.log('--------------');
+      // console.log(this.fst);
+      // console.log(this.frame.node);
+      // console.log(this.frame.state);
+      // console.log(this.frame.ws);
+      return new Promise((resolve) => {
+        resolve(this[`${this.frame.node.type}Node`]());
+      }).then(() => {
+        // continue
+        return this.loop();
+      }).catch((err) => {
+        // attach the node where the error occured
+        if (!err.node) {
+          err.node = this.frame.node;
+        }
+        throw err;
+      });
+    } else {
+      return Promise.resolve();
+    }
+  }
+
+  push(node) {
+    this.fst = this.fst.push(this.frame);
+    this.frame = new Frame({ node });
+  }
+
+  pop(result) {
+    // if the node returns a plain value, convert it to an rvalue
+    if (result == null || !hasOwnProperty.call(result, 'rv')) {
+      result = { rv: result };
+    }
+    this.result = result;
+    this.frame = this.fst.first();
+    this.fst = this.fst.pop();
   }
 
   // main node visitor
-  visit(node) {
+  xxvisit(node) {
     // optimize literals: extract the value directly without a function call
     if (node.type == 'literal') {
       return Promise.resolve({ rv: node.value });
@@ -34,7 +83,7 @@ export class SInterpreter {
 
   // safely get and normalize the node's result, or attach the node to
   // the error object on failure
-  nodeResult(node) {
+  xxnodeResult(node) {
     let method = node.type + 'Node';
     return new Promise((resolve) => {
       resolve(this[method](node));
@@ -55,21 +104,24 @@ export class SInterpreter {
 
   // ** implementations of AST nodes **
 
-  blockNode(node) {
-    let len = node.elems.length;
-    // recursive loop over block statements
-    let loop = (count) => {
-      if (count < len) {
-        return this.visit(node.elems[count]).then((eres) => {
-          // propagate a flow result
-          return eres.flow ? eres : loop(count + 1);
-        });
-      }
-    };
-    return loop(0);
+  blockNode() {
+    switch (this.frame.state) {
+      case 0:
+        this.frame = this.frame.set('state', 1)
+                      .setIn([ 'ws', 'count' ], 0);
+        break;
+      case 1:
+        if (this.frame.getIn([ 'ws', 'count' ]) < this.frame.node.elems.length) {
+          let count = this.frame.getIn([ 'ws', 'count' ]);
+          this.frame = this.frame.setIn([ 'ws', 'count' ], count + 1);
+          this.push(this.frame.node.elems[count]);
+        } else {
+          this.pop();
+        }
+    }
   }
 
-  loopBody(body, loop, next) {
+  xxloopBody(body, loop, next) {
     return this.visit(body).then((bres) => {
       let flow = bres.flow;
       if (!flow || flow == 'next') {
@@ -82,19 +134,29 @@ export class SInterpreter {
     });
   }
 
-  repeatNode(node) {
-    return this.visit(node.times).then((tres) => {
-      // recursive loop over range
-      let loop = (count) => {
-        if (count < tres.rv) {
-          return this.loopBody(node.body, loop, count + 1);
+  repeatNode() {
+    switch (this.frame.state) {
+      case 0:
+        this.frame = this.frame.set('state', 1);
+        this.push(this.frame.node.times);
+        break;
+      case 1:
+        this.frame = this.frame.set('state', 2)
+                      .setIn([ 'ws', 'times' ], this.result.rv)
+                      .setIn([ 'ws', 'count' ], 0);
+        break;
+      case 2:
+        let count = this.frame.getIn([ 'ws', 'count' ]);
+        if (count < this.frame.getIn([ 'ws', 'times' ])) {
+          this.frame = this.frame.setIn([ 'ws', 'count' ], count + 1);
+          this.push(this.frame.node.body);
+        } else {
+          this.pop();
         }
-      };
-      return loop(0);
-    });
+    }
   }
 
-  countNode(node) {
+  xxcountNode(node) {
     return this.visit(node.from).then((fres) => {
       return this.visit(node.to).then((tres) => {
         let bp = node.by ? this.visit(node.by) : Promise.resolve({ rv: 1 });
@@ -112,7 +174,7 @@ export class SInterpreter {
     });
   }
 
-  forNode(node) {
+  xxforNode(node) {
     return this.visit(node.range).then((rres) => {
       // recursive loop over range
       let loop = (iter) => {
@@ -126,7 +188,7 @@ export class SInterpreter {
     });
   }
 
-  whileNode(node) {
+  xxwhileNode(node) {
     // recursive loop while condition is true
     let loop = () => {
       return this.visit(node.cond).then((cres) => {
@@ -138,46 +200,78 @@ export class SInterpreter {
     return loop();
   }
 
-  ifNode(node) {
-    return this.visit(node.cond).then((cres) => {
-      if (cres.rv) {
-        return this.visit(node.tbody);
-      } else if (node.fbody) {
-        return this.visit(node.fbody);
-      }
-    });
+  ifNode() {
+    switch (this.frame.state) {
+      case 0:
+        this.frame = this.frame.set('state', 1);
+        this.push(this.frame.node.cond);
+        break;
+      case 1:
+        this.frame = this.frame.set('state', 2)
+                      .setIn([ 'ws', 'cond' ], this.result.rv);
+        break;
+      case 2:
+        this.frame = this.frame.set('state', 3);
+        if (this.frame.getIn([ 'ws', 'cond' ])) {
+          this.push(this.frame.node.tbody);
+        } else if (this.frame.node.fbody) {
+          this.push(this.frame.node.fbody);
+        }
+        break;
+      case 3:
+        this.pop();
+    }
   }
 
-  beginNode(node) {
+  xxbeginNode(node) {
     // save the begin node in the function table
     return this.ctx.setfn(node.name, node);
   }
 
-  callNode(node) {
-    let len = node.args ? node.args.length : 0, args = [], assn = [];
-    // loop to collect arguments and call the function
-    let loop = (count) => {
-      if (count < len) {
-        return this.visit(node.args[count]).then((ares) => {
-          args[count] = ares.rv;
-          assn[count] = ares.lv;
-          return loop(count + 1);
-        });
-      } else {
-        // look for a user-defined function first
-        let fn = this.ctx.getfn(node.name);
-        if (fn) {
-          return this.userCall(fn, args);
+  callNode() {
+    switch (this.frame.state) {
+      case 0:
+        this.frame = this.frame.set('state', 1)
+                      .setIn([ 'ws', 'args' ], immutable.List())
+                      .setIn([ 'ws', 'assn' ], immutable.List())
+                      .setIn([ 'ws', 'count' ], 0);
+        break;
+      case 1:
+        let count = this.frame.getIn([ 'ws', 'count' ]);
+        if (count < this.frame.node.args.length) {
+          this.frame = this.frame.set('state', 2)
+          this.push(this.frame.node.args[count]);
         } else {
-          // try to call a runtime API function
-          return this.ctx.syscall(node.name, args, assn);
+          this.frame = this.frame.set('state', 3)
         }
-      }
-    };
-    return loop(0);
+        break;
+      case 2:
+        this.frame = this.frame.set('state', 1)
+                      .updateIn([ 'ws', 'args' ], (args) => args.push(this.result.rv))
+                      .updateIn([ 'ws', 'assn' ], (assn) => assn.push(this.result.lv))
+                      .updateIn([ 'ws', 'count' ], (count) => count + 1);
+        break;
+      case 3:
+        // look for a user-defined function first
+        // let fn = this.ctx.getfn(this.frame.node.name);
+        // if (fn) {
+        //   return this.userCall(fn, args);
+        // } else {
+          // try to call a runtime API function
+          return new Promise((resolve) => {
+            resolve(this.ctx.syscall(
+                      this.frame.node.name,
+                      this.frame.getIn([ 'ws', 'args' ]).toJS(),
+                      this.frame.getIn([ 'ws', 'assn' ]).toJS()));
+          }).then((result) => {
+            this.pop(result);
+          });
+        //}
+
+    }
   }
 
-  userCall(node, args) {
+  xxuserCall(node, args) {
     let len = node.params ? node.params.length : 0;
     // push a new stack and set parameter values
     this.ctx.push();
@@ -198,19 +292,19 @@ export class SInterpreter {
     });
   }
 
-  exitNode() {
+  xxexitNode() {
     return { rv: undefined, flow: 'exit' };
   }
 
-  breakNode() {
+  xxbreakNode() {
     return { rv: undefined, flow: 'break' };
   }
 
-  nextNode() {
+  xxnextNode() {
     return { rv: undefined, flow: 'next' };
   }
 
-  returnNode(node) {
+  xxreturnNode(node) {
     if (node.result) {
       return this.visit(node.result).then((rres) => {
         return { rv: rres.rv, flow: 'return' };
@@ -220,11 +314,18 @@ export class SInterpreter {
     }
   }
 
-  varNode(node) {
-    return { rv: this.ctx.get(node.name), lv: { name: node.name } };
+  literalNode() {
+    this.pop({ rv: this.frame.node.value });
   }
 
-  letNode(node) {
+  varNode() {
+    this.pop({
+      rv: this.ctx.get(this.frame.node.name),
+      lv: { name: this.frame.node.name }
+    });
+  }
+
+  xxletNode(node) {
     return this.visit(node.value).then((vres) => {
       this.ctx.set(node.name, vres.rv);
       // return the rv/lv pair for this assignment
@@ -232,7 +333,7 @@ export class SInterpreter {
     });
   }
 
-  visitIndexes(indexes) {
+  xxvisitIndexes(indexes) {
     let len = indexes.length, res = [];
     // collect indexes
     let loop = (count) => {
@@ -248,7 +349,7 @@ export class SInterpreter {
     return loop(0);
   }
 
-  indexNode(node) {
+  xxindexNode(node) {
     return this.visitIndexes(node.indexes).then((rres) => {
       return {
         rv: this.ctx.getindex(node.name, rres),
@@ -257,7 +358,7 @@ export class SInterpreter {
     });
   }
 
-  letIndexNode(node) {
+  xxletIndexNode(node) {
     return this.visitIndexes(node.indexes).then((rres) => {
       return this.visit(node.value).then((vres) => {
         this.ctx.setindex(node.name, rres, vres.rv);
@@ -270,7 +371,7 @@ export class SInterpreter {
     });
   }
 
-  withNode(node) {
+  xxwithNode(node) {
     let v = node.name ?
       // treat this as a let/letIndex and let it do its thing
       (node.indexes ? this.letIndexNode(node) : this.letNode(node)) :
@@ -290,7 +391,7 @@ export class SInterpreter {
     });
   }
 
-  logicalOpNode(node) {
+  xxlogicalOpNode(node) {
     switch (node.op) {
       case 'and':
         return this.visit(node.left).then((lres) => {
@@ -319,18 +420,44 @@ export class SInterpreter {
     }
   }
 
-  binaryOpNode(node) {
-    return this.visit(node.left).then((lres) => {
-      return this.visit(node.right).then((rres) => {
-        return this.ctx.binaryop(node.op, lres.rv, rres.rv);
-      });
-    });
+  binaryOpNode() {
+    switch (this.frame.state) {
+      case 0:
+        this.frame = this.frame.set('state', 1);
+        this.push(this.frame.node.left);
+        break;
+      case 1:
+        this.frame = this.frame.set('state', 2)
+                      .setIn([ 'ws', 'left' ], this.result.rv);
+        this.push(this.frame.node.right);
+        break;
+      case 2:
+        this.frame = this.frame.set('state', 3)
+                      .setIn([ 'ws', 'right' ], this.result.rv);
+        break;
+      case 3:
+        this.pop(this.ctx.binaryop(
+                  this.frame.node.op,
+                  this.frame.getIn([ 'ws', 'left' ]),
+                  this.frame.getIn([ 'ws', 'right' ])));
+    }
   }
 
-  unaryOpNode(node) {
-    return this.visit(node.right).then((rres) => {
-      return this.ctx.unaryop(node.op, rres.rv);
-    });
+  unaryOpNode() {
+    switch (this.frame.state) {
+      case 0:
+        this.frame = this.frame.set('state', 1);
+        this.push(this.frame.node.right);
+        break;
+      case 1:
+        this.frame = this.frame.set('state', 2)
+                      .setIn([ 'ws', 'right' ], this.result.rv);
+        break;
+      case 2:
+        this.pop(this.ctx.unaryop(
+                  this.frame.node.op,
+                  this.frame.getIn([ 'ws', 'right' ])));
+    }
   }
 }
 
