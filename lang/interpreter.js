@@ -240,9 +240,10 @@ export class SInterpreter {
     }
   }
 
-  xxbeginNode(node) {
+  beginNode(node) {
     // save the begin node in the function table
-    return this.ctx.setfn(node.name, node);
+    this.ctx.setfn(node.name, node);
+    this.pop();
   }
 
   callNode(node, state, ws) {
@@ -280,8 +281,8 @@ export class SInterpreter {
           return new Promise((resolve) => {
             resolve(this.ctx.syscall(
                       node.name,
-                      ws.get('args').toJS(),
-                      ws.get('assn').toJS()));
+                      ws.get('args').toArray(),
+                      ws.get('assn').toArray()));
           }).then((result) => {
             this.pop(result);
           });
@@ -350,50 +351,89 @@ export class SInterpreter {
     });
   }
 
-  xxletNode(node) {
-    return this.visit(node.value).then((vres) => {
-      this.ctx.set(node.name, vres.rv);
-      // return the rv/lv pair for this assignment
-      return { rv: vres.rv, lv: { name: node.name } };
-    });
+  letNode(node, state, ws) {
+    switch (state) {
+      case 0:
+        this.goto(1);
+        this.push(node.value);
+        break;
+      case 1:
+        this.ctx.set(node.name, this.result.rv);
+        this.pop({ rv: this.result.rv, lv: { name: node.name } });
+        break;
+    }
   }
 
-  xxvisitIndexes(indexes) {
-    let len = indexes.length, res = [];
-    // collect indexes
-    let loop = (count) => {
-      if (count < len) {
-        return this.visit(indexes[count]).then((ires) => {
-          res[count] = ires.rv;
-          return loop(count + 1);
+  indexNode(node, state, ws) {
+    switch (state) {
+      case 0:
+        this.goto(1, (ws) => {
+          ws.set('indexes', immutable.List());
+          ws.set('count', 0);
         });
-      } else {
-        return res;
-      }
-    };
-    return loop(0);
+        break;
+      case 1:
+        let count = ws.get('count');
+        if (count < node.indexes.length) {
+          this.goto(2);
+          this.push(node.indexes[count]);
+        } else {
+          this.goto(3);
+        }
+        break;
+      case 2:
+        this.goto(1, (ws) => {
+          ws.update('indexes', (indexes) => indexes.push(this.result.rv));
+          ws.update('count', (count) => count + 1);
+        });
+        break;
+      case 3:
+        let indexes = ws.get('indexes').toArray();
+        this.pop({
+          rv: this.ctx.getindex(node.name, indexes),
+          lv: { name: node.name, indexes: indexes }
+        });
+        break;
+    }
   }
 
-  xxindexNode(node) {
-    return this.visitIndexes(node.indexes).then((rres) => {
-      return {
-        rv: this.ctx.getindex(node.name, rres),
-        lv: { name: node.name, indexes: rres }
-      };
-    });
-  }
-
-  xxletIndexNode(node) {
-    return this.visitIndexes(node.indexes).then((rres) => {
-      return this.visit(node.value).then((vres) => {
-        this.ctx.setindex(node.name, rres, vres.rv);
+  letIndexNode(node, state, ws) {
+    switch (state) {
+      case 0:
+        this.goto(1, (ws) => {
+          ws.set('indexes', immutable.List());
+          ws.set('count', 0);
+        });
+        break;
+      case 1:
+        let count = ws.get('count');
+        if (count < node.indexes.length) {
+          this.goto(2);
+          this.push(node.indexes[count]);
+        } else {
+          this.goto(3);
+        }
+        break;
+      case 2:
+        this.goto(1, (ws) => {
+          ws.update('indexes', (indexes) => indexes.push(this.result.rv));
+          ws.update('count', (count) => count + 1);
+        });
+        break;
+      case 3:
+        this.goto(4);
+        this.push(node.value);
+        break;
+      case 4:
+        let indexes = ws.get('indexes').toArray();
+        this.ctx.setindex(node.name, indexes, this.result.rv);
         // return the rv/lv pair for this assignment
-        return {
-          rv: vres.rv,
-          lv: { name: node.name, indexes: rres }
-        };
-      });
-    });
+        this.pop({
+          rv: this.result.rv,
+          lv: { name: node.name, indexes: indexes }
+        });
+        break;
+    }
   }
 
   xxwithNode(node) {
