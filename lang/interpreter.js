@@ -456,72 +456,104 @@ export class SInterpreter {
     });
   }
 
-  xxlogicalOpNode(node) {
+  logicalOpNode(node, state, ws) {
     switch (node.op) {
       case 'and':
-        return this.visit(node.left).then((lres) => {
-          if (!lres.rv) {
-            return false;
-          } else {
-            return this.visit(node.right).then((rres) => {
-              return !!rres.rv;
-            });
-          }
-        });
+        switch (state) {
+          case 0:
+            this.goto(1);
+            this.push(node.left);
+            break;
+          case 1:
+            if (!this.result.rv) {
+              this.pop(false);
+            } else {
+              this.goto(2);
+              this.push(node.right);
+            }
+            break;
+          case 2:
+            this.pop(!!this.result.rv);
+            break;
+        }
+        break;
+
       case 'or':
-        return this.visit(node.left).then((lres) => {
-          if (lres.rv) {
-            return true;
-          } else {
-            return this.visit(node.right).then((rres) => {
-              return !!rres.rv;
-            });
-          }
-        });
+        switch (state) {
+          case 0:
+            this.goto(1);
+            this.push(node.left);
+            break;
+          case 1:
+            if (this.result.rv) {
+              this.pop(true);
+            } else {
+              this.goto(2);
+              this.push(node.right);
+            }
+            break;
+          case 2:
+            this.pop(!!this.result.rv);
+            break;
+        }
+        break;
+
       case 'not':
-        return this.visit(node.right).then((rres) => {
-          return !rres.rv;
-        });
+        switch (state) {
+          case 0:
+            this.goto(1);
+            this.push(node.right);
+            break;
+          case 1:
+            this.pop(!this.result.rv);
+            break;
+        }
+        break;
     }
   }
 
-  binaryOpNode() {
-    switch (this.frame.state) {
+  binaryOpNode(node, state, ws) {
+    switch (state) {
       case 0:
-        this.frame = this.frame.set('state', 1);
-        this.push(this.frame.node.left);
+        this.goto(1);
+        this.push(node.left);
         break;
       case 1:
-        this.frame = this.frame.set('state', 2)
-                      .setIn([ 'ws', 'left' ], this.result.rv);
-        this.push(this.frame.node.right);
+        this.goto(2, (ws) => {
+          ws.set('left', this.result.rv);
+        });
+        this.push(node.right);
         break;
       case 2:
-        this.frame = this.frame.set('state', 3)
-                      .setIn([ 'ws', 'right' ], this.result.rv);
+        this.goto(3, (ws) => {
+          ws.set('right', this.result.rv);
+        });
         break;
       case 3:
         this.pop(this.ctx.binaryop(
-                  this.frame.node.op,
-                  this.frame.getIn([ 'ws', 'left' ]),
-                  this.frame.getIn([ 'ws', 'right' ])));
+                  node.op,
+                  ws.get('left'),
+                  ws.get('right')));
+        break;
     }
   }
 
-  unaryOpNode() {
-    switch (this.frame.state) {
+  unaryOpNode(node, state, ws) {
+    switch (state) {
       case 0:
-        this.frame = this.frame.set('state', 1);
-        this.push(this.frame.node.right);
+        this.goto(1);
+        this.push(node.right);
         break;
       case 1:
-        this.frame = this.frame.set('state', 2)
-                      .setIn([ 'ws', 'right' ], this.result.rv);
+        this.goto(2, (ws) => {
+          ws.set('right', this.result.rv);
+        });
         break;
       case 2:
         this.pop(this.ctx.unaryop(
-                  this.frame.node.op,
-                  this.frame.getIn([ 'ws', 'right' ])));
+                  node.op,
+                  ws.get('right')));
+        break;
     }
   }
 }
