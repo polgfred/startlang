@@ -280,8 +280,10 @@ export class SInterpreter {
         if (node.args && count < node.args.length) {
           this.goto(2);
           this.push(node.args[count]);
-        } else {
+        } else if (this.ctx.getfn(node.name)) {
           this.goto(3);
+        } else {
+          this.goto(5);
         }
         break;
       case 2:
@@ -292,44 +294,34 @@ export class SInterpreter {
         });
         break;
       case 3:
-        // look for a user-defined function first
-        // let fn = this.ctx.getfn(this.frame.node.name);
-        // if (fn) {
-        //   return this.userCall(fn, args);
-        // } else {
-          // try to call a runtime API function
-          return new Promise((resolve) => {
-            resolve(this.ctx.syscall(
-                      node.name,
-                      ws.get('args').toArray(),
-                      ws.get('assn').toArray()));
-          }).then((result) => {
-            this.pop(result);
-          });
-        //}
-
+        // handle a user-defined function
+        let fn = this.ctx.getfn(node.name);
+        let args = ws.get('args');
+        this.ctx.push();
+        if (fn.params) {
+          for (let i = 0; i < fn.params.length; ++i) {
+            this.ctx.set(fn.params[i], args.get(i));
+          }
+        }
+        this.goto(4);
+        this.push(fn.body);
+        break;
+      case 4:
+        this.ctx.pop();
+        this.pop(this.result);
+        break;
+      case 5:
+        // handle a runtime API function
+        return new Promise((resolve) => {
+          resolve(this.ctx.syscall(
+                    node.name,
+                    ws.get('args').toArray(),
+                    ws.get('assn').toArray()));
+        }).then((result) => {
+          this.pop(result);
+        });
+        break;
     }
-  }
-
-  xxuserCall(node, args) {
-    let len = node.params ? node.params.length : 0;
-    // push a new stack and set parameter values
-    this.ctx.push();
-    for (let i = 0; i < len; ++i) {
-      this.ctx.set(node.params[i], args[i]);
-    }
-    // capture a possible return value and then clean up
-    return this.visit(node.body).then((bres) => {
-      this.ctx.pop();
-      if (bres.flow == 'return') {
-        return bres.rv; // terminate and return the result
-      } else if (bres.flow == 'exit') {
-        return bres; // propagate up the stack
-      }
-    }, (err) => {
-      this.ctx.pop();
-      throw err;
-    });
   }
 
   exitNode() {
