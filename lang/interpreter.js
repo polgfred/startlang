@@ -189,30 +189,50 @@ export class SInterpreter {
     }
   }
 
-  xxforNode(node) {
-    return this.visit(node.range).then((rres) => {
-      // recursive loop over range
-      let loop = (iter) => {
+  forNode(node, state, ws) {
+    switch (state) {
+      case 0:
+        this.goto(1);
+        this.push(node.range);
+        break;
+      case 1:
+        this.goto(2, (ws) => {
+          ws.set('iter', this.ctx.enumerate(this.result.rv));
+        });
+        break;
+      case 2:
+        let iter = ws.get('iter');
         if (iter.more) {
           this.ctx.set(node.name, iter.value);
-          return this.loopBody(node.body, loop, iter.next());
+          this.goto(3);
+          this.push(node.body);
+        } else {
+          this.pop();
         }
-      };
-      // convert the range to an enumeration
-      return loop(this.ctx.enumerate(rres.rv));
-    });
+        break;
+      case 3:
+        this.goto(2, (ws) => {
+          ws.update('iter', (iter) => iter.next());
+        });
+        break;
+    }
   }
 
-  xxwhileNode(node) {
-    // recursive loop while condition is true
-    let loop = () => {
-      return this.visit(node.cond).then((cres) => {
-        if (cres.rv) {
-          return this.loopBody(node.body, loop);
+  whileNode(node, state, ws) {
+    switch (state) {
+      case 0:
+        this.goto(1);
+        this.push(node.cond);
+        break;
+      case 1:
+        if (this.result.rv) {
+          this.goto(0);
+          this.push(node.body);
+        } else {
+          this.pop();
         }
-      });
-    };
-    return loop();
+        break;
+    }
   }
 
   ifNode(node, state, ws) {
@@ -257,7 +277,7 @@ export class SInterpreter {
         break;
       case 1:
         let count = ws.get('count');
-        if (count < node.args.length) {
+        if (node.args && count < node.args.length) {
           this.goto(2);
           this.push(node.args[count]);
         } else {
