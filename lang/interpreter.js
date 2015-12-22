@@ -448,24 +448,39 @@ export class SInterpreter {
     }
   }
 
-  xxwithNode(node) {
-    let v = node.name ?
-      // treat this as a let/letIndex and let it do its thing
-      (node.indexes ? this.letIndexNode(node) : this.letNode(node)) :
-      // value will have an lv if it's a var/index
-      this.visit(node.value);
-    return v.then((vres) => {
-      this.ctx.pushw(vres);
-      return this.visit(node.body).then((bres) => {
-        this.ctx.popw();
-        if (bres.flow == 'return' || bres.flow == 'exit') {
-          return bres; // propagate up the stack
+  withNode(node, state, ws) {
+    switch (state) {
+      case 0:
+        this.goto(1);
+        if (node.name) {
+          if (node.indexes) {
+            this.push({
+              type: 'letIndex',
+              name: node.name,
+              indexes: node.indexes,
+              value: node.value
+            });
+          } else {
+            this.push({
+              type: 'let',
+              name: node.name,
+              value: node.value
+            });
+          }
+        } else {
+          this.push(node.value);
         }
-      });
-    }, (err) => {
-      this.ctx.popw();
-      throw err;
-    });
+        break;
+      case 1:
+        this.ctx.pushw(this.result);
+        this.goto(2);
+        this.push(node.body);
+        break;
+      case 2:
+        this.ctx.popw();
+        this.pop();
+        break;
+    }
   }
 
   logicalOpNode(node, state, ws) {
