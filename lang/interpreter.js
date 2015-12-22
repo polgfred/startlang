@@ -8,7 +8,11 @@ export class Frame extends immutable.Record({
   node: null,
   state: 0,
   ws: immutable.OrderedMap()
-}) {}
+}) {
+  debug() {
+    return `[Frame node=${this.node.name} state=${this.state} ws=${JSON.stringify(this.ws.toJS())}]`;
+  }
+}
 
 export class SInterpreter {
   constructor(root, ctx) {
@@ -24,12 +28,8 @@ export class SInterpreter {
   }
 
   loop() {
+    // loop until the stack is empty
     if (this.frame) {
-      // console.log('--------------');
-      // console.log(this.fst);
-      // console.log(this.frame.node);
-      // console.log(this.frame.state);
-      // console.log(this.frame.ws);
       let { node, state, ws } = this.frame;
       return new Promise((resolve) => {
         resolve(this[`${node.type}Node`](node, state, ws));
@@ -49,6 +49,7 @@ export class SInterpreter {
   }
 
   push(node) {
+    // push a new frame onto the stack for this node
     this.fst = this.fst.push(this.frame);
     this.frame = new Frame({ node });
   }
@@ -58,12 +59,15 @@ export class SInterpreter {
     if (result == null || !hasOwnProperty.call(result, 'rv')) {
       result = { rv: result };
     }
+    // put the result into the result register
     this.result = result;
+    // pop this frame off the stack
     this.frame = this.fst.first();
     this.fst = this.fst.pop();
   }
 
   goto(state, mut) {
+    // atomically update the current frame's state and workspace
     this.frame = this.frame.withMutations((frame) => {
       if (state != null) {
         frame.set('state', state);
@@ -71,46 +75,6 @@ export class SInterpreter {
       if (mut) {
         frame.set('ws', frame.ws.withMutations(mut));
       }
-    });
-  }
-
-  // main node visitor
-  xxvisit(node) {
-    // optimize literals: extract the value directly without a function call
-    if (node.type == 'literal') {
-      return Promise.resolve({ rv: node.value });
-    }
-    if (node.pause) {
-      // return a promise to resume execution when resume() is called
-      return new Promise((resolve) => {
-        this.resume = () => {
-          this.resume = null;
-          return this.nodeResult(node);
-        };
-      });
-    }
-    // return the node's result immediately
-    return this.nodeResult(node);
-  }
-
-  // safely get and normalize the node's result, or attach the node to
-  // the error object on failure
-  xxnodeResult(node) {
-    let method = node.type + 'Node';
-    return new Promise((resolve) => {
-      resolve(this[method](node));
-    }).then((result) => {
-      // if the node returns a plain value, convert it to an rvalue
-      if (result == null || !hasOwnProperty.call(result, 'rv')) {
-        result = { rv: result };
-      }
-      return result;
-    }, (err) => {
-      // attach the node where the error occured
-      if (!err.node) {
-        err.node = node;
-      }
-      throw err;
     });
   }
 
