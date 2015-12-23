@@ -49,9 +49,16 @@ export class SInterpreter {
   }
 
   push(node) {
-    // push a new frame onto the stack for this node
-    this.fst = this.fst.push(this.frame);
-    this.frame = new Frame({ node });
+    // optimize literals and vars by setting the result register directly
+    if (node.type == 'literal') {
+      this.result = { rv: node.value };
+    } else if (node.type == 'var') {
+      this.result = { rv: this.ctx.get(node.name), lv: { name: node.name } };
+    } else {
+      // push a new frame onto the stack for this node
+      this.fst = this.fst.push(this.frame);
+      this.frame = new Frame({ node });
+    }
   }
 
   pop(result) {
