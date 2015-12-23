@@ -24,8 +24,8 @@ if (process.argv.indexOf('--ns') != -1) {
   options.ns = true;
 }
 
-if (process.argv.indexOf('--frames') != -1) {
-  options.frames = true;
+if (process.argv.indexOf('--time') != -1) {
+  options.time = true;
 }
 
 if (process.argv.indexOf('--meta') != -1) {
@@ -33,7 +33,7 @@ if (process.argv.indexOf('--meta') != -1) {
   parserOptions.ast = parserOptions.meta = true;
 }
 
-let ctx, interp;
+let ctx, interp, start, end;
 
 Promise.resolve().then(() => {
   return readFileSync(process.argv[2], 'utf-8');
@@ -49,6 +49,12 @@ Promise.resolve().then(() => {
 
   ctx = createRuntime();
   interp = createInterpreter(root, ctx);
+
+  if (options.time) {
+    start = new Date;
+    console.error('start', start);
+  }
+
   return interp.run();
 }).catch((err) => {
   if (err.stack) {
@@ -59,6 +65,12 @@ Promise.resolve().then(() => {
     output(err.node);
   }
 }).then(() => {
+  if (options.time) {
+    end = new Date;
+    console.error('end', end);
+    console.error('time (ms)', end - start);
+  }
+
   if (ctx && options.ns) {
     output(ctx.ns.toJS());
   }
