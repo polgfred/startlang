@@ -55,12 +55,14 @@ export class SInterpreter {
   }
 
   pop(result) {
-    // if the node returns a plain value, convert it to an rvalue
-    if (result == null || !hasOwnProperty.call(result, 'rv')) {
-      result = { rv: result };
+    if (result !== undefined) {
+      // if the node returns a plain value, convert it to an rvalue
+      if (result == null || !hasOwnProperty.call(result, 'rv')) {
+        result = { rv: result };
+      }
+      // put the result into the result register
+      this.result = result;
     }
-    // put the result into the result register
-    this.result = result;
     // pop this frame off the stack
     this.frame = this.fst.first();
     this.fst = this.fst.pop();
@@ -90,12 +92,19 @@ export class SInterpreter {
       case 1:
         let count = ws.get('count');
         if (count < node.elems.length) {
-          this.goto(null, (ws) => {
+          this.goto(2, (ws) => {
             ws.set('count', count + 1);
           });
           this.push(node.elems[count]);
         } else {
           this.pop();
+        }
+        break;
+      case 2:
+        if (this.result.flow) {
+          this.pop();
+        } else {
+          this.goto(1);
         }
         break;
     }
@@ -129,10 +138,20 @@ export class SInterpreter {
       case 2:
         let count = ws.get('count');
         if (count < ws.get('times')) {
-          this.goto(null, (ws) => {
+          this.goto(3, (ws) => {
             ws.set('count', count + 1);
           });
           this.push(node.body);
+        } else {
+          this.pop();
+        }
+        break;
+      case 3:
+        let flow = this.result.flow;
+        if (!flow || flow == 'next') {
+          this.goto(2);
+        } else if (flow == 'break') {
+          this.pop({ rv: this.result.rv });
         } else {
           this.pop();
         }
@@ -182,9 +201,16 @@ export class SInterpreter {
         }
         break;
       case 5:
-        this.goto(4, (ws) => {
-          ws.update('count', (count) => count + ws.get('by'));
-        });
+        let flow = this.result.flow;
+        if (!flow || flow == 'next') {
+          this.goto(4, (ws) => {
+            ws.update('count', (count) => count + ws.get('by'));
+          });
+        } else if (flow == 'break') {
+          this.pop({ rv: this.result.rv });
+        } else {
+          this.pop();
+        }
         break;
     }
   }
@@ -211,9 +237,16 @@ export class SInterpreter {
         }
         break;
       case 3:
-        this.goto(2, (ws) => {
-          ws.update('iter', (iter) => iter.next());
-        });
+        let flow = this.result.flow;
+        if (!flow || flow == 'next') {
+          this.goto(2, (ws) => {
+            ws.update('iter', (iter) => iter.next());
+          });
+        } else if (flow == 'break') {
+          this.pop({ rv: this.result.rv });
+        } else {
+          this.pop();
+        }
         break;
     }
   }
@@ -226,8 +259,18 @@ export class SInterpreter {
         break;
       case 1:
         if (this.result.rv) {
-          this.goto(0);
+          this.goto(2);
           this.push(node.body);
+        } else {
+          this.pop();
+        }
+        break;
+      case 2:
+        let flow = this.result.flow;
+        if (!flow || flow == 'next') {
+          this.goto(0);
+        } else if (flow == 'break') {
+          this.pop({ rv: this.result.rv });
         } else {
           this.pop();
         }
@@ -308,7 +351,7 @@ export class SInterpreter {
         break;
       case 4:
         this.ctx.pop();
-        this.pop(this.result);
+        this.pop();
         break;
       case 5:
         // handle a runtime API function
@@ -352,15 +395,12 @@ export class SInterpreter {
     }
   }
 
-  literalNode() {
-    this.pop({ rv: this.frame.node.value });
+  literalNode(node, state, ws) {
+    this.pop({ rv: node.value });
   }
 
-  varNode() {
-    this.pop({
-      rv: this.ctx.get(this.frame.node.name),
-      lv: { name: this.frame.node.name }
-    });
+  varNode(node, state, ws) {
+    this.pop({ rv: this.ctx.get(node.name), lv: { name: node.name } });
   }
 
   letNode(node, state, ws) {
