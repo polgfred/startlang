@@ -36,7 +36,7 @@ export class SInterpreter {
       }).then(() => {
         // continue
         return this.loop();
-      }).catch((err) => {
+      }, (err) => {
         // attach the node where the error occured
         if (!err.node) {
           err.node = node;
@@ -60,7 +60,7 @@ export class SInterpreter {
       if (result == null || !hasOwnProperty.call(result, 'rv')) {
         result = { rv: result };
       }
-      // put the result into the result register
+      // put the return value into the result register
       this.result = result;
     }
     // pop this frame off the stack
@@ -108,19 +108,6 @@ export class SInterpreter {
         }
         break;
     }
-  }
-
-  xxloopBody(body, loop, next) {
-    return this.visit(body).then((bres) => {
-      let flow = bres.flow;
-      if (!flow || flow == 'next') {
-        return loop(next);
-      } else if (flow == 'break') {
-        return; // just terminate the surrounding block
-      } else {
-        return bres; // propagate up the stack
-      }
-    });
   }
 
   repeatNode(node, state, ws) {
