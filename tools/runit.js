@@ -61,8 +61,8 @@ Promise.resolve().then(() => {
     console.log(err.stack);
   }
 
-  if (err.node) {
-    output(err.node);
+  if (interp.frame) {
+    output(interp.frame.node);
   }
 }).then(() => {
   if (options.time) {

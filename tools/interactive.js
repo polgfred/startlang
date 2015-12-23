@@ -6,6 +6,7 @@ import { createRuntime } from '../lang/runtime';
 import { createInterpreter } from '../lang/interpreter';
 
 let ctx = createRuntime();
+let interp;
 
 let rl = readline.createInterface({
   input: process.stdin,
@@ -27,13 +28,18 @@ rl.on('line', (line) => {
   buf += line + '\n';
 
   Promise.resolve().then(() => {
+    interp = null;
     return parse(buf);
   }).then((root) => {
-    let interp = createInterpreter(root, ctx);
+    interp = createInterpreter(root, ctx);
     return interp.run();
   }).catch((err) => {
     if (err.stack) {
       console.log(err.stack);
+    }
+
+    if (interp && interp.frame) {
+      console.log(interp.frame.node);
     }
   }).then((result) => {
     if (result && result.flow == 'exit') {

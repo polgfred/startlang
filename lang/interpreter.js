@@ -4,15 +4,11 @@ import immutable from 'immutable';
 
 let hasOwnProperty = Object.prototype.hasOwnProperty; // cache this for performance
 
-export class Frame extends immutable.Record({
+export const Frame = immutable.Record({
   node: null,
   state: 0,
   ws: immutable.OrderedMap()
-}) {
-  debug() {
-    return `[Frame node=${this.node.name} state=${this.state} ws=${JSON.stringify(this.ws.toJS())}]`;
-  }
-}
+});
 
 export class SInterpreter {
   constructor(root, ctx) {
@@ -28,24 +24,21 @@ export class SInterpreter {
   }
 
   loop() {
-    // loop until the stack is empty
-    if (this.frame) {
-      let { node, state, ws } = this.frame;
-      return new Promise((resolve) => {
-        resolve(this[`${node.type}Node`](node, state, ws));
-      }).then(() => {
-        // continue
-        return this.loop();
-      }, (err) => {
-        // attach the node where the error occured
-        if (!err.node) {
-          err.node = node;
+    // return a promise for the eventual termination of the loop - if any node
+    // function returns a promise, chain on a new promise to reenter the loop
+    // when it settles
+    return Promise.resolve().then(() => {
+      while (this.frame) {
+        let { node, state, ws } = this.frame;
+        let result = this[`${node.type}Node`](node, state, ws);
+        if (result instanceof Promise) {
+          // bail out and re-enter the loop when the promise settles
+          return result.then(() => {
+            return this.loop();
+          });
         }
-        throw err;
-      });
-    } else {
-      return Promise.resolve();
-    }
+      }
+    });
   }
 
   push(node) {
@@ -234,6 +227,7 @@ export class SInterpreter {
         let flow = this.result.flow;
         if (!flow || flow == 'next') {
           this.goto(2, (ws) => {
+            // TODO: iteration should allow async
             ws.update('iter', (iter) => iter.next());
           });
         } else if (flow == 'break') {
@@ -349,14 +343,18 @@ export class SInterpreter {
         break;
       case 5:
         // handle a runtime API function
-        return new Promise((resolve) => {
-          resolve(this.ctx.syscall(
-                    node.name,
-                    ws.get('args').toArray(),
-                    ws.get('assn').toArray()));
-        }).then((result) => {
+        let result = this.ctx.syscall(
+                        node.name,
+                        ws.get('args').toArray(),
+                        ws.get('assn').toArray());
+        if (result instanceof Promise) {
+          // if we got a promise, pop the result when it gets resolved
+          return result.then((result) => {
+            this.pop(result);
+          });
+        } else {
           this.pop(result);
-        });
+        }
         break;
     }
   }
