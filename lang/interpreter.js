@@ -388,7 +388,7 @@ export class SInterpreter {
   }
 
   literalNode(node, state, ws) {
-    this.pop({ rv: node.value });
+    this.pop(node.value);
   }
 
   varNode(node, state, ws) {
