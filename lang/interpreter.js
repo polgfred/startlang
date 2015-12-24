@@ -91,14 +91,9 @@ export class SInterpreter {
   blockNode(node, state, ws) {
     switch (state) {
       case 0:
-        this.goto(1, (ws) => {
-          ws.set('count', 0);
-        });
-        break;
-      case 1:
-        let count = ws.get('count');
+        let count = ws.get('count', 0);
         if (count < node.elems.length) {
-          this.goto(2, (ws) => {
+          this.goto(1, (ws) => {
             ws.set('count', count + 1);
           });
           this.push(node.elems[count]);
@@ -106,11 +101,11 @@ export class SInterpreter {
           this.pop();
         }
         break;
-      case 2:
+      case 1:
         if (this.result.flow) {
           this.pop();
         } else {
-          this.goto(1);
+          this.goto(0);
         }
         break;
     }
@@ -283,19 +278,17 @@ export class SInterpreter {
         this.push(node.cond);
         break;
       case 1:
-        this.goto(2, (ws) => {
-          ws.set('cond', this.result.rv);
-        });
-        break;
-      case 2:
-        this.goto(3);
-        if (ws.get('cond')) {
+        if (this.result.rv) {
+          this.goto(2);
           this.push(node.tbody);
         } else if (node.fbody) {
+          this.goto(2);
           this.push(node.fbody);
+        } else {
+          this.pop();
         }
         break;
-      case 3:
+      case 2:
         this.pop();
         break;
     }
@@ -620,15 +613,10 @@ export class SInterpreter {
         this.push(node.right);
         break;
       case 2:
-        this.goto(3, (ws) => {
-          ws.set('right', this.result.rv);
-        });
-        break;
-      case 3:
         this.replace(this.ctx.binaryop(
                       node.op,
                       ws.get('left'),
-                      ws.get('right')));
+                      this.result.rv));
         this.pop();
         break;
     }
@@ -641,14 +629,9 @@ export class SInterpreter {
         this.push(node.right);
         break;
       case 1:
-        this.goto(2, (ws) => {
-          ws.set('right', this.result.rv);
-        });
-        break;
-      case 2:
         this.replace(this.ctx.unaryop(
                       node.op,
-                      ws.get('right')));
+                      this.result.rv));
         this.pop();
         break;
     }
