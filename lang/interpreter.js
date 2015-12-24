@@ -4,7 +4,7 @@ import immutable from 'immutable';
 
 let hasOwnProperty = Object.prototype.hasOwnProperty; // cache this for performance
 
-export const Frame = immutable.Record({
+export const SFrame = immutable.Record({
   node: null,
   state: 0,
   ws: immutable.OrderedMap()
@@ -19,8 +19,8 @@ export class SInterpreter {
   run() {
     // push on the root node and kick off the run loop
     this.fst = immutable.Stack();
-    this.frame = new Frame({ node: this.root });
-    this.result = { rv: undefined };
+    this.frame = SFrame({ node: this.root });
+    this.replace();
     return this.loop();
   }
 
@@ -55,7 +55,7 @@ export class SInterpreter {
     } else {
       // push a new frame onto the stack for this node
       this.fst = this.fst.push(this.frame);
-      this.frame = new Frame({ node });
+      this.frame = SFrame({ node });
     }
   }
 
