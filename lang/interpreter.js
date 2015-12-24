@@ -20,6 +20,7 @@ export class SInterpreter {
     // push on the root node and kick off the run loop
     this.fst = immutable.Stack();
     this.frame = new Frame({ node: this.root });
+    this.result = { rv: undefined };
     return this.loop();
   }
 
@@ -44,9 +45,13 @@ export class SInterpreter {
   push(node) {
     // optimize literals and vars by setting the result register directly
     if (node.type == 'literal') {
-      this.result = { rv: node.value };
+      this.replace(node.value);
     } else if (node.type == 'var') {
-      this.result = { rv: this.ctx.get(node.name), lv: { name: node.name } };
+      // return the rv/lv pair for this assignment
+      this.replace({
+        rv: this.ctx.get(node.name),
+        lv: { name: node.name }
+      });
     } else {
       // push a new frame onto the stack for this node
       this.fst = this.fst.push(this.frame);
@@ -54,15 +59,16 @@ export class SInterpreter {
     }
   }
 
-  pop(result) {
-    if (result !== undefined) {
-      // if the node returns a plain value, convert it to an rvalue
-      if (result == null || !hasOwnProperty.call(result, 'rv')) {
-        result = { rv: result };
-      }
-      // put the return value into the result register
-      this.result = result;
+  replace(result) {
+    // normalize the result to rvalue/lvalue form if necessary
+    if (result == null || !hasOwnProperty.call(result, 'rv')) {
+      result = { rv: result };
     }
+    // put the return value into the result register
+    this.result = result;
+  }
+
+  pop(result) {
     // pop this frame off the stack
     this.frame = this.fst.first();
     this.fst = this.fst.pop();
@@ -137,9 +143,10 @@ export class SInterpreter {
         let flow = this.result.flow;
         if (!flow || flow == 'next') {
           this.goto(2);
-        } else if (flow == 'break') {
-          this.pop({ rv: this.result.rv });
         } else {
+          if (flow == 'break') {
+            this.replace(this.result.rv);
+          }
           this.pop();
         }
         break;
@@ -193,9 +200,10 @@ export class SInterpreter {
           this.goto(4, (ws) => {
             ws.update('count', (count) => count + ws.get('by'));
           });
-        } else if (flow == 'break') {
-          this.pop({ rv: this.result.rv });
         } else {
+          if (flow == 'break') {
+            this.replace(this.result.rv);
+          }
           this.pop();
         }
         break;
@@ -230,9 +238,10 @@ export class SInterpreter {
             // TODO: iteration should allow async
             ws.update('iter', (iter) => iter.next());
           });
-        } else if (flow == 'break') {
-          this.pop({ rv: this.result.rv });
         } else {
+          if (flow == 'break') {
+            this.replace(this.result.rv);
+          }
           this.pop();
         }
         break;
@@ -257,9 +266,10 @@ export class SInterpreter {
         let flow = this.result.flow;
         if (!flow || flow == 'next') {
           this.goto(0);
-        } else if (flow == 'break') {
-          this.pop({ rv: this.result.rv });
         } else {
+          if (flow == 'break') {
+            this.replace(this.result.rv);
+          }
           this.pop();
         }
         break;
@@ -348,27 +358,32 @@ export class SInterpreter {
                         ws.get('args').toArray(),
                         ws.get('assn').toArray());
         if (result instanceof Promise) {
-          // if we got a promise, pop the result when it gets resolved
+          // if we got a promise, handle the result when fulfilled
           return result.then((result) => {
-            this.pop(result);
+            this.replace(result);
+            this.pop();
           });
         } else {
-          this.pop(result);
+          this.replace(result);
+          this.pop();
         }
         break;
     }
   }
 
   exitNode() {
-    this.pop({ rv: undefined, flow: 'exit' });
+    this.replace({ rv: undefined, flow: 'exit' });
+    this.pop();
   }
 
   breakNode() {
-    this.pop({ rv: undefined, flow: 'break' });
+    this.replace({ rv: undefined, flow: 'break' });
+    this.pop();
   }
 
   nextNode() {
-    this.pop({ rv: undefined, flow: 'next' });
+    this.replace({ rv: undefined, flow: 'next' });
+    this.pop();
   }
 
   returnNode(node, state, ws) {
@@ -378,21 +393,29 @@ export class SInterpreter {
           this.goto(1);
           this.push(node.result);
         } else {
-          this.pop({ rv: undefined, flow: 'return' });
+          this.replace({ rv: undefined, flow: 'return' });
+          this.pop();
         }
         break;
       case 1:
-        this.pop({ rv: this.result.rv, flow: 'return' });
+        this.replace({ rv: this.result.rv, flow: 'return' });
+        this.pop();
         break;
     }
   }
 
   literalNode(node, state, ws) {
-    this.pop(node.value);
+    this.replace(node.value);
+    this.pop();
   }
 
   varNode(node, state, ws) {
-    this.pop({ rv: this.ctx.get(node.name), lv: { name: node.name } });
+    // return the rv/lv pair for this var
+    this.replace({
+      rv: this.ctx.get(node.name),
+      lv: { name: node.name }
+    });
+    this.pop();
   }
 
   letNode(node, state, ws) {
@@ -403,7 +426,12 @@ export class SInterpreter {
         break;
       case 1:
         this.ctx.set(node.name, this.result.rv);
-        this.pop({ rv: this.result.rv, lv: { name: node.name } });
+        // return the rv/lv pair for this assignment
+        this.replace({
+          rv: this.result.rv,
+          lv: { name: node.name }
+        });
+        this.pop();
         break;
     }
   }
@@ -433,10 +461,12 @@ export class SInterpreter {
         break;
       case 3:
         let indexes = ws.get('indexes').toArray();
-        this.pop({
+        // return the rv/lv pair for this slot
+        this.replace({
           rv: this.ctx.getindex(node.name, indexes),
           lv: { name: node.name, indexes: indexes }
         });
+        this.pop();
         break;
     }
   }
@@ -472,10 +502,11 @@ export class SInterpreter {
         let indexes = ws.get('indexes').toArray();
         this.ctx.setindex(node.name, indexes, this.result.rv);
         // return the rv/lv pair for this assignment
-        this.pop({
+        this.replace({
           rv: this.result.rv,
           lv: { name: node.name, indexes: indexes }
         });
+        this.pop();
         break;
     }
   }
@@ -525,14 +556,16 @@ export class SInterpreter {
             break;
           case 1:
             if (!this.result.rv) {
-              this.pop(false);
+              this.replace(false);
+              this.pop();
             } else {
               this.goto(2);
               this.push(node.right);
             }
             break;
           case 2:
-            this.pop(!!this.result.rv);
+            this.replace(!!this.result.rv);
+            this.pop();
             break;
         }
         break;
@@ -545,14 +578,16 @@ export class SInterpreter {
             break;
           case 1:
             if (this.result.rv) {
-              this.pop(true);
+              this.replace(true);
+              this.pop();
             } else {
               this.goto(2);
               this.push(node.right);
             }
             break;
           case 2:
-            this.pop(!!this.result.rv);
+            this.replace(!!this.result.rv);
+            this.pop();
             break;
         }
         break;
@@ -564,7 +599,8 @@ export class SInterpreter {
             this.push(node.right);
             break;
           case 1:
-            this.pop(!this.result.rv);
+            this.replace(!this.result.rv);
+            this.pop();
             break;
         }
         break;
@@ -589,10 +625,11 @@ export class SInterpreter {
         });
         break;
       case 3:
-        this.pop(this.ctx.binaryop(
-                  node.op,
-                  ws.get('left'),
-                  ws.get('right')));
+        this.replace(this.ctx.binaryop(
+                      node.op,
+                      ws.get('left'),
+                      ws.get('right')));
+        this.pop();
         break;
     }
   }
@@ -609,9 +646,10 @@ export class SInterpreter {
         });
         break;
       case 2:
-        this.pop(this.ctx.unaryop(
-                  node.op,
-                  ws.get('right')));
+        this.replace(this.ctx.unaryop(
+                      node.op,
+                      ws.get('right')));
+        this.pop();
         break;
     }
   }
