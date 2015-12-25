@@ -7,7 +7,7 @@ let hasOwnProperty = Object.prototype.hasOwnProperty; // cache this for performa
 export const SFrame = immutable.Record({
   node: null,
   state: 0,
-  ws: immutable.OrderedMap()
+  ws: immutable.Map()
 });
 
 export class SInterpreter {
