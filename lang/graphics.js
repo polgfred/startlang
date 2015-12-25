@@ -105,6 +105,25 @@ export class SGRuntime extends SRuntime {
 SGRuntime.globals = {
   __proto__: SRuntime.globals,
 
+  refresh() {
+    // let the DOM catch up
+    return new Promise((resolve) => {
+      setImmediate(resolve);
+    });
+  },
+
+  repaint() {
+    // render pending changes to DOM and refresh
+    this.updateDisplay();
+    return SGRuntime.globals.refresh.call(this);
+  },
+
+  clear() {
+    this.buf = immutable.List();
+    this.gfx = immutable.OrderedMap();
+    return SGRuntime.globals.repaint.call(this);
+  },
+
   print(...values) {
     if (values.length > 0) {
       for (let v of values) {
@@ -113,7 +132,7 @@ SGRuntime.globals = {
     } else {
       this.buf = this.buf.push('');
     }
-    this.updateDisplay();
+    return SGRuntime.globals.repaint.call(this);
   },
 
   input(prompt) {
@@ -124,17 +143,6 @@ SGRuntime.globals = {
         resolve(input);
       });
     });
-  },
-
-  clear() {
-    console.clear();
-    return SGRuntime.globals.repaint.call(this);
-  },
-
-  repaint() {
-    // render to DOM and refresh
-    this.updateDisplay();
-    return SRuntime.globals.refresh.call(this);
   },
 
   rgb(r, g, b) {

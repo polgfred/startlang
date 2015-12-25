@@ -251,6 +251,16 @@ SRuntime.globals = {
     };
   },
 
+  print(...values) {
+    if (values.length > 0) {
+      for (let v of values) {
+        console.log(handle(v).repr(v));
+      }
+    } else {
+      console.log();
+    }
+  },
+
   input(message) {
     return new Promise((resolve) => {
       let rl = readline.createInterface({
@@ -265,26 +275,9 @@ SRuntime.globals = {
     });
   },
 
-  print(...values) {
-    if (values.length > 0) {
-      for (let v of values) {
-        console.log(handle(v).repr(v));
-      }
-    } else {
-      console.log();
-    }
-  },
-
   sleep(seconds) {
     return new Promise((resolve) => {
       setTimeout(resolve, seconds * 1000);
-    });
-  },
-
-  refresh() {
-    // let the DOM catch up
-    return new Promise((resolve) => {
-      setImmediate(resolve);
     });
   }
 };
