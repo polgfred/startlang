@@ -508,24 +508,7 @@ export class SInterpreter {
     switch (state) {
       case 0:
         this.goto(1);
-        if (node.name) {
-          if (node.indexes) {
-            this.push({
-              type: 'letIndex',
-              name: node.name,
-              indexes: node.indexes,
-              value: node.value
-            });
-          } else {
-            this.push({
-              type: 'let',
-              name: node.name,
-              value: node.value
-            });
-          }
-        } else {
-          this.push(node.value);
-        }
+        this.push(node.value);
         break;
       case 1:
         this.ctx.pushw(this.result);

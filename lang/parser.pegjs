@@ -166,10 +166,13 @@ While
 
 With
   = 'with' WB __ name:Symbol __ indexes:Dimensions? __ '=' __ value:Value __ 'do' WB __ body:EndBody {
-      return buildNode('with', { name, indexes, value, body });
+      value = indexes ?
+        buildNode('letIndex', { name, indexes, value }) :
+        buildNode('let', { name, value });
+      return buildNode('with', { value, body });
     }
   / 'with' WB __ value:Value __ 'do' WB __ body:EndBody {
-      return buildNode('with', { name: null, value, body });
+      return buildNode('with', { value, body });
     }
 
 Begin
