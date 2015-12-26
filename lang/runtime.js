@@ -53,7 +53,6 @@ export class SRuntime {
   // push and pop new objects onto the ns stack
   push() {
     this.st = this.st.push(this.ns);
-    this.ns = immutable.OrderedMap();
   }
 
   pop() {
@@ -71,28 +70,10 @@ export class SRuntime {
   }
 
   get(name) {
-    // look in the current ns
-    let result = this.ns.get(name);
-    if (typeof result != 'undefined') {
-      return result;
-    }
-
-    // look up the stack (should we do this?)
-    let iter = this.st.values();
-    while (true) {
-      let next = iter.next();
-      if (next.done) {
-        break;
-      }
-      result = next.value.get(name);
-      if (typeof result != 'undefined') {
-        return result;
-      }
-    }
+    return this.ns.get(name);
   }
 
   set(name, value) {
-    // always in the current ns only
     this.ns = this.ns.set(name, value);
   }
 
