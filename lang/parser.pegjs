@@ -18,9 +18,7 @@
     if (options.meta) {
       node.meta = {
         text: text(),
-        offset: offset(),
-        line: line(),
-        column: column()
+        location: location()
       };
     }
 
