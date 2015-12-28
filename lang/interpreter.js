@@ -68,10 +68,25 @@ export class SInterpreter {
     this.result = result;
   }
 
-  pop(result) {
+  pop() {
     // pop this frame off the stack
     this.frame = this.fst.first();
     this.fst = this.fst.pop();
+  }
+
+  popUntil(flow, includeSelf) {
+    this.fst = this.fst.withMutations((fst) => {
+      // pop frames off until hitting a loop or function call node
+      while (this.frame.node.flow != flow) {
+        this.frame = fst.first();
+        fst.pop();
+      }
+      // pop the target frame as well (break/return/exit) or not (next)
+      if (includeSelf) {
+        this.frame = fst.first();
+        fst.pop();
+      }
+    });
   }
 
   goto(state, mut) {
@@ -89,25 +104,14 @@ export class SInterpreter {
   // ** implementations of AST nodes **
 
   blockNode(node, state, ws) {
-    switch (state) {
-      case 0:
-        let count = ws.get('count', 0);
-        if (count < node.elems.length) {
-          this.goto(1, (ws) => {
-            ws.set('count', count + 1);
-          });
-          this.push(node.elems[count]);
-        } else {
-          this.pop();
-        }
-        break;
-      case 1:
-        if (this.result.flow) {
-          this.pop();
-        } else {
-          this.goto(0);
-        }
-        break;
+    let count = ws.get('count', 0);
+    if (count < node.elems.length) {
+      this.goto(null, (ws) => {
+        ws.set('count', count + 1);
+      });
+      this.push(node.elems[count]);
+    } else {
+      this.pop();
     }
   }
 
@@ -126,22 +130,11 @@ export class SInterpreter {
       case 2:
         let count = ws.get('count');
         if (count < ws.get('times')) {
-          this.goto(3, (ws) => {
+          this.goto(null, (ws) => {
             ws.set('count', count + 1);
           });
           this.push(node.body);
         } else {
-          this.pop();
-        }
-        break;
-      case 3:
-        let flow = this.result.flow;
-        if (!flow || flow == 'next') {
-          this.goto(2);
-        } else {
-          if (flow == 'break') {
-            this.replace(this.result.rv);
-          }
           this.pop();
         }
         break;
@@ -183,22 +176,11 @@ export class SInterpreter {
         let count = ws.get('count');
         if (count <= ws.get('to')) {
           this.ctx.set(node.name, count);
-          this.goto(5);
+          this.goto(null, (ws) => {
+            ws.set('count', count + ws.get('by'));
+          });
           this.push(node.body);
         } else {
-          this.pop();
-        }
-        break;
-      case 5:
-        let flow = this.result.flow;
-        if (!flow || flow == 'next') {
-          this.goto(4, (ws) => {
-            ws.update('count', (count) => count + ws.get('by'));
-          });
-        } else {
-          if (flow == 'break') {
-            this.replace(this.result.rv);
-          }
           this.pop();
         }
         break;
@@ -220,23 +202,12 @@ export class SInterpreter {
         let iter = ws.get('iter');
         if (iter.more) {
           this.ctx.set(node.name, iter.value);
-          this.goto(3);
+          this.goto(null, (ws) => {
+            // TODO: iteration should allow async
+            ws.set('iter', iter.next());
+          });
           this.push(node.body);
         } else {
-          this.pop();
-        }
-        break;
-      case 3:
-        let flow = this.result.flow;
-        if (!flow || flow == 'next') {
-          this.goto(2, (ws) => {
-            // TODO: iteration should allow async
-            ws.update('iter', (iter) => iter.next());
-          });
-        } else {
-          if (flow == 'break') {
-            this.replace(this.result.rv);
-          }
           this.pop();
         }
         break;
@@ -251,20 +222,9 @@ export class SInterpreter {
         break;
       case 1:
         if (this.result.rv) {
-          this.goto(2);
+          this.goto(0);
           this.push(node.body);
         } else {
-          this.pop();
-        }
-        break;
-      case 2:
-        let flow = this.result.flow;
-        if (!flow || flow == 'next') {
-          this.goto(0);
-        } else {
-          if (flow == 'break') {
-            this.replace(this.result.rv);
-          }
           this.pop();
         }
         break;
@@ -365,18 +325,17 @@ export class SInterpreter {
   }
 
   exitNode() {
-    this.replace({ rv: undefined, flow: 'exit' });
-    this.pop();
+    // clear the stack so the program exits
+    this.frame = null;
+    this.fst = this.fst.clear();
   }
 
   breakNode() {
-    this.replace({ rv: undefined, flow: 'break' });
-    this.pop();
+    this.popUntil('loop', true);
   }
 
   nextNode() {
-    this.replace({ rv: undefined, flow: 'next' });
-    this.pop();
+    this.popUntil('loop', false);
   }
 
   returnNode(node, state, ws) {
@@ -386,13 +345,13 @@ export class SInterpreter {
           this.goto(1);
           this.push(node.result);
         } else {
-          this.replace({ rv: undefined, flow: 'return' });
-          this.pop();
+          this.replace();
+          this.popUntil('call', true);
         }
         break;
       case 1:
-        this.replace({ rv: this.result.rv, flow: 'return' });
-        this.pop();
+        this.replace(this.result.rv);
+        this.popUntil('call', true);
         break;
     }
   }

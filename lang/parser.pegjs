@@ -143,25 +143,25 @@ If
 
 Repeat
   = 'repeat' WB __ times:Value __ 'do' WB __ body:EndBody {
-      return buildNode('repeat', { times, body });
+      return buildNode('repeat', { times, body, flow: 'loop' });
     }
 
 Count
   = 'count' WB __ name:Symbol __ 'from' WB __ from:Value __ 'to' WB __ to:Value __ 'by' WB __ by:Value __ 'do' WB __ body:EndBody {
-      return buildNode('count', { name, from, to, by, body });
+      return buildNode('count', { name, from, to, by, body, flow: 'loop' });
     }
   / 'count' WB __ name:Symbol __ 'from' WB __ from:Value __ 'to' WB __ to:Value __ 'do' WB __ body:EndBody {
-      return buildNode('count', { name, from, to, body });
+      return buildNode('count', { name, from, to, body, flow: 'loop' });
     }
 
 For
   = 'for' WB __ name:Symbol __ 'in' WB __ range:Value __ 'do' WB __ body:EndBody {
-      return buildNode('for', { name, range, body });
+      return buildNode('for', { name, range, body, flow: 'loop' });
     }
 
 While
   = 'while' WB __ cond:Value __ 'do' WB __ body:EndBody {
-      return buildNode('while', { cond, body });
+      return buildNode('while', { cond, body, flow: 'loop' });
     }
 
 With
@@ -230,13 +230,13 @@ Call
   //  2- try to match zero or more parenthesized arguments
   //  3- match a bare call with no parens or args
   = name:Symbol __ args:Values {
-      return buildNode('call', { name, args });
+      return buildNode('call', { name, args, flow: 'call' });
     }
   / name:Symbol __ '(' __ EOL? __ args:Values? __ ')' {
-      return buildNode('call', { name, args });
+      return buildNode('call', { name, args, flow: 'call' });
     }
   / name:Symbol {
-      return buildNode('call', { name, args: null });
+      return buildNode('call', { name, args: null, flow: 'call' });
     }
 
 // Values
@@ -339,7 +339,7 @@ UnaryOp
 
 CallExpr
   = name:Symbol __ '(' __ EOL? __ args:Values? __ ')' {
-      return buildNode('call', { name, args });
+      return buildNode('call', { name, args, flow: 'call' });
     }
   / IndexExpr
 
