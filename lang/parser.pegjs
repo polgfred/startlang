@@ -1,6 +1,14 @@
 // Language Nodes
 
 {
+  let flowMarker = {
+    'repeat': 'loop',
+    'count': 'loop',
+    'for': 'loop',
+    'while': 'loop',
+    'call': 'call'
+  };
+
   // build an object for this node
   function buildNode(type, attrs) {
     // if we're a block with one statement, just return the statement itself
@@ -10,6 +18,11 @@
 
     // show the type first
     let node = { type: type };
+
+    // then the flow marker
+    if (flowMarker[type]) {
+      node.flow = flowMarker[type];
+    }
 
     // then the passed-in attributes
     Object.assign(node, attrs);
@@ -141,25 +154,25 @@ If
 
 Repeat
   = 'repeat' WB __ times:Value __ 'do' WB __ body:EndBody {
-      return buildNode('repeat', { times, body, flow: 'loop' });
+      return buildNode('repeat', { times, body });
     }
 
 Count
   = 'count' WB __ name:Symbol __ 'from' WB __ from:Value __ 'to' WB __ to:Value __ 'by' WB __ by:Value __ 'do' WB __ body:EndBody {
-      return buildNode('count', { name, from, to, by, body, flow: 'loop' });
+      return buildNode('count', { name, from, to, by, body });
     }
   / 'count' WB __ name:Symbol __ 'from' WB __ from:Value __ 'to' WB __ to:Value __ 'do' WB __ body:EndBody {
-      return buildNode('count', { name, from, to, body, flow: 'loop' });
+      return buildNode('count', { name, from, to, body });
     }
 
 For
   = 'for' WB __ name:Symbol __ 'in' WB __ range:Value __ 'do' WB __ body:EndBody {
-      return buildNode('for', { name, range, body, flow: 'loop' });
+      return buildNode('for', { name, range, body });
     }
 
 While
   = 'while' WB __ cond:Value __ 'do' WB __ body:EndBody {
-      return buildNode('while', { cond, body, flow: 'loop' });
+      return buildNode('while', { cond, body });
     }
 
 With
@@ -222,13 +235,13 @@ Call
   //  2- try to match zero or more parenthesized arguments
   //  3- match a bare call with no parens or args
   = name:Symbol __ args:Values {
-      return buildNode('call', { name, args, flow: 'call' });
+      return buildNode('call', { name, args });
     }
   / name:Symbol __ '(' __ EOL? __ args:Values? __ ')' {
-      return buildNode('call', { name, args, flow: 'call' });
+      return buildNode('call', { name, args });
     }
   / name:Symbol {
-      return buildNode('call', { name, args: null, flow: 'call' });
+      return buildNode('call', { name, args: null });
     }
 
 // Values
@@ -331,7 +344,7 @@ UnaryOp
 
 CallExpr
   = name:Symbol __ '(' __ EOL? __ args:Values? __ ')' {
-      return buildNode('call', { name, args, flow: 'call' });
+      return buildNode('call', { name, args });
     }
   / IndexExpr
 

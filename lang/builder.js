@@ -2,13 +2,27 @@
 
 import Blockly from '../blockly_start';
 
+let flowMarker = {
+  'repeat': 'loop',
+  'count': 'loop',
+  'for': 'loop',
+  'while': 'loop',
+  'call': 'call'
+};
+
 function buildNode(type, block, attrs) {
   // if we're a block with one statement, just return the statement itself
   if (type == 'block' && attrs.elems.length == 1) {
     return attrs.elems[0];
   }
 
-  let node = { type: type }; // block: block
+  // show the type first
+  let node = { type: type };
+
+  // then the flow marker
+  if (flowMarker[type]) {
+    node.flow = flowMarker[type];
+  }
 
   // then the passed-in attributes
   Object.assign(node, attrs);
