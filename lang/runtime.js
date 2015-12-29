@@ -280,7 +280,7 @@ export const SBase = {
     throw new Error('object does not support []');
   },
 
-  methods: [],
+  methods: {},
 
   unaryops: {},
 
