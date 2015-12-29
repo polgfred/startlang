@@ -483,10 +483,12 @@ export const SString = {
 
 String.prototype[handlerKey] = SString;
 
-function checkTimeUnit(unit) {
-  if (moment.normalizeUnits(unit) == null) {
+function normalizeTimeUnit(unit) {
+  let norm = moment.normalizeUnits(unit);
+  if (norm == null) {
     throw new Error('unrecognized time unit');
   }
+  return norm;
 }
 
 export const STime = {
@@ -507,7 +509,7 @@ export const STime = {
 
   methods: {
     part(t, unit) {
-      checkTimeUnit(unit);
+      unit = normalizeTimeUnit(unit);
       let val = t.get(unit);
       if (unit == 'month' || unit == 'day') {
         val++;
@@ -516,28 +518,23 @@ export const STime = {
     },
 
     add(t, n, unit) {
-      checkTimeUnit(unit);
-      return { [assignKey]: moment(t).add(n, unit) };
+      return { [assignKey]: moment(t).add(n, normalizeTimeUnit(unit)) };
     },
 
     sub(t, n, unit) {
-      checkTimeUnit(unit);
-      return { [assignKey]: moment(t).subtract(n, unit) };
+      return { [assignKey]: moment(t).subtract(n, normalizeTimeUnit(unit)) };
     },
 
     startof(t, unit) {
-      checkTimeUnit(unit);
-      return { [assignKey]: moment(t).startOf(unit) };
+      return { [assignKey]: moment(t).startOf(normalizeTimeUnit(unit)) };
     },
 
     endof(t, unit) {
-      checkTimeUnit(unit);
-      return { [assignKey]: moment(t).endOf(unit) };
+      return { [assignKey]: moment(t).endOf(normalizeTimeUnit(unit)) };
     },
 
     diff(t1, t2, unit) {
-      checkTimeUnit(unit);
-      return t2.diff(t1, unit);
+      return t2.diff(t1, normalizeTimeUnit(unit));
     }
   },
 
