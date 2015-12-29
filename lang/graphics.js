@@ -102,9 +102,7 @@ export class SGRuntime extends SRuntime {
   }
 }
 
-SGRuntime.globals = {
-  __proto__: SRuntime.globals,
-
+SGRuntime.globals = Object.setPrototypeOf({
   refresh() {
     // let the DOM catch up
     return new Promise((resolve) => {
@@ -191,12 +189,10 @@ SGRuntime.globals = {
       attrs: { points: points.join(',') }
     });
   }
-};
+}, SRuntime.globals);
 
 // all shapes have these basic utilities in common
-export const SShape = {
-  __proto__: SBase,
-
+export const SShape = Object.setPrototypeOf({
   repr(sh) {
     return `*${sh.type}*`;
   },
@@ -262,75 +258,55 @@ export const SShape = {
     remove(sh) {
     }
   }
-};
+}, SBase);
 
-export const SRect = {
-  __proto__: SShape,
-
-  methods: {
-    __proto__: SShape.methods,
-
+export const SRect = Object.setPrototypeOf({
+  methods: Object.setPrototypeOf({
     move(sh, x, y) {
       sh = this.updateShape(sh, 'x', x);
       sh = this.updateShape(sh, 'y', y);
       return { [assignKey]: [ sh ] };
     }
-  }
-};
+  }, SShape.methods)
+}, SShape);
 
-export const SCircle = {
-  __proto__: SShape,
-
-  methods: {
-    __proto__: SShape.methods,
-
+export const SCircle = Object.setPrototypeOf({
+  methods: Object.setPrototypeOf({
     move(sh, cx, cy) {
       sh = this.updateShape(sh, 'cx', cx);
       sh = this.updateShape(sh, 'cy', cy);
       return { [assignKey]: [ sh ] };
     }
-  }
-};
+  }, SShape.methods)
+}, SShape);
 
-export const SEllipse = {
-  __proto__: SShape,
-
-  methods: {
-    __proto__: SShape.methods,
-
+export const SEllipse = Object.setPrototypeOf({
+  methods: Object.setPrototypeOf({
     move(sh, cx, cy) {
       sh = this.updateShape(sh, 'cx', cx);
       sh = this.updateShape(sh, 'cy', cy);
       return { [assignKey]: [ sh ] };
     }
-  }
-};
+  }, SShape.methods)
+}, SShape);
 
-export const SLine = {
-  __proto__: SShape,
-
-  methods: {
-    __proto__: SShape.methods,
-
+export const SLine = Object.setPrototypeOf({
+  methods: Object.setPrototypeOf({
     move(sh, x, y) {
       sh = this.updateShape(sh, 'x', x);
       sh = this.updateShape(sh, 'y', y);
       return { [assignKey]: [ sh ] };
     }
-  }
-};
+  }, SShape.methods)
+}, SShape);
 
 // used for both polylines and polygons, as it just moves points
-export const SPolygon = {
-  __proto__: SShape,
-
-  methods: {
-    __proto__: SShape.methods,
-
+export const SPolygon = Object.setPrototypeOf({
+  methods: Object.setPrototypeOf({
     move(el, x, y) {
     }
-  }
-};
+  }, SShape.methods)
+}, SShape);
 
 let handlerMap = {
   rect: SRect,
