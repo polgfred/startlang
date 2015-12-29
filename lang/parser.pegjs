@@ -48,7 +48,7 @@
     return buildNode('if', { cond, tbody, fbody });
   }
 
-  // take a base name, dimensions, and (optionally) a value, and construct an indexish node
+  // take a base name, indexes, and (optionally) a value, and construct an indexish node
   function buildIndex(name, indexes, value) {
     if (value === undefined) {
       return buildNode('index', { name, indexes });
@@ -219,7 +219,7 @@ Flow
     }
 
 Let
-  = ( 'let' WB __ )? name:Symbol __ indexes:Dimensions? __ '=' __ value:Value {
+  = ( 'let' WB __ )? name:Symbol __ indexes:Indexes? __ '=' __ value:Value {
       if (!indexes) {
         return buildNode('let', { name, value });
       } else {
@@ -351,7 +351,7 @@ CallExpr
 // Indexes
 
 IndexExpr
-  = name:Symbol __ indexes:Dimensions? {
+  = name:Symbol __ indexes:Indexes? {
       if (!indexes) {
         return buildNode('var', { name });
       } else {
@@ -360,12 +360,12 @@ IndexExpr
     }
   / PrimaryExpr
 
-Dimensions
-  = first:Dimension rest:( __ dim:Dimension { return dim; } )* {
+Indexes
+  = first:Index rest:( __ index:Index { return index; } )* {
       return [first].concat(rest);
     }
 
-Dimension
+Index
   = '[' __ val:Value __ ']' {
       return val;
     }
