@@ -7,8 +7,8 @@ import immutable from 'immutable';
 export const handlerKey = Symbol('START_HANDLER');
 
 // ensures its operands are of the same type
-export function checkOp(fn) {
-  return function(left, right) {
+function checkOp(fn) {
+  return (left, right) => {
     if (handle(left) !== handle(right)) {
       throw new Error('operands must be of the same type');
     }
@@ -18,12 +18,12 @@ export function checkOp(fn) {
 }
 
 // the above, plus ensures that its return value is not NaN
-export function checkMathOp(fn) {
+function checkMathOp(fn) {
   let checked = checkOp(fn);
 
-  return function(left, right) {
+  return (left, right) => {
     let result = checked(left, right);
-    // check for valid result
+    // check for numeric (not NaN) result
     if (result !== result) {
       throw new Error('result is not a number');
     }
@@ -31,7 +31,7 @@ export function checkMathOp(fn) {
   };
 }
 
-export function adjustIndex(index, size) {
+function adjustIndex(index, size) {
   return index > 0 ? index - 1 : Math.max(0, size + index);
 }
 
@@ -78,27 +78,29 @@ export class SRuntime {
   }
 
   getindex(name, indexes) {
-    let max = indexes.length - 1;
-    return next(this.get(name), 0);
+    let max = indexes.length - 1,
+        // recurse into nested containers
+        next = (b, i) => {
+          let h = handle(b), idx = indexes[i];
+          return (i == max) ?
+                    h.getindex(b, idx) :
+                    next(h.getindex(b, idx), i + 1);
+        };
 
-    function next(b, i) {
-      let h = handle(b), idx = indexes[i];
-      return (i == max) ?
-                h.getindex(b, idx) :
-                next(h.getindex(b, idx), i + 1);
-    }
+    return next(this.get(name), 0);
   }
 
   setindex(name, indexes, value) {
-    let max = indexes.length - 1;
-    this.set(name, next(this.get(name), 0));
+    let max = indexes.length - 1,
+        // recurse into nested containers
+        next = (b, i) => {
+          let h = handle(b), idx = indexes[i];
+          return (i == max) ?
+                    h.setindex(b, idx, value) :
+                    h.setindex(b, idx, next(h.getindex(b, idx), i + 1));
+        };
 
-    function next(b, i) {
-      let h = handle(b), idx = indexes[i];
-      return (i == max) ?
-                h.setindex(b, idx, value) :
-                h.setindex(b, idx, next(h.getindex(b, idx), i + 1));
-    }
+    this.set(name, next(this.get(name), 0));
   }
 
   enumerate(value) {
@@ -249,7 +251,7 @@ SRuntime.globals = {
         output: process.stdout
       });
 
-      rl.question(message, function(answer) {
+      rl.question(message, (answer) => {
         rl.close();
         resolve(answer);
       });
@@ -340,10 +342,10 @@ export const SNumber = {
     'max',
     'min'
   ].reduce((ns, method) => {
-    ns[method] = function(...args) {
+    ns[method] = (...args) => {
       // forward onto built-in Math function
       var result = Math[method](...args);
-      // check for valid result
+      // check for numeric (not NaN) result
       if (result !== result) {
         throw new Error('result is not a number');
       }
