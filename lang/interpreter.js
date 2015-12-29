@@ -25,20 +25,21 @@ export class SInterpreter {
   }
 
   loop() {
-    // return a promise for the eventual termination of the loop - if any node
-    // function returns a promise, chain on a new promise to reenter the loop
-    // when it settles
-    return Promise.resolve().then(() => {
+    // set up an entry point that loops until the stack is exhausted, or
+    // until a node returns a promise
+    let loop = () => {
       while (this.frame) {
         let { node, state, ws } = this.frame;
         let result = this[`${node.type}Node`](node, state, ws);
         if (result instanceof Promise) {
-          // bail out and re-enter the loop when the promise settles
-          return result.then(() => {
-            return this.loop();
-          });
+          return result.then(loop);
         }
       }
+    };
+
+    // return a promise for the eventual termination of the loop
+    return new Promise((resolve) => {
+      resolve(loop());
     });
   }
 
