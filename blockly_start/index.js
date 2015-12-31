@@ -12,8 +12,6 @@ import './lists';
 import './tables';
 import './graphics';
 
-// import './generator';
-
 export default Blockly = require('node-blockly/lib/blockly_compressed');
 
 // this abomination is brought to you by the fact that requiring this module
