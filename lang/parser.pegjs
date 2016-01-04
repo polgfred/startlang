@@ -3,8 +3,8 @@
 {
   let flowMarker = {
     'repeat': 'loop',
-    'count': 'loop',
     'for': 'loop',
+    'forIn': 'loop',
     'while': 'loop',
     'call': 'call'
   };
@@ -133,7 +133,6 @@ BlockElement
 Control
   = If
   / Repeat
-  / Count
   / For
   / While
   / With
@@ -153,21 +152,27 @@ If
     }
 
 Repeat
-  = 'repeat' WB __ times:Value? __ 'do' WB __ body:EndBody {
+  // repeat 10
+  = 'repeat' WB __ times:Value __ 'do' WB __ body:EndBody {
       return buildNode('repeat', { times, body });
     }
-
-Count
-  = 'for' WB __ name:Symbol __ 'from' WB __ from:Value __ 'to' WB __ to:Value __ 'by' WB __ by:Value __ 'do' WB __ body:EndBody {
-      return buildNode('count', { name, from, to, by, body });
-    }
-  / 'for' WB __ name:Symbol __ 'from' WB __ from:Value __ 'to' WB __ to:Value __ 'do' WB __ body:EndBody {
-      return buildNode('count', { name, from, to, body });
+  // repeat (forever)
+  / 'repeat' WB __ 'do' WB __ body:EndBody {
+      return buildNode('repeat', { body });
     }
 
 For
-  = 'for' WB __ name:Symbol __ 'in' WB __ range:Value __ 'do' WB __ body:EndBody {
-      return buildNode('for', { name, range, body });
+  // for i from a to b by c
+  = 'for' WB __ name:Symbol __ 'from' WB __ from:Value __ 'to' WB __ to:Value __ 'by' WB __ by:Value __ 'do' WB __ body:EndBody {
+      return buildNode('for', { name, from, to, by, body });
+    }
+  // for i from a to b
+  / 'for' WB __ name:Symbol __ 'from' WB __ from:Value __ 'to' WB __ to:Value __ 'do' WB __ body:EndBody {
+      return buildNode('for', { name, from, to, body });
+    }
+  // for i in x
+  / 'for' WB __ name:Symbol __ 'in' WB __ range:Value __ 'do' WB __ body:EndBody {
+      return buildNode('forIn', { name, range, body });
     }
 
 While

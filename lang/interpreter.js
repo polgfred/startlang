@@ -150,7 +150,7 @@ export class SInterpreter {
     }
   }
 
-  countNode(node, state, ws) {
+  forNode(node, state, ws) {
     switch (state) {
       case 0:
         this.goto(1);
@@ -196,7 +196,7 @@ export class SInterpreter {
     }
   }
 
-  forNode(node, state, ws) {
+  forInNode(node, state, ws) {
     switch (state) {
       case 0:
         this.goto(1);
