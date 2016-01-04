@@ -158,10 +158,10 @@ Repeat
     }
 
 Count
-  = 'count' WB __ name:Symbol __ 'from' WB __ from:Value __ 'to' WB __ to:Value __ 'by' WB __ by:Value __ 'do' WB __ body:EndBody {
+  = 'for' WB __ name:Symbol __ 'from' WB __ from:Value __ 'to' WB __ to:Value __ 'by' WB __ by:Value __ 'do' WB __ body:EndBody {
       return buildNode('count', { name, from, to, by, body });
     }
-  / 'count' WB __ name:Symbol __ 'from' WB __ from:Value __ 'to' WB __ to:Value __ 'do' WB __ body:EndBody {
+  / 'for' WB __ name:Symbol __ 'from' WB __ from:Value __ 'to' WB __ to:Value __ 'do' WB __ body:EndBody {
       return buildNode('count', { name, from, to, body });
     }
 

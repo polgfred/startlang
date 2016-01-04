@@ -1,8 +1,8 @@
-count i from 1 to 5 do print i
+for i from 1 to 5 do print i
 
 if i = 5 then print "done0" else print "done1"
 
-count i from 1 to 10 do
+for i from 1 to 10 do
   print "hi `i`"
   if i = 4 then next
   if i = 8 then break
@@ -35,7 +35,7 @@ y = 3
 print fred()
 
 begin fred do
-  count i from 1 to 5 do
+  for i from 1 to 5 do
     if i*2 = 6 then return "three"
     print i
   end

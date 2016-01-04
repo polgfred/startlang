@@ -5,7 +5,7 @@ marked = list()
 i = 2
 while i <= upper do
   print "`i` is prime"
-  count j from exp(2, i) to upper by i do marked[j] = true
+  for j from exp(2, i) to upper by i do marked[j] = true
   i = i + 1
   while marked[i] do i = i + 1
 end

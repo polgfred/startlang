@@ -6,7 +6,7 @@ colors = list("black",
               "yellow")
 
 with box = rect(0, 0, 10, 10) do
-  count t from 0 to 72 do
+  for t from 0 to 72 do
     move t*5, t*5
     rotate t*5
     scale t/2
