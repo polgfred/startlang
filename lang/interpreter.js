@@ -119,8 +119,12 @@ export class SInterpreter {
   repeatNode(node, state, ws) {
     switch (state) {
       case 0:
-        this.goto(1);
-        this.push(node.times);
+        if (node.times) {
+          this.goto(1);
+          this.push(node.times);
+        } else {
+          this.goto(3);
+        }
         break;
       case 1:
         this.goto(2, (ws) => {
@@ -138,6 +142,10 @@ export class SInterpreter {
         } else {
           this.pop();
         }
+        break;
+      case 3:
+        // repeat forever
+        this.push(node.body);
         break;
     }
   }

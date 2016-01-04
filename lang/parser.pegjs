@@ -153,7 +153,7 @@ If
     }
 
 Repeat
-  = 'repeat' WB __ times:Value __ 'do' WB __ body:EndBody {
+  = 'repeat' WB __ times:Value? __ 'do' WB __ body:EndBody {
       return buildNode('repeat', { times, body });
     }
 
