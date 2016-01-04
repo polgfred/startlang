@@ -25,13 +25,13 @@ function createMatrix() {
 export class SGRuntime extends SRuntime {
   constructor() {
     super();
+    this.buf = immutable.List();
+    this.gfx = immutable.OrderedMap();
     this.setMode('text');
   }
 
   setMode(mode) {
     this.mode = mode;
-    this.buf = immutable.List();
-    this.gfx = immutable.OrderedMap();
     this.updateDisplay();
   }
 
@@ -88,7 +88,7 @@ export class SGRuntime extends SRuntime {
     if (!$('#display').hasClass(`mode-${this.mode}`)) {
       $('#display').removeClass('mode-graphics')
                    .removeClass('mode-text')
-                   .removeClass('mode-mixed')
+                   .removeClass('mode-split')
                    .addClass(`mode-${this.mode}`);
     }
 
@@ -114,6 +114,10 @@ SGRuntime.globals = Object.setPrototypeOf({
     // render pending changes to DOM and refresh
     this.updateDisplay();
     return SGRuntime.globals.refresh.call(this);
+  },
+
+  display(mode) {
+    this.setMode(mode);
   },
 
   clear() {

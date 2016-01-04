@@ -21,7 +21,7 @@ class StartHighlightRules extends TextHighlightRules {
           regex: /\b(?:a(bs|cos|dd|sin|tan|vg)|c(eil|l(amp|ear)|o(py|s))|diff|e(ndof|xp)|f(irst|loor)|in(pu|ser)t|join|keys|l(ast|en|ist|o(g|wer))|m(ax|in)|num|p(art|ow|rint|ut)|r(and|e(mov|plac|vers)e|gb|ound|sort)|s(huffle|in|leep|ort|plit|qrt|t(artof|r)|u(b|m)|wap)|t(a(ble|n)|ime)|upper)\b/
         }, {
           token: 'support.function',
-          regex: /\b(?:c(ircle|lone)|ellipse|f(ill|lip(x|y))|line|move|opacity|poly(gon|line)|r(e(ct|fresh|move|paint)|otate)|s(cale(x|y)?|kew(x|y)|troke)|translate)\b/
+          regex: /\b(?:c(ircle|lone)|display|ellipse|f(ill|lip(x|y))|line|move|opacity|poly(gon|line)|r(e(ct|fresh|move|paint)|otate)|s(cale(x|y)?|kew(x|y)|troke)|translate)\b/
         }, {
           token: 'keyword.operator',
           regex: /[,+\-*/%!=<>&|~]/
