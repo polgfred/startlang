@@ -738,7 +738,7 @@ export const STable = Object.setPrototypeOf({
 
     remove(t, ...keys) {
       // remove and return one or more values
-      let o = [];
+      let o = immutable.List().asMutable();
 
       return {
         [assignKey]:
@@ -749,7 +749,7 @@ export const STable = Object.setPrototypeOf({
             }
           }),
         [resultKey]:
-          o.length == 1 ? o[0] : immutable.List(o)
+          o.size == 1 ? o.first() : o.asImmutable()
       };
     }
   },
