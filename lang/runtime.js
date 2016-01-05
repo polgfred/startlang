@@ -543,8 +543,7 @@ function compareElements(left, right) {
 }
 
 function compareElementsReversed(left, right) {
-  let h = handle(left);
-  return h.binaryops['<'](left, right) ? 1 : (h.binaryops['>'](left, right) ? -1 : 0);
+  return -compareElements(left, right);
 }
 
 export const SContainer = Object.setPrototypeOf({
