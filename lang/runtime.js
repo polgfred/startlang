@@ -347,8 +347,9 @@ export const SNumber = Object.setPrototypeOf({
     };
     return ns;
   }, {
-    log(n, base) {
-      if (base == null) {
+    log(base, n) {
+      if (n == null) {
+        n = base;
         return Math.log(n);
       } else if (base == 10) {
         return Math.log10(n);
@@ -357,8 +358,9 @@ export const SNumber = Object.setPrototypeOf({
       }
     },
 
-    exp(n, base) {
-      if (base == null) {
+    exp(base, n) {
+      if (n == null) {
+        n = base;
         return Math.exp(n);
       } else {
         return Math.pow(base, n);
