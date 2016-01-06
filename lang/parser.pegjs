@@ -338,7 +338,6 @@ UnaryExpr
   = ops:( op:UnaryOp __ { return op; } )* right:CallExpr {
       return buildUnaryOpRight(ops, right);
     }
-  / CallExpr
 
 UnaryOp
   = '+'
@@ -389,7 +388,7 @@ PrimaryExpr
 
 String 'a string'
   = '"' rest:StringSegment* '"' {
-      // if the first segment isn't a string literal, make it one
+      // if the first segment isn't a string literal, prepend an empty string
       let first = (rest.length > 0 && rest[0].type == 'literal' && typeof rest[0].value == 'string') ?
                     rest.shift() :
                     buildNode('literal', { value: '' });
