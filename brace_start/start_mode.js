@@ -46,6 +46,9 @@ class StartHighlightRules extends TextHighlightRules {
           token: 'string',
           regex: /""/
         }, {
+          token: 'string',
+          regex: /``/
+        }, {
           token: 'keyword.operator',
           regex: /`/,
           push: 'start'
