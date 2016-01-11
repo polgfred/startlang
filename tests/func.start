@@ -3,10 +3,10 @@ a = list(0,1,2,3)
 print len(a)
 
 begin len do
-  print "blargh"
+  return "blargh"
 end
 
-len
+print len(a)
 
 begin lily(foo, bar) do
   print "`foo` and `bar` are friends"
@@ -33,3 +33,16 @@ end
 for x from 8 to 13 do
   print "compare(`x`, 10) is `compare(x, 10)`"
 end
+
+begin func1(i) do
+  while i < 60 do i = i * 2
+  return i
+end
+
+begin func2(i) do
+  j = i
+  while j < func1(i) do j = j + 11
+  return j
+end
+
+print "func2(10) = `func2(10)` = 87"
