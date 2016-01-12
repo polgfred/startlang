@@ -77,15 +77,38 @@ export class SInterpreter {
 
   popUntil(flow, includeSelf) {
     this.fst = this.fst.withMutations((fst) => {
-      // pop frames off until hitting a loop or function call node
-      while (this.frame.node.flow != flow) {
-        this.frame = fst.first();
-        fst.pop();
-      }
-      // pop the target frame as well (break/return/exit) or not (next)
       if (includeSelf) {
-        this.frame = fst.first();
-        fst.pop();
+        // pop frames off until hitting a loop or function call node
+        while (this.frame) {
+          let { node } = this.frame;
+          // if we're popping off a call node, also pop the namespace stack
+          if (node.type == 'call') {
+            this.ctx.pop();
+          }
+          // pop the frame itself
+          this.frame = fst.first();
+          fst.pop();
+          // break here if we're popping the target frame
+          if (node.flow == flow) {
+            break;
+          }
+        }
+      } else {
+        // pop frames off until hitting a loop or function call node
+        while (this.frame) {
+          let { node } = this.frame;
+          // break here if we're not popping the target frame
+          if (node.flow == flow) {
+            break;
+          }
+          // if we're popping off a call node, also pop the namespace stack
+          if (node.type == 'call') {
+            this.ctx.pop();
+          }
+          // pop the frame itself
+          this.frame = fst.first();
+          fst.pop();
+        }
       }
     });
   }
