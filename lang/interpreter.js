@@ -81,10 +81,6 @@ export class SInterpreter {
         // pop frames off until hitting a loop or function call node
         while (this.frame) {
           let { node } = this.frame;
-          // if we're popping off a call node, also pop the namespace stack
-          if (node.type == 'call') {
-            this.ctx.pop();
-          }
           // pop the frame itself
           this.frame = fst.first();
           fst.pop();
@@ -100,10 +96,6 @@ export class SInterpreter {
           // break here if we're not popping the target frame
           if (node.flow == flow) {
             break;
-          }
-          // if we're popping off a call node, also pop the namespace stack
-          if (node.type == 'call') {
-            this.ctx.pop();
           }
           // pop the frame itself
           this.frame = fst.first();
@@ -323,7 +315,6 @@ export class SInterpreter {
         // handle a user-defined function
         let fn = this.ctx.getfn(node.name);
         let args = ws.get('args');
-        this.ctx.push();
         if (fn.params) {
           for (let i = 0; i < fn.params.length; ++i) {
             this.ctx.set(fn.params[i], args.get(i));
@@ -333,7 +324,6 @@ export class SInterpreter {
         this.push(fn.body);
         break;
       case 4:
-        this.ctx.pop();
         this.pop();
         break;
       case 5:

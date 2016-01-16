@@ -46,18 +46,7 @@ export class SRuntime {
   constructor() {
     this.fn = immutable.OrderedMap();
     this.ns = immutable.OrderedMap();
-    this.st = immutable.Stack();
     this.wst = immutable.Stack();
-  }
-
-  // push and pop new objects onto the ns stack
-  push() {
-    this.st = this.st.push(this.ns);
-  }
-
-  pop() {
-    this.ns = this.st.first();
-    this.st = this.st.pop();
   }
 
   // push and pop values onto the with stack
@@ -178,10 +167,7 @@ export class SRuntime {
             if (i == 0 && wflag) {
               // we're in with-mode, so set the top of the with stack
               // to the replaced value
-              this.wst = this.wst.withMutations((m) => {
-                m.pop();
-                m.push({ rv: r, lv: a });
-              });
+              this.wst = this.wst.pop().push({ rv: r, lv: a });
             }
           }
         }
