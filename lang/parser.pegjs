@@ -135,7 +135,6 @@ Control
   / Repeat
   / For
   / While
-  / With
   / Begin
 
 If
@@ -178,11 +177,6 @@ For
 While
   = 'while' WB __ cond:Value __ 'do' WB __ body:EndBody {
       return buildNode('while', { cond, body });
-    }
-
-With
-  = 'with' WB __ value:( Let / Value ) __ 'do' WB __ body:EndBody {
-      return buildNode('with', { value, body });
     }
 
 Begin

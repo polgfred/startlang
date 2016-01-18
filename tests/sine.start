@@ -1,5 +1,8 @@
-with line(0,360,720,360) do stroke "lightgrey"
-with line(360,0,360,720) do stroke "lightgrey"
+l1 = line(0,360,720,360)
+stroke l1, "lightgrey"
+
+l2 = line(360,0,360,720)
+stroke l2, "lightgrey"
 
 pi = 4*atan(1)
 torad = pi/180
@@ -8,6 +11,7 @@ for x1 from -360 to 355 by 5 do
   x2 = x1+5
   y1 = 360*sin(torad*x1/2)
   y2 = 360*sin(torad*x2/2)
-  with line(360+x1,360-y1,360+x2,360-y2) do stroke "blue"
+  l = line(360+x1,360-y1,360+x2,360-y2)
+  stroke l, "blue"
   refresh
 end

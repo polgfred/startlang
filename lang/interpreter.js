@@ -485,24 +485,6 @@ export class SInterpreter {
     }
   }
 
-  withNode(node, state, ws) {
-    switch (state) {
-      case 0:
-        this.goto(1);
-        this.push(node.value);
-        break;
-      case 1:
-        this.ctx.pushw(this.result);
-        this.goto(2);
-        this.push(node.body);
-        break;
-      case 2:
-        this.ctx.popw();
-        this.pop();
-        break;
-    }
-  }
-
   logicalOpNode(node, state, ws) {
     switch (node.op) {
       case 'and':

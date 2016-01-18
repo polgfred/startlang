@@ -46,16 +46,6 @@ export class SRuntime {
   constructor() {
     this.fn = immutable.OrderedMap();
     this.ns = immutable.OrderedMap();
-    this.wst = immutable.Stack();
-  }
-
-  // push and pop values onto the with stack
-  pushw(val) {
-    this.wst = this.wst.push(val);
-  }
-
-  popw() {
-    this.wst = this.wst.pop();
   }
 
   get(name) {
@@ -118,23 +108,8 @@ export class SRuntime {
     // a lot, so it needs to be crazy fast.
 
     // first try to find the function to call
-    let fn, wflag = false;
-    if (!this.wst.isEmpty()) {
-      let { rv: wrv, lv: wlv } = this.wst.first();
-      // try to look up a method of the object on the with stack
-      fn = handle(wrv).methods[name];
-      if (fn) {
-        // if we found one, prepend the with obj onto the arg list
-        wflag = true;
-        args.unshift(wrv);
-        assn.unshift(wlv);
-      }
-    }
-    if (!fn) {
-      // try to look up a method of the first argument, or a global function
-      fn = (args.length > 0 && handle(args[0]).methods[name]) ||
-            this.constructor.globals[name];
-    }
+    let fn = (args.length > 0 && handle(args[0]).methods[name]) ||
+              this.constructor.globals[name];
     if (!fn) {
       // couldn't find it
       throw new Error('object not found or not a function');
@@ -163,11 +138,6 @@ export class SRuntime {
               } else {
                 this.set(a.name, r);
               }
-            }
-            if (i == 0 && wflag) {
-              // we're in with-mode, so set the top of the with stack
-              // to the replaced value
-              this.wst = this.wst.pop().push({ rv: r, lv: a });
             }
           }
         }
