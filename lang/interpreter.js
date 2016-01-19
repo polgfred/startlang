@@ -76,45 +76,41 @@ export class SInterpreter {
   }
 
   popUntil(flow, includeSelf) {
-    this.fst = this.fst.withMutations((fst) => {
-      if (includeSelf) {
-        // pop frames off until hitting a loop or function call node
-        while (this.frame) {
-          let { node } = this.frame;
-          // pop the frame itself
-          this.frame = fst.first();
-          fst.pop();
-          // break here if we're popping the target frame
-          if (node.flow == flow) {
-            break;
-          }
-        }
-      } else {
-        // pop frames off until hitting a loop or function call node
-        while (this.frame) {
-          let { node } = this.frame;
-          // break here if we're not popping the target frame
-          if (node.flow == flow) {
-            break;
-          }
-          // pop the frame itself
-          this.frame = fst.first();
-          fst.pop();
+    if (includeSelf) {
+      // pop frames off until hitting a loop or function call node
+      while (this.frame) {
+        let { node } = this.frame;
+        // pop the frame itself
+        this.frame = this.fst.first();
+        this.fst = this.fst.pop();
+        // break here if we're popping the target frame
+        if (node.flow == flow) {
+          break;
         }
       }
-    });
+    } else {
+      // pop frames off until hitting a loop or function call node
+      while (this.frame) {
+        let { node } = this.frame;
+        // break here if we're not popping the target frame
+        if (node.flow == flow) {
+          break;
+        }
+        // pop the frame itself
+        this.frame = this.fst.first();
+        this.fst = this.fst.pop();
+      }
+    }
   }
 
-  goto(state, mut) {
-    // atomically update the current frame's state and workspace
-    this.frame = this.frame.withMutations((frame) => {
-      if (state != null) {
-        frame.set('state', state);
-      }
-      if (mut) {
-        frame.set('ws', frame.ws.withMutations(mut));
-      }
-    });
+  goto(state, xform) {
+    // update the current frame's state and workspace
+    if (state != null) {
+      this.frame = this.frame.set('state', state);
+    }
+    if (xform) {
+      this.frame = this.frame.set('ws', xform(this.frame.ws));
+    }
   }
 
   // ** implementations of AST nodes **
@@ -122,9 +118,7 @@ export class SInterpreter {
   blockNode(node, state, ws) {
     let count = ws.get('count', 0);
     if (count < node.elems.length) {
-      this.goto(null, (ws) => {
-        ws.set('count', count + 1);
-      });
+      this.goto(null, (ws) => ws.set('count', count + 1));
       this.push(node.elems[count]);
     } else {
       this.pop();
@@ -142,17 +136,12 @@ export class SInterpreter {
         }
         break;
       case 1:
-        this.goto(2, (ws) => {
-          ws.set('times', this.result.rv);
-          ws.set('count', 0);
-        });
+        this.goto(2, (ws) => ws.set('times', this.result.rv).set('count', 0));
         break;
       case 2:
         let count = ws.get('count');
         if (count < ws.get('times')) {
-          this.goto(null, (ws) => {
-            ws.set('count', count + 1);
-          });
+          this.goto(null, (ws) => ws.set('count', count + 1));
           this.push(node.body);
         } else {
           this.pop();
@@ -172,37 +161,26 @@ export class SInterpreter {
         this.push(node.from);
         break;
       case 1:
-        this.goto(2, (ws) => {
-          ws.set('from', this.result.rv);
-          ws.set('count', this.result.rv);
-        });
+        let res = this.result.rv;
+        this.goto(2, (ws) => ws.set('from', res).set('count', res));
         this.push(node.to);
         break;
       case 2:
         if (node.by) {
-          this.goto(3, (ws) => {
-            ws.set('to', this.result.rv);
-          });
+          this.goto(3, (ws) => ws.set('to', this.result.rv));
           this.push(node.by);
         } else {
-          this.goto(4, (ws) => {
-            ws.set('to', this.result.rv);
-            ws.set('by', 1);
-          });
+          this.goto(4, (ws) => ws.set('to', this.result.rv).set('by', 1));
         }
         break;
       case 3:
-        this.goto(4, (ws) => {
-          ws.set('by', this.result.rv);
-        });
+        this.goto(4, (ws) => ws.set('by', this.result.rv));
         break;
       case 4:
         let count = ws.get('count');
         if (count <= ws.get('to')) {
           this.ctx.set(node.name, count);
-          this.goto(null, (ws) => {
-            ws.set('count', count + ws.get('by'));
-          });
+          this.goto(null, (ws) => ws.set('count', count + ws.get('by')));
           this.push(node.body);
         } else {
           this.pop();
@@ -218,18 +196,14 @@ export class SInterpreter {
         this.push(node.range);
         break;
       case 1:
-        this.goto(2, (ws) => {
-          ws.set('iter', this.ctx.enumerate(this.result.rv));
-        });
+        this.goto(2, (ws) => ws.set('iter', this.ctx.enumerate(this.result.rv)));
         break;
       case 2:
         let iter = ws.get('iter');
         if (iter.more) {
           this.ctx.set(node.name, iter.value);
-          this.goto(null, (ws) => {
-            // TODO: iteration should allow async
-            ws.set('iter', iter.next());
-          });
+          // TODO: iteration should allow async
+          this.goto(null, (ws) => ws.set('iter', iter.next()));
           this.push(node.body);
         } else {
           this.pop();
@@ -287,11 +261,11 @@ export class SInterpreter {
   callNode(node, state, ws) {
     switch (state) {
       case 0:
-        this.goto(1, (ws) => {
-          ws.set('args', immutable.List());
-          ws.set('assn', immutable.List());
-          ws.set('count', 0);
-        });
+        let l = immutable.List();
+        this.goto(1, (ws) =>
+          ws.set('args', l)
+            .set('assn', l)
+            .set('count', 0));
         break;
       case 1:
         let count = ws.get('count');
@@ -305,11 +279,11 @@ export class SInterpreter {
         }
         break;
       case 2:
-        this.goto(1, (ws) => {
-          ws.update('args', (args) => args.push(this.result.rv));
-          ws.update('assn', (assn) => assn.push(this.result.lv));
-          ws.update('count', (count) => count + 1);
-        });
+        let res = this.result;
+        this.goto(1, (ws) =>
+          ws.update('args', (args) => args.push(res.rv))
+            .update('assn', (assn) => assn.push(res.lv))
+            .update('count', (count) => count + 1));
         break;
       case 3:
         // handle a user-defined function
@@ -413,10 +387,9 @@ export class SInterpreter {
   indexNode(node, state, ws) {
     switch (state) {
       case 0:
-        this.goto(1, (ws) => {
-          ws.set('indexes', immutable.List());
-          ws.set('count', 0);
-        });
+        this.goto(1, (ws) =>
+          ws.set('indexes', immutable.List())
+            .set('count', 0));
         break;
       case 1:
         let count = ws.get('count');
@@ -428,10 +401,9 @@ export class SInterpreter {
         }
         break;
       case 2:
-        this.goto(1, (ws) => {
-          ws.update('indexes', (indexes) => indexes.push(this.result.rv));
-          ws.update('count', (count) => count + 1);
-        });
+        this.goto(1, (ws) =>
+          ws.update('indexes', (indexes) => indexes.push(this.result.rv))
+            .update('count', (count) => count + 1));
         break;
       case 3:
         let indexes = ws.get('indexes').toArray();
@@ -448,10 +420,9 @@ export class SInterpreter {
   letIndexNode(node, state, ws) {
     switch (state) {
       case 0:
-        this.goto(1, (ws) => {
-          ws.set('indexes', immutable.List());
-          ws.set('count', 0);
-        });
+        this.goto(1, (ws) =>
+          ws.set('indexes', immutable.List())
+            .set('count', 0));
         break;
       case 1:
         let count = ws.get('count');
@@ -463,10 +434,9 @@ export class SInterpreter {
         }
         break;
       case 2:
-        this.goto(1, (ws) => {
-          ws.update('indexes', (indexes) => indexes.push(this.result.rv));
-          ws.update('count', (count) => count + 1);
-        });
+        this.goto(1, (ws) =>
+          ws.update('indexes', (indexes) => indexes.push(this.result.rv))
+            .update('count', (count) => count + 1));
         break;
       case 3:
         this.goto(4);
@@ -553,9 +523,7 @@ export class SInterpreter {
         this.push(node.left);
         break;
       case 1:
-        this.goto(2, (ws) => {
-          ws.set('left', this.result.rv);
-        });
+        this.goto(2, (ws) => ws.set('left', this.result.rv));
         this.push(node.right);
         break;
       case 2:
