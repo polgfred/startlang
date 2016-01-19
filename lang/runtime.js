@@ -593,12 +593,7 @@ export const SList = Object.setPrototypeOf({
     },
 
     sum(l) {
-      return l.reduce((total, item) => {
-        if (handle(item) != SNumber) {
-          throw new Error('list must contain only numbers');
-        }
-        return total + item;
-      }, 0);
+      return l.reduce((total, item) => handle(total).binaryops['+'](total, item));
     },
 
     min(l) {
