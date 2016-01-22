@@ -59,51 +59,16 @@ export class SRuntime {
     return handle(left).binaryops[op](left, right);
   }
 
-  syscall(name, args, assn) {
-    // this is pretty much the workhorse that glues the runtime API and the
-    // interpreter together. it's long and kind of ugly, but it gets called
-    // a lot, so it needs to be crazy fast.
-
-    // first try to find the function to call
+  syscall(name, args) {
+    // try to find the function to call
     let fn = (args.length > 0 && handle(args[0]).methods[name]) ||
               this.constructor.globals[name];
     if (!fn) {
-      // couldn't find it
       throw new Error('object not found or not a function');
     }
 
     // make the call
-    let res = fn.call(this, ...args);
-    let repl, i, r, a;
-    if (res) {
-      repl = res[assignKey];
-      if (repl) {
-        // if this result contains replacement args, assign them
-        if (!Array.isArray(repl)) {
-          repl = [ repl ];
-        }
-        // loop over replacement args
-        for (i = 0; i < repl.length; ++i) {
-          r = repl[i];
-          if (typeof r != 'undefined') {
-            // we have a replacement for this slot
-            a = assn[i];
-            if (a) {
-              // this slot can be assigned to
-              if (a.indexes) {
-                this.setindex(a.name, a.indexes, r);
-              } else {
-                this.set(a.name, r);
-              }
-            }
-          }
-        }
-        // grab an explicit result, or the first replacement
-        res = res[resultKey] || repl[0];
-      }
-    }
-
-    return res;
+    return fn.call(this, ...args);
   }
 }
 
@@ -601,7 +566,7 @@ immutable.List.prototype[handlerKey] = SList;
 
 export const STable = Object.setPrototypeOf({
   create(pairs) {
-    return immutable.Map().withMutations((n) => {
+    return immutable.OrderedMap().withMutations((n) => {
       for (let i = 0; i < pairs.length; i += 2) {
         n.set(pairs[i], pairs[i + 1]);
       }

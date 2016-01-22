@@ -1,7 +1,7 @@
 'use strict';
 
 import immutable from 'immutable';
-import { createRuntime } from './runtime';
+import { handle, assignKey, resultKey } from './runtime';
 
 let hop = Object.prototype.hasOwnProperty; // cache this for performance
 
@@ -14,7 +14,7 @@ export const SFrame = immutable.Record({
 
 export class SInterpreter {
   constructor() {
-    this.ctx = createRuntime();       // runtime
+    // setup the internal state
     this.fn = immutable.OrderedMap(); // function table
     this.ns = immutable.OrderedMap(); // top namespace
     this.st = immutable.Stack();      // namespace stack
@@ -26,6 +26,11 @@ export class SInterpreter {
     // push on the root node and global namespace
     this.frame = SFrame({ node });
     this.fst = immutable.Stack();
+  }
+
+  set runtime(ctx) {
+    // set a reference to the runtime context
+    this.ctx = ctx;
   }
 
   run() {
@@ -160,11 +165,11 @@ export class SInterpreter {
     });
   }
 
-  getindex(name, indexes) {
-    let max = indexes.length - 1,
+  getIndex(name, indexes) {
+    let max = indexes.size - 1,
         // recurse into nested containers
         next = (b, i) => {
-          let h = this.ctx.handle(b), idx = indexes[i];
+          let h = handle(b), idx = indexes.get(i);
           return (i == max) ?
                     h.getindex(b, idx) :
                     next(h.getindex(b, idx), i + 1);
@@ -173,11 +178,11 @@ export class SInterpreter {
     return next(this.get(name), 0);
   }
 
-  setindex(name, indexes, value) {
-    let max = indexes.length - 1,
+  setIndex(name, indexes, value) {
+    let max = indexes.size - 1,
         // recurse into nested containers
         next = (b, i) => {
-          let h = this.ctx.handle(b), idx = indexes[i];
+          let h = handle(b), idx = indexes.get(i);
           return (i == max) ?
                     h.setindex(b, idx, value) :
                     h.setindex(b, idx, next(h.getindex(b, idx), i + 1));
@@ -375,22 +380,52 @@ export class SInterpreter {
         break;
       case 5:
         // handle a runtime API function
-        let result = this.ctx.syscall(
-                        node.name,
-                        ws.get('args').toArray(),
-                        ws.get('assn').toArray());
+        let result = this.ctx.syscall(node.name, ws.get('args').toArray()),
+            assn = ws.get('assn');
         if (result instanceof Promise) {
           // if we got a promise, handle the result when fulfilled
           return result.then((result) => {
-            this.replace(result);
+            this.handleResult(result, assn);
             this.pop();
           });
         } else {
-          this.replace(result);
+          this.handleResult(result, assn);
           this.pop();
         }
         break;
     }
+  }
+
+  handleResult(res, assn) {
+    // handle the result of a runtime function
+    if (res) {
+      let repl = res[assignKey], i, r, a;
+      if (repl) {
+        // if this result contains replacement args, assign them
+        if (!Array.isArray(repl)) {
+          repl = [ repl ];
+        }
+        // loop over replacement args
+        for (i = 0; i < repl.length; ++i) {
+          r = repl[i];
+          if (r !== undefined) {
+            // we have a replacement for this slot
+            if (a = assn.get(i)) {
+              // this slot can be assigned to
+              if (a.indexes) {
+                this.setIndex(a.name, a.indexes, r);
+              } else {
+                this.set(a.name, r);
+              }
+            }
+          }
+        }
+        // grab an explicit result, or the first replacement
+        res = res[resultKey] || repl[0];
+      }
+    }
+    // put it in the result register
+    this.replace(res);
   }
 
   exitNode() {
@@ -479,10 +514,10 @@ export class SInterpreter {
             .update('count', (count) => count + 1));
         break;
       case 3:
-        let indexes = ws.get('indexes').toArray();
+        let indexes = ws.get('indexes');
         // return the rv/lv pair for this slot
         this.replace({
-          rv: this.getindex(node.name, indexes),
+          rv: this.getIndex(node.name, indexes),
           lv: { name: node.name, indexes: indexes }
         });
         this.pop();
@@ -516,8 +551,8 @@ export class SInterpreter {
         this.push(node.value);
         break;
       case 4:
-        let indexes = ws.get('indexes').toArray();
-        this.setindex(node.name, indexes, this.result.rv);
+        let indexes = ws.get('indexes');
+        this.setIndex(node.name, indexes, this.result.rv);
         // return the rv/lv pair for this assignment
         this.replace({
           rv: this.result.rv,

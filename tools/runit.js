@@ -33,7 +33,7 @@ if (process.argv.indexOf('--meta') != -1) {
   parserOptions.ast = parserOptions.meta = true;
 }
 
-let ctx, interp, start, end;
+let interp, start, end;
 
 Promise.resolve().then(() => {
   return readFileSync(process.argv[2], 'utf-8');
@@ -47,8 +47,9 @@ Promise.resolve().then(() => {
     process.exit();
   }
 
-  ctx = createRuntime();
-  interp = createInterpreter(root, ctx);
+  interp = createInterpreter();
+  interp.ctx = createRuntime();
+  interp.root = root;
 
   if (options.time) {
     start = new Date;
@@ -71,7 +72,7 @@ Promise.resolve().then(() => {
     console.error('time (ms)', end - start);
   }
 
-  if (ctx && options.ns) {
-    output(ctx.ns.toJS());
+  if (options.ns) {
+    output(interp.ns.toJS());
   }
 });
