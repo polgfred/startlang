@@ -5,23 +5,26 @@ import immutable from 'immutable';
 let hasOwnProperty = Object.prototype.hasOwnProperty; // cache this for performance
 
 export const SFrame = immutable.Record({
-  node: null,
-  state: 0,
-  ws: immutable.Map()
+  node: null, // node for this evaluation frame
+  state: 0,   // evaluation state machine state
+  ns: immutable.OrderedMap(), // local/frame namespace
+  ws: immutable.Map()         // evalutaion workspace
 });
 
 export class SInterpreter {
   constructor(root, ctx) {
-    this.root = root;
-    this.ctx = ctx;
-    this.fn = immutable.OrderedMap();
+    this.root = root; // root of ast
+    this.ctx = ctx;   // runtime context
+    this.fn = immutable.OrderedMap(); // function table
   }
 
   run() {
-    // push on the root node and kick off the run loop
+    // push on the root node and global namespace
     this.fst = immutable.Stack();
-    this.frame = SFrame({ node: this.root });
+    this.frame = SFrame({ node: this.root, ns: immutable.OrderedMap() });
+    // set an empty result value
     this.replace();
+    // kick off the run loop
     return this.loop();
   }
 
@@ -112,6 +115,49 @@ export class SInterpreter {
     if (xform) {
       this.frame = this.frame.set('ws', xform(this.frame.ws));
     }
+  }
+
+  // ** namespace stuff **
+
+  get(name) {
+    let ns = this.frame.ns;
+    if (ns.size > 0 && ns.has(name)) {
+      return ns.get(name);
+    }
+    let frame = this.fst.find((frame) => frame.ns.size > 0 && frame.ns.has(name));
+    if (frame) {
+      return frame.ns.get(name)
+    }
+  }
+
+  set(name, value) {
+    this.ns = this.ns.set(name, value);
+  }
+
+  getindex(name, indexes) {
+    let max = indexes.length - 1,
+        // recurse into nested containers
+        next = (b, i) => {
+          let h = handle(b), idx = indexes[i];
+          return (i == max) ?
+                    h.getindex(b, idx) :
+                    next(h.getindex(b, idx), i + 1);
+        };
+
+    return next(this.get(name), 0);
+  }
+
+  setindex(name, indexes, value) {
+    let max = indexes.length - 1,
+        // recurse into nested containers
+        next = (b, i) => {
+          let h = handle(b), idx = indexes[i];
+          return (i == max) ?
+                    h.setindex(b, idx, value) :
+                    h.setindex(b, idx, next(h.getindex(b, idx), i + 1));
+        };
+
+    this.set(name, next(this.get(name), 0));
   }
 
   // ** implementations of AST nodes **
