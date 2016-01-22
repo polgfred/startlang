@@ -43,42 +43,8 @@ export const resultKey = Symbol('START_RESULT');
 // Environment
 
 export class SRuntime {
-  constructor() {
-    this.ns = immutable.OrderedMap();
-  }
-
-  get(name) {
-    return this.ns.get(name);
-  }
-
-  set(name, value) {
-    this.ns = this.ns.set(name, value);
-  }
-
-  getindex(name, indexes) {
-    let max = indexes.length - 1,
-        // recurse into nested containers
-        next = (b, i) => {
-          let h = handle(b), idx = indexes[i];
-          return (i == max) ?
-                    h.getindex(b, idx) :
-                    next(h.getindex(b, idx), i + 1);
-        };
-
-    return next(this.get(name), 0);
-  }
-
-  setindex(name, indexes, value) {
-    let max = indexes.length - 1,
-        // recurse into nested containers
-        next = (b, i) => {
-          let h = handle(b), idx = indexes[i];
-          return (i == max) ?
-                    h.setindex(b, idx, value) :
-                    h.setindex(b, idx, next(h.getindex(b, idx), i + 1));
-        };
-
-    this.set(name, next(this.get(name), 0));
+  handle(value) {
+    return handle(value);
   }
 
   enumerate(value) {
