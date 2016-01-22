@@ -112,16 +112,6 @@ export class SInterpreter {
     }
   }
 
-  goto(state, xform) {
-    // update the current frame's state and workspace
-    if (state != null) {
-      this.frame = this.frame.set('state', state);
-    }
-    if (xform) {
-      this.frame = this.frame.set('ws', xform(this.frame.ws));
-    }
-  }
-
   // ** namespace access **
 
   get(name) {
@@ -196,7 +186,9 @@ export class SInterpreter {
   blockNode(node, state, ws) {
     let count = ws.get('count', 0);
     if (count < node.elems.length) {
-      this.goto(null, (ws) => ws.set('count', count + 1));
+      this.frame = this.frame
+        .set('ws', ws
+          .set('count', count + 1));
       this.push(node.elems[count]);
     } else {
       this.pop();
@@ -207,19 +199,25 @@ export class SInterpreter {
     switch (state) {
       case 0:
         if (node.times) {
-          this.goto(1);
+          this.frame = this.frame.set('state', 1);
           this.push(node.times);
         } else {
-          this.goto(3);
+          this.frame = this.frame.set('state', 3);
         }
         break;
       case 1:
-        this.goto(2, (ws) => ws.set('times', this.result.rv).set('count', 0));
+        this.frame = this.frame
+          .set('state', 2)
+          .set('ws', ws
+            .set('times', this.result.rv)
+            .set('count', 0));
         break;
       case 2:
         let count = ws.get('count');
         if (count < ws.get('times')) {
-          this.goto(null, (ws) => ws.set('count', count + 1));
+          this.frame = this.frame
+            .set('ws', ws
+              .set('count', count + 1));
           this.push(node.body);
         } else {
           this.pop();
@@ -235,30 +233,45 @@ export class SInterpreter {
   forNode(node, state, ws) {
     switch (state) {
       case 0:
-        this.goto(1);
+        this.frame = this.frame.set('state', 1);
         this.push(node.from);
         break;
       case 1:
         let res = this.result.rv;
-        this.goto(2, (ws) => ws.set('from', res).set('count', res));
+        this.frame = this.frame
+          .set('state', 2)
+          .set('ws', ws
+            .set('from', res).set('count', res));
         this.push(node.to);
         break;
       case 2:
         if (node.by) {
-          this.goto(3, (ws) => ws.set('to', this.result.rv));
+          this.frame = this.frame
+            .set('state', 3)
+            .set('ws', ws
+              .set('to', this.result.rv));
           this.push(node.by);
         } else {
-          this.goto(4, (ws) => ws.set('to', this.result.rv).set('by', 1));
+          this.frame = this.frame
+            .set('state', 4)
+            .set('ws', ws
+              .set('to', this.result.rv)
+              .set('by', 1));
         }
         break;
       case 3:
-        this.goto(4, (ws) => ws.set('by', this.result.rv));
+        this.frame = this.frame
+          .set('state', 4)
+          .set('ws', ws
+            .set('by', this.result.rv));
         break;
       case 4:
         let count = ws.get('count');
         if (count <= ws.get('to')) {
           this.set(node.name, count);
-          this.goto(null, (ws) => ws.set('count', count + ws.get('by')));
+          this.frame = this.frame
+            .set('ws', ws
+              .set('count', count + ws.get('by')));
           this.push(node.body);
         } else {
           this.pop();
@@ -270,18 +283,23 @@ export class SInterpreter {
   forInNode(node, state, ws) {
     switch (state) {
       case 0:
-        this.goto(1);
+        this.frame = this.frame.set('state', 1);
         this.push(node.range);
         break;
       case 1:
-        this.goto(2, (ws) => ws.set('iter', this.ctx.enumerate(this.result.rv)));
+        this.frame = this.frame
+          .set('state', 2)
+          .set('ws', ws
+            .set('iter', this.ctx.enumerate(this.result.rv)));
         break;
       case 2:
         let iter = ws.get('iter');
         if (iter.more) {
           this.set(node.name, iter.value);
           // TODO: iteration should allow async
-          this.goto(null, (ws) => ws.set('iter', iter.next()));
+          this.frame = this.frame
+            .set('ws', ws
+              .set('iter', iter.next()));
           this.push(node.body);
         } else {
           this.pop();
@@ -293,12 +311,12 @@ export class SInterpreter {
   whileNode(node, state, ws) {
     switch (state) {
       case 0:
-        this.goto(1);
+        this.frame = this.frame.set('state', 1);
         this.push(node.cond);
         break;
       case 1:
         if (this.result.rv) {
-          this.goto(0);
+          this.frame = this.frame.set('state', 0);
           this.push(node.body);
         } else {
           this.pop();
@@ -310,15 +328,15 @@ export class SInterpreter {
   ifNode(node, state, ws) {
     switch (state) {
       case 0:
-        this.goto(1);
+        this.frame = this.frame.set('state', 1);
         this.push(node.cond);
         break;
       case 1:
         if (this.result.rv) {
-          this.goto(2);
+          this.frame = this.frame.set('state', 2);
           this.push(node.tbody);
         } else if (node.fbody) {
-          this.goto(2);
+          this.frame = this.frame.set('state', 2);
           this.push(node.fbody);
         } else {
           this.pop();
@@ -339,40 +357,43 @@ export class SInterpreter {
   callNode(node, state, ws) {
     switch (state) {
       case 0:
-        let l = immutable.List();
-        this.goto(1, (ws) =>
-          ws.set('args', l)
-            .set('assn', l)
+        this.frame = this.frame
+          .set('state', 1)
+          .set('ws', ws
+            .set('args', immutable.List())
+            .set('assn', immutable.List())
             .set('count', 0));
         break;
       case 1:
         let count = ws.get('count');
         if (node.args && count < node.args.length) {
-          this.goto(2);
+          this.frame = this.frame.set('state', 2);
           this.push(node.args[count]);
         } else if (this.fn.has(node.name)) {
-          this.goto(3);
+          this.frame = this.frame.set('state', 3);
         } else {
-          this.goto(5);
+          this.frame = this.frame.set('state', 5);
         }
         break;
       case 2:
         let res = this.result;
-        this.goto(1, (ws) =>
-          ws.update('args', (args) => args.push(res.rv))
+        this.frame = this.frame
+          .set('state', 1)
+          .set('ws', ws
+            .update('args', (args) => args.push(res.rv))
             .update('assn', (assn) => assn.push(res.lv))
             .update('count', (count) => count + 1));
         break;
       case 3:
         // handle a user-defined function
-        let fn = this.fn.get(node.name);
-        let args = ws.get('args');
+        let fn = this.fn.get(node.name),
+            args = ws.get('args');
         if (fn.params) {
           for (let i = 0; i < fn.params.length; ++i) {
             this.set(fn.params[i], args.get(i));
           }
         }
-        this.goto(4);
+        this.frame = this.frame.set('state', 4);
         this.push(fn.body);
         break;
       case 4:
@@ -380,16 +401,17 @@ export class SInterpreter {
         break;
       case 5:
         // handle a runtime API function
-        let result = this.ctx.syscall(node.name, ws.get('args').toArray()),
-            assn = ws.get('assn');
+        let args5 = ws.get('args'),
+            assn5 = ws.get('assn'),
+            result = this.ctx.syscall(node.name, args5.toArray());
         if (result instanceof Promise) {
           // if we got a promise, handle the result when fulfilled
           return result.then((result) => {
-            this.handleResult(result, assn);
+            this.handleResult(result, assn5);
             this.pop();
           });
         } else {
-          this.handleResult(result, assn);
+          this.handleResult(result, assn5);
           this.pop();
         }
         break;
@@ -446,7 +468,7 @@ export class SInterpreter {
     switch (state) {
       case 0:
         if (node.result) {
-          this.goto(1);
+          this.frame = this.frame.set('state', 1);
           this.push(node.result);
         } else {
           this.replace();
@@ -477,16 +499,11 @@ export class SInterpreter {
   letNode(node, state, ws) {
     switch (state) {
       case 0:
-        this.goto(1);
+        this.frame = this.frame.set('state', 1);
         this.push(node.value);
         break;
       case 1:
         this.set(node.name, this.result.rv);
-        // return the rv/lv pair for this assignment
-        this.replace({
-          rv: this.result.rv,
-          lv: { name: node.name }
-        });
         this.pop();
         break;
     }
@@ -495,22 +512,26 @@ export class SInterpreter {
   indexNode(node, state, ws) {
     switch (state) {
       case 0:
-        this.goto(1, (ws) =>
-          ws.set('indexes', immutable.List())
+        this.frame = this.frame
+          .set('state', 1)
+          .set('ws', ws
+            .set('indexes', immutable.List())
             .set('count', 0));
         break;
       case 1:
         let count = ws.get('count');
         if (count < node.indexes.length) {
-          this.goto(2);
+          this.frame = this.frame.set('state', 2);
           this.push(node.indexes[count]);
         } else {
-          this.goto(3);
+          this.frame = this.frame.set('state', 3);
         }
         break;
       case 2:
-        this.goto(1, (ws) =>
-          ws.update('indexes', (indexes) => indexes.push(this.result.rv))
+        this.frame = this.frame
+          .set('state', 1)
+          .set('ws', ws
+            .update('indexes', (indexes) => indexes.push(this.result.rv))
             .update('count', (count) => count + 1));
         break;
       case 3:
@@ -528,36 +549,35 @@ export class SInterpreter {
   letIndexNode(node, state, ws) {
     switch (state) {
       case 0:
-        this.goto(1, (ws) =>
-          ws.set('indexes', immutable.List())
+        this.frame = this.frame
+          .set('state', 1)
+          .set('ws', ws
+            .set('indexes', immutable.List())
             .set('count', 0));
         break;
       case 1:
         let count = ws.get('count');
         if (count < node.indexes.length) {
-          this.goto(2);
+          this.frame = this.frame.set('state', 2);
           this.push(node.indexes[count]);
         } else {
-          this.goto(3);
+          this.frame = this.frame.set('state', 3);
         }
         break;
       case 2:
-        this.goto(1, (ws) =>
-          ws.update('indexes', (indexes) => indexes.push(this.result.rv))
+        this.frame = this.frame
+          .set('state', 1)
+          .set('ws', ws
+            .update('indexes', (indexes) => indexes.push(this.result.rv))
             .update('count', (count) => count + 1));
         break;
       case 3:
-        this.goto(4);
+        this.frame = this.frame.set('state', 4);
         this.push(node.value);
         break;
       case 4:
         let indexes = ws.get('indexes');
         this.setIndex(node.name, indexes, this.result.rv);
-        // return the rv/lv pair for this assignment
-        this.replace({
-          rv: this.result.rv,
-          lv: { name: node.name, indexes: indexes }
-        });
         this.pop();
         break;
     }
@@ -568,7 +588,7 @@ export class SInterpreter {
       case 'and':
         switch (state) {
           case 0:
-            this.goto(1);
+            this.frame = this.frame.set('state', 1);
             this.push(node.left);
             break;
           case 1:
@@ -576,7 +596,7 @@ export class SInterpreter {
               this.replace(false);
               this.pop();
             } else {
-              this.goto(2);
+              this.frame = this.frame.set('state', 2);
               this.push(node.right);
             }
             break;
@@ -590,7 +610,7 @@ export class SInterpreter {
       case 'or':
         switch (state) {
           case 0:
-            this.goto(1);
+            this.frame = this.frame.set('state', 1);
             this.push(node.left);
             break;
           case 1:
@@ -598,7 +618,7 @@ export class SInterpreter {
               this.replace(true);
               this.pop();
             } else {
-              this.goto(2);
+              this.frame = this.frame.set('state', 2);
               this.push(node.right);
             }
             break;
@@ -612,7 +632,7 @@ export class SInterpreter {
       case 'not':
         switch (state) {
           case 0:
-            this.goto(1);
+            this.frame = this.frame.set('state', 1);
             this.push(node.right);
             break;
           case 1:
@@ -627,18 +647,21 @@ export class SInterpreter {
   binaryOpNode(node, state, ws) {
     switch (state) {
       case 0:
-        this.goto(1);
+        this.frame = this.frame.set('state', 1);
         this.push(node.left);
         break;
       case 1:
-        this.goto(2, (ws) => ws.set('left', this.result.rv));
+        this.frame = this.frame
+          .set('state', 2)
+          .set('ws', ws
+            .set('left', this.result.rv));
         this.push(node.right);
         break;
       case 2:
         this.replace(this.ctx.binaryop(
-                      node.op,
-                      ws.get('left'),
-                      this.result.rv));
+          node.op,
+          ws.get('left'),
+          this.result.rv));
         this.pop();
         break;
     }
@@ -647,13 +670,13 @@ export class SInterpreter {
   unaryOpNode(node, state, ws) {
     switch (state) {
       case 0:
-        this.goto(1);
+        this.frame = this.frame.set('state', 1);
         this.push(node.right);
         break;
       case 1:
         this.replace(this.ctx.unaryop(
-                      node.op,
-                      this.result.rv));
+          node.op,
+          this.result.rv));
         this.pop();
         break;
     }
