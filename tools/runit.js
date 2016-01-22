@@ -35,44 +35,42 @@ if (process.argv.indexOf('--meta') != -1) {
 
 let interp, start, end;
 
-Promise.resolve().then(() => {
-  return readFileSync(process.argv[2], 'utf-8');
-}).catch((err) => {
-  return process.argv[2] + '\n';
-}).then((source) => {
-  return parse(source, parserOptions);
-}).then((root) => {
-  if (options.ast) {
-    output(root);
-    process.exit();
-  }
+Promise.resolve()
+  .then(() => readFileSync(process.argv[2], 'utf-8'))
+  .catch((err) => process.argv[2] + '\n')
+  .then((source) => parse(source, parserOptions))
+  .then((root) => {
+    if (options.ast) {
+      output(root);
+      process.exit();
+    }
 
-  interp = createInterpreter();
-  interp.ctx = createRuntime();
-  interp.root = root;
+    interp = createInterpreter();
+    interp.ctx = createRuntime();
+    interp.root = root;
 
-  if (options.time) {
-    start = new Date;
-    console.error('start', start);
-  }
+    if (options.time) {
+      start = new Date;
+      console.error('start', start);
+    }
 
-  return interp.run();
-}).catch((err) => {
-  if (err.stack) {
-    console.log(err.stack);
-  }
+    return interp.run();
+  }).catch((err) => {
+    if (err.stack) {
+      console.log(err.stack);
+    }
 
-  if (interp.frame) {
-    output(interp.frame.node);
-  }
-}).then(() => {
-  if (options.time) {
-    end = new Date;
-    console.error('end', end);
-    console.error('time (ms)', end - start);
-  }
+    if (interp.frame) {
+      output(interp.frame.node);
+    }
+  }).then(() => {
+    if (options.time) {
+      end = new Date;
+      console.error('end', end);
+      console.error('time (ms)', end - start);
+    }
 
-  if (options.ns) {
-    output(interp.ns.toJS());
-  }
-});
+    if (options.ns) {
+      output(interp.ns.toJS());
+    }
+  });
