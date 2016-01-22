@@ -52,6 +52,8 @@ export class SInterpreter {
     });
   }
 
+  // ** manage stack frames **
+
   push(node) {
     // optimize literals and vars by setting the result register directly
     if (node.type == 'literal') {
@@ -69,6 +71,42 @@ export class SInterpreter {
     }
   }
 
+  pop() {
+    if (this.frame.ns) {
+      // pop off the corresponding namespace
+      this.ns = this.st.first();
+      this.st = this.st.pop();
+    }
+    // pop this frame off the stack
+    this.frame = this.fst.first();
+    this.fst = this.fst.pop();
+  }
+
+  popOver(flow) {
+    // pop frames off including a loop or function call node
+    while (this.frame) {
+      let { node } = this.frame;
+      // pop the target frame
+      this.pop();
+      // break here if we're popping the target frame
+      if (node.flow == flow) {
+        break;
+      }
+    }
+  }
+
+  popUntil(flow) {
+    // pop frames off until hitting a loop or function call node
+    while (this.frame) {
+      // break here if we're popping the target frame
+      if (this.frame.node.flow == flow) {
+        break;
+      }
+      // pop the target frame
+      this.pop();
+    }
+  }
+
   replace(result) {
     // normalize the result to rvalue/lvalue form if necessary
     if (result == null || !hop.call(result, 'rv')) {
@@ -78,41 +116,13 @@ export class SInterpreter {
     this.result = result;
   }
 
-  pop() {
-    // pop this frame off the stack
-    this.frame = this.fst.first();
-    this.fst = this.fst.pop();
-  }
-
-  popUntil(flow, includeSelf) {
-    if (includeSelf) {
-      // pop frames off until hitting a loop or function call node
-      while (this.frame) {
-        let { node } = this.frame;
-        // pop the frame itself
-        this.frame = this.fst.first();
-        this.fst = this.fst.pop();
-        // break here if we're popping the target frame
-        if (node.flow == flow) {
-          break;
-        }
-      }
-    } else {
-      // pop frames off until hitting a loop or function call node
-      while (this.frame) {
-        let { node } = this.frame;
-        // break here if we're not popping the target frame
-        if (node.flow == flow) {
-          break;
-        }
-        // pop the frame itself
-        this.frame = this.fst.first();
-        this.fst = this.fst.pop();
-      }
-    }
-  }
-
   // ** namespace access **
+
+  pushns() {
+    // push on a new namespace
+    this.st = this.st.push(this.ns);
+    this.ns = immutable.OrderedMap();
+  }
 
   get(name) {
     // look in the top frame
@@ -126,9 +136,9 @@ export class SInterpreter {
     }
   }
 
-  set(name, value) {
+  set(name, value, top = false) {
     // look in the top frame
-    if (this.st.size == 0 || (this.ns.size > 0 && this.ns.has(name))) {
+    if (top || this.st.size == 0 || (this.ns.size > 0 && this.ns.has(name))) {
       this.ns = this.ns.set(name, value);
       return;
     }
@@ -388,12 +398,17 @@ export class SInterpreter {
         // handle a user-defined function
         let fn = this.fn.get(node.name),
             args = ws.get('args');
+        // push on a new namespace
+        this.pushns();
+        // set the arguments in the local ns
         if (fn.params) {
           for (let i = 0; i < fn.params.length; ++i) {
-            this.set(fn.params[i], args.get(i));
+            this.set(fn.params[i], args.get(i), true);
           }
         }
-        this.frame = this.frame.set('state', 4);
+        this.frame = this.frame
+          .set('state', 4)
+          .set('ns', true);
         this.push(fn.body);
         break;
       case 4:
@@ -457,11 +472,11 @@ export class SInterpreter {
   }
 
   breakNode() {
-    this.popUntil('loop', true);
+    this.popOver('loop');
   }
 
   nextNode() {
-    this.popUntil('loop', false);
+    this.popUntil('loop');
   }
 
   returnNode(node, state, ws) {
@@ -472,12 +487,12 @@ export class SInterpreter {
           this.push(node.result);
         } else {
           this.replace();
-          this.popUntil('call', true);
+          this.popOver('call');
         }
         break;
       case 1:
         this.replace(this.result.rv);
-        this.popUntil('call', true);
+        this.popOver('call');
         break;
     }
   }
