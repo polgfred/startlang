@@ -1,34 +1,34 @@
 'use strict';
 
 import immutable from 'immutable';
+import { createRuntime } from './runtime';
 
-let hasOwnProperty = Object.prototype.hasOwnProperty; // cache this for performance
+let hop = Object.prototype.hasOwnProperty; // cache this for performance
 
 export const SFrame = immutable.Record({
-  node: null, // node for this evaluation frame
-  state: 0,   // evaluation state machine state
-  ns: immutable.OrderedMap(), // local/frame namespace
-  ws: immutable.Map()         // evalutaion workspace
+  node: null,         // node for this evaluation frame
+  ns: false,          // whether to pop a ns off the stack for this frame
+  state: 0,           // evaluation state machine state
+  ws: immutable.Map() // evalutaion workspace
 });
 
 export class SInterpreter {
-  constructor(root, ctx) {
-    this.root = root; // root of ast
-    this.ctx = ctx;   // runtime context
+  constructor() {
+    this.ctx = createRuntime();       // runtime
     this.fn = immutable.OrderedMap(); // function table
-    this.fst = immutable.Stack();     // evaluation frame stack
+    this.ns = immutable.OrderedMap(); // top namespace
+    this.st = immutable.Stack();      // namespace stack
+    // set an empty result value
+    this.replace();
+  }
+
+  set root(node) {
+    // push on the root node and global namespace
+    this.frame = SFrame({ node });
+    this.fst = immutable.Stack();
   }
 
   run() {
-    // push on the root node and global namespace
-    this.frame = SFrame({ node: this.root, ns: immutable.OrderedMap() });
-    // set an empty result value
-    this.replace();
-    // kick off the run loop
-    return this.loop();
-  }
-
-  loop() {
     // set up an entry point that loops until the stack is exhausted, or
     // until a node returns a promise
     let loop = () => {
@@ -66,7 +66,7 @@ export class SInterpreter {
 
   replace(result) {
     // normalize the result to rvalue/lvalue form if necessary
-    if (result == null || !hasOwnProperty.call(result, 'rv')) {
+    if (result == null || !hop.call(result, 'rv')) {
       result = { rv: result };
     }
     // put the return value into the result register
@@ -117,46 +117,45 @@ export class SInterpreter {
     }
   }
 
-  // ** namespace stuff **
+  // ** namespace access **
 
   get(name) {
     // look in the top frame
-    let ns = this.frame.ns;
-    if (this.fst.size == 0 || (ns.size > 0 && ns.has(name))) {
-      return ns.get(name);
+    if (this.st.size == 0 || (this.ns.size > 0 && this.ns.has(name))) {
+      return this.ns.get(name);
     }
-    // look up the frame stack
-    let fr = this.fst.find((fr) => fr.ns.size > 0 && fr.ns.has(name));
-    if (fr) {
-      return fr.ns.get(name);
+    // look up the namespace stack
+    let ns = this.st.find((ns) => ns.size > 0 && ns.has(name));
+    if (ns) {
+      return ns.get(name);
     }
   }
 
   set(name, value) {
     // look in the top frame
-    let ns = this.frame.ns;
-    if (this.fst.size == 0 || (ns.size > 0 && ns.has(name))) {
-      this.frame = this.frame.set('ns', ns.set(name, value));
+    if (this.st.size == 0 || (this.ns.size > 0 && this.ns.has(name))) {
+      this.ns = this.ns.set(name, value);
       return;
     }
-    // look up the frame stack
-    this.fst = this.fst.withMutations((fst) => {
-      let saved = new Array(fst.size), i = 0, fr;
-      // loop until we hit the root node, collect intermediate frames
+    // look up the namespace stack
+    this.st = this.st.withMutations((st) => {
+      let saved = new Array(st.size), i = 0, ns;
+      // loop until we hit the root ns
       for (;;) {
-        fr = fst.first();
-        if (fst.size == 1 || (fr.ns.size > 0 && fr.ns.has(name))) {
+        ns = st.first();
+        if (st.size == 1 || (ns.size > 0 && ns.has(name))) {
           break;
         }
-        saved[i++] = fr;
-        fst.pop();
+        // keep track of the intermediate ns
+        saved[i++] = ns;
+        st.pop();
       }
-      // set the value in the target frame
-      fst.pop();
-      fst.push(fr.set('ns', fr.ns.set(name, value)));
-      // push the intermediate frames back on in reverse order
+      // set the value in the target namespace
+      st.pop();
+      st.push(ns.set(name, value));
+      // push the intermediate namespaces back on in reverse order
       for (--i; i >= 0; --i) {
-        fst.push(saved[i]);
+        st.push(saved[i]);
       }
     });
   }
