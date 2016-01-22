@@ -518,7 +518,7 @@ export class SInterpreter {
         this.push(node.value);
         break;
       case 1:
-        this.set(node.name, this.result.rv);
+        this.set(node.name, this.result.rv, node.top);
         this.pop();
         break;
     }

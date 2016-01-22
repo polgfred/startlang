@@ -201,6 +201,7 @@ Params
 Statement
   = Flow
   / Let
+  / Local
   / Call
 
 Flow
@@ -225,6 +226,12 @@ Let
         return buildIndex(name, indexes, value);
       }
     }
+
+Local
+  = 'local' WB __ name:Symbol value:( __ '=' __ v:Value { return v; } )? {
+    value = value || buildNode('literal', { value: undefined });
+    return buildNode('let', { name, value, top: true });
+  }
 
 Call
   // if we match non-parenthesized args optionally right away, it will

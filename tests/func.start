@@ -8,24 +8,33 @@ end
 
 print len(a)
 
+begin inner3 do
+  print "    - inner3 `foo` should be 43"
+  local foo = 99 ; makes a new foo
+  print "    - inner3 `foo` should be 99"
+end
+
 begin inner2 do
-  print "inner2 foo is `foo`"
-  foo = foo + 1 ; refers to the foo in inner1
+  print "  - inner2 `foo` should be 42"
+  let foo = foo + 1 ; refers to the foo in inner1
+  print "  - inner2 `foo` should be 43"
+  inner3
+  print "  - inner2 `foo` should be 43"
 end
 
-begin inner1(foo) do
-  print "inner1 foo is `foo`"
+begin inner1(foo) do ; implies local foo
+  print "inner1 `foo` should be 42"
   inner2
-  print "inner1 foo is `foo`"
-  foo = foo + 1
-  print "inner1 foo is `foo`"
+  print "inner1 `foo` should be 43"
+  let foo = foo + 1
+  print "inner1 `foo` should be 44"
 end
 
-foo = 123
-print "outer foo is `foo`"
+let foo = 123
+print "outer `foo` should be 123"
 
 inner1 42
-print "outer foo is still `foo`"
+print "outer `foo` should still be 123"
 
 begin compare(first, second) do
   if first > second then
