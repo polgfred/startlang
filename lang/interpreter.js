@@ -12,8 +12,9 @@ export const SFrame = immutable.Record({
 
 export class SInterpreter {
   constructor(root, ctx) {
-    this.root = root; // root of the program ast
-    this.ctx = ctx; // the Runtime instance
+    this.root = root;
+    this.ctx = ctx;
+    this.fn = immutable.OrderedMap();
   }
 
   run() {
@@ -254,7 +255,7 @@ export class SInterpreter {
 
   beginNode(node) {
     // save the begin node in the function table
-    this.ctx.setfn(node.name, node);
+    this.fn = this.fn.set(node.name, node);
     this.pop();
   }
 
@@ -272,7 +273,7 @@ export class SInterpreter {
         if (node.args && count < node.args.length) {
           this.goto(2);
           this.push(node.args[count]);
-        } else if (this.ctx.getfn(node.name)) {
+        } else if (this.fn.has(node.name)) {
           this.goto(3);
         } else {
           this.goto(5);
@@ -287,7 +288,7 @@ export class SInterpreter {
         break;
       case 3:
         // handle a user-defined function
-        let fn = this.ctx.getfn(node.name);
+        let fn = this.fn.get(node.name);
         let args = ws.get('args');
         if (fn.params) {
           for (let i = 0; i < fn.params.length; ++i) {

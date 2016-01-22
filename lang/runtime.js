@@ -44,7 +44,6 @@ export const resultKey = Symbol('START_RESULT');
 
 export class SRuntime {
   constructor() {
-    this.fn = immutable.OrderedMap();
     this.ns = immutable.OrderedMap();
   }
 
@@ -92,14 +91,6 @@ export class SRuntime {
 
   binaryop(op, left, right) {
     return handle(left).binaryops[op](left, right);
-  }
-
-  getfn(name) {
-    return this.fn.get(name);
-  }
-
-  setfn(name, body) {
-    this.fn = this.fn.set(name, body);
   }
 
   syscall(name, args, assn) {
