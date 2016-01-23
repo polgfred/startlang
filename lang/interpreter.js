@@ -166,27 +166,27 @@ export class SInterpreter {
   }
 
   getIndex(name, indexes) {
-    let max = indexes.size - 1,
-        // recurse into nested containers
-        next = (b, i) => {
-          let h = handle(b), idx = indexes.get(i);
-          return (i == max) ?
-                    h.getindex(b, idx) :
-                    next(h.getindex(b, idx), i + 1);
-        };
+    let max = indexes.size - 1;
+    // recurse into nested containers
+    let next = (b, i) => {
+      let h = handle(b), idx = indexes.get(i);
+      return (i == max) ?
+        h.getindex(b, idx) :
+        next(h.getindex(b, idx), i + 1);
+    };
 
     return next(this.get(name), 0);
   }
 
   setIndex(name, indexes, value) {
-    let max = indexes.size - 1,
-        // recurse into nested containers
-        next = (b, i) => {
-          let h = handle(b), idx = indexes.get(i);
-          return (i == max) ?
-                    h.setindex(b, idx, value) :
-                    h.setindex(b, idx, next(h.getindex(b, idx), i + 1));
-        };
+    let max = indexes.size - 1;
+    // recurse into nested containers
+    let next = (b, i) => {
+      let h = handle(b), idx = indexes.get(i);
+      return (i == max) ?
+        h.setindex(b, idx, value) :
+        h.setindex(b, idx, next(h.getindex(b, idx), i + 1));
+    };
 
     this.set(name, next(this.get(name), 0));
   }
