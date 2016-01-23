@@ -698,6 +698,6 @@ export class SInterpreter {
   }
 }
 
-export function createInterpreter(root, ctx) {
-  return new SInterpreter(root, ctx);
+export function createInterpreter() {
+  return new SInterpreter;
 }

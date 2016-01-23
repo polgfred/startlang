@@ -324,5 +324,5 @@ let handlerMap = {
 Shape.prototype[handlerKey] = (obj) => handlerMap[obj.type];
 
 export function createRuntime() {
-  return new SGRuntime();
+  return new SGRuntime;
 }

@@ -91,20 +91,16 @@ $('#runner').click(() => {
   console.clear();
   // termapi.clear();
   // execute the code in the buffer
-  let root = getRoot(),
-      ctx = createRuntime(),
-      interp = createInterpreter(root, ctx);
-
-  console.log(root);
+  let interp = createInterpreter();
+  interp.root = getRoot();
+  interp.runtime = createRuntime();
 
   $('#runner').prop('disabled', true);
 
   interp.run().then(() => {
-    ctx.updateDisplay();
-    console.log('[END]');
     $('#runner').prop('disabled', false);
   }).catch((err) => {
-    console.error('[ERROR]: ' + err.message);
+    console.error(err.message);
     $('#runner').prop('disabled', false);
   });
 });

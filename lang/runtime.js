@@ -648,5 +648,5 @@ export function handle(obj) {
 }
 
 export function createRuntime() {
-  return new SRuntime();
+  return new SRuntime;
 }
