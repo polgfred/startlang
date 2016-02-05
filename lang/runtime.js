@@ -632,7 +632,7 @@ export const STable = Object.setPrototypeOf({
   }, SContainer.binaryops)
 }, SContainer);
 
-immutable.Map.prototype[handlerKey] = STable;
+immutable.OrderedMap.prototype[handlerKey] = STable;
 
 // find a protocol handler for this object
 export function handle(obj) {
