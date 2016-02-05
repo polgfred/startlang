@@ -18,7 +18,8 @@ export const Shape = immutable.Record({
   angle: 0,               // rotation in coordinate space
   scalex: 1,              // scale factor for x
   scaley: 1,              // scale factor for y
-  attrs: immutable.Map()  // svg attrs for this element
+  attrs: immutable.Map(), // svg attrs for this element
+  text: null              // inner text content for element
 });
 
 export class SGRuntime extends SRuntime {
@@ -38,14 +39,10 @@ export class SGRuntime extends SRuntime {
     let rnd = Math.floor(Math.random() * (2 << 23)),
         key = ('000000' + rnd.toString(16)).substr(-6);
 
-    let shape = new Shape({
-      key: key,
-      type: data.type,
-      x: data.x,
-      y: data.y,
-      attrs: immutable.Map(data.attrs)
-    });
+    data.key = key;
+    data.attrs = immutable.Map(data.attrs);
 
+    let shape = Shape(data);
     this.gfx = this.gfx.set(key, shape);
     return shape;
   }
@@ -123,6 +120,12 @@ SGRuntime.globals = Object.setPrototypeOf({
   rgb(r, g, b) {
     let hex = (v) => ('0' + Math.round(255 * v).toString(16)).substr(-2);
     return `#${hex(r)}${hex(g)}${hex(b)}`;
+  },
+
+  text(x, y, text, fontSize = 16) {
+    return this.addShape({
+      type: 'text', x, y, text, attrs: { fontSize }
+    });
   },
 
   rect(x, y, width, height) {
@@ -275,6 +278,7 @@ export const SPolygon = Object.setPrototypeOf({
 }, SShape);
 
 let handlerMap = {
+  text: SRect,
   rect: SRect,
   circle: SEllipse,
   ellipse: SEllipse,

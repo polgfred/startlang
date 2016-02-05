@@ -38,7 +38,7 @@ export class RShape extends RBase {
     }
 
     return <g transform={`translate(${shape.x} ${shape.y})`}>
-      {React.createElement(shape.type, attrs)}
+      {React.createElement(shape.type, attrs, shape.text)}
     </g>;
   }
 
