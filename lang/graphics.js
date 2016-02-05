@@ -11,16 +11,15 @@ import RTerm from '../comp/term';
 
 // immutable record type for shape data
 export const Shape = immutable.Record({
-  key: null, // identifier for lookup
-  type: null, // rect, circle, ellipse, etc.
-  transform: null, // transformation matrix
-  origin: immutable.List([ 0, 0 ]), // origin for transforms
-  attrs: immutable.Map() // svg attrs for this element
+  key: null,              // identifier for lookup
+  type: null,             // rect, circle, ellipse, etc.
+  x: 0,                   // location of shape on x axis
+  y: 0,                   // location of shape on y axis
+  angle: 0,               // rotation in coordinate space
+  scalex: 1,              // scale factor for x
+  scaley: 1,              // scale factor for y
+  attrs: immutable.Map()  // svg attrs for this element
 });
-
-function createMatrix() {
-  return $('#display svg')[0].createSVGMatrix();
-}
 
 export class SGRuntime extends SRuntime {
   constructor() {
@@ -42,6 +41,8 @@ export class SGRuntime extends SRuntime {
     let shape = new Shape({
       key: key,
       type: data.type,
+      x: data.x,
+      y: data.y,
       attrs: immutable.Map(data.attrs)
     });
 
@@ -49,38 +50,10 @@ export class SGRuntime extends SRuntime {
     return shape;
   }
 
-  updateShape(shape, name, value) {
-    // retrieve current shape data, might have been modified elsewhere
-    shape = this.gfx.get(shape.key);
-
-    // update the supplied attribute
-    shape = shape.set('attrs', shape.attrs.set(name, value));
-    this.gfx = this.gfx.set(shape.key, shape);
-    return shape;
-  }
-
-  transformShape(shape, xform) {
-    // retrieve current shape data, might have been modified elsewhere
-    shape = this.gfx.get(shape.key);
-
-    let mat = createMatrix(), trans = shape.transform;
-
-    if (trans) {
-      mat.a = trans.get(0);
-      mat.b = trans.get(1);
-      mat.c = trans.get(2);
-      mat.d = trans.get(3);
-      mat.e = trans.get(4);
-      mat.f = trans.get(5);
-    }
-
-    // call the supplied transformer
-    mat = xform(mat);
-
-    // update the transform
-    trans = immutable.List([ mat.a, mat.b, mat.c, mat.d, mat.e, mat.f ]);
-    shape = shape.set('transform', trans);
-    this.gfx = this.gfx.set(shape.key, shape);
+  updateShape(key, xform) {
+    // retrieve current shape data and update it
+    let shape = xform(this.gfx.get(key));
+    this.gfx = this.gfx.set(key, shape);
     return shape;
   }
 
@@ -154,43 +127,44 @@ SGRuntime.globals = Object.setPrototypeOf({
 
   rect(x, y, width, height) {
     return this.addShape({
-      type: 'rect',
-      attrs: { x, y, width, height }
+      type: 'rect', x, y, attrs: { width, height }
     });
   },
 
-  circle(cx, cy, r) {
+  crect(x, y, width, height) {
+    // a rect, but shifted so that its x, y is in the center
     return this.addShape({
-      type: 'circle',
-      attrs: { cx, cy, r }
+      type: 'rect', x, y, attrs: { x: -width / 2, y: -height / 2, width, height }
     });
   },
 
-  ellipse(cx, cy, rx, ry) {
+  circle(x, y, r) {
     return this.addShape({
-      type: 'ellipse',
-      attrs: { cx, cy, rx, ry }
+      type: 'circle', x, y, attrs: { r }
     });
   },
 
-  line(x1, y1, x2, y2) {
+  ellipse(x, y, rx, ry) {
     return this.addShape({
-      type: 'line',
-      attrs: { x1, y1, x2, y2 }
+      type: 'ellipse', x, y, attrs: { rx, ry }
     });
   },
 
-  polyline(...points) {
+  line(x, y, x2, y2) {
     return this.addShape({
-      type: 'polyline',
-      attrs: { points: points.join(',') }
+      type: 'line', x, y, attrs: { x2: x2 - x, y2: y2 - y }
     });
   },
 
-  polygon(...points) {
+  polyline(x, y, ...points) {
     return this.addShape({
-      type: 'polygon',
-      attrs: { points: points.join(',') }
+      type: 'polyline', x, y, attrs: { points: points.join(',') }
+    });
+  },
+
+  polygon(x, y, ...points) {
+    return this.addShape({
+      type: 'polygon', x, y, attrs: { points: points.join(',') }
     });
   }
 }, SRuntime.globals);
@@ -202,58 +176,73 @@ export const SShape = Object.setPrototypeOf({
   },
 
   methods: {
+    move(sh, x, y) {
+      return {
+        [assignKey]:
+          this.updateShape(sh.key, (sh) => sh
+            .set('x', x)
+            .set('y', y))
+      };
+    },
+
     fill(sh, color) {
-      return { [assignKey]: [ this.updateShape(sh, 'fill', color || 'none') ] };
+      return {
+        [assignKey]:
+          this.updateShape(sh.key, (sh) => sh
+            .set('attrs', sh.attrs
+              .set('fill', color || 'none')))
+      };
     },
 
-    stroke(sh, color) {
-      return { [assignKey]: [ this.updateShape(sh, 'stroke', color || 'none') ] };
+    draw(sh, color) {
+      return {
+        [assignKey]:
+          this.updateShape(sh.key, (sh) => sh
+            .set('attrs', sh.attrs
+              .set('stroke', color || 'none')))
+      };
     },
 
-    opacity(sh, value = 1) {
-      return { [assignKey]: [ this.updateShape(sh, 'opacity', value) ] };
+    alpha(sh, value = 1) {
+      return {
+        [assignKey]:
+          this.updateShape(sh.key, (sh) => sh
+            .set('attrs', sh.attrs
+              .set('opacity', value)))
+      };
     },
 
-    translate(sh, tx = 0, ty = 0) {
-      return { [assignKey]: [ this.transformShape(sh, (mat) => mat.translate(tx, ty)) ] };
-    },
-
-    scale(sh, s) {
-      return { [assignKey]: [ this.transformShape(sh, (mat) => mat.scale(s)) ] };
-    },
-
-    scalex(sh, sx) {
-      return { [assignKey]: [ this.transformShape(sh, (mat) => mat.scaleNonUniform(sx, 1)) ] };
-    },
-
-    scaley(sh, sy) {
-      return { [assignKey]: [ this.transformShape(sh, (mat) => mat.scaleNonUniform(1, sy)) ] };
+    scale(sh, sx = 1, sy = sx) {
+      return {
+        [assignKey]:
+          this.updateShape(sh.key, (sh) => sh
+            .set('scalex', sx)
+            .set('scaley', sy))
+      };
     },
 
     flipx(sh) {
-      return { [assignKey]: [ this.transformShape(sh, (mat) => mat.flipX()) ] };
+      return {
+        [assignKey]:
+          this.updateShape(sh.key, (sh) => sh
+            .set('scalex', -sh.scalex))
+      };
     },
 
     flipy(sh) {
-      return { [assignKey]: [ this.transformShape(sh, (mat) => mat.flipY()) ] };
+      return {
+        [assignKey]:
+          this.updateShape(sh.key, (sh) => sh
+            .set('scaley', -sh.scaley))
+      };
     },
 
-    skewx(sh, ax) {
-      return { [assignKey]: [ this.transformShape(sh, (mat) => mat.skewX(ax)) ] };
-    },
-
-    skewy(sh, ay) {
-      return { [assignKey]: [ this.transformShape(sh, (mat) => mat.skewY(ay)) ] };
-    },
-
-    rotate(sh, a = 0, cx = 0, cy = 0) {
-      let xform = cx == 0 && cy == 0 ?
-                    (mat) => mat.rotate(a) :
-                    (mat) => mat.translate(cx, cy)
-                              .rotate(a)
-                              .translate(-cx, -cy);
-
-      return { [assignKey]: [ this.transformShape(sh, xform) ] };
+    rotate(sh, a = 0) {
+      return {
+        [assignKey]:
+          this.updateShape(sh.key, (sh) => sh
+            .set('angle', a))
+      };
     },
 
     clone(sh) {
@@ -266,55 +255,28 @@ export const SShape = Object.setPrototypeOf({
 
 export const SRect = Object.setPrototypeOf({
   methods: Object.setPrototypeOf({
-    move(sh, x, y) {
-      sh = this.updateShape(sh, 'x', x);
-      sh = this.updateShape(sh, 'y', y);
-      return { [assignKey]: [ sh ] };
-    }
-  }, SShape.methods)
-}, SShape);
-
-export const SCircle = Object.setPrototypeOf({
-  methods: Object.setPrototypeOf({
-    move(sh, cx, cy) {
-      sh = this.updateShape(sh, 'cx', cx);
-      sh = this.updateShape(sh, 'cy', cy);
-      return { [assignKey]: [ sh ] };
-    }
   }, SShape.methods)
 }, SShape);
 
 export const SEllipse = Object.setPrototypeOf({
   methods: Object.setPrototypeOf({
-    move(sh, cx, cy) {
-      sh = this.updateShape(sh, 'cx', cx);
-      sh = this.updateShape(sh, 'cy', cy);
-      return { [assignKey]: [ sh ] };
-    }
   }, SShape.methods)
 }, SShape);
 
 export const SLine = Object.setPrototypeOf({
   methods: Object.setPrototypeOf({
-    move(sh, x, y) {
-      sh = this.updateShape(sh, 'x', x);
-      sh = this.updateShape(sh, 'y', y);
-      return { [assignKey]: [ sh ] };
-    }
   }, SShape.methods)
 }, SShape);
 
 // used for both polylines and polygons, as it just moves points
 export const SPolygon = Object.setPrototypeOf({
   methods: Object.setPrototypeOf({
-    move(el, x, y) {
-    }
   }, SShape.methods)
 }, SShape);
 
 let handlerMap = {
   rect: SRect,
-  circle: SCircle,
+  circle: SEllipse,
   ellipse: SEllipse,
   line: SLine,
   polyline: SPolygon,
