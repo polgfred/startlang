@@ -137,7 +137,12 @@ SGRuntime.globals = Object.setPrototypeOf({
   crect(x, y, width, height) {
     // a rect, but shifted so that its x, y is in the center
     return this.addShape({
-      type: 'rect', x, y, attrs: { x: -width / 2, y: -height / 2, width, height }
+      type: 'rect', x, y, attrs: {
+        x: -width / 2,
+        y: -height / 2,
+        width,
+        height
+      }
     });
   },
 
@@ -153,9 +158,28 @@ SGRuntime.globals = Object.setPrototypeOf({
     });
   },
 
-  line(x, y, x2, y2) {
+  line(x1, y1, x2, y2) {
     return this.addShape({
-      type: 'line', x, y, attrs: { x2: x2 - x, y2: y2 - y }
+      type: 'line', x: x1, y: y1, attrs: {
+        x1: 0,
+        y1: 0,
+        x2: x2 - x1,
+        y2: y2 - y1
+      }
+    });
+  },
+
+  cline(x1, y1, x2, y2) {
+    // a line, but shifted so that its x, y is in the center
+    let hdx = (x2 - x1) / 2, hdy = (y2 - y1) / 2;
+
+    return this.addShape({
+      type: 'line', x: x1 + hdx, y: y1 + hdy, attrs: {
+        x1: -hdx,
+        y1: -hdy,
+        x2: hdx,
+        y2: hdy
+      }
     });
   },
 

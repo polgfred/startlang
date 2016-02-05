@@ -1,14 +1,24 @@
 display "graphics"
 
-colors = list("black","blue","red","green","orange","yellow")
+t = text(60, 60, "Hi there", 50)
+draw t, "blue"
+fill t, none
 
-box = rect(0,0,50,50)
+colors = list()
+repeat 6 do add colors, rgb(rand(), rand(), rand())
 
-for t from 1 to 72 do
-  move box, t*5, t*5
-  rotate box, t*5
-  scale box, t/36, -t/24
-  fill box, colors[floor(t/6) % len(colors) + 1]
-  sleep 1/36
+box = crect(0, 0, 60, 40)
+dot = crect(0, 0, 10, 10)
+fill dot, "white"
+
+for t from 1 to 360 do
+  move box, t, t
+  move dot, t, t
+  rotate box, t
+  rotate dot, -t*4
+  scale box, t/180
+  fill box, colors[floor(t/30) % len(colors) + 1]
+  alpha box, t/360
+  ;sleep 1/250
   repaint
 end
