@@ -3,13 +3,14 @@
 import $ from 'jquery';
 import React from 'react';
 import ReactDOM from 'react-dom';
-import RBase from './base';
 
-export default class RTerm extends RBase {
+import CBase from './base';
+
+export default class CTerm extends CBase {
   render() {
     return <div className="terminal" onClick={this.handleClick.bind(this)}>
-      <RTermOutput buf={this.props.buf} />
-      <RTermInput ref="input" />
+      <CTermOutput buf={this.props.buf} />
+      <CTermInput ref="input" />
     </div>;
   }
 
@@ -27,7 +28,7 @@ export default class RTerm extends RBase {
   }
 }
 
-export class RTermOutput extends RBase {
+export class CTermOutput extends CBase {
   render() {
     let lines = this.props.buf.map((line, i) =>
           <div key={i} className="terminal-output-line">{line}</div>);
@@ -40,7 +41,7 @@ export class RTermOutput extends RBase {
   }
 }
 
-export class RTermInput extends RBase {
+export class CTermInput extends CBase {
   constructor() {
     super();
 

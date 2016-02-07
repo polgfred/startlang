@@ -101,6 +101,7 @@ $('#runner').click(() => {
     $('#runner').prop('disabled', false);
   }).catch((err) => {
     console.error(err.message);
+    console.error(err.stack);
     $('#runner').prop('disabled', false);
   });
 });

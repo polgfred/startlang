@@ -1,26 +1,35 @@
 'use strict';
 
+import { _extend as extendObject } from 'util';
+
 import $ from 'jquery';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import immutable from 'immutable';
 
 import { SRuntime, SBase, handle, handlerKey, assignKey, resultKey } from './runtime';
-import RGraphics from '../comp/graphics';
-import RTerm from '../comp/term';
+import CGraphics from '../comp/graphics';
+import CTerm from '../comp/term';
+
+const baseProps = {
+  key: null,
+  stroke: null,
+  fill: null,
+  alpha: null,
+  align: 'center',
+  angle: 0,
+  scalex: 1,
+  scaley: 1
+};
 
 // immutable record type for shape data
-export const Shape = immutable.Record({
-  key: null,              // identifier for lookup
-  type: null,             // rect, circle, ellipse, etc.
-  x: 0,                   // location of shape on x axis
-  y: 0,                   // location of shape on y axis
-  angle: 0,               // rotation in coordinate space
-  scalex: 1,              // scale factor for x
-  scaley: 1,              // scale factor for y
-  attrs: immutable.Map(), // svg attrs for this element
-  text: null              // inner text content for element
-});
+const Rect = immutable.Record(extendObject(baseProps, {
+  type: 'rect',
+  x: 0,
+  y: 0,
+  width: 0,
+  height: 0
+}));
 
 export class SGRuntime extends SRuntime {
   constructor() {
@@ -35,14 +44,11 @@ export class SGRuntime extends SRuntime {
     this.updateDisplay();
   }
 
-  addShape(data) {
+  addShape(shape) {
     let rnd = Math.floor(Math.random() * (2 << 23)),
         key = ('000000' + rnd.toString(16)).substr(-6);
 
-    data.key = key;
-    data.attrs = immutable.Map(data.attrs);
-
-    let shape = Shape(data);
+    shape = shape.set('key', key);
     this.gfx = this.gfx.set(key, shape);
     return shape;
   }
@@ -63,11 +69,11 @@ export class SGRuntime extends SRuntime {
     }
 
     if (this.buf) {
-      this.rterm = ReactDOM.render(<RTerm buf={this.buf} />, $('#display .text')[0]);
+      this.rterm = ReactDOM.render(<CTerm buf={this.buf} />, $('#display .text')[0]);
     }
 
     if (this.gfx) {
-      this.rgfx = ReactDOM.render(<RGraphics data={this.gfx} />, $('#display .graphics')[0]);
+      this.rgfx = ReactDOM.render(<CGraphics data={this.gfx} />, $('#display .graphics')[0]);
     }
   }
 }
@@ -128,22 +134,8 @@ SGRuntime.globals = Object.setPrototypeOf({
     });
   },
 
-  rect(x, y, width, height) {
-    return this.addShape({
-      type: 'rect', x, y, attrs: { width, height }
-    });
-  },
-
-  crect(x, y, width, height) {
-    // a rect, but shifted so that its x, y is in the center
-    return this.addShape({
-      type: 'rect', x, y, attrs: {
-        x: -width / 2,
-        y: -height / 2,
-        width,
-        height
-      }
-    });
+  rect(x, y, width, height, align = 'c') {
+    return this.addShape(new Rect({ x, y, width, height, align }));
   },
 
   circle(x, y, r) {
@@ -216,8 +208,7 @@ export const SShape = Object.setPrototypeOf({
       return {
         [assignKey]:
           this.updateShape(sh.key, (sh) => sh
-            .set('attrs', sh.attrs
-              .set('fill', color || 'none')))
+            .set('fill', color || 'none'))
       };
     },
 
@@ -225,8 +216,7 @@ export const SShape = Object.setPrototypeOf({
       return {
         [assignKey]:
           this.updateShape(sh.key, (sh) => sh
-            .set('attrs', sh.attrs
-              .set('stroke', color || 'none')))
+            .set('stroke', color || 'none'))
       };
     },
 
@@ -234,8 +224,7 @@ export const SShape = Object.setPrototypeOf({
       return {
         [assignKey]:
           this.updateShape(sh.key, (sh) => sh
-            .set('attrs', sh.attrs
-              .set('opacity', value)))
+            .set('alpha', value))
       };
     },
 
@@ -301,17 +290,19 @@ export const SPolygon = Object.setPrototypeOf({
   }, SShape.methods)
 }, SShape);
 
-let handlerMap = {
-  text: SRect,
-  rect: SRect,
-  circle: SEllipse,
-  ellipse: SEllipse,
-  line: SLine,
-  polyline: SPolygon,
-  polygon: SPolygon
-};
+// let handlerMap = {
+//   rect: SRect,
+//   text: SRect,
+//   circle: SEllipse,
+//   ellipse: SEllipse,
+//   line: SLine,
+//   polyline: SPolygon,
+//   polygon: SPolygon
+// };
+//
+// Shape.prototype[handlerKey] = (obj) => handlerMap[obj.type];
 
-Shape.prototype[handlerKey] = (obj) => handlerMap[obj.type];
+Rect.prototype[handlerKey] = SRect;
 
 export function createRuntime() {
   return new SGRuntime;
