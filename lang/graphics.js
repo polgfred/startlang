@@ -11,26 +11,6 @@ import { SRuntime, SBase, handle, handlerKey, assignKey, resultKey } from './run
 import CGraphics from '../comp/graphics';
 import CTerm from '../comp/term';
 
-const baseProps = {
-  key: null,
-  stroke: null,
-  fill: null,
-  alpha: null,
-  align: 'center',
-  angle: 0,
-  scalex: 1,
-  scaley: 1
-};
-
-// immutable record type for shape data
-const Rect = immutable.Record(extendObject(baseProps, {
-  type: 'rect',
-  x: 0,
-  y: 0,
-  width: 0,
-  height: 0
-}));
-
 export class SGRuntime extends SRuntime {
   constructor() {
     super();
@@ -134,20 +114,16 @@ SGRuntime.globals = Object.setPrototypeOf({
     });
   },
 
-  rect(x, y, width, height, align = 'c') {
-    return this.addShape(new Rect({ x, y, width, height, align }));
+  rect(x, y, width, height) {
+    return this.addShape(Rect({ x, y, width, height }));
   },
 
-  circle(x, y, r) {
-    return this.addShape({
-      type: 'circle', x, y, attrs: { r }
-    });
+  circle(cx, cy, r) {
+    return this.addShape(Circle({ cx, cy, r }));
   },
 
-  ellipse(x, y, rx, ry) {
-    return this.addShape({
-      type: 'ellipse', x, y, attrs: { rx, ry }
-    });
+  ellipse(cx, cy, rx, ry) {
+    return this.addShape(Ellipse({ cx, cy, rx, ry }));
   },
 
   line(x1, y1, x2, y2) {
@@ -188,43 +164,73 @@ SGRuntime.globals = Object.setPrototypeOf({
   }
 }, SRuntime.globals);
 
-// all shapes have these basic utilities in common
+// properties common to all shapes
+const baseProps = {
+  key: null,
+  stroke: null,
+  fill: null,
+  alpha: null,
+  align: 'center',
+  angle: 0,
+  scalex: 1,
+  scaley: 1
+};
+
+const Rect = immutable.Record(extendObject({
+  type: 'rect',
+  x: 0,
+  y: 0,
+  width: 0,
+  height: 0
+}, baseProps));
+
+const Circle = immutable.Record(extendObject({
+  type: 'circle',
+  cx: 0,
+  cy: 0,
+  r: 0
+}, baseProps));
+
+const Ellipse = immutable.Record(extendObject({
+  type: 'ellipse',
+  cx: 0,
+  cy: 0,
+  rx: 0,
+  ry: 0
+}, baseProps));
+
+// handlers for shapes
 export const SShape = Object.setPrototypeOf({
   repr(sh) {
     return `*${sh.type}*`;
   },
 
   methods: {
-    move(sh, x, y) {
-      return {
-        [assignKey]:
-          this.updateShape(sh.key, (sh) => sh
-            .set('x', x)
-            .set('y', y))
-      };
-    },
-
     fill(sh, color) {
       return {
         [assignKey]:
-          this.updateShape(sh.key, (sh) => sh
-            .set('fill', color || 'none'))
+          this.updateShape(sh.key, (sh) => sh.set('fill', color || 'none'))
       };
     },
 
-    draw(sh, color) {
+    stroke(sh, color) {
       return {
         [assignKey]:
-          this.updateShape(sh.key, (sh) => sh
-            .set('stroke', color || 'none'))
+          this.updateShape(sh.key, (sh) => sh.set('stroke', color || 'none'))
       };
     },
 
     alpha(sh, value = 1) {
       return {
         [assignKey]:
-          this.updateShape(sh.key, (sh) => sh
-            .set('alpha', value))
+          this.updateShape(sh.key, (sh) => sh.set('alpha', value))
+      };
+    },
+
+    align(sh, value = 'center') {
+      return {
+        [assignKey]:
+          this.updateShape(sh.key, (sh) => sh.set('align', value))
       };
     },
 
@@ -240,24 +246,21 @@ export const SShape = Object.setPrototypeOf({
     flipx(sh) {
       return {
         [assignKey]:
-          this.updateShape(sh.key, (sh) => sh
-            .set('scalex', -sh.scalex))
+          this.updateShape(sh.key, (sh) => sh.set('scalex', -sh.scalex))
       };
     },
 
     flipy(sh) {
       return {
         [assignKey]:
-          this.updateShape(sh.key, (sh) => sh
-            .set('scaley', -sh.scaley))
+          this.updateShape(sh.key, (sh) => sh.set('scaley', -sh.scaley))
       };
     },
 
     rotate(sh, a = 0) {
       return {
         [assignKey]:
-          this.updateShape(sh.key, (sh) => sh
-            .set('angle', a))
+          this.updateShape(sh.key, (sh) => sh.set('angle', a))
       };
     },
 
@@ -271,13 +274,48 @@ export const SShape = Object.setPrototypeOf({
 
 export const SRect = Object.setPrototypeOf({
   methods: Object.setPrototypeOf({
+    move(sh, x, y) {
+      return {
+        [assignKey]:
+          this.updateShape(sh.key, (sh) => sh
+            .set('x', x)
+            .set('y', y))
+      };
+    }
   }, SShape.methods)
 }, SShape);
 
-export const SEllipse = Object.setPrototypeOf({
+Rect.prototype[handlerKey] = SRect;
+
+export const SCircle = Object.setPrototypeOf({
   methods: Object.setPrototypeOf({
+    move(sh, cx, cy) {
+      return {
+        [assignKey]:
+          this.updateShape(sh.key, (sh) => sh
+            .set('cx', cx)
+            .set('cy', cy))
+      };
+    }
   }, SShape.methods)
 }, SShape);
+
+Circle.prototype[handlerKey] = SCircle;
+
+export const SEllipse = Object.setPrototypeOf({
+  methods: Object.setPrototypeOf({
+    move(sh, cx, cy) {
+      return {
+        [assignKey]:
+          this.updateShape(sh.key, (sh) => sh
+            .set('cx', cx)
+            .set('cy', cy))
+      };
+    }
+  }, SShape.methods)
+}, SShape);
+
+Ellipse.prototype[handlerKey] = SEllipse;
 
 export const SLine = Object.setPrototypeOf({
   methods: Object.setPrototypeOf({
@@ -289,20 +327,6 @@ export const SPolygon = Object.setPrototypeOf({
   methods: Object.setPrototypeOf({
   }, SShape.methods)
 }, SShape);
-
-// let handlerMap = {
-//   rect: SRect,
-//   text: SRect,
-//   circle: SEllipse,
-//   ellipse: SEllipse,
-//   line: SLine,
-//   polyline: SPolygon,
-//   polygon: SPolygon
-// };
-//
-// Shape.prototype[handlerKey] = (obj) => handlerMap[obj.type];
-
-Rect.prototype[handlerKey] = SRect;
 
 export function createRuntime() {
   return new SGRuntime;

@@ -27,16 +27,9 @@ export class CShape extends CBase {
   shouldComponentUpdate(nextProps) {
     return this.props.shape != nextProps.shape;
   }
-}
 
-export class CRect extends CBase {
-  render() {
+  setup() {
     let shape = this.props.shape, attrs = { style: {} };
-
-    attrs.x = shape.x;
-    attrs.y = shape.y;
-    attrs.width = shape.width;
-    attrs.height = shape.height;
 
     if (shape.stroke) {
       attrs.stroke = shape.stroke;
@@ -62,16 +55,56 @@ export class CRect extends CBase {
       }
 
       if (shape.scalex != 1 && shape.scaley != 1) {
-        trans += `scale(${shape.scalex} ${shape.scaley})`;
+        trans += `scale(${shape.scalex}, ${shape.scaley})`;
       }
 
       attrs.style.transform = trans;
     }
 
+    return attrs;
+  }
+}
+
+export class CRect extends CShape {
+  render() {
+    let shape = this.props.shape, attrs = this.setup();
+
+    attrs.x = shape.x;
+    attrs.y = shape.y;
+    attrs.width = shape.width;
+    attrs.height = shape.height;
+
     return React.createElement('rect', attrs);
   }
 }
 
+export class CCircle extends CShape {
+  render() {
+    let shape = this.props.shape, attrs = this.setup();
+
+    attrs.cx = shape.cx;
+    attrs.cy = shape.cy;
+    attrs.r = shape.r;
+
+    return React.createElement('circle', attrs);
+  }
+}
+
+export class CEllipse extends CShape {
+  render() {
+    let shape = this.props.shape, attrs = this.setup();
+
+    attrs.cx = shape.cx;
+    attrs.cy = shape.cy;
+    attrs.rx = shape.rx;
+    attrs.ry = shape.ry;
+
+    return React.createElement('ellipse', attrs);
+  }
+}
+
 const registry = {
-  'rect': CRect
+  'rect': CRect,
+  'circle': CCircle,
+  'ellipse': CEllipse
 };
