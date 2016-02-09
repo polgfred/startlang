@@ -108,12 +108,6 @@ SGRuntime.globals = Object.setPrototypeOf({
     return `#${hex(r)}${hex(g)}${hex(b)}`;
   },
 
-  text(x, y, text, fontSize = 16) {
-    return this.addShape({
-      type: 'text', x, y, text, attrs: { fontSize }
-    });
-  },
-
   rect(x, y, width, height) {
     return this.addShape(Rect({ x, y, width, height }));
   },
@@ -126,6 +120,12 @@ SGRuntime.globals = Object.setPrototypeOf({
     return this.addShape(Ellipse({ cx, cy, rx, ry }));
   },
 
+  text(x, y, text, fontSize = 16) {
+    return this.addShape({
+      type: 'text', x, y, text, attrs: { fontSize }
+    });
+  },
+
   line(x1, y1, x2, y2) {
     return this.addShape({
       type: 'line', x: x1, y: y1, attrs: {
@@ -133,20 +133,6 @@ SGRuntime.globals = Object.setPrototypeOf({
         y1: 0,
         x2: x2 - x1,
         y2: y2 - y1
-      }
-    });
-  },
-
-  cline(x1, y1, x2, y2) {
-    // a line, but shifted so that its x, y is in the center
-    let hdx = (x2 - x1) / 2, hdy = (y2 - y1) / 2;
-
-    return this.addShape({
-      type: 'line', x: x1 + hdx, y: y1 + hdy, attrs: {
-        x1: -hdx,
-        y1: -hdy,
-        x2: hdx,
-        y2: hdy
       }
     });
   },

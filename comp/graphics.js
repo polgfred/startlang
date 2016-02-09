@@ -32,15 +32,15 @@ export class CShape extends CBase {
     let shape = this.props.shape, attrs = { style: {} };
 
     if (shape.stroke) {
-      attrs.stroke = shape.stroke;
+      attrs.style.stroke = shape.stroke;
     }
 
     if (shape.fill) {
-      attrs.fill = shape.fill;
+      attrs.style.fill = shape.fill;
     }
 
     if (shape.alpha && shape.alpha < 1) {
-      attrs.opacity = shape.alpha;
+      attrs.style.opacity = shape.alpha;
     }
 
     if (shape.align) {
@@ -55,7 +55,7 @@ export class CShape extends CBase {
       }
 
       if (shape.scalex != 1 && shape.scaley != 1) {
-        trans += `scale(${shape.scalex}, ${shape.scaley})`;
+        trans += `scale(${shape.scalex},${shape.scaley})`;
       }
 
       attrs.style.transform = trans;
