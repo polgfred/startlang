@@ -29,7 +29,7 @@ export class CShape extends CBase {
   }
 
   setup() {
-    let shape = this.props.shape, attrs = { style: {} };
+    let shape = this.props.shape, attrs = { style: {} }, trans = '';
     if (shape.stroke) {
       attrs.style.stroke = shape.stroke;
     }
@@ -39,21 +39,20 @@ export class CShape extends CBase {
     if (shape.alpha && shape.alpha < 1) {
       attrs.style.opacity = shape.alpha;
     }
-    if (shape.align) {
-      attrs.style.transformOrigin = shape.align;
+    if (shape.angle != 0) {
+      trans += `rotate(${shape.angle}deg)`;
     }
-    if (shape.angle != 0 || shape.scalex != 1 || shape.scaley != 1) {
-      let trans = '';
-      if (shape.angle != 0) {
-        trans += `rotate(${shape.angle}deg)`;
-      }
-      if (shape.scalex != 1) {
-        trans += `scalex(${shape.scalex})`;
-      }
-      if (shape.scaley != 1) {
-        trans += `scaley(${shape.scaley})`;
-      }
+    if (shape.scalex != 1) {
+      trans += `scalex(${shape.scalex})`;
+    }
+    if (shape.scaley != 1) {
+      trans += `scaley(${shape.scaley})`;
+    }
+    if (trans) {
       attrs.style.transform = trans;
+      if (shape.align) {
+        attrs.style.transformOrigin = shape.align;
+      }
     }
     return attrs;
   }
