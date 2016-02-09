@@ -12,9 +12,9 @@ export default class CGraphics extends CBase {
     //     originy = Math.floor(dims.height / 2);
     //<g transform={`translate(${originx} ${originy}) scale(1 -1)`}>
 
-    let shapes = this.props.data.valueSeq().map((shape) => {
-      let comp = registry[shape.type];
-      return React.createElement(comp, { key: shape.key, shape: shape });
+    let shapes = [];
+    this.props.data.forEach((shape, key) => {
+      shapes.push(React.createElement(registry[shape.type], { key, shape }));
     });
 
     return <svg>
