@@ -30,37 +30,31 @@ export class CShape extends CBase {
 
   setup() {
     let shape = this.props.shape, attrs = { style: {} };
-
     if (shape.stroke) {
       attrs.style.stroke = shape.stroke;
     }
-
     if (shape.fill) {
       attrs.style.fill = shape.fill;
     }
-
     if (shape.alpha && shape.alpha < 1) {
       attrs.style.opacity = shape.alpha;
     }
-
     if (shape.align) {
       attrs.style.transformOrigin = shape.align;
     }
-
-    if (shape.angle != 0 || shape.scalex != 1 && shape.scaley != 1) {
+    if (shape.angle != 0 || shape.scalex != 1 || shape.scaley != 1) {
       let trans = '';
-
       if (shape.angle != 0) {
         trans += `rotate(${shape.angle}deg)`;
       }
-
-      if (shape.scalex != 1 && shape.scaley != 1) {
-        trans += `scale(${shape.scalex},${shape.scaley})`;
+      if (shape.scalex != 1) {
+        trans += `scalex(${shape.scalex})`;
       }
-
+      if (shape.scaley != 1) {
+        trans += `scaley(${shape.scaley})`;
+      }
       attrs.style.transform = trans;
     }
-
     return attrs;
   }
 }
@@ -68,12 +62,10 @@ export class CShape extends CBase {
 export class CRect extends CShape {
   render() {
     let shape = this.props.shape, attrs = this.setup();
-
     attrs.x = shape.x;
     attrs.y = shape.y;
     attrs.width = shape.width;
     attrs.height = shape.height;
-
     return React.createElement('rect', attrs);
   }
 }
@@ -81,11 +73,9 @@ export class CRect extends CShape {
 export class CCircle extends CShape {
   render() {
     let shape = this.props.shape, attrs = this.setup();
-
     attrs.cx = shape.cx;
     attrs.cy = shape.cy;
     attrs.r = shape.r;
-
     return React.createElement('circle', attrs);
   }
 }
@@ -93,12 +83,10 @@ export class CCircle extends CShape {
 export class CEllipse extends CShape {
   render() {
     let shape = this.props.shape, attrs = this.setup();
-
     attrs.cx = shape.cx;
     attrs.cy = shape.cy;
     attrs.rx = shape.rx;
     attrs.ry = shape.ry;
-
     return React.createElement('ellipse', attrs);
   }
 }
