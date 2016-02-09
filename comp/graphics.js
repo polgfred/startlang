@@ -23,7 +23,7 @@ export default class CGraphics extends CBase {
   }
 }
 
-export class CShape extends CBase {
+class CShape extends CBase {
   shouldComponentUpdate(nextProps) {
     return this.props.shape != nextProps.shape;
   }
@@ -50,15 +50,13 @@ export class CShape extends CBase {
     }
     if (trans) {
       attrs.style.transform = trans;
-      if (shape.align) {
-        attrs.style.transformOrigin = shape.align;
-      }
+      attrs.style.transformOrigin = shape.align;
     }
     return attrs;
   }
 }
 
-export class CRect extends CShape {
+class CRect extends CShape {
   render() {
     let shape = this.props.shape, attrs = this.setup();
     attrs.x = shape.x;
@@ -69,7 +67,7 @@ export class CRect extends CShape {
   }
 }
 
-export class CCircle extends CShape {
+class CCircle extends CShape {
   render() {
     let shape = this.props.shape, attrs = this.setup();
     attrs.cx = shape.cx;
@@ -79,7 +77,7 @@ export class CCircle extends CShape {
   }
 }
 
-export class CEllipse extends CShape {
+class CEllipse extends CShape {
   render() {
     let shape = this.props.shape, attrs = this.setup();
     attrs.cx = shape.cx;

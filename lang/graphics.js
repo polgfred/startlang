@@ -186,7 +186,7 @@ const Ellipse = immutable.Record(extendObject({
 }, baseProps));
 
 // handlers for shapes
-export const SShape = Object.setPrototypeOf({
+const SShape = Object.setPrototypeOf({
   repr(sh) {
     return `*${sh.type}*`;
   },
@@ -258,7 +258,7 @@ export const SShape = Object.setPrototypeOf({
   }
 }, SBase);
 
-export const SRect = Object.setPrototypeOf({
+const SRect = Object.setPrototypeOf({
   methods: Object.setPrototypeOf({
     move(sh, x, y) {
       return {
@@ -273,7 +273,7 @@ export const SRect = Object.setPrototypeOf({
 
 Rect.prototype[handlerKey] = SRect;
 
-export const SCircle = Object.setPrototypeOf({
+const SCircle = Object.setPrototypeOf({
   methods: Object.setPrototypeOf({
     move(sh, cx, cy) {
       return {
@@ -288,7 +288,7 @@ export const SCircle = Object.setPrototypeOf({
 
 Circle.prototype[handlerKey] = SCircle;
 
-export const SEllipse = Object.setPrototypeOf({
+const SEllipse = Object.setPrototypeOf({
   methods: Object.setPrototypeOf({
     move(sh, cx, cy) {
       return {
@@ -303,13 +303,13 @@ export const SEllipse = Object.setPrototypeOf({
 
 Ellipse.prototype[handlerKey] = SEllipse;
 
-export const SLine = Object.setPrototypeOf({
+const SLine = Object.setPrototypeOf({
   methods: Object.setPrototypeOf({
   }, SShape.methods)
 }, SShape);
 
 // used for both polylines and polygons, as it just moves points
-export const SPolygon = Object.setPrototypeOf({
+const SPolygon = Object.setPrototypeOf({
   methods: Object.setPrototypeOf({
   }, SShape.methods)
 }, SShape);

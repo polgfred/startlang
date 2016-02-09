@@ -176,13 +176,13 @@ export const SBase = {
 
 // Handler definitions
 
-export const SNone = Object.setPrototypeOf({
+const SNone = Object.setPrototypeOf({
   repr() {
     return '*none*';
   }
 }, SBase);
 
-export const SBoolean = Object.setPrototypeOf({
+const SBoolean = Object.setPrototypeOf({
   repr(b) {
     return b ? '*true*' : '*false*';
   }
@@ -190,7 +190,7 @@ export const SBoolean = Object.setPrototypeOf({
 
 Boolean.prototype[handlerKey] = SBoolean;
 
-export const SNumber = Object.setPrototypeOf({
+const SNumber = Object.setPrototypeOf({
   repr(n) {
     if (isFinite(n)) {
       return String(n);
@@ -278,7 +278,7 @@ export const SNumber = Object.setPrototypeOf({
 
 Number.prototype[handlerKey] = SNumber;
 
-export const SString = Object.setPrototypeOf({
+const SString = Object.setPrototypeOf({
   repr(s) {
     return s;
   },
@@ -359,7 +359,7 @@ function normalizeTimeUnit(unit) {
   return norm;
 }
 
-export const STime = Object.setPrototypeOf({
+const STime = Object.setPrototypeOf({
   create(args) {
     if (args.length == 0) {
       return moment();
@@ -424,7 +424,7 @@ function compareElementsReversed(left, right) {
   return -compareElements(left, right);
 }
 
-export const SContainer = Object.setPrototypeOf({
+const SContainer = Object.setPrototypeOf({
   binaryops: {
     '=' : (left, right) =>  left.equals(right),
     '!=': (left, right) => !left.equals(right)
@@ -433,7 +433,7 @@ export const SContainer = Object.setPrototypeOf({
 
 // Lists
 
-export const SList = Object.setPrototypeOf({
+const SList = Object.setPrototypeOf({
   create(items) {
     return immutable.List(items);
   },
@@ -564,7 +564,7 @@ immutable.List.prototype[handlerKey] = SList;
 
 // Tables
 
-export const STable = Object.setPrototypeOf({
+const STable = Object.setPrototypeOf({
   create(pairs) {
     return immutable.OrderedMap().withMutations((n) => {
       for (let i = 0; i < pairs.length; i += 2) {
