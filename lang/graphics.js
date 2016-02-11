@@ -33,9 +33,8 @@ export class SGRuntime extends SRuntime {
     return shape;
   }
 
-  updateShape(key, xform) {
+  updateShape(key, shape) {
     // retrieve current shape data and update it
-    let shape = xform(this.gfx.get(key));
     this.gfx = this.gfx.set(key, shape);
     return shape;
   }
@@ -191,65 +190,15 @@ const SShape = Object.setPrototypeOf({
     return `*${sh.type}*`;
   },
 
+  getindex(sh, index) {
+    return sh.get(index);
+  },
+
+  setindex(sh, index, value) {
+    return this.updateShape(sh.key, sh.set(index, value));
+  },
+
   methods: {
-    fill(sh, color) {
-      return {
-        [assignKey]:
-          this.updateShape(sh.key, (sh) => sh.set('fill', color || 'none'))
-      };
-    },
-
-    stroke(sh, color) {
-      return {
-        [assignKey]:
-          this.updateShape(sh.key, (sh) => sh.set('stroke', color || 'none'))
-      };
-    },
-
-    alpha(sh, value = 1) {
-      return {
-        [assignKey]:
-          this.updateShape(sh.key, (sh) => sh.set('alpha', value))
-      };
-    },
-
-    align(sh, value = 'center') {
-      return {
-        [assignKey]:
-          this.updateShape(sh.key, (sh) => sh.set('align', value))
-      };
-    },
-
-    scale(sh, sx = 1, sy = sx) {
-      return {
-        [assignKey]:
-          this.updateShape(sh.key, (sh) => sh
-            .set('scalex', sx)
-            .set('scaley', sy))
-      };
-    },
-
-    flipx(sh) {
-      return {
-        [assignKey]:
-          this.updateShape(sh.key, (sh) => sh.set('scalex', -sh.scalex))
-      };
-    },
-
-    flipy(sh) {
-      return {
-        [assignKey]:
-          this.updateShape(sh.key, (sh) => sh.set('scaley', -sh.scaley))
-      };
-    },
-
-    rotate(sh, a = 0) {
-      return {
-        [assignKey]:
-          this.updateShape(sh.key, (sh) => sh.set('angle', a))
-      };
-    },
-
     clone(sh) {
     },
 
@@ -262,10 +211,7 @@ const SRect = Object.setPrototypeOf({
   methods: Object.setPrototypeOf({
     move(sh, x, y) {
       return {
-        [assignKey]:
-          this.updateShape(sh.key, (sh) => sh
-            .set('x', x)
-            .set('y', y))
+        [assignKey]: this.updateShape(sh.key, sh.set('x', x).set('y', y))
       };
     }
   }, SShape.methods)
@@ -277,10 +223,7 @@ const SCircle = Object.setPrototypeOf({
   methods: Object.setPrototypeOf({
     move(sh, cx, cy) {
       return {
-        [assignKey]:
-          this.updateShape(sh.key, (sh) => sh
-            .set('cx', cx)
-            .set('cy', cy))
+        [assignKey]: this.updateShape(sh.key, sh.set('cx', cx).set('cy', cy))
       };
     }
   }, SShape.methods)
@@ -292,10 +235,7 @@ const SEllipse = Object.setPrototypeOf({
   methods: Object.setPrototypeOf({
     move(sh, cx, cy) {
       return {
-        [assignKey]:
-          this.updateShape(sh.key, (sh) => sh
-            .set('cx', cx)
-            .set('cy', cy))
+        [assignKey]: this.updateShape(sh.key, sh.set('cx', cx).set('cy', cy))
       };
     }
   }, SShape.methods)

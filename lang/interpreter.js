@@ -171,8 +171,8 @@ export class SInterpreter {
     let next = (b, i) => {
       let h = handle(b), idx = indexes.get(i);
       return (i == max) ?
-        h.getindex(b, idx) :
-        next(h.getindex(b, idx), i + 1);
+        h.getindex.call(this.ctx, b, idx) :
+        next(h.getindex.call(this.ctx, b, idx), i + 1);
     };
 
     return next(this.get(name), 0);
@@ -184,8 +184,8 @@ export class SInterpreter {
     let next = (b, i) => {
       let h = handle(b), idx = indexes.get(i);
       return (i == max) ?
-        h.setindex(b, idx, value) :
-        h.setindex(b, idx, next(h.getindex(b, idx), i + 1));
+        h.setindex.call(this.ctx, b, idx, value) :
+        h.setindex.call(this.ctx, b, idx, next(h.getindex.call(this.ctx, b, idx), i + 1));
     };
 
     this.set(name, next(this.get(name), 0));
