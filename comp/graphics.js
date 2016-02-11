@@ -42,11 +42,8 @@ class CShape extends CBase {
     if (shape.angle != 0) {
       trans += `rotate(${shape.angle}deg)`;
     }
-    if (shape.scalex != 1) {
-      trans += `scalex(${shape.scalex})`;
-    }
-    if (shape.scaley != 1) {
-      trans += `scaley(${shape.scaley})`;
+    if (shape.scalex != 1 || shape.scaley != 1) {
+      trans += `scale(${shape.scalex},${shape.scaley})`;
     }
     if (trans) {
       attrs.style.transform = trans;
