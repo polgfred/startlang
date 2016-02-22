@@ -13,7 +13,7 @@ export default class CGraphics extends CBase {
     //<g transform={`translate(${originx} ${originy}) scale(1 -1)`}>
 
     let shapes = [];
-    this.props.data.forEach((shape, key) => {
+    this.props.data.shapes.forEach((shape, key) => {
       shapes.push(React.createElement(registry[shape.type], { key, shape }));
     });
 

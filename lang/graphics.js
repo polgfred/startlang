@@ -15,28 +15,13 @@ export class SGRuntime extends SRuntime {
   constructor() {
     super();
     this.buf = immutable.List();
-    this.gfx = immutable.OrderedMap();
+    this.gfx = new SGraphics();
     this.setMode('text');
   }
 
   setMode(mode) {
     this.mode = mode;
     this.updateDisplay();
-  }
-
-  addShape(shape) {
-    let rnd = Math.floor(Math.random() * (2 << 23)),
-        key = ('000000' + rnd.toString(16)).substr(-6);
-
-    shape = shape.set('key', key);
-    this.gfx = this.gfx.set(key, shape);
-    return shape;
-  }
-
-  updateShape(key, shape) {
-    // retrieve current shape data and update it
-    this.gfx = this.gfx.set(key, shape);
-    return shape;
   }
 
   updateDisplay() {
@@ -71,14 +56,18 @@ SGRuntime.globals = Object.setPrototypeOf({
     return SGRuntime.globals.refresh.call(this);
   },
 
-  display(mode) {
-    this.setMode(mode);
+  reset() {
+    this.buf = immutable.List();
+    this.gfx = new SGraphics();
   },
 
   clear() {
-    this.buf = immutable.List();
-    this.gfx = immutable.OrderedMap();
+    SGRuntime.globals.reset.call(this);
     return SGRuntime.globals.repaint.call(this);
+  },
+
+  display(mode) {
+    this.setMode(mode);
   },
 
   print(...values) {
@@ -107,51 +96,70 @@ SGRuntime.globals = Object.setPrototypeOf({
     return `#${hex(r)}${hex(g)}${hex(b)}`;
   },
 
+  fill(color) {
+    this.gfx = this.gfx.set('fill', color);
+  },
+
+  stroke(color) {
+    this.gfx = this.gfx.set('stroke', color);
+  },
+
+  alpha(opacity = 1) {
+    this.gfx = this.gfx.set('alpha', opacity);
+  },
+
+  rotate(angle = 0) {
+    this.gfx = this.gfx.set('angle', angle);
+  },
+
+  scale(scalex = 1, scaley = scalex) {
+    this.gfx = this.gfx.set('scalex', scalex).set('scaley', scaley);
+  },
+
   rect(x, y, width, height) {
-    return this.addShape(Rect({ x, y, width, height }));
+    this.gfx = this.gfx.addShape(Rect({ x, y, width, height }));
   },
 
   circle(cx, cy, r) {
-    return this.addShape(Circle({ cx, cy, r }));
+    this.gfx = this.gfx.addShape(Circle({ cx, cy, r }));
   },
 
   ellipse(cx, cy, rx, ry) {
-    return this.addShape(Ellipse({ cx, cy, rx, ry }));
-  },
-
-  text(x, y, text, fontSize = 16) {
-    return this.addShape({
-      type: 'text', x, y, text, attrs: { fontSize }
-    });
-  },
-
-  line(x1, y1, x2, y2) {
-    return this.addShape({
-      type: 'line', x: x1, y: y1, attrs: {
-        x1: 0,
-        y1: 0,
-        x2: x2 - x1,
-        y2: y2 - y1
-      }
-    });
-  },
-
-  polyline(x, y, ...points) {
-    return this.addShape({
-      type: 'polyline', x, y, attrs: { points: points.join(',') }
-    });
-  },
-
-  polygon(x, y, ...points) {
-    return this.addShape({
-      type: 'polygon', x, y, attrs: { points: points.join(',') }
-    });
+    this.gfx = this.gfx.addShape(Ellipse({ cx, cy, rx, ry }));
   }
+
+  // text(x, y, text, fontSize = 16) {
+  //   return this.addShape({
+  //     type: 'text', x, y, text, attrs: { fontSize }
+  //   });
+  // },
+  //
+  // line(x1, y1, x2, y2) {
+  //   return this.addShape({
+  //     type: 'line', x: x1, y: y1, attrs: {
+  //       x1: 0,
+  //       y1: 0,
+  //       x2: x2 - x1,
+  //       y2: y2 - y1
+  //     }
+  //   });
+  // },
+  //
+  // polyline(x, y, ...points) {
+  //   return this.addShape({
+  //     type: 'polyline', x, y, attrs: { points: points.join(',') }
+  //   });
+  // },
+  //
+  // polygon(x, y, ...points) {
+  //   return this.addShape({
+  //     type: 'polygon', x, y, attrs: { points: points.join(',') }
+  //   });
+  // }
 }, SRuntime.globals);
 
 // properties common to all shapes
-const baseProps = {
-  key: null,
+const shapeProps = {
   stroke: null,
   fill: null,
   alpha: null,
@@ -161,20 +169,34 @@ const baseProps = {
   scaley: 1
 };
 
+let shapeKeys = Object.keys(shapeProps);
+
+export class SGraphics extends immutable.Record(extendObject({
+  shapes: immutable.List()
+}, shapeProps)) {
+  addShape(sh) {
+    return this.set('shapes', this.shapes.push(sh.withMutations((sh) => {
+      for (let i = 0; i < shapeKeys.length; ++i) {
+        sh.set(shapeKeys[i], this.get(shapeKeys[i]));
+      }
+    })));
+  }
+}
+
 const Rect = immutable.Record(extendObject({
   type: 'rect',
   x: 0,
   y: 0,
   width: 0,
   height: 0
-}, baseProps));
+}, shapeProps));
 
 const Circle = immutable.Record(extendObject({
   type: 'circle',
   cx: 0,
   cy: 0,
   r: 0
-}, baseProps));
+}, shapeProps));
 
 const Ellipse = immutable.Record(extendObject({
   type: 'ellipse',
@@ -182,77 +204,7 @@ const Ellipse = immutable.Record(extendObject({
   cy: 0,
   rx: 0,
   ry: 0
-}, baseProps));
-
-// handlers for shapes
-const SShape = Object.setPrototypeOf({
-  repr(sh) {
-    return `*${sh.type}*`;
-  },
-
-  getindex(sh, index) {
-    return sh.get(index);
-  },
-
-  setindex(sh, index, value) {
-    return this.updateShape(sh.key, sh.set(index, value));
-  },
-
-  methods: {
-    clone(sh) {
-    },
-
-    remove(sh) {
-    }
-  }
-}, SBase);
-
-const SRect = Object.setPrototypeOf({
-  methods: Object.setPrototypeOf({
-    move(sh, x, y) {
-      return {
-        [assignKey]: this.updateShape(sh.key, sh.set('x', x).set('y', y))
-      };
-    }
-  }, SShape.methods)
-}, SShape);
-
-Rect.prototype[handlerKey] = SRect;
-
-const SCircle = Object.setPrototypeOf({
-  methods: Object.setPrototypeOf({
-    move(sh, cx, cy) {
-      return {
-        [assignKey]: this.updateShape(sh.key, sh.set('cx', cx).set('cy', cy))
-      };
-    }
-  }, SShape.methods)
-}, SShape);
-
-Circle.prototype[handlerKey] = SCircle;
-
-const SEllipse = Object.setPrototypeOf({
-  methods: Object.setPrototypeOf({
-    move(sh, cx, cy) {
-      return {
-        [assignKey]: this.updateShape(sh.key, sh.set('cx', cx).set('cy', cy))
-      };
-    }
-  }, SShape.methods)
-}, SShape);
-
-Ellipse.prototype[handlerKey] = SEllipse;
-
-const SLine = Object.setPrototypeOf({
-  methods: Object.setPrototypeOf({
-  }, SShape.methods)
-}, SShape);
-
-// used for both polylines and polygons, as it just moves points
-const SPolygon = Object.setPrototypeOf({
-  methods: Object.setPrototypeOf({
-  }, SShape.methods)
-}, SShape);
+}, shapeProps));
 
 export function createRuntime() {
   return new SGRuntime;
