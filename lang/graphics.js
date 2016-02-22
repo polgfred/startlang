@@ -97,23 +97,25 @@ SGRuntime.globals = Object.setPrototypeOf({
   },
 
   fill(color) {
-    this.gfx = this.gfx.set('fill', color);
+    this.gfx = this.gfx.update('props', (props) => props.set('fill', color));
   },
 
   stroke(color) {
-    this.gfx = this.gfx.set('stroke', color);
+    this.gfx = this.gfx.update('props', (props) => props.set('stroke', color));
   },
 
   alpha(opacity = 1) {
-    this.gfx = this.gfx.set('alpha', opacity);
+    this.gfx = this.gfx.update('props', (props) => props.set('alpha', opacity));
   },
 
   rotate(angle = 0) {
-    this.gfx = this.gfx.set('angle', angle);
+    this.gfx = this.gfx.update('props', (props) => props.set('angle', angle));
   },
 
   scale(scalex = 1, scaley = scalex) {
-    this.gfx = this.gfx.set('scalex', scalex).set('scaley', scaley);
+    this.gfx = this.gfx.update('props', (props) => props
+      .set('scalex', scalex)
+      .set('scaley', scaley));
   },
 
   rect(x, y, width, height) {
@@ -171,15 +173,12 @@ const shapeProps = {
 
 let shapeKeys = Object.keys(shapeProps);
 
-export class SGraphics extends immutable.Record(extendObject({
+export class SGraphics extends immutable.Record({
+  props: immutable.Map(shapeProps),
   shapes: immutable.List()
-}, shapeProps)) {
+}) {
   addShape(sh) {
-    return this.set('shapes', this.shapes.push(sh.withMutations((sh) => {
-      for (let i = 0; i < shapeKeys.length; ++i) {
-        sh.set(shapeKeys[i], this.get(shapeKeys[i]));
-      }
-    })));
+    return this.update('shapes', (shapes) => shapes.push(sh.merge(this.props)));
   }
 }
 
