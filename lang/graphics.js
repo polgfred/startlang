@@ -58,7 +58,7 @@ SGRuntime.globals = Object.setPrototypeOf({
 
   reset() {
     this.buf = immutable.List();
-    this.gfx = new SGraphics();
+    this.gfx = this.gfx.set('shapes', immutable.List());
   },
 
   clear() {
