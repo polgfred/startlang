@@ -4,7 +4,27 @@ import React from 'react';
 
 import CBase from './base';
 
+// This React implementation depends on the internals of immutable.List
+// (https://facebook.github.io/immutable-js/docs/#/List) to render the
+// graphics display as a tree of svg nodes. The shapes are grouped into
+// nested <g> elements per VNode of the list. Since most of the internal
+// structure of the list never changes when items are added to the end,
+// this enables React to refresh the graphics display in O(log32^n) time.
+
+// For simplicity, this implementation assumes that the shape list has not
+// had any items prepended to or removed from the front, as this adds
+// additional complexity to the descent. But we check the list origin
+// just in case.
+
+// immutable.Lists use balanced trees of 32 (2^5) items, so this constant
+// is the level shift we need to do when descending through nodes
+const LIST_SHIFT = 5;
+
 export default class CGraphics extends CBase {
+  shouldComponentUpdate(nextProps) {
+    return this.props.data != nextProps.data;
+  }
+
   render() {
     // TODO: allow for different coordinate systems
     // let dims = $('svg')[0].getBoundingClientRect(),
@@ -15,6 +35,10 @@ export default class CGraphics extends CBase {
     let { shapes: list } = this.props.data,
         shapes = [];
 
+    // make sure the list hasn't been modified from the front
+    if (list._origin != 0) {
+      throw new Error('shape list has been modified from the front');
+    }
     if (list._root) {
       shapes.push(React.createElement(CGroup, {
         key: 0,
@@ -57,7 +81,7 @@ class CGroup extends CBase {
         shapes.push(React.createElement(CGroup, {
           key: i,
           node: array[i],
-          level: level - 5
+          level: level - LIST_SHIFT
         }));
       }
     }
