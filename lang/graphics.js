@@ -1,7 +1,5 @@
 'use strict';
 
-import { _extend as extendObject } from 'util';
-
 import $ from 'jquery';
 import React from 'react';
 import ReactDOM from 'react-dom';
@@ -123,15 +121,15 @@ SGRuntime.globals = Object.setPrototypeOf({
   },
 
   rect(x, y, width, height) {
-    this.gfx = this.gfx.addShape(Rect({ x, y, width, height }));
+    this.gfx = this.gfx.addShape(Rect, { x, y, width, height });
   },
 
   circle(cx, cy, r) {
-    this.gfx = this.gfx.addShape(Circle({ cx, cy, r }));
+    this.gfx = this.gfx.addShape(Circle, { cx, cy, r });
   },
 
   ellipse(cx, cy, rx, ry) {
-    this.gfx = this.gfx.addShape(Ellipse({ cx, cy, rx, ry }));
+    this.gfx = this.gfx.addShape(Ellipse, { cx, cy, rx, ry });
   }
 
   // text(x, y, text, fontSize = 16) {
@@ -164,8 +162,8 @@ SGRuntime.globals = Object.setPrototypeOf({
   // }
 }, SRuntime.globals);
 
-// properties common to all shapes
-const shapeProps = {
+// style properties that will get applied to shapes
+const SProps = immutable.Record({
   stroke: null,
   fill: null,
   opacity: null,
@@ -173,41 +171,44 @@ const shapeProps = {
   rotate: 0,
   scalex: 1,
   scaley: 1
-};
-
-let shapeKeys = Object.keys(shapeProps);
+});
 
 export class SGraphics extends immutable.Record({
-  props: immutable.Map(shapeProps),
-  shapes: immutable.List()
+  shapes: immutable.List(),
+  props: SProps()
 }) {
-  addShape(sh) {
-    return this.update('shapes', (shapes) => shapes.push(sh.merge(this.props)));
+  addShape(rec, attrs) {
+    // set the current graphics props on the shape
+    attrs.props = this.props;
+    return this.update('shapes', (shapes) => shapes.push(rec(attrs)));
   }
 }
 
-const Rect = immutable.Record(extendObject({
+const Rect = immutable.Record({
   type: 'rect',
   x: 0,
   y: 0,
   width: 0,
-  height: 0
-}, shapeProps));
+  height: 0,
+  props: SProps()
+});
 
-const Circle = immutable.Record(extendObject({
+const Circle = immutable.Record({
   type: 'circle',
   cx: 0,
   cy: 0,
-  r: 0
-}, shapeProps));
+  r: 0,
+  props: SProps()
+});
 
-const Ellipse = immutable.Record(extendObject({
+const Ellipse = immutable.Record({
   type: 'ellipse',
   cx: 0,
   cy: 0,
   rx: 0,
-  ry: 0
-}, shapeProps));
+  ry: 0,
+  props: SProps()
+});
 
 export function createRuntime() {
   return new SGRuntime;

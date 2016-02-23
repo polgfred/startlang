@@ -29,25 +29,29 @@ class CShape extends CBase {
   }
 
   setup() {
-    let shape = this.props.shape, attrs = { style: {} }, trans = '';
-    if (shape.stroke) {
-      attrs.style.stroke = shape.stroke;
+    let shape = this.props.shape,
+        props = shape.props,
+        attrs = { style: {} },
+        trans = '';
+
+    if (props.stroke) {
+      attrs.style.stroke = props.stroke;
     }
-    if (shape.fill) {
-      attrs.style.fill = shape.fill;
+    if (props.fill) {
+      attrs.style.fill = props.fill;
     }
-    if (shape.opacity && shape.opacity < 1) {
-      attrs.style.opacity = shape.opacity;
+    if (props.opacity && props.opacity < 1) {
+      attrs.style.opacity = props.opacity;
     }
-    if (shape.rotate != 0) {
-      trans += `rotate(${shape.rotate}deg)`;
+    if (props.rotate != 0) {
+      trans += `rotate(${props.rotate}deg)`;
     }
-    if (shape.scalex != 1 || shape.scaley != 1) {
-      trans += `scale(${shape.scalex},${shape.scaley})`;
+    if (props.scalex != 1 || props.scaley != 1) {
+      trans += `scale(${props.scalex},${props.scaley})`;
     }
     if (trans) {
       attrs.style.transform = trans;
-      attrs.style.transformOrigin = shape.origin;
+      attrs.style.transformOrigin = props.origin;
     }
     return attrs;
   }
