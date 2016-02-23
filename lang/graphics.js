@@ -91,7 +91,7 @@ SGRuntime.globals = Object.setPrototypeOf({
     });
   },
 
-  rgb(r, g, b) {
+  color(r, g, b) {
     let hex = (v) => ('0' + Math.round(255 * v).toString(16)).substr(-2);
     return `#${hex(r)}${hex(g)}${hex(b)}`;
   },
@@ -104,12 +104,16 @@ SGRuntime.globals = Object.setPrototypeOf({
     this.gfx = this.gfx.update('props', (props) => props.set('stroke', color));
   },
 
-  alpha(opacity = 1) {
-    this.gfx = this.gfx.update('props', (props) => props.set('alpha', opacity));
+  opacity(value = 1) {
+    this.gfx = this.gfx.update('props', (props) => props.set('opacity', value));
+  },
+
+  origin(value = 'center') {
+    this.gfx = this.gfx.update('props', (props) => props.set('origin', value));
   },
 
   rotate(angle = 0) {
-    this.gfx = this.gfx.update('props', (props) => props.set('angle', angle));
+    this.gfx = this.gfx.update('props', (props) => props.set('rotate', angle));
   },
 
   scale(scalex = 1, scaley = scalex) {
@@ -164,9 +168,9 @@ SGRuntime.globals = Object.setPrototypeOf({
 const shapeProps = {
   stroke: null,
   fill: null,
-  alpha: null,
-  align: 'center',
-  angle: 0,
+  opacity: null,
+  origin: 'center',
+  rotate: 0,
   scalex: 1,
   scaley: 1
 };

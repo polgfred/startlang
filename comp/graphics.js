@@ -36,18 +36,18 @@ class CShape extends CBase {
     if (shape.fill) {
       attrs.style.fill = shape.fill;
     }
-    if (shape.alpha && shape.alpha < 1) {
-      attrs.style.opacity = shape.alpha;
+    if (shape.opacity && shape.opacity < 1) {
+      attrs.style.opacity = shape.opacity;
     }
-    if (shape.angle != 0) {
-      trans += `rotate(${shape.angle}deg)`;
+    if (shape.rotate != 0) {
+      trans += `rotate(${shape.rotate}deg)`;
     }
     if (shape.scalex != 1 || shape.scaley != 1) {
       trans += `scale(${shape.scalex},${shape.scaley})`;
     }
     if (trans) {
       attrs.style.transform = trans;
-      attrs.style.transformOrigin = shape.align;
+      attrs.style.transformOrigin = shape.origin;
     }
     return attrs;
   }

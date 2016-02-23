@@ -64,7 +64,7 @@ export class SRuntime {
     let fn = (args.length > 0 && handle(args[0]).methods[name]) ||
               this.constructor.globals[name];
     if (!fn) {
-      throw new Error('object not found or not a function');
+      throw new Error(`object not found or not a function: ${name}`);
     }
 
     // make the call
