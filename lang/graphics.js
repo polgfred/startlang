@@ -130,36 +130,22 @@ SGRuntime.globals = Object.setPrototypeOf({
 
   ellipse(cx, cy, rx, ry) {
     this.gfx = this.gfx.addShape(Ellipse, { cx, cy, rx, ry });
-  }
+  },
+
+  line(x1, y1, x2, y2) {
+    this.gfx = this.gfx.addShape(Line, { x1, y1, x2, y2 });
+  },
+
+  polygon(...points) {
+    points = immutable.List.isList(points[0]) ? points[0] : immutable.List(points);
+    this.gfx = this.gfx.addShape(Polygon, { points });
+  },
 
   // text(x, y, text, fontSize = 16) {
   //   return this.addShape({
   //     type: 'text', x, y, text, attrs: { fontSize }
   //   });
   // },
-  //
-  // line(x1, y1, x2, y2) {
-  //   return this.addShape({
-  //     type: 'line', x: x1, y: y1, attrs: {
-  //       x1: 0,
-  //       y1: 0,
-  //       x2: x2 - x1,
-  //       y2: y2 - y1
-  //     }
-  //   });
-  // },
-  //
-  // polyline(x, y, ...points) {
-  //   return this.addShape({
-  //     type: 'polyline', x, y, attrs: { points: points.join(',') }
-  //   });
-  // },
-  //
-  // polygon(x, y, ...points) {
-  //   return this.addShape({
-  //     type: 'polygon', x, y, attrs: { points: points.join(',') }
-  //   });
-  // }
 }, SRuntime.globals);
 
 // style properties that will get applied to shapes
@@ -181,6 +167,10 @@ export class SGraphics extends immutable.Record({
     // set the current graphics props on the shape
     attrs.props = this.props;
     return this.update('shapes', (shapes) => shapes.push(rec(attrs)));
+  }
+
+  removeShapes(num) {
+    return this.update('shapes', (shapes) => shapes.slice(0, -num));
   }
 }
 
@@ -207,6 +197,21 @@ const Ellipse = immutable.Record({
   cy: 0,
   rx: 0,
   ry: 0,
+  props: SProps()
+});
+
+const Line = immutable.Record({
+  type: 'line',
+  x1: 0,
+  y1: 0,
+  x2: 0,
+  y2: 0,
+  props: SProps()
+});
+
+const Polygon = immutable.Record({
+  type: 'polygon',
+  points: immutable.List(),
   props: SProps()
 });
 

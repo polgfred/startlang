@@ -166,8 +166,35 @@ class CEllipse extends CShape {
   }
 }
 
+class CLine extends CShape {
+  render() {
+    let shape = this.props.shape,
+        attrs = this.setup();
+
+    attrs.x1 = shape.x1;
+    attrs.y1 = shape.y1;
+    attrs.x2 = shape.x2;
+    attrs.y2 = shape.y2;
+
+    return React.createElement('line', attrs);
+  }
+}
+
+class CPolygon extends CShape {
+  render() {
+    let shape = this.props.shape,
+        attrs = this.setup();
+
+    attrs.points = shape.points.join(',');
+
+    return React.createElement('polygon', attrs);
+  }
+}
+
 const registry = {
   'rect': CRect,
   'circle': CCircle,
-  'ellipse': CEllipse
+  'ellipse': CEllipse,
+  'line': CLine,
+  'polygon': CPolygon
 };
