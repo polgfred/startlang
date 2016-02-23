@@ -12,14 +12,57 @@ export default class CGraphics extends CBase {
     //     originy = Math.floor(dims.height / 2);
     //<g transform={`translate(${originx} ${originy}) scale(1 -1)`}>
 
-    let shapes = [];
-    this.props.data.shapes.forEach((shape, key) => {
-      shapes.push(React.createElement(registry[shape.type], { key, shape }));
-    });
+    let { shapes: list } = this.props.data,
+        shapes = [];
 
-    return <svg>
-      <g>{shapes}</g>
-    </svg>;
+    if (list._root) {
+      shapes.push(React.createElement(CGroup, {
+        key: 0,
+        node: list._root,
+        level: list._level
+      }));
+    }
+    if (list._tail) {
+      shapes.push(React.createElement(CGroup, {
+        key: 1,
+        node: list._tail,
+        level: 0
+      }));
+    }
+
+    return React.createElement('svg', null, shapes);
+  }
+}
+
+class CGroup extends CBase {
+  shouldComponentUpdate(nextProps) {
+    return this.props.node != nextProps.node;
+  }
+
+  render() {
+    let { node, level } = this.props,
+        array = node.array,
+        shapes = [],
+        i;
+
+    if (level == 0) {
+      for (i = 0; i < array.length; ++i) {
+        shapes.push(React.createElement(registry[array[i].type], {
+          key: i,
+          shape: array[i]
+        }));
+      }
+    } else {
+      for (i = 0; i < array.length; ++i) {
+        shapes.push(React.createElement(CGroup, {
+          key: i,
+          node: array[i],
+          level: level - 5
+        }));
+      }
+    }
+
+    return React.createElement('g', null, shapes);
   }
 }
 
@@ -29,7 +72,7 @@ class CShape extends CBase {
   }
 
   setup() {
-    let shape = this.props.shape,
+    let { shape } = this.props,
         props = shape.props,
         attrs = { style: {} },
         trans = '';
@@ -53,38 +96,48 @@ class CShape extends CBase {
       attrs.style.transform = trans;
       attrs.style.transformOrigin = props.origin;
     }
+
     return attrs;
   }
 }
 
 class CRect extends CShape {
   render() {
-    let shape = this.props.shape, attrs = this.setup();
+    let shape = this.props.shape,
+        attrs = this.setup();
+
     attrs.x = shape.x;
     attrs.y = shape.y;
     attrs.width = shape.width;
     attrs.height = shape.height;
+
     return React.createElement('rect', attrs);
   }
 }
 
 class CCircle extends CShape {
   render() {
-    let shape = this.props.shape, attrs = this.setup();
+    let shape = this.props.shape,
+        attrs = this.setup();
+
     attrs.cx = shape.cx;
     attrs.cy = shape.cy;
     attrs.r = shape.r;
+
     return React.createElement('circle', attrs);
   }
 }
 
 class CEllipse extends CShape {
   render() {
-    let shape = this.props.shape, attrs = this.setup();
+    let shape = this.props.shape,
+        attrs = this.setup();
+
     attrs.cx = shape.cx;
     attrs.cy = shape.cy;
     attrs.rx = shape.rx;
     attrs.ry = shape.ry;
+
     return React.createElement('ellipse', attrs);
   }
 }
