@@ -92,26 +92,26 @@ class CShape extends CBase {
   }
 
   setup() {
-    let { shape: { props } } = this.props, attrs = { style: {} }, trans = '';
+    let { shape: { sprops } } = this.props, attrs = { style: {} }, trans = '';
 
-    if (props.stroke) {
-      attrs.style.stroke = props.stroke;
+    if (sprops.stroke) {
+      attrs.style.stroke = sprops.stroke;
     }
-    if (props.fill) {
-      attrs.style.fill = props.fill;
+    if (sprops.fill) {
+      attrs.style.fill = sprops.fill;
     }
-    if (props.opacity && props.opacity < 1) {
-      attrs.style.opacity = props.opacity;
+    if (sprops.opacity && sprops.opacity < 1) {
+      attrs.style.opacity = sprops.opacity;
     }
-    if (props.rotate != 0) {
-      trans += `rotate(${props.rotate}deg)`;
+    if (sprops.rotate != 0) {
+      trans += `rotate(${sprops.rotate}deg)`;
     }
-    if (props.scalex != 1 || props.scaley != 1) {
-      trans += `scale(${props.scalex},${props.scaley})`;
+    if (sprops.scalex != 1 || sprops.scaley != 1) {
+      trans += `scale(${sprops.scalex},${sprops.scaley})`;
     }
     if (trans) {
       attrs.style.transform = trans;
-      attrs.style.transformOrigin = props.origin;
+      attrs.style.transformOrigin = sprops.anchor;
     }
 
     return attrs;
@@ -179,10 +179,25 @@ class CPolygon extends CShape {
   }
 }
 
+class CText extends CShape {
+  render() {
+    let { shape } = this.props, attrs = this.setup();
+
+    attrs.x = shape.x;
+    attrs.y = shape.y;
+    attrs.textAnchor = shape.tprops.align;
+    attrs.style.fontFamily = shape.tprops.fface;
+    attrs.style.fontSize = shape.tprops.fsize;
+
+    return React.createElement('text', attrs, shape.text);
+  }
+}
+
 const registry = {
   'rect': CRect,
   'circle': CCircle,
   'ellipse': CEllipse,
   'line': CLine,
-  'polygon': CPolygon
+  'polygon': CPolygon,
+  'text': CText
 };

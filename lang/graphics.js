@@ -31,11 +31,15 @@ export class SGRuntime extends SRuntime {
     }
 
     if (this.buf) {
-      this.rterm = ReactDOM.render(<CTerm buf={this.buf} />, $('#display .text')[0]);
+      this.rterm = ReactDOM.render(
+        <CTerm buf={this.buf} />,
+        $('#display .text')[0]);
     }
 
     if (this.gfx) {
-      this.rgfx = ReactDOM.render(<CGraphics data={this.gfx} />, $('#display .graphics')[0]);
+      this.rgfx = ReactDOM.render(
+        <CGraphics data={this.gfx} />,
+        $('#display .graphics')[0]);
     }
   }
 }
@@ -89,36 +93,7 @@ SGRuntime.globals = Object.setPrototypeOf({
     });
   },
 
-  color(r, g, b) {
-    let hex = (v) => ('0' + Math.round(255 * v).toString(16)).substr(-2);
-    return `#${hex(r)}${hex(g)}${hex(b)}`;
-  },
-
-  fill(color) {
-    this.gfx = this.gfx.update('props', (props) => props.set('fill', color));
-  },
-
-  stroke(color) {
-    this.gfx = this.gfx.update('props', (props) => props.set('stroke', color));
-  },
-
-  opacity(value = 1) {
-    this.gfx = this.gfx.update('props', (props) => props.set('opacity', value));
-  },
-
-  origin(value = 'center') {
-    this.gfx = this.gfx.update('props', (props) => props.set('origin', value));
-  },
-
-  rotate(angle = 0) {
-    this.gfx = this.gfx.update('props', (props) => props.set('rotate', angle));
-  },
-
-  scale(scalex = 1, scaley = scalex) {
-    this.gfx = this.gfx.update('props', (props) => props
-      .set('scalex', scalex)
-      .set('scaley', scaley));
-  },
+  // shape creation
 
   rect(x, y, width, height) {
     this.gfx = this.gfx.addShape(Rect, { x, y, width, height });
@@ -141,36 +116,92 @@ SGRuntime.globals = Object.setPrototypeOf({
     this.gfx = this.gfx.addShape(Polygon, { points });
   },
 
-  // text(x, y, text, fontSize = 16) {
-  //   return this.addShape({
-  //     type: 'text', x, y, text, attrs: { fontSize }
-  //   });
-  // },
+  text(x, y, text) {
+    this.gfx = this.gfx.addShape(Text, { x, y, text });
+  },
+
+  // set shape and text attributes
+
+  color(r, g, b) {
+    let hex = (v) => ('0' + Math.round(255 * v).toString(16)).substr(-2);
+    return `#${hex(r)}${hex(g)}${hex(b)}`;
+  },
+
+  fill(color) {
+    this.gfx = this.gfx.update('sprops', (sprops) => sprops
+      .set('fill', color));
+  },
+
+  stroke(color) {
+    this.gfx = this.gfx.update('sprops', (sprops) => sprops
+      .set('stroke', color));
+  },
+
+  opacity(value = 1) {
+    this.gfx = this.gfx.update('sprops', (sprops) => sprops
+      .set('opacity', value));
+  },
+
+  anchor(value = 'center') {
+    this.gfx = this.gfx.update('sprops', (sprops) => sprops
+      .set('anchor', value));
+  },
+
+  rotate(angle = 0) {
+    this.gfx = this.gfx.update('sprops', (sprops) => sprops
+      .set('rotate', angle));
+  },
+
+  scale(scalex = 1, scaley = scalex) {
+    this.gfx = this.gfx.update('sprops', (sprops) => sprops
+      .set('scalex', scalex)
+      .set('scaley', scaley));
+  },
+
+  font(fface = 'Helvetica', fsize = 32) {
+    this.gfx = this.gfx.update('tprops', (tprops) => tprops
+      .set('fface', fface)
+      .set('fsize', fsize));
+  },
+
+  align(value = 'start') {
+    this.gfx = this.gfx.update('tprops', (sprops) => sprops
+      .set('align', value));
+  }
 }, SRuntime.globals);
 
-// style properties that will get applied to shapes
-const SProps = immutable.Record({
+// visual properties that will get applied to shapes
+const SShapeProps = immutable.Record({
   stroke: null,
   fill: null,
   opacity: null,
-  origin: 'center',
+  anchor: 'center',
   rotate: 0,
   scalex: 1,
   scaley: 1
 });
 
+// visual properties that will get applied to text
+const STextProps = immutable.Record({
+  fface: 'Helvetica',
+  fsize: 32,
+  align: 'start'
+});
+
 export class SGraphics extends immutable.Record({
   shapes: immutable.List(),
-  props: SProps()
+  sprops: SShapeProps(),
+  tprops: STextProps()
 }) {
   addShape(rec, attrs) {
     // set the current graphics props on the shape
-    attrs.props = this.props;
+    attrs.sprops = this.sprops;
+    attrs.tprops = this.tprops;
     return this.update('shapes', (shapes) => shapes.push(rec(attrs)));
   }
 
   removeShapes(num) {
-    return this.update('shapes', (shapes) => shapes.slice(0, -num));
+    return this.update('shapes', (shapes) => shapes.skipLast(num));
   }
 }
 
@@ -180,7 +211,7 @@ const Rect = immutable.Record({
   y: 0,
   width: 0,
   height: 0,
-  props: SProps()
+  sprops: SShapeProps()
 });
 
 const Circle = immutable.Record({
@@ -188,7 +219,7 @@ const Circle = immutable.Record({
   cx: 0,
   cy: 0,
   r: 0,
-  props: SProps()
+  sprops: SShapeProps()
 });
 
 const Ellipse = immutable.Record({
@@ -197,7 +228,7 @@ const Ellipse = immutable.Record({
   cy: 0,
   rx: 0,
   ry: 0,
-  props: SProps()
+  sprops: SShapeProps()
 });
 
 const Line = immutable.Record({
@@ -206,13 +237,22 @@ const Line = immutable.Record({
   y1: 0,
   x2: 0,
   y2: 0,
-  props: SProps()
+  sprops: SShapeProps()
 });
 
 const Polygon = immutable.Record({
   type: 'polygon',
   points: immutable.List(),
-  props: SProps()
+  sprops: SShapeProps()
+});
+
+const Text = immutable.Record({
+  type: 'text',
+  x: 0,
+  y: 0,
+  text: '',
+  sprops: SShapeProps(),
+  tprops: STextProps()
 });
 
 export function createRuntime() {
