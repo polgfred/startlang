@@ -32,29 +32,28 @@ export default class CGraphics extends CBase {
     //     originy = Math.floor(dims.height / 2);
     //<g transform={`translate(${originx} ${originy}) scale(1 -1)`}>
 
-    let { shapes: list } = this.props.data,
-        shapes = [];
+    let { data: { shapes } } = this.props, elems = [];
 
     // make sure the list hasn't been modified from the front
-    if (list._origin != 0) {
+    if (shapes._origin != 0) {
       throw new Error('shape list has been modified from the front');
     }
-    if (list._root) {
-      shapes.push(React.createElement(CGroup, {
+    if (shapes._root) {
+      elems.push(React.createElement(CGroup, {
         key: 0,
-        node: list._root,
-        level: list._level
+        node: shapes._root,
+        level: shapes._level
       }));
     }
-    if (list._tail) {
-      shapes.push(React.createElement(CGroup, {
+    if (shapes._tail) {
+      elems.push(React.createElement(CGroup, {
         key: 1,
-        node: list._tail,
+        node: shapes._tail,
         level: 0
       }));
     }
 
-    return React.createElement('svg', null, shapes);
+    return React.createElement('svg', null, elems);
   }
 }
 
@@ -64,21 +63,18 @@ class CGroup extends CBase {
   }
 
   render() {
-    let { node, level } = this.props,
-        array = node.array,
-        shapes = [],
-        i;
+    let { node: { array }, level } = this.props, elems = [];
 
     if (level == 0) {
-      for (i = 0; i < array.length; ++i) {
-        shapes.push(React.createElement(registry[array[i].type], {
+      for (let i = 0; i < array.length; ++i) {
+        elems.push(React.createElement(registry[array[i].type], {
           key: i,
           shape: array[i]
         }));
       }
     } else {
-      for (i = 0; i < array.length; ++i) {
-        shapes.push(React.createElement(CGroup, {
+      for (let i = 0; i < array.length; ++i) {
+        elems.push(React.createElement(CGroup, {
           key: i,
           node: array[i],
           level: level - LIST_SHIFT
@@ -86,7 +82,7 @@ class CGroup extends CBase {
       }
     }
 
-    return React.createElement('g', null, shapes);
+    return React.createElement('g', null, elems);
   }
 }
 
@@ -96,10 +92,7 @@ class CShape extends CBase {
   }
 
   setup() {
-    let { shape } = this.props,
-        props = shape.props,
-        attrs = { style: {} },
-        trans = '';
+    let { shape: { props } } = this.props, attrs = { style: {} }, trans = '';
 
     if (props.stroke) {
       attrs.style.stroke = props.stroke;
@@ -127,8 +120,7 @@ class CShape extends CBase {
 
 class CRect extends CShape {
   render() {
-    let shape = this.props.shape,
-        attrs = this.setup();
+    let { shape } = this.props, attrs = this.setup();
 
     attrs.x = shape.x;
     attrs.y = shape.y;
@@ -141,8 +133,7 @@ class CRect extends CShape {
 
 class CCircle extends CShape {
   render() {
-    let shape = this.props.shape,
-        attrs = this.setup();
+    let { shape } = this.props, attrs = this.setup();
 
     attrs.cx = shape.cx;
     attrs.cy = shape.cy;
@@ -154,8 +145,7 @@ class CCircle extends CShape {
 
 class CEllipse extends CShape {
   render() {
-    let shape = this.props.shape,
-        attrs = this.setup();
+    let { shape } = this.props, attrs = this.setup();
 
     attrs.cx = shape.cx;
     attrs.cy = shape.cy;
@@ -168,8 +158,7 @@ class CEllipse extends CShape {
 
 class CLine extends CShape {
   render() {
-    let shape = this.props.shape,
-        attrs = this.setup();
+    let { shape } = this.props, attrs = this.setup();
 
     attrs.x1 = shape.x1;
     attrs.y1 = shape.y1;
@@ -182,8 +171,7 @@ class CLine extends CShape {
 
 class CPolygon extends CShape {
   render() {
-    let shape = this.props.shape,
-        attrs = this.setup();
+    let { shape } = this.props, attrs = this.setup();
 
     attrs.points = shape.points.join(',');
 
