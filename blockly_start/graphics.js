@@ -2,11 +2,6 @@
 
 let Blockly = require('node-blockly/lib/blockly_compressed');
 
-// TODO: graphics (SVG)
-//    change the opacity of %1 to percent
-//    make a copy of %1
-//    remove %1 from the screen
-
 Blockly.Blocks['graphics_rect'] = {
   init: function() {
     this.setColour(Blockly.Blocks.graphics.HUE);
@@ -27,7 +22,6 @@ Blockly.Blocks['graphics_rect'] = {
         .setCheck('Number')
         .setAlign(Blockly.ALIGN_RIGHT)
         .appendField('height');
-    this.setInputsInline(true);
     this.setPreviousStatement(true);
     this.setNextStatement(true);
     this.setTooltip('Display a rectangle with the upper left corner at (x, y), having the specified width and height.');
@@ -51,7 +45,6 @@ Blockly.Blocks['graphics_circle'] = {
         .setCheck('Number')
         .setAlign(Blockly.ALIGN_RIGHT)
         .appendField('radius');
-    this.setInputsInline(true);
     this.setPreviousStatement(true);
     this.setNextStatement(true);
     this.setTooltip('Display a circle with the center at (x, y), having the specified radius.');
@@ -79,7 +72,6 @@ Blockly.Blocks['graphics_ellipse'] = {
         .setCheck('Number')
         .setAlign(Blockly.ALIGN_RIGHT)
         .appendField('y-radius');
-    this.setInputsInline(true);
     this.setPreviousStatement(true);
     this.setNextStatement(true);
     this.setTooltip('Display an ellipse (oval) with the center at (x, y), having the specified radii.');
@@ -108,7 +100,6 @@ Blockly.Blocks['graphics_line'] = {
         .setCheck('Number')
         .setAlign(Blockly.ALIGN_RIGHT)
         .appendField('y2');
-    this.setInputsInline(true);
     this.setPreviousStatement(true);
     this.setNextStatement(true);
     this.setTooltip('Display a line from (x1, y1) to (x2, y2).');
@@ -192,7 +183,9 @@ Blockly.Blocks['graphics_scale'] = {
     this.setInputsInline(true);
     this.setPreviousStatement(true);
     this.setNextStatement(true);
-    this.setTooltip('Set the scale factor to the specified magnitude.');
+    this.setTooltip('Set the scale factor to the specified magnitude. For example, ' +
+                    'a value of 2 means that shapes will be twice their normal size. ' +
+                    'You can set a magnitude in both the x (width) and y (height) dimensions.');
     this.setHelpUrl('');
   }
 };
