@@ -316,7 +316,7 @@
               </block>
             </value>
           </block-->
-          <block type="graphics_create_rect">
+          <block type="graphics_rect">
             <value name="X">
               <block type="math_number">
                 <field name="NUM">0</field>
@@ -338,7 +338,7 @@
               </block>
             </value>
           </block>
-          <block type="graphics_create_circle">
+          <block type="graphics_circle">
             <value name="X">
               <block type="math_number">
                 <field name="NUM">0</field>
@@ -355,7 +355,7 @@
               </block>
             </value>
           </block>
-          <block type="graphics_create_ellipse">
+          <block type="graphics_ellipse">
             <value name="X">
               <block type="math_number">
                 <field name="NUM">0</field>
@@ -377,7 +377,7 @@
               </block>
             </value>
           </block>
-          <block type="graphics_create_line">
+          <block type="graphics_line">
             <value name="X1">
               <block type="math_number">
                 <field name="NUM">0</field>
@@ -399,73 +399,31 @@
               </block>
             </value>
           </block>
-          <block type="graphics_move_shape">
-            <value name="SHAPE">
-              <block type="variables_get">
-                <field name="VAR">shape</field>
-              </block>
-            </value>
-            <value name="X">
-              <block type="math_number">
-                <field name="NUM">0</field>
-              </block>
-            </value>
-            <value name="Y">
-              <block type="math_number">
-                <field name="NUM">0</field>
-              </block>
-            </value>
-          </block>
-          <block type="graphics_outline_shape">
-            <value name="SHAPE">
-              <block type="variables_get">
-                <field name="VAR">shape</field>
-              </block>
-            </value>
+          <block type="graphics_stroke">
             <value name="COLOR">
               <block type="colour_picker"></block>
             </value>
           </block>
-          <block type="graphics_fill_shape">
-            <value name="SHAPE">
-              <block type="variables_get">
-                <field name="VAR">shape</field>
-              </block>
-            </value>
+          <block type="graphics_fill">
             <value name="COLOR">
               <block type="colour_picker"></block>
             </value>
           </block>
-          <block type="graphics_opacify_shape">
-            <value name="SHAPE">
-              <block type="variables_get">
-                <field name="VAR">shape</field>
-              </block>
-            </value>
+          <block type="graphics_opacity">
             <value name="AMOUNT">
               <block type="math_number">
                 <field name="NUM">1</field>
               </block>
             </value>
           </block>
-          <block type="graphics_rotate_shape">
-            <value name="SHAPE">
-              <block type="variables_get">
-                <field name="VAR">shape</field>
-              </block>
-            </value>
+          <block type="graphics_rotate">
             <value name="ANGLE">
               <block type="math_angle">
                 <field name="ANGLE">90</field>
               </block>
             </value>
           </block>
-          <block type="graphics_scale_shape">
-            <value name="SHAPE">
-              <block type="variables_get">
-                <field name="VAR">shape</field>
-              </block>
-            </value>
+          <block type="graphics_scale">
             <value name="MULTX">
               <block type="math_number">
                 <field name="NUM">1</field>
@@ -477,7 +435,7 @@
               </block>
             </value>
           </block>
-          <block type="graphics_refresh"></block>
+          <block type="graphics_repaint"></block>
         </category>
         <sep></sep>
         <category name="Variables" custom="VARIABLE"></category>

@@ -37,7 +37,7 @@ if (mode == 'blocks') {
       controls: true,
       wheel: false,
       maxScale: 2,
-      minScale: .1,
+      minScale: 0.1,
       scaleSpeed: 1.1
     }
   });

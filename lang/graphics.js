@@ -14,7 +14,7 @@ export class SGRuntime extends SRuntime {
     super();
     this.buf = immutable.List();
     this.gfx = new SGraphics();
-    this.setMode('text');
+    this.setMode('split');
   }
 
   setMode(mode) {

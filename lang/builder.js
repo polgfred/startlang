@@ -1007,7 +1007,7 @@ export class Builder {
     });
 
     return buildNode('call', block, {
-      name: 'rgb',
+      name: 'color',
       args: [ rand, rand, rand ]
     });
   }
@@ -1027,7 +1027,7 @@ export class Builder {
     };
 
     return buildNode('call', block, {
-      name: 'rgb',
+      name: 'color',
       args: [
         convert(this.handleValue(block, 'RED')),
         convert(this.handleValue(block, 'GREEN')),
@@ -1036,7 +1036,7 @@ export class Builder {
     });
   }
 
-  graphics_create_rect(block) {
+  graphics_rect(block) {
     return buildNode('call', block, {
       name: 'rect',
       args: [
@@ -1048,7 +1048,7 @@ export class Builder {
     });
   }
 
-  graphics_create_circle(block) {
+  graphics_circle(block) {
     return buildNode('call', block, {
       name: 'circle',
       args: [
@@ -1059,7 +1059,7 @@ export class Builder {
     });
   }
 
-  graphics_create_ellipse(block) {
+  graphics_ellipse(block) {
     return buildNode('call', block, {
       name: 'ellipse',
       args: [
@@ -1071,7 +1071,7 @@ export class Builder {
     });
   }
 
-  graphics_create_line(block) {
+  graphics_line(block) {
     return buildNode('call', block, {
       name: 'line',
       args: [
@@ -1083,69 +1083,53 @@ export class Builder {
     });
   }
 
-  graphics_move_shape(block) {
-    return buildNode('call', block, {
-      name: 'move',
-      args: [
-        this.handleValue(block, 'SHAPE'),
-        this.handleValue(block, 'X'),
-        this.handleValue(block, 'Y')
-      ]
-    });
-  }
-
-  graphics_outline_shape(block) {
+  graphics_stroke(block) {
     return buildNode('call', block, {
       name: 'stroke',
       args: [
-        this.handleValue(block, 'SHAPE'),
         this.handleValue(block, 'COLOR')
       ]
     });
   }
 
-  graphics_fill_shape(block) {
+  graphics_fill(block) {
     return buildNode('call', block, {
       name: 'fill',
       args: [
-        this.handleValue(block, 'SHAPE'),
         this.handleValue(block, 'COLOR')
       ]
     });
   }
 
-  graphics_opacify_shape(block) {
+  graphics_opacity(block) {
     return buildNode('call', block, {
       name: 'opacity',
       args: [
-        this.handleValue(block, 'SHAPE'),
         this.handleValue(block, 'AMOUNT')
       ]
     });
   }
 
-  graphics_rotate_shape(block) {
+  graphics_rotate(block) {
     return buildNode('call', block, {
       name: 'rotate',
       args: [
-        this.handleValue(block, 'SHAPE'),
         this.handleValue(block, 'ANGLE')
       ]
     });
   }
 
-  graphics_scale_shape(block) {
+  graphics_scale(block) {
     return buildNode('call', block, {
       name: 'scale',
       args: [
-        this.handleValue(block, 'SHAPE'),
         this.handleValue(block, 'MULTX'),
         this.handleValue(block, 'MULTY')
       ]
     });
   }
 
-  graphics_refresh(block) {
+  graphics_repaint(block) {
     return buildNode('call', block, {
       name: 'repaint',
       args: []

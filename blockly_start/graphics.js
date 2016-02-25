@@ -2,20 +2,18 @@
 
 let Blockly = require('node-blockly/lib/blockly_compressed');
 
-// TODO: graphics (canvas) ?
-
 // TODO: graphics (SVG)
 //    change the opacity of %1 to percent
 //    make a copy of %1
 //    remove %1 from the screen
 
-Blockly.Blocks['graphics_create_rect'] = {
+Blockly.Blocks['graphics_rect'] = {
   init: function() {
     this.setColour(Blockly.Blocks.graphics.HUE);
     this.appendValueInput('X')
         .setCheck('Number')
         .setAlign(Blockly.ALIGN_RIGHT)
-        .appendField('box at')
+        .appendField('draw box at')
         .appendField('x');
     this.appendValueInput('Y')
         .setCheck('Number')
@@ -30,19 +28,20 @@ Blockly.Blocks['graphics_create_rect'] = {
         .setAlign(Blockly.ALIGN_RIGHT)
         .appendField('height');
     this.setInputsInline(true);
-    this.setOutput(true, 'Shape');
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
     this.setTooltip('Display a rectangle with the upper left corner at (x, y), having the specified width and height.');
     this.setHelpUrl('');
   }
 };
 
-Blockly.Blocks['graphics_create_circle'] = {
+Blockly.Blocks['graphics_circle'] = {
   init: function() {
     this.setColour(Blockly.Blocks.graphics.HUE);
     this.appendValueInput('X')
         .setCheck('Number')
         .setAlign(Blockly.ALIGN_RIGHT)
-        .appendField('circle at')
+        .appendField('draw circle at')
         .appendField('x');
     this.appendValueInput('Y')
         .setCheck('Number')
@@ -53,19 +52,20 @@ Blockly.Blocks['graphics_create_circle'] = {
         .setAlign(Blockly.ALIGN_RIGHT)
         .appendField('radius');
     this.setInputsInline(true);
-    this.setOutput(true, 'Shape');
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
     this.setTooltip('Display a circle with the center at (x, y), having the specified radius.');
     this.setHelpUrl('');
   }
 };
 
-Blockly.Blocks['graphics_create_ellipse'] = {
+Blockly.Blocks['graphics_ellipse'] = {
   init: function() {
     this.setColour(Blockly.Blocks.graphics.HUE);
     this.appendValueInput('X')
         .setCheck('Number')
         .setAlign(Blockly.ALIGN_RIGHT)
-        .appendField('ellipse at')
+        .appendField('draw ellipse at')
         .appendField('x');
     this.appendValueInput('Y')
         .setCheck('Number')
@@ -80,19 +80,20 @@ Blockly.Blocks['graphics_create_ellipse'] = {
         .setAlign(Blockly.ALIGN_RIGHT)
         .appendField('y-radius');
     this.setInputsInline(true);
-    this.setOutput(true, 'Shape');
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
     this.setTooltip('Display an ellipse (oval) with the center at (x, y), having the specified radii.');
     this.setHelpUrl('');
   }
 };
 
-Blockly.Blocks['graphics_create_line'] = {
+Blockly.Blocks['graphics_line'] = {
   init: function() {
     this.setColour(Blockly.Blocks.graphics.HUE);
     this.appendValueInput('X1')
         .setCheck('Number')
         .setAlign(Blockly.ALIGN_RIGHT)
-        .appendField('line from')
+        .appendField('draw line from')
         .appendField('x1');
     this.appendValueInput('Y1')
         .setCheck('Number')
@@ -108,142 +109,99 @@ Blockly.Blocks['graphics_create_line'] = {
         .setAlign(Blockly.ALIGN_RIGHT)
         .appendField('y2');
     this.setInputsInline(true);
-    this.setOutput(true, 'Shape');
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
     this.setTooltip('Display a line from (x1, y1) to (x2, y2).');
     this.setHelpUrl('');
   }
 };
 
-Blockly.Blocks['graphics_move_shape'] = {
+Blockly.Blocks['graphics_stroke'] = {
   init: function() {
     this.setColour(Blockly.Blocks.graphics.HUE);
-    this.appendValueInput('SHAPE')
-        .setCheck('Shape')
-        .setAlign(Blockly.ALIGN_RIGHT)
-        .appendField('move shape')
-    this.appendValueInput('X')
-        .setCheck('Number')
-        .setAlign(Blockly.ALIGN_RIGHT)
-        .appendField('to')
-        .appendField('x');
-    this.appendValueInput('Y')
-        .setCheck('Number')
-        .setAlign(Blockly.ALIGN_RIGHT)
-        .appendField('y');
-    this.setInputsInline(true);
-    this.setPreviousStatement(true);
-    this.setNextStatement(true);
-    this.setTooltip('Move a shape to the coordinates (x, y).');
-    this.setHelpUrl('');
-  }
-};
-
-Blockly.Blocks['graphics_outline_shape'] = {
-  init: function() {
-    this.setColour(Blockly.Blocks.graphics.HUE);
-    this.appendValueInput('SHAPE')
-        .setCheck('Shape')
-        .setAlign(Blockly.ALIGN_RIGHT)
-        .appendField('outline shape')
     this.appendValueInput('COLOR')
         .setCheck('Colour')
         .setAlign(Blockly.ALIGN_RIGHT)
-        .appendField('with color');
+        .appendField('set outline color to');
     this.setInputsInline(true);
     this.setPreviousStatement(true);
     this.setNextStatement(true);
-    this.setTooltip('Outline a shape with the specified color.');
+    this.setTooltip('Set the shape outline (stroke) to the specified color.');
     this.setHelpUrl('');
   }
 };
 
-Blockly.Blocks['graphics_fill_shape'] = {
+Blockly.Blocks['graphics_fill'] = {
   init: function() {
     this.setColour(Blockly.Blocks.graphics.HUE);
-    this.appendValueInput('SHAPE')
-        .setCheck('Shape')
-        .setAlign(Blockly.ALIGN_RIGHT)
-        .appendField('fill shape')
     this.appendValueInput('COLOR')
         .setCheck('Colour')
         .setAlign(Blockly.ALIGN_RIGHT)
-        .appendField('with color');
+        .appendField('set fill color to');
     this.setInputsInline(true);
     this.setPreviousStatement(true);
     this.setNextStatement(true);
-    this.setTooltip('Fill a shape with the specified color.');
+    this.setTooltip('Set the shape fill color to the specified color.');
     this.setHelpUrl('');
   }
 };
 
-Blockly.Blocks['graphics_opacify_shape'] = {
+Blockly.Blocks['graphics_opacity'] = {
   init: function() {
     this.setColour(Blockly.Blocks.graphics.HUE);
-    this.appendValueInput('SHAPE')
-        .setCheck('Shape')
-        .setAlign(Blockly.ALIGN_RIGHT)
-        .appendField('set opacity of shape')
     this.appendValueInput('AMOUNT')
         .setCheck('Number')
         .setAlign(Blockly.ALIGN_RIGHT)
-        .appendField('to');
+        .appendField('set opacity to');
     this.setInputsInline(true);
     this.setPreviousStatement(true);
     this.setNextStatement(true);
-    this.setTooltip('Set the opacity of a shape. ' +
+    this.setTooltip('Set the shape opacity. ' +
                     'The value can be anything from 0 (completely transparent) ' +
                     'to 1 (completely solid).');
     this.setHelpUrl('');
   }
 };
 
-Blockly.Blocks['graphics_rotate_shape'] = {
+Blockly.Blocks['graphics_rotate'] = {
   init: function() {
     this.setColour(Blockly.Blocks.graphics.HUE);
-    this.appendValueInput('SHAPE')
-        .setCheck('Shape')
-        .setAlign(Blockly.ALIGN_RIGHT)
-        .appendField('rotate shape')
     this.appendValueInput('ANGLE')
         .setCheck('Number')
         .setAlign(Blockly.ALIGN_RIGHT)
-        .appendField('by angle');
+        .appendField('set angle of rotation to');
     this.setInputsInline(true);
     this.setPreviousStatement(true);
     this.setNextStatement(true);
-    this.setTooltip('Rotate a shape by the specified angle.');
+    this.setTooltip('Set the angle of rotation to the specified angle.');
     this.setHelpUrl('');
   }
 };
 
-Blockly.Blocks['graphics_scale_shape'] = {
+Blockly.Blocks['graphics_scale'] = {
   init: function() {
     this.setColour(Blockly.Blocks.graphics.HUE);
-    this.appendValueInput('SHAPE')
-        .setCheck('Shape')
-        .setAlign(Blockly.ALIGN_RIGHT)
-        .appendField('scale shape');
     this.appendValueInput('MULTX')
         .setCheck('number')
         .setAlign(Blockly.ALIGN_RIGHT)
-        .appendField('width by');
+        .appendField('set scale factor to x');
     this.appendValueInput('MULTY')
         .setCheck('number')
         .setAlign(Blockly.ALIGN_RIGHT)
-        .appendField('height by');
+        .appendField('y');
     this.setInputsInline(true);
     this.setPreviousStatement(true);
     this.setNextStatement(true);
-    this.setTooltip('Scale a shape by the specified magnitude.');
+    this.setTooltip('Set the scale factor to the specified magnitude.');
     this.setHelpUrl('');
   }
 };
 
-Blockly.Blocks['graphics_refresh'] = {
+Blockly.Blocks['graphics_repaint'] = {
   init: function() {
     this.setColour(Blockly.Blocks.graphics.HUE);
     this.appendDummyInput()
-        .appendField('repaint display');
+        .appendField('repaint the display');
     this.setPreviousStatement(true);
     this.setNextStatement(true);
     this.setTooltip('Repaint the display with any graphics updates.');
