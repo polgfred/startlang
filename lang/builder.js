@@ -4,8 +4,8 @@ import Blockly from '../blockly_start';
 
 let flowMarker = {
   'repeat': 'loop',
-  'count': 'loop',
   'for': 'loop',
+  'forIn': 'loop',
   'while': 'loop',
   'call': 'call'
 };
@@ -205,7 +205,7 @@ export class Builder {
   }
 
   controls_for(block) {
-    return buildNode('count', block, {
+    return buildNode('for', block, {
       name: block.getFieldValue('VAR'),
       from: this.handleValue(block, 'FROM'),
       to: this.handleValue(block, 'TO'),
@@ -215,7 +215,7 @@ export class Builder {
   }
 
   controls_forEach(block) {
-    return buildNode('for', block, {
+    return buildNode('forIn', block, {
       name: block.getFieldValue('VAR'),
       range: this.handleValue(block, 'LIST'),
       body: this.handleStatements(block, 'DO')
@@ -324,8 +324,8 @@ export class Builder {
       return buildNode('call', block, {
         name: 'exp',
         args: [
-          this.handleValue(block, 'B'),
-          this.handleValue(block, 'A')
+          this.handleValue(block, 'A'),
+          this.handleValue(block, 'B')
         ]
       });
     } else {
