@@ -8,6 +8,7 @@ binary-heap@1.0.5-beta.16
 blaze@2.1.4-beta.16
 blaze-tools@1.0.5-beta.16
 boilerplate-generator@1.0.5-beta.16
+caching-compiler@1.0.1-beta.16
 callback-hook@1.0.5-beta.16
 check@1.1.1-beta.16
 ddp@1.2.2-beta.16
@@ -21,6 +22,7 @@ ecmascript-runtime@0.2.7-beta.16
 ejson@1.0.8-beta.16
 es5-shim@4.3.2-beta.16
 fastclick@1.0.8-beta.16
+fourseven:scss@3.4.1
 geojson-utils@1.0.5-beta.16
 hot-code-push@1.0.1-beta.16
 html-tools@1.0.6-beta.16
@@ -55,6 +57,7 @@ reactive-dict@1.1.4-beta.16
 reactive-var@1.0.6-beta.16
 reload@1.1.5-beta.16
 retry@1.0.4-beta.16
+reywood:bootstrap3-sass@3.3.5_2
 routepolicy@1.0.7-beta.16
 session@1.1.2-beta.16
 spacebars@1.0.8-beta.16

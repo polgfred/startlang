@@ -19,3 +19,5 @@ insecure                # Allow all DB writes from clients (for prototyping)
 standard-minifier-css
 standard-minifier-js
 polgfred:pegjs
+fourseven:scss
+reywood:bootstrap3-sass
