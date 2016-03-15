@@ -1,19 +1,27 @@
 'use strict';
 
-import $ from 'jquery';
-
-import ace from 'brace';
-import 'brace/theme/textmate';
-import { default as StartMode } from '../brace_start/start_mode';
+import React from 'react';
+import ReactDOM from 'react-dom';
 
 import Blockly from '../blockly_start';
 
-import { parse } from '../lang/parser';
+import { parse } from '../lang/parser.pegjs';
 import { createInterpreter } from '../lang/interpreter';
 import { createBuilder } from '../lang/builder';
 import { createRuntime } from '../lang/graphics';
 
+import CApp from './comp/app';
+
 let mode = (location.search.match('mode=(.*)') || [])[1];
+
+Meteor.startup(() => {
+  let wrapper = document.createElement('div');
+  wrapper.setAttribute('id', 'wrapper');
+  document.body.appendChild(wrapper);
+  ReactDOM.render(<CApp />, wrapper);
+});
+
+/*
 let getRoot;
 
 if (mode == 'blocks') {
@@ -59,14 +67,13 @@ if (mode == 'blocks') {
     localStorage['savedBlocks'] = Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(ws));
   });
 } else {
-  let editor = ace.edit('editor');
-
-  editor.$blockScrolling = Infinity;
-  editor.setTheme('ace/theme/textmate');
-  editor.setShowFoldWidgets(false);
-  editor.getSession().setTabSize(2);
-  editor.getSession().setUseSoftTabs(true);
-  editor.getSession().setMode(new StartMode());
+  ///let editor = ace.edit('editor');
+  //editor.$blockScrolling = Infinity;
+  //editor.setTheme('ace/theme/textmate');
+  //editor.setShowFoldWidgets(false);
+  //editor.getSession().setTabSize(2);
+  //editor.getSession().setUseSoftTabs(true);
+  //editor.getSession().setMode(new StartMode());
 
   getRoot = () => parse(editor.getValue() + '\n');
 
@@ -105,3 +112,5 @@ $('#runner').click(() => {
     $('#runner').prop('disabled', false);
   });
 });
+
+*/

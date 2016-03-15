@@ -1,6 +1,7 @@
 'use strict';
 
-import $ from 'jquery';
+import $ from 'meteor/jquery';
+
 import React from 'react';
 import ReactDOM from 'react-dom';
 

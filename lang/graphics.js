@@ -1,13 +1,13 @@
 'use strict';
 
-import $ from 'jquery';
+//import $ from 'jquery';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import immutable from 'immutable';
 
 import { SRuntime, SBase, handle, handlerKey, assignKey, resultKey } from './runtime';
-import CGraphics from '../comp/graphics';
-import CTerm from '../comp/term';
+//import CGraphics from '../../client/comp/graphics';
+//import CTerm from '../comp/term';
 
 export class SGRuntime extends SRuntime {
   constructor() {
@@ -23,7 +23,7 @@ export class SGRuntime extends SRuntime {
   }
 
   updateDisplay() {
-    if (!$('#display').hasClass(`mode-${this.mode}`)) {
+    /*if (!$('#display').hasClass(`mode-${this.mode}`)) {
       $('#display').removeClass('mode-graphics')
                    .removeClass('mode-text')
                    .removeClass('mode-split')
@@ -40,7 +40,7 @@ export class SGRuntime extends SRuntime {
       this.rgfx = ReactDOM.render(
         <CGraphics data={this.gfx} />,
         $('#display .graphics')[0]);
-    }
+    }*/
   }
 }
 
