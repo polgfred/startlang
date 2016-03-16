@@ -11,6 +11,7 @@
     "blockly": "git://github.com/google/blockly#8fb16b61a35f9b8ecb5faf127b1cc9f5f10f6517",
     "bootstrap": "^3.3.5",
     "bootstrap-sass": "^3.3.5",
+    "brace": "^0.7.0",
     "classnames": "^2.1.2",
     "immutable": "^3.7.5",
     "meteor-node-stubs": "^0.2.1",

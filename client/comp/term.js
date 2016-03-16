@@ -1,7 +1,6 @@
 'use strict';
 
-import $ from 'meteor/jquery';
-
+import { $ } from 'meteor/jquery';
 import React from 'react';
 import ReactDOM from 'react-dom';
 
@@ -9,7 +8,7 @@ import CBase from './base';
 
 export default class CTerm extends CBase {
   render() {
-    return <div className="terminal" onClick={this.handleClick.bind(this)}>
+    return <div className="start-terminal" onClick={this.handleClick.bind(this)}>
       <CTermOutput buf={this.props.buf} />
       <CTermInput ref="input" />
     </div>;

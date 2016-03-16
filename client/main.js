@@ -1,5 +1,6 @@
 'use strict';
 
+import { $ } from 'meteor/jquery';
 import React from 'react';
 import ReactDOM from 'react-dom';
 
@@ -15,10 +16,7 @@ import CApp from './comp/app';
 let mode = (location.search.match('mode=(.*)') || [])[1];
 
 Meteor.startup(() => {
-  let wrapper = document.createElement('div');
-  wrapper.setAttribute('id', 'wrapper');
-  document.body.appendChild(wrapper);
-  ReactDOM.render(<CApp />, wrapper);
+  ReactDOM.render(<CApp />, $('.start-wrapper')[0]);
 });
 
 /*
