@@ -23,13 +23,16 @@ export default class CApp extends CBase {
         <Nav>
           <NavItem eventKey={1} href="#">Link</NavItem>
           <NavItem eventKey={2} href="#">Link</NavItem>
-          <NavDropdown eventKey={3} title="Dropdown">
+          <NavDropdown eventKey={3} title="Dropdown" id="dropdown-3">
             <MenuItem eventKey={3.1}>Action</MenuItem>
             <MenuItem eventKey={3.2}>Another action</MenuItem>
             <MenuItem eventKey={3.3}>Something else here</MenuItem>
             <MenuItem divider />
             <MenuItem eventKey={3.3} href="#">Separated link</MenuItem>
           </NavDropdown>
+        </Nav>
+        <Nav pullRight>
+          <NavItem eventKey={5} active>Run</NavItem>
         </Nav>
       </Navbar>
       <Grid className="start-body" fluid>
