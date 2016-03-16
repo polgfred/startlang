@@ -24,7 +24,6 @@ ecmascript-runtime@0.2.7-beta.16
 ejson@1.0.8-beta.16
 es5-shim@4.3.2-beta.16
 fastclick@1.0.8-beta.16
-fourseven:scss@3.4.1
 geojson-utils@1.0.5-beta.16
 hot-code-push@1.0.1-beta.16
 html-tools@1.0.6-beta.16
@@ -34,6 +33,7 @@ id-map@1.0.4-beta.16
 insecure@1.0.4-beta.16
 jquery@1.11.5-beta.16
 launch-screen@1.0.6-beta.16
+less@2.5.2-beta.16
 livedata@1.0.15-beta.16
 logging@1.0.9-beta.16
 meteor@1.1.11-beta.16
@@ -59,7 +59,6 @@ reactive-dict@1.1.4-beta.16
 reactive-var@1.0.6-beta.16
 reload@1.1.5-beta.16
 retry@1.0.4-beta.16
-reywood:bootstrap3-sass@3.3.5_2
 routepolicy@1.0.7-beta.16
 session@1.1.2-beta.16
 spacebars@1.0.8-beta.16

@@ -10,7 +10,6 @@
   "dependencies": {
     "blockly": "git://github.com/google/blockly#8fb16b61a35f9b8ecb5faf127b1cc9f5f10f6517",
     "bootstrap": "^3.3.5",
-    "bootstrap-sass": "^3.3.5",
     "brace": "^0.7.0",
     "classnames": "^2.1.2",
     "immutable": "^3.7.5",
@@ -18,7 +17,7 @@
     "moment": "^2.10.6",
     "node-blockly": "git://github.com/polgfred/node-blockly#20c15c84e938318a407e7e8a79ba6cb15fbe104a",
     "react": "^0.14.4",
-    "react-ace": "^3.1.0",
+    "react-bootstrap": "^0.28.3",
     "react-dom": "^0.14.4"
   },
   "scripts": {

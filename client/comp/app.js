@@ -3,6 +3,7 @@
 import { $ } from 'meteor/jquery';
 import React from 'react';
 import ReactDOM from 'react-dom';
+import ReactBootstrap from 'react-bootstrap';
 
 import immutable from 'immutable';
 
