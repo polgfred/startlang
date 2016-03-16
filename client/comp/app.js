@@ -24,7 +24,6 @@ export default class CApp extends CBase {
       </div>
       <div className="start-sidebar">
         <CEditor />
-        <button className="start-runner">Run</button>
       </div>
     </div>;
   }

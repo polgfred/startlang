@@ -140,44 +140,44 @@ body, .start-wrapper {
       @include proportional-font;
     }
   }
-}
 
-.blocklyToolboxDiv {
-  .blocklyTreeRow {
-    line-height: 20px;
-    height: 24px;
-  }
-  .blocklyTreeLabel {
-    @include proportional-font;
-  }
-}
+  .start-runner {
+    background-color: #eee;
+    font-family: inherit;
+    font-weight: 400;
+    font-size: 16px;
+    height: 40px;
+    margin: 10px;
+    opacity: 0.75;
+    padding: 8px 20px;
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    z-index: 10;
 
-.blocklyWidgetDiv {
-  .blocklyHtmlInput {
-    height: 22px;
-    @include proportional-font;
-  }
-}
+    &:disabled {
+      color: #ccc;
+    }
 
-.start-runner {
-  background-color: #eee;
-  font-family: inherit;
-  font-weight: 400;
-  font-size: 16px;
-  height: 40px;
-  margin: 10px;
-  opacity: 0.75;
-  padding: 8px 20px;
-  position: absolute;
-  right: 10px;
-  top: 10px;
-  z-index: 10;
-
-  &:disabled {
-    color: #ccc;
+    &:active {
+      background-color: #ddd;
+    }
   }
 
-  &:active {
-    background-color: #ddd;
+  .blocklyToolboxDiv {
+    .blocklyTreeRow {
+      line-height: 20px;
+      height: 24px;
+    }
+    .blocklyTreeLabel {
+      @include proportional-font;
+    }
+  }
+
+  .blocklyWidgetDiv {
+    .blocklyHtmlInput {
+      height: 22px;
+      @include proportional-font;
+    }
   }
 }
