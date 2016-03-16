@@ -53,7 +53,7 @@ export default class CGraphics extends CBase {
       }));
     }
 
-    return React.createElement('svg', null, elems);
+    return <svg className="start-graphics">{ elems }</svg>
   }
 }
 

@@ -26,6 +26,10 @@
   font-weight: 400;
 }
 
+.box-shadow {
+  box-shadow: 2px 2px 6px rgba(0,0,0,0.2);
+}
+
 body {
   background: #ccc;
   height: 100%;
@@ -36,7 +40,8 @@ body {
 
 .start-app {
   .navbar {
-    margin-bottom: 0;
+    margin: 4px;
+    .box-shadow();
   }
 
   .start-body {
@@ -46,42 +51,33 @@ body {
       height: 100%;
       .col-md-6 {
         height: 100%;
-        padding: 0;
+        padding: 4px;
       }
     }
   }
 
-  .start.graphics, .start-text {
+  .start-graphics, .start-terminal {
     background-color: #fff;
-    border-color: #000;
-    border-radius: 4px;
-    border-width: 0;
-    box-shadow: 2px 2px 6px rgba(0,0,0,0.5);
     color: #000;
     display: none;
-    margin: 10px;
-  }
-
-  .start-graphics svg {
-    height: 100%;
+    margin: 0;
     width: 100%;
+    .box-shadow();
   }
 
-  .start-text {
-    .terminal {
-      font-size: 14px;
-      height: 100%;
-      overflow: scroll;
-      padding: 4px 8px;
-      .source-font();
+  .start-terminal {
+    font-size: 14px;
+    height: 100%;
+    overflow: scroll;
+    padding: 4px 8px;
+    .source-font();
 
-      .terminal-text {
-        border: 0;
-        font-size: 14px;
-        outline: none;
-        padding: 0;
-        width: calc(~"100% - 20px");
-      }
+    .terminal-text {
+      border: 0;
+      font-size: 14px;
+      outline: none;
+      padding: 0;
+      width: 100%;
     }
   }
 
@@ -91,29 +87,26 @@ body {
     .start-graphics {
       display: block;
       height: calc(~"100vh - 20px");
-      width: calc(~"50vw - 20px");
     }
   }
 
   &.mode-text {
-    .start-text {
+    .start-terminal {
       display: block;
       height: calc(~"100vh - 20px");
-      width: calc(~"50vw - 20px");
     }
   }
 
   &.mode-split {
     .start-graphics {
       display: block;
-      height: calc(~"65vh - 15px");
-      width: calc(~"50vw - 20px");
+      height: calc(~"65vh - 60px");
     }
 
-    .start-text {
+    .start-terminal {
       display: block;
-      height: calc(~"35vh - 15px");
-      width: calc(~"50vw - 20px");
+      height: calc(~"35vh - 60px");
+      margin-top: 10px;
     }
   }
 
@@ -121,6 +114,7 @@ body {
     font-size: 14px;
     height: 100%;
     line-height: 18px;
+    .box-shadow();
     .source-font();
 
     .ace_indent-guide {
