@@ -1,457 +1,442 @@
-<!doctype html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <link rel="stylesheet" type="text/css" href="bundle.css">
-  </head>
-  <body>
-    <div id="display">
-      <div class="graphics"></div>
-      <div class="text"></div>
-    </div>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
 
-    <div id="sidebar">
-      <div id="editor"></div>
-      <button id="runner">Run</button>
-
-      <xml id="toolbox" style="display:none;">
-        <category name="Logic">
-          <block type="controls_if"></block>
-          <block type="logic_compare"></block>
-          <block type="logic_operation"></block>
-          <block type="logic_negate"></block>
-          <block type="logic_boolean"></block>
-          <block type="logic_null">
+<template name="foo">
+  <xml id="toolbox" style="display:none;">
+    <category name="Logic">
+      <block type="controls_if"></block>
+      <block type="logic_compare"></block>
+      <block type="logic_operation"></block>
+      <block type="logic_negate"></block>
+      <block type="logic_boolean"></block>
+      <block type="logic_null">
+      </block>
+    </category>
+    <category name="Loops">
+      <block type="controls_repeat_ext">
+        <value name="TIMES">
+          <block type="math_number">
+            <field name="NUM">10</field>
           </block>
-        </category>
-        <category name="Loops">
-          <block type="controls_repeat_ext">
-            <value name="TIMES">
-              <block type="math_number">
-                <field name="NUM">10</field>
-              </block>
-            </value>
+        </value>
+      </block>
+      <block type="controls_whileUntil"></block>
+      <block type="controls_for">
+        <value name="FROM">
+          <block type="math_number">
+            <field name="NUM">1</field>
           </block>
-          <block type="controls_whileUntil"></block>
-          <block type="controls_for">
-            <value name="FROM">
-              <block type="math_number">
-                <field name="NUM">1</field>
-              </block>
-            </value>
-            <value name="TO">
-              <block type="math_number">
-                <field name="NUM">10</field>
-              </block>
-            </value>
-            <value name="BY">
-              <block type="math_number">
-                <field name="NUM">1</field>
-              </block>
-            </value>
+        </value>
+        <value name="TO">
+          <block type="math_number">
+            <field name="NUM">10</field>
           </block>
-          <block type="controls_forEach"></block>
-          <block type="controls_flow_statements"></block>
-        </category>
-        <sep></sep>
-        <category name="Math">
-          <block type="math_number"></block>
-          <block type="math_angle"></block>
-          <block type="math_arithmetic"></block>
-          <block type="math_single"></block>
-          <block type="math_trig"></block>
-          <!--block type="math_constant"></block-->
-          <block type="math_number_property"></block>
-          <block type="math_change">
-            <value name="DELTA">
-              <block type="math_number">
-                <field name="NUM">1</field>
-              </block>
-            </value>
+        </value>
+        <value name="BY">
+          <block type="math_number">
+            <field name="NUM">1</field>
           </block>
-          <block type="math_round"></block>
-          <block type="math_modulo"></block>
-          <block type="math_constrain">
-            <value name="LOW">
-              <block type="math_number">
-                <field name="NUM">1</field>
-              </block>
-            </value>
-            <value name="HIGH">
-              <block type="math_number">
-                <field name="NUM">100</field>
-              </block>
-            </value>
+        </value>
+      </block>
+      <block type="controls_forEach"></block>
+      <block type="controls_flow_statements"></block>
+    </category>
+    <sep></sep>
+    <category name="Math">
+      <block type="math_number"></block>
+      <block type="math_angle"></block>
+      <block type="math_arithmetic"></block>
+      <block type="math_single"></block>
+      <block type="math_trig"></block>
+      <!--block type="math_constant"></block-->
+      <block type="math_number_property"></block>
+      <block type="math_change">
+        <value name="DELTA">
+          <block type="math_number">
+            <field name="NUM">1</field>
           </block>
-          <block type="math_random_int">
-            <value name="FROM">
-              <block type="math_number">
-                <field name="NUM">1</field>
-              </block>
-            </value>
-            <value name="TO">
-              <block type="math_number">
-                <field name="NUM">100</field>
-              </block>
-            </value>
+        </value>
+      </block>
+      <block type="math_round"></block>
+      <block type="math_modulo"></block>
+      <block type="math_constrain">
+        <value name="LOW">
+          <block type="math_number">
+            <field name="NUM">1</field>
           </block>
-          <block type="math_random_float"></block>
-        </category>
-        <category name="Text">
+        </value>
+        <value name="HIGH">
+          <block type="math_number">
+            <field name="NUM">100</field>
+          </block>
+        </value>
+      </block>
+      <block type="math_random_int">
+        <value name="FROM">
+          <block type="math_number">
+            <field name="NUM">1</field>
+          </block>
+        </value>
+        <value name="TO">
+          <block type="math_number">
+            <field name="NUM">100</field>
+          </block>
+        </value>
+      </block>
+      <block type="math_random_float"></block>
+    </category>
+    <category name="Text">
+      <block type="text"></block>
+      <block type="text_join"></block>
+      <block type="text_append">
+        <value name="TEXT">
           <block type="text"></block>
-          <block type="text_join"></block>
-          <block type="text_append">
-            <value name="TEXT">
-              <block type="text"></block>
-            </value>
+        </value>
+      </block>
+      <block type="text_length"></block>
+      <block type="text_isEmpty"></block>
+      <block type="text_indexOf">
+        <value name="VALUE">
+          <block type="variables_get">
+            <field name="VAR">text</field>
           </block>
-          <block type="text_length"></block>
-          <block type="text_isEmpty"></block>
-          <block type="text_indexOf">
-            <value name="VALUE">
-              <block type="variables_get">
-                <field name="VAR">text</field>
-              </block>
-            </value>
+        </value>
+      </block>
+      <block type="text_charAt">
+        <value name="VALUE">
+          <block type="variables_get">
+            <field name="VAR">text</field>
           </block>
-          <block type="text_charAt">
-            <value name="VALUE">
-              <block type="variables_get">
-                <field name="VAR">text</field>
-              </block>
-            </value>
+        </value>
+      </block>
+      <block type="text_getSubstring">
+        <value name="STRING">
+          <block type="variables_get">
+            <field name="VAR">text</field>
           </block>
-          <block type="text_getSubstring">
-            <value name="STRING">
-              <block type="variables_get">
-                <field name="VAR">text</field>
-              </block>
-            </value>
+        </value>
+      </block>
+      <block type="text_changeCase"></block>
+      <block type="text_trim"></block>
+      <block type="text_print"></block>
+      <block type="text_prompt_ext">
+        <value name="TEXT">
+          <block type="text"></block>
+        </value>
+      </block>
+    </category>
+    <category name="Time">
+      <block type="time_create_empty"></block>
+      <block type="time_create_with">
+        <value name="YEAR">
+          <block type="math_number">
+            <field name="NUM">2015</field>
           </block>
-          <block type="text_changeCase"></block>
-          <block type="text_trim"></block>
-          <block type="text_print"></block>
-          <block type="text_prompt_ext">
-            <value name="TEXT">
-              <block type="text"></block>
-            </value>
+        </value>
+        <value name="MONTH">
+          <block type="math_number">
+            <field name="NUM">12</field>
           </block>
-        </category>
-        <category name="Time">
-          <block type="time_create_empty"></block>
-          <block type="time_create_with">
-            <value name="YEAR">
-              <block type="math_number">
-                <field name="NUM">2015</field>
-              </block>
-            </value>
-            <value name="MONTH">
-              <block type="math_number">
-                <field name="NUM">12</field>
-              </block>
-            </value>
-            <value name="DAY">
-              <block type="math_number">
-                <field name="NUM">1</field>
-              </block>
-            </value>
-            <value name="HOUR">
-              <block type="math_number">
-                <field name="NUM">0</field>
-              </block>
-            </value>
-            <value name="MINUTE">
-              <block type="math_number">
-                <field name="NUM">0</field>
-              </block>
-            </value>
-            <value name="SECOND">
-              <block type="math_number">
-                <field name="NUM">0</field>
-              </block>
-            </value>
+        </value>
+        <value name="DAY">
+          <block type="math_number">
+            <field name="NUM">1</field>
           </block>
-          <block type="time_getPart"></block>
-          <block type="time_diff"></block>
-          <block type="time_addSubtract">
-            <value name="VALUE">
-              <block type="math_number">
-                <field name="NUM">1</field>
-              </block>
-            </value>
-            <value name="TIME">
-              <block type="variables_get">
-                <field name="VAR">time</field>
-              </block>
-            </value>
+        </value>
+        <value name="HOUR">
+          <block type="math_number">
+            <field name="NUM">0</field>
           </block>
-          <block type="time_startEnd">
-            <value name="TIME">
-              <block type="variables_get">
-                <field name="VAR">time</field>
-              </block>
-            </value>
+        </value>
+        <value name="MINUTE">
+          <block type="math_number">
+            <field name="NUM">0</field>
           </block>
-          <block type="time_sleep">
-            <value name="SECONDS">
-              <block type="math_number">
-                <field name="NUM">1</field>
-              </block>
-            </value>
+        </value>
+        <value name="SECOND">
+          <block type="math_number">
+            <field name="NUM">0</field>
           </block>
-        </category>
-        <sep></sep>
-        <category name="Lists">
-          <block type="lists_create_empty"></block>
-          <block type="lists_create_with"></block>
-          <!--block type="lists_repeat">
-            <value name="NUM">
-              <block type="math_number">
-                <field name="NUM">5</field>
-              </block>
-            </value>
-          </block-->
-          <block type="lists_length"></block>
-          <block type="lists_isEmpty"></block>
-          <block type="lists_functions"></block>
-          <block type="lists_transformers">
-            <value name="LIST">
-              <block type="variables_get">
-                <field name="VAR">list</field>
-              </block>
-            </value>
+        </value>
+      </block>
+      <block type="time_getPart"></block>
+      <block type="time_diff"></block>
+      <block type="time_addSubtract">
+        <value name="VALUE">
+          <block type="math_number">
+            <field name="NUM">1</field>
           </block>
-          <block type="lists_indexOf">
-            <value name="VALUE">
-              <block type="variables_get">
-                <field name="VAR">list</field>
-              </block>
-            </value>
+        </value>
+        <value name="TIME">
+          <block type="variables_get">
+            <field name="VAR">time</field>
           </block>
-          <block type="lists_getIndex">
-            <value name="VALUE">
-              <block type="variables_get">
-                <field name="VAR">list</field>
-              </block>
-            </value>
+        </value>
+      </block>
+      <block type="time_startEnd">
+        <value name="TIME">
+          <block type="variables_get">
+            <field name="VAR">time</field>
           </block>
-          <block type="lists_setIndex">
-            <value name="LIST">
-              <block type="variables_get">
-                <field name="VAR">list</field>
-              </block>
-            </value>
+        </value>
+      </block>
+      <block type="time_sleep">
+        <value name="SECONDS">
+          <block type="math_number">
+            <field name="NUM">1</field>
           </block>
-          <block type="lists_getSublist">
-            <value name="LIST">
-              <block type="variables_get">
-                <field name="VAR">list</field>
-              </block>
-            </value>
+        </value>
+      </block>
+    </category>
+    <sep></sep>
+    <category name="Lists">
+      <block type="lists_create_empty"></block>
+      <block type="lists_create_with"></block>
+      <!--block type="lists_repeat">
+        <value name="NUM">
+          <block type="math_number">
+            <field name="NUM">5</field>
           </block>
-          <block type="lists_split">
-            <value name="DELIM">
-              <block type="text">
-                <field name="TEXT">,</field>
-              </block>
-            </value>
+        </value>
+      </block-->
+      <block type="lists_length"></block>
+      <block type="lists_isEmpty"></block>
+      <block type="lists_functions"></block>
+      <block type="lists_transformers">
+        <value name="LIST">
+          <block type="variables_get">
+            <field name="VAR">list</field>
           </block>
-        </category>
-        <category name="Tables">
-          <block type="tables_create_empty"></block>
-          <block type="tables_create_with"></block>
-          <block type="tables_size"></block>
-          <block type="tables_keys"></block>
-          <block type="tables_isEmpty"></block>
-          <block type="tables_getIndex">
-            <value name="VALUE">
-              <block type="variables_get">
-                <field name="VAR">table</field>
-              </block>
-            </value>
+        </value>
+      </block>
+      <block type="lists_indexOf">
+        <value name="VALUE">
+          <block type="variables_get">
+            <field name="VAR">list</field>
           </block>
-          <block type="tables_setIndex">
-            <value name="TABLE">
-              <block type="variables_get">
-                <field name="VAR">table</field>
-              </block>
-            </value>
+        </value>
+      </block>
+      <block type="lists_getIndex">
+        <value name="VALUE">
+          <block type="variables_get">
+            <field name="VAR">list</field>
           </block>
-        </category>
-        <sep></sep>
-        <category name="Graphics">
+        </value>
+      </block>
+      <block type="lists_setIndex">
+        <value name="LIST">
+          <block type="variables_get">
+            <field name="VAR">list</field>
+          </block>
+        </value>
+      </block>
+      <block type="lists_getSublist">
+        <value name="LIST">
+          <block type="variables_get">
+            <field name="VAR">list</field>
+          </block>
+        </value>
+      </block>
+      <block type="lists_split">
+        <value name="DELIM">
+          <block type="text">
+            <field name="TEXT">,</field>
+          </block>
+        </value>
+      </block>
+    </category>
+    <category name="Tables">
+      <block type="tables_create_empty"></block>
+      <block type="tables_create_with"></block>
+      <block type="tables_size"></block>
+      <block type="tables_keys"></block>
+      <block type="tables_isEmpty"></block>
+      <block type="tables_getIndex">
+        <value name="VALUE">
+          <block type="variables_get">
+            <field name="VAR">table</field>
+          </block>
+        </value>
+      </block>
+      <block type="tables_setIndex">
+        <value name="TABLE">
+          <block type="variables_get">
+            <field name="VAR">table</field>
+          </block>
+        </value>
+      </block>
+    </category>
+    <sep></sep>
+    <category name="Graphics">
+      <block type="colour_picker"></block>
+      <block type="colour_random"></block>
+      <block type="colour_rgb" inline="true">
+        <value name="RED">
+          <block type="math_number">
+            <field name="NUM">100</field>
+          </block>
+        </value>
+        <value name="GREEN">
+          <block type="math_number">
+            <field name="NUM">50</field>
+          </block>
+        </value>
+        <value name="BLUE">
+          <block type="math_number">
+            <field name="NUM">0</field>
+          </block>
+        </value>
+      </block>
+      <!--block type="colour_blend" inline="true">
+        <value name="COLOUR1">
+          <block type="colour_picker">
+            <field name="COLOUR">#ff0000</field>
+          </block>
+        </value>
+        <value name="COLOUR2">
+          <block type="colour_picker">
+            <field name="COLOUR">#3333ff</field>
+          </block>
+        </value>
+        <value name="RATIO">
+          <block type="math_number">
+            <field name="NUM">0.5</field>
+          </block>
+        </value>
+      </block-->
+      <block type="graphics_stroke">
+        <value name="COLOR">
           <block type="colour_picker"></block>
-          <block type="colour_random"></block>
-          <block type="colour_rgb" inline="true">
-            <value name="RED">
-              <block type="math_number">
-                <field name="NUM">100</field>
-              </block>
-            </value>
-            <value name="GREEN">
-              <block type="math_number">
-                <field name="NUM">50</field>
-              </block>
-            </value>
-            <value name="BLUE">
-              <block type="math_number">
-                <field name="NUM">0</field>
-              </block>
-            </value>
+        </value>
+      </block>
+      <block type="graphics_fill">
+        <value name="COLOR">
+          <block type="colour_picker"></block>
+        </value>
+      </block>
+      <block type="graphics_opacity">
+        <value name="AMOUNT">
+          <block type="math_number">
+            <field name="NUM">1</field>
           </block>
-          <!--block type="colour_blend" inline="true">
-            <value name="COLOUR1">
-              <block type="colour_picker">
-                <field name="COLOUR">#ff0000</field>
-              </block>
-            </value>
-            <value name="COLOUR2">
-              <block type="colour_picker">
-                <field name="COLOUR">#3333ff</field>
-              </block>
-            </value>
-            <value name="RATIO">
-              <block type="math_number">
-                <field name="NUM">0.5</field>
-              </block>
-            </value>
-          </block-->
-          <block type="graphics_stroke">
-            <value name="COLOR">
-              <block type="colour_picker"></block>
-            </value>
+        </value>
+      </block>
+      <block type="graphics_rotate">
+        <value name="ANGLE">
+          <block type="math_angle">
+            <field name="ANGLE">90</field>
           </block>
-          <block type="graphics_fill">
-            <value name="COLOR">
-              <block type="colour_picker"></block>
-            </value>
+        </value>
+      </block>
+      <block type="graphics_scale">
+        <value name="MULTX">
+          <block type="math_number">
+            <field name="NUM">1</field>
           </block>
-          <block type="graphics_opacity">
-            <value name="AMOUNT">
-              <block type="math_number">
-                <field name="NUM">1</field>
-              </block>
-            </value>
+        </value>
+        <value name="MULTY">
+          <block type="math_number">
+            <field name="NUM">1</field>
           </block>
-          <block type="graphics_rotate">
-            <value name="ANGLE">
-              <block type="math_angle">
-                <field name="ANGLE">90</field>
-              </block>
-            </value>
+        </value>
+      </block>
+      <block type="graphics_rect">
+        <value name="X">
+          <block type="math_number">
+            <field name="NUM">0</field>
           </block>
-          <block type="graphics_scale">
-            <value name="MULTX">
-              <block type="math_number">
-                <field name="NUM">1</field>
-              </block>
-            </value>
-            <value name="MULTY">
-              <block type="math_number">
-                <field name="NUM">1</field>
-              </block>
-            </value>
+        </value>
+        <value name="Y">
+          <block type="math_number">
+            <field name="NUM">0</field>
           </block>
-          <block type="graphics_rect">
-            <value name="X">
-              <block type="math_number">
-                <field name="NUM">0</field>
-              </block>
-            </value>
-            <value name="Y">
-              <block type="math_number">
-                <field name="NUM">0</field>
-              </block>
-            </value>
-            <value name="WIDTH">
-              <block type="math_number">
-                <field name="NUM">0</field>
-              </block>
-            </value>
-            <value name="HEIGHT">
-              <block type="math_number">
-                <field name="NUM">0</field>
-              </block>
-            </value>
+        </value>
+        <value name="WIDTH">
+          <block type="math_number">
+            <field name="NUM">0</field>
           </block>
-          <block type="graphics_circle">
-            <value name="X">
-              <block type="math_number">
-                <field name="NUM">0</field>
-              </block>
-            </value>
-            <value name="Y">
-              <block type="math_number">
-                <field name="NUM">0</field>
-              </block>
-            </value>
-            <value name="RADIUS">
-              <block type="math_number">
-                <field name="NUM">0</field>
-              </block>
-            </value>
+        </value>
+        <value name="HEIGHT">
+          <block type="math_number">
+            <field name="NUM">0</field>
           </block>
-          <block type="graphics_ellipse">
-            <value name="X">
-              <block type="math_number">
-                <field name="NUM">0</field>
-              </block>
-            </value>
-            <value name="Y">
-              <block type="math_number">
-                <field name="NUM">0</field>
-              </block>
-            </value>
-            <value name="XRADIUS">
-              <block type="math_number">
-                <field name="NUM">0</field>
-              </block>
-            </value>
-            <value name="YRADIUS">
-              <block type="math_number">
-                <field name="NUM">0</field>
-              </block>
-            </value>
+        </value>
+      </block>
+      <block type="graphics_circle">
+        <value name="X">
+          <block type="math_number">
+            <field name="NUM">0</field>
           </block>
-          <block type="graphics_line">
-            <value name="X1">
-              <block type="math_number">
-                <field name="NUM">0</field>
-              </block>
-            </value>
-            <value name="Y1">
-              <block type="math_number">
-                <field name="NUM">0</field>
-              </block>
-            </value>
-            <value name="X2">
-              <block type="math_number">
-                <field name="NUM">0</field>
-              </block>
-            </value>
-            <value name="Y2">
-              <block type="math_number">
-                <field name="NUM">0</field>
-              </block>
-            </value>
+        </value>
+        <value name="Y">
+          <block type="math_number">
+            <field name="NUM">0</field>
           </block>
-          <block type="graphics_repaint"></block>
-        </category>
-        <sep></sep>
-        <category name="Variables" custom="VARIABLE"></category>
-        <category name="Functions" custom="PROCEDURE"></category>
-        <sep></sep>
-        <category name="Control">
-          <block type="control_exit"></block>
-        </category>
-      </xml>
-
-      <xml id="new_workspace" style="display:none;">
-        <block type="control_start" id="1" deletable="false" x="13" y="13"></block>
-      </xml>
-    </div>
-
-    <script src="browser-polyfill.js"></script>
-    <script src="bundle.js"></script>
-  </body>
-</html>
+        </value>
+        <value name="RADIUS">
+          <block type="math_number">
+            <field name="NUM">0</field>
+          </block>
+        </value>
+      </block>
+      <block type="graphics_ellipse">
+        <value name="X">
+          <block type="math_number">
+            <field name="NUM">0</field>
+          </block>
+        </value>
+        <value name="Y">
+          <block type="math_number">
+            <field name="NUM">0</field>
+          </block>
+        </value>
+        <value name="XRADIUS">
+          <block type="math_number">
+            <field name="NUM">0</field>
+          </block>
+        </value>
+        <value name="YRADIUS">
+          <block type="math_number">
+            <field name="NUM">0</field>
+          </block>
+        </value>
+      </block>
+      <block type="graphics_line">
+        <value name="X1">
+          <block type="math_number">
+            <field name="NUM">0</field>
+          </block>
+        </value>
+        <value name="Y1">
+          <block type="math_number">
+            <field name="NUM">0</field>
+          </block>
+        </value>
+        <value name="X2">
+          <block type="math_number">
+            <field name="NUM">0</field>
+          </block>
+        </value>
+        <value name="Y2">
+          <block type="math_number">
+            <field name="NUM">0</field>
+          </block>
+        </value>
+      </block>
+      <block type="graphics_repaint"></block>
+    </category>
+    <sep></sep>
+    <category name="Variables" custom="VARIABLE"></category>
+    <category name="Functions" custom="PROCEDURE"></category>
+    <sep></sep>
+    <category name="Control">
+      <block type="control_exit"></block>
+    </category>
+  </xml>
+  <xml id="new_workspace" style="display:none;">
+    <block type="control_start" id="1" deletable="false" x="13" y="13"></block>
+  </xml>
+</template>
