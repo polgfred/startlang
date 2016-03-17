@@ -5,8 +5,8 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 
 import {
-  Navbar, Nav, NavItem, NavDropdown,
-  MenuItem, Grid, Row, Col
+  Navbar, Nav, NavItem, NavDropdown, MenuItem,
+  ButtonToolbar, Button, Grid, Row, Col
 } from 'react-bootstrap';
 
 import immutable from 'immutable';
@@ -31,9 +31,9 @@ export default class CApp extends CBase {
             <MenuItem eventKey={3.3} href="#">Separated link</MenuItem>
           </NavDropdown>
         </Nav>
-        <Nav pullRight>
-          <NavItem eventKey={5} active>Run</NavItem>
-        </Nav>
+        <ButtonToolbar className="pull-right">
+          <Button eventKey={5} bsStyle="primary">Run</Button>
+        </ButtonToolbar>
       </Navbar>
       <Grid className="start-body" fluid>
         <Row>
