@@ -24,18 +24,12 @@ export default class CApp extends CBase {
   constructor(props) {
     super(props);
 
-    this.onEditorUpdate = this.onEditorUpdate.bind(this);
     this.onGfxUpdate = this.onGfxUpdate.bind(this);
     this.onRun = this.onRun.bind(this);
 
     this.state = {
-      source: '',
       gfx: new SGraphics()
     };
-  }
-
-  onEditorUpdate(source) {
-    this.setState({ source });
   }
 
   onGfxUpdate(mut) {
@@ -44,7 +38,7 @@ export default class CApp extends CBase {
 
   onRun() {
     let interp = createInterpreter();
-    interp.root = parser.parse(this.state.source);
+    interp.root = parser.parse(this.editor.source);
     interp.runtime = createRuntime();
     interp.ctx.update = this.onGfxUpdate;
     interp.run().catch((err) => {
@@ -78,7 +72,7 @@ export default class CApp extends CBase {
             <CTerm buf={ immutable.List() }/>
           </Col>
           <Col md={6}>
-            <CEditor update={ this.onEditorUpdate }/>
+            <CEditor ref={ (ref) => { this.editor = ref; } }/>
           </Col>
         </Row>
       </Grid>
