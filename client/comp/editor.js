@@ -21,8 +21,16 @@ export default class CEditor extends CBase {
     editor.$blockScrolling = Infinity;
     editor.setTheme('ace/theme/textmate');
     editor.setShowFoldWidgets(false);
+    editor.setShowPrintMargin(false);
     editor.getSession().setTabSize(2);
     editor.getSession().setUseSoftTabs(true);
     editor.getSession().setMode(new StartMode());
+
+    editor.on('change', this.onChange.bind(this));
+  }
+
+  onChange() {
+    let editor = ace.edit(this.$()[0]);
+    this.props.update(editor.getValue());
   }
 }

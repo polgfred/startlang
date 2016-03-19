@@ -1,5 +1,7 @@
 'use strict';
 
+import { nextTick } from 'process';
+
 import React from 'react';
 import ReactDOM from 'react-dom';
 import immutable from 'immutable';
@@ -12,7 +14,6 @@ export class SGRuntime extends SRuntime {
   constructor() {
     super();
     this.buf = immutable.List();
-    this.gfx = new SGraphics();
     this.setMode('split');
   }
 
@@ -47,7 +48,7 @@ SGRuntime.globals = Object.setPrototypeOf({
   refresh() {
     // let the DOM catch up
     return new Promise((resolve) => {
-      setImmediate(resolve);
+      nextTick(resolve);
     });
   },
 
@@ -95,28 +96,28 @@ SGRuntime.globals = Object.setPrototypeOf({
   // shape creation
 
   rect(x, y, width, height) {
-    this.gfx = this.gfx.addShape(Rect, { x, y, width, height });
+    this.update((gfx) => gfx.addShape(Rect, { x, y, width, height }));
   },
 
   circle(cx, cy, r) {
-    this.gfx = this.gfx.addShape(Circle, { cx, cy, r });
+    this.update((gfx) => gfx.addShape(Circle, { cx, cy, r }));
   },
 
   ellipse(cx, cy, rx, ry) {
-    this.gfx = this.gfx.addShape(Ellipse, { cx, cy, rx, ry });
+    this.update((gfx) => gfx.addShape(Ellipse, { cx, cy, rx, ry }));
   },
 
   line(x1, y1, x2, y2) {
-    this.gfx = this.gfx.addShape(Line, { x1, y1, x2, y2 });
+    this.update((gfx) => gfx.addShape(Line, { x1, y1, x2, y2 }));
   },
 
   polygon(...points) {
     points = immutable.List.isList(points[0]) ? points[0] : immutable.List(points);
-    this.gfx = this.gfx.addShape(Polygon, { points });
+    this.update((gfx) => gfx.addShape(Polygon, { points }));
   },
 
   text(x, y, text) {
-    this.gfx = this.gfx.addShape(Text, { x, y, text });
+    this.update((gfx) => gfx.addShape(Text, { x, y, text }));
   },
 
   // set shape and text attributes
@@ -127,45 +128,45 @@ SGRuntime.globals = Object.setPrototypeOf({
   },
 
   fill(color) {
-    this.gfx = this.gfx.update('sprops', (sprops) => sprops
-      .set('fill', color));
+    this.update((gfx) => gfx.updateSprops((sprops) => sprops
+      .set('fill', color)));
   },
 
   stroke(color) {
-    this.gfx = this.gfx.update('sprops', (sprops) => sprops
-      .set('stroke', color));
+    this.update((gfx) => gfx.updateSprops((sprops) => sprops
+      .set('stroke', color)));
   },
 
   opacity(value = 1) {
-    this.gfx = this.gfx.update('sprops', (sprops) => sprops
-      .set('opacity', value));
+    this.update((gfx) => gfx.updateSprops((sprops) => sprops
+      .set('opacity', value)));
   },
 
   anchor(value = 'center') {
-    this.gfx = this.gfx.update('sprops', (sprops) => sprops
-      .set('anchor', value));
+    this.update((gfx) => gfx.updateSprops((sprops) => sprops
+      .set('anchor', value)));
   },
 
   rotate(angle = 0) {
-    this.gfx = this.gfx.update('sprops', (sprops) => sprops
-      .set('rotate', angle));
+    this.update((gfx) => gfx.updateSprops((sprops) => sprops
+      .set('rotate', angle)));
   },
 
   scale(scalex = 1, scaley = scalex) {
-    this.gfx = this.gfx.update('sprops', (sprops) => sprops
+    this.update((gfx) => gfx.updateSprops((sprops) => sprops
       .set('scalex', scalex)
-      .set('scaley', scaley));
-  },
-
-  font(fface = 'Helvetica', fsize = 32) {
-    this.gfx = this.gfx.update('tprops', (tprops) => tprops
-      .set('fface', fface)
-      .set('fsize', fsize));
+      .set('scaley', scaley)));
   },
 
   align(value = 'start') {
-    this.gfx = this.gfx.update('tprops', (sprops) => sprops
-      .set('align', value));
+    this.update((gfx) => gfx.updateSprops((sprops) => sprops
+      .set('align', value)));
+  },
+
+  font(fface = 'Helvetica', fsize = 32) {
+    this.update((gfx) => gfx.updateTprops((tprops) => tprops
+      .set('fface', fface)
+      .set('fsize', fsize)));
   }
 }, SRuntime.globals);
 
@@ -201,6 +202,14 @@ export class SGraphics extends immutable.Record({
 
   removeShapes(num) {
     return this.update('shapes', (shapes) => shapes.skipLast(num));
+  }
+
+  updateSprops(mut) {
+    return this.update('sprops', (sprops) => mut(sprops));
+  }
+
+  updateTprops(mut) {
+    return this.update('tprops', (tprops) => mut(tprops));
   }
 }
 

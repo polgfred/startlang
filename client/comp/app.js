@@ -15,33 +15,70 @@ import CTerm from './term';
 import CGraphics from './graphics';
 import CEditor from './editor';
 
+import parser from '../../lang/parser.pegjs';
+import { createInterpreter } from '../../lang/interpreter';
+import { createBuilder } from '../../lang/builder';
+import { SGraphics, createRuntime } from '../../lang/graphics';
+
 export default class CApp extends CBase {
+  constructor(props) {
+    super(props);
+
+    this.onEditorUpdate = this.onEditorUpdate.bind(this);
+    this.onGfxUpdate = this.onGfxUpdate.bind(this);
+    this.onRun = this.onRun.bind(this);
+
+    this.state = {
+      source: '',
+      gfx: new SGraphics()
+    };
+  }
+
+  onEditorUpdate(source) {
+    this.setState({ source });
+  }
+
+  onGfxUpdate(mut) {
+    this.setState({ gfx: mut(this.state.gfx) });
+  }
+
+  onRun() {
+    let interp = createInterpreter();
+    interp.root = parser.parse(this.state.source);
+    interp.runtime = createRuntime();
+    interp.ctx.update = this.onGfxUpdate;
+    interp.run().catch((err) => {
+      console.log(err);
+      console.log(err.stack);
+    });
+  }
+
   render() {
     return <div className="start-app mode-split">
       <Navbar>
         <Nav>
-          <NavItem eventKey={1} href="#">Link</NavItem>
-          <NavItem eventKey={2} href="#">Link</NavItem>
-          <NavDropdown eventKey={3} title="Dropdown" id="dropdown-3">
-            <MenuItem eventKey={3.1}>Action</MenuItem>
-            <MenuItem eventKey={3.2}>Another action</MenuItem>
-            <MenuItem eventKey={3.3}>Something else here</MenuItem>
+          <NavItem href="#">Link</NavItem>
+          <NavItem href="#">Link</NavItem>
+          <NavDropdown title="Dropdown" id="dropdown-3">
+            <MenuItem>Action</MenuItem>
+            <MenuItem>Another action</MenuItem>
+            <MenuItem>Something else here</MenuItem>
             <MenuItem divider />
-            <MenuItem eventKey={3.3} href="#">Separated link</MenuItem>
+            <MenuItem href="#">Separated link</MenuItem>
           </NavDropdown>
         </Nav>
         <ButtonToolbar className="pull-right">
-          <Button eventKey={5} bsStyle="primary">Run</Button>
+          <Button bsStyle="primary" onClick={ this.onRun }>Run</Button>
         </ButtonToolbar>
       </Navbar>
       <Grid className="start-body" fluid>
         <Row>
           <Col md={6}>
-            <CGraphics data={{ shapes: immutable.List() }}/>
+            <CGraphics data={ this.state.gfx } update={ this.onGfxUpdate }/>
             <CTerm buf={ immutable.List() }/>
           </Col>
           <Col md={6}>
-            <CEditor />
+            <CEditor update={ this.onEditorUpdate }/>
           </Col>
         </Row>
       </Grid>

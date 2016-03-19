@@ -5,11 +5,6 @@ import ReactDOM from 'react-dom';
 
 import Blockly from '../blockly_start';
 
-import { parse } from '../lang/parser.pegjs';
-import { createInterpreter } from '../lang/interpreter';
-import { createBuilder } from '../lang/builder';
-import { createRuntime } from '../lang/graphics';
-
 import CApp from './comp/app';
 
 let mode = (location.search.match('mode=(.*)') || [])[1];
