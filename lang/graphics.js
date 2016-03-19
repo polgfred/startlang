@@ -1,7 +1,5 @@
 'use strict';
 
-import { nextTick } from 'process';
-
 import React from 'react';
 import ReactDOM from 'react-dom';
 import immutable from 'immutable';
@@ -48,7 +46,7 @@ SGRuntime.globals = Object.setPrototypeOf({
   refresh() {
     // let the DOM catch up
     return new Promise((resolve) => {
-      nextTick(resolve);
+      Meteor._setImmediate(resolve);
     });
   },
 
