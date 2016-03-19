@@ -33,7 +33,7 @@ export default class CApp extends CBase {
   }
 
   onGfxUpdate(mut) {
-    this.setState({ gfx: mut(this.state.gfx) });
+    this.setState((state) => ({ gfx: mut(state.gfx) }));
   }
 
   onRun() {
