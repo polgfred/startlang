@@ -6,6 +6,10 @@ import ReactDOM from 'react-dom';
 import CBase from './base';
 
 export default class CTerm extends CBase {
+  shouldComponentUpdate(nextProps) {
+    return this.props.buf != nextProps.buf;
+  }
+
   render() {
     return <div className="start-terminal" onClick={this.handleClick.bind(this)}>
       <CTermOutput buf={this.props.buf} />

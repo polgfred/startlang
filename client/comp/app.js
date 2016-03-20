@@ -26,10 +26,7 @@ export default class CApp extends CBase {
 
     this.onGfxUpdate = this.onGfxUpdate.bind(this);
     this.onRun = this.onRun.bind(this);
-
-    this.state = {
-      gfx: new SGraphics()
-    };
+    this.state = { gfx: new SGraphics() };
   }
 
   onGfxUpdate(mut) {
@@ -37,13 +34,17 @@ export default class CApp extends CBase {
   }
 
   onRun() {
-    let interp = createInterpreter();
-    interp.root = parser.parse(this.editor.source);
-    interp.runtime = createRuntime();
-    interp.ctx.update = this.onGfxUpdate;
-    interp.run().catch((err) => {
-      console.log(err);
-      console.log(err.stack);
+    this.setState({ gfx: new SGraphics() });
+
+    Meteor.defer(() => {
+      let interp = createInterpreter();
+      interp.root = parser.parse(this.editor.source);
+      interp.runtime = createRuntime();
+      interp.ctx.update = this.onGfxUpdate;
+      interp.run().catch((err) => {
+        console.log(err);
+        console.log(err.stack);
+      });
     });
   }
 

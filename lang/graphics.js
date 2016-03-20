@@ -5,8 +5,6 @@ import ReactDOM from 'react-dom';
 import immutable from 'immutable';
 
 import { SRuntime, SBase, handle, handlerKey, assignKey, resultKey } from './runtime';
-//import CGraphics from '../../client/comp/graphics';
-//import CTerm from '../comp/term';
 
 export class SGRuntime extends SRuntime {
   constructor() {
@@ -17,28 +15,6 @@ export class SGRuntime extends SRuntime {
 
   setMode(mode) {
     this.mode = mode;
-    this.updateDisplay();
-  }
-
-  updateDisplay() {
-    /*if (!$('#display').hasClass(`mode-${this.mode}`)) {
-      $('#display').removeClass('mode-graphics')
-                   .removeClass('mode-text')
-                   .removeClass('mode-split')
-                   .addClass(`mode-${this.mode}`);
-    }
-
-    if (this.buf) {
-      this.rterm = ReactDOM.render(
-        <CTerm buf={this.buf} />,
-        $('#display .text')[0]);
-    }
-
-    if (this.gfx) {
-      this.rgfx = ReactDOM.render(
-        <CGraphics data={this.gfx} />,
-        $('#display .graphics')[0]);
-    }*/
   }
 }
 
@@ -46,19 +22,18 @@ SGRuntime.globals = Object.setPrototypeOf({
   refresh() {
     // let the DOM catch up
     return new Promise((resolve) => {
-      Meteor._setImmediate(resolve);
+      Meteor.defer(resolve);
     });
   },
 
   repaint() {
     // render pending changes to DOM and refresh
-    this.updateDisplay();
     return SGRuntime.globals.refresh.call(this);
   },
 
   reset() {
     this.buf = immutable.List();
-    this.gfx = this.gfx.set('shapes', immutable.List());
+    this.update((gfx) => gfx.set('shapes', immutable.List()));
   },
 
   clear() {
@@ -85,7 +60,6 @@ SGRuntime.globals = Object.setPrototypeOf({
     return new Promise((resolve) => {
       this.rterm.getInput(prompt, (input) => {
         this.buf = this.buf.push(`${prompt}${input}`);
-        this.updateDisplay();
         resolve(input);
       });
     });
@@ -110,7 +84,9 @@ SGRuntime.globals = Object.setPrototypeOf({
   },
 
   polygon(...points) {
-    points = immutable.List.isList(points[0]) ? points[0] : immutable.List(points);
+    points = immutable.List.isList(points[0]) ?
+      points[0] :
+      immutable.List(points);
     this.update((gfx) => gfx.addShape(Polygon, { points }));
   },
 
@@ -126,45 +102,53 @@ SGRuntime.globals = Object.setPrototypeOf({
   },
 
   fill(color) {
-    this.update((gfx) => gfx.updateSprops((sprops) => sprops
-      .set('fill', color)));
+    this.update((gfx) => gfx
+      .updateSprops((sprops) => sprops
+        .set('fill', color)));
   },
 
   stroke(color) {
-    this.update((gfx) => gfx.updateSprops((sprops) => sprops
-      .set('stroke', color)));
+    this.update((gfx) => gfx
+      .updateSprops((sprops) => sprops
+        .set('stroke', color)));
   },
 
   opacity(value = 1) {
-    this.update((gfx) => gfx.updateSprops((sprops) => sprops
-      .set('opacity', value)));
+    this.update((gfx) => gfx
+      .updateSprops((sprops) => sprops
+        .set('opacity', value)));
   },
 
   anchor(value = 'center') {
-    this.update((gfx) => gfx.updateSprops((sprops) => sprops
-      .set('anchor', value)));
+    this.update((gfx) => gfx
+      .updateSprops((sprops) => sprops
+        .set('anchor', value)));
   },
 
   rotate(angle = 0) {
-    this.update((gfx) => gfx.updateSprops((sprops) => sprops
-      .set('rotate', angle)));
+    this.update((gfx) => gfx
+      .updateSprops((sprops) => sprops
+        .set('rotate', angle)));
   },
 
   scale(scalex = 1, scaley = scalex) {
-    this.update((gfx) => gfx.updateSprops((sprops) => sprops
-      .set('scalex', scalex)
-      .set('scaley', scaley)));
+    this.update((gfx) => gfx
+      .updateSprops((sprops) => sprops
+        .set('scalex', scalex)
+        .set('scaley', scaley)));
   },
 
   align(value = 'start') {
-    this.update((gfx) => gfx.updateSprops((sprops) => sprops
-      .set('align', value)));
+    this.update((gfx) => gfx
+      .updateSprops((sprops) => sprops
+        .set('align', value)));
   },
 
   font(fface = 'Helvetica', fsize = 32) {
-    this.update((gfx) => gfx.updateTprops((tprops) => tprops
-      .set('fface', fface)
-      .set('fsize', fsize)));
+    this.update((gfx) => gfx
+      .updateTprops((tprops) => tprops
+        .set('fface', fface)
+        .set('fsize', fsize)));
   }
 }, SRuntime.globals);
 

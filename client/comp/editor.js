@@ -12,6 +12,10 @@ import CBase from './base';
 import StartMode from '../brace_start/start_mode';
 
 export default class CEditor extends CBase {
+  shouldComponentUpdate(nextProps) {
+    return false;
+  }
+
   render() {
     return <div className="start-editor" />;
   }

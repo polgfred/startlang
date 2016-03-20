@@ -22,7 +22,7 @@ const LIST_SHIFT = 5;
 
 export default class CGraphics extends CBase {
   shouldComponentUpdate(nextProps) {
-    return this.props.data != nextProps.data;
+    return this.props.data.shapes != nextProps.data.shapes;
   }
 
   render() {
