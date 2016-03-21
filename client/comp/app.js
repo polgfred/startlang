@@ -50,27 +50,12 @@ export default class CApp extends CBase {
 
   render() {
     return <div className="start-app mode-split">
-      <Navbar>
-        <Nav>
-          <NavItem href="#">Link</NavItem>
-          <NavItem href="#">Link</NavItem>
-          <NavDropdown title="Dropdown" id="dropdown-3">
-            <MenuItem>Action</MenuItem>
-            <MenuItem>Another action</MenuItem>
-            <MenuItem>Something else here</MenuItem>
-            <MenuItem divider />
-            <MenuItem href="#">Separated link</MenuItem>
-          </NavDropdown>
-        </Nav>
-        <ButtonToolbar className="pull-right">
-          <Button bsStyle="primary" onClick={ this.onRun }>Run</Button>
-        </ButtonToolbar>
-      </Navbar>
+      <AppNav onRun={ this.onRun } />
       <Grid className="start-body" fluid>
         <Row>
           <Col md={6}>
-            <CGraphics data={ this.state.gfx } update={ this.onGfxUpdate }/>
-            <CTerm buf={ immutable.List() }/>
+            <CGraphics data={ this.state.gfx } />
+            <CTerm buf={ immutable.List() } />
           </Col>
           <Col md={6}>
             <CEditor ref={ (ref) => { this.editor = ref; } }/>
@@ -78,5 +63,30 @@ export default class CApp extends CBase {
         </Row>
       </Grid>
     </div>;
+  }
+}
+
+class AppNav extends CBase {
+  shouldComponentUpdate() {
+    return false;
+  }
+
+  render() {
+    return <Navbar>
+      <Nav>
+        <NavItem href="#">Link</NavItem>
+        <NavItem href="#">Link</NavItem>
+        <NavDropdown title="Dropdown" id="dropdown-3">
+          <MenuItem>Action</MenuItem>
+          <MenuItem>Another action</MenuItem>
+          <MenuItem>Something else here</MenuItem>
+          <MenuItem divider />
+          <MenuItem href="#">Separated link</MenuItem>
+        </NavDropdown>
+      </Nav>
+      <ButtonToolbar className="pull-right">
+        <Button bsStyle="primary" onClick={ this.props.onRun }>Run</Button>
+      </ButtonToolbar>
+    </Navbar>;
   }
 }
