@@ -32,8 +32,8 @@ SGRuntime.globals = Object.setPrototypeOf({
   },
 
   reset() {
-    this.buf = immutable.List();
-    this.update((gfx) => gfx.set('shapes', immutable.List()));
+    this.gfxUpdate((gfx) => gfx.set('shapes', immutable.List()));
+    this.termUpdate((buf) => buf.clear());
   },
 
   clear() {
@@ -48,10 +48,10 @@ SGRuntime.globals = Object.setPrototypeOf({
   print(...values) {
     if (values.length > 0) {
       for (let v of values) {
-        this.buf = this.buf.push(handle(v).repr(v));
+        this.termUpdate((buf) => buf.push(handle(v).repr(v)));
       }
     } else {
-      this.buf = this.buf.push('');
+      this.termUpdate((buf) => buf.push(''));
     }
     return SGRuntime.globals.repaint.call(this);
   },
@@ -59,7 +59,7 @@ SGRuntime.globals = Object.setPrototypeOf({
   input(prompt) {
     return new Promise((resolve) => {
       this.rterm.getInput(prompt, (input) => {
-        this.buf = this.buf.push(`${prompt}${input}`);
+        this.termUpdate((buf) => buf.push(`${prompt}${input}`));
         resolve(input);
       });
     });
@@ -68,30 +68,30 @@ SGRuntime.globals = Object.setPrototypeOf({
   // shape creation
 
   rect(x, y, width, height) {
-    this.update((gfx) => gfx.addShape(Rect, { x, y, width, height }));
+    this.gfxUpdate((gfx) => gfx.addShape(Rect, { x, y, width, height }));
   },
 
   circle(cx, cy, r) {
-    this.update((gfx) => gfx.addShape(Circle, { cx, cy, r }));
+    this.gfxUpdate((gfx) => gfx.addShape(Circle, { cx, cy, r }));
   },
 
   ellipse(cx, cy, rx, ry) {
-    this.update((gfx) => gfx.addShape(Ellipse, { cx, cy, rx, ry }));
+    this.gfxUpdate((gfx) => gfx.addShape(Ellipse, { cx, cy, rx, ry }));
   },
 
   line(x1, y1, x2, y2) {
-    this.update((gfx) => gfx.addShape(Line, { x1, y1, x2, y2 }));
+    this.gfxUpdate((gfx) => gfx.addShape(Line, { x1, y1, x2, y2 }));
   },
 
   polygon(...points) {
     points = immutable.List.isList(points[0]) ?
       points[0] :
       immutable.List(points);
-    this.update((gfx) => gfx.addShape(Polygon, { points }));
+    this.gfxUpdate((gfx) => gfx.addShape(Polygon, { points }));
   },
 
   text(x, y, text) {
-    this.update((gfx) => gfx.addShape(Text, { x, y, text }));
+    this.gfxUpdate((gfx) => gfx.addShape(Text, { x, y, text }));
   },
 
   // set shape and text attributes
@@ -102,50 +102,50 @@ SGRuntime.globals = Object.setPrototypeOf({
   },
 
   fill(color) {
-    this.update((gfx) => gfx
+    this.gfxUpdate((gfx) => gfx
       .updateSprops((sprops) => sprops
         .set('fill', color)));
   },
 
   stroke(color) {
-    this.update((gfx) => gfx
+    this.gfxUpdate((gfx) => gfx
       .updateSprops((sprops) => sprops
         .set('stroke', color)));
   },
 
   opacity(value = 1) {
-    this.update((gfx) => gfx
+    this.gfxUpdate((gfx) => gfx
       .updateSprops((sprops) => sprops
         .set('opacity', value)));
   },
 
   anchor(value = 'center') {
-    this.update((gfx) => gfx
+    this.gfxUpdate((gfx) => gfx
       .updateSprops((sprops) => sprops
         .set('anchor', value)));
   },
 
   rotate(angle = 0) {
-    this.update((gfx) => gfx
+    this.gfxUpdate((gfx) => gfx
       .updateSprops((sprops) => sprops
         .set('rotate', angle)));
   },
 
   scale(scalex = 1, scaley = scalex) {
-    this.update((gfx) => gfx
+    this.gfxUpdate((gfx) => gfx
       .updateSprops((sprops) => sprops
         .set('scalex', scalex)
         .set('scaley', scaley)));
   },
 
   align(value = 'start') {
-    this.update((gfx) => gfx
+    this.gfxUpdate((gfx) => gfx
       .updateSprops((sprops) => sprops
         .set('align', value)));
   },
 
   font(fface = 'Helvetica', fsize = 32) {
-    this.update((gfx) => gfx
+    this.gfxUpdate((gfx) => gfx
       .updateTprops((tprops) => tprops
         .set('fface', fface)
         .set('fsize', fsize)));

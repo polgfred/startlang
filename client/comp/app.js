@@ -24,28 +24,39 @@ export default class CApp extends CBase {
   constructor(props) {
     super(props);
 
-    this.onGfxUpdate = this.onGfxUpdate.bind(this);
     this.onRun = this.onRun.bind(this);
-    this.state = { gfx: new SGraphics() };
+    this.onGfxUpdate = this.onGfxUpdate.bind(this);
+    this.onTermUpdate = this.onTermUpdate.bind(this);
+
+    this.state = this.initialState = {
+      gfx: new SGraphics(),
+      buf: immutable.List()
+    };
   }
 
   onGfxUpdate(mut) {
     this.setState((state) => ({ gfx: mut(state.gfx) }));
   }
 
-  onRun() {
-    this.setState({ gfx: new SGraphics() });
+  onTermUpdate(mut) {
+    this.setState((state) => ({ buf: mut(state.buf) }));
+  }
 
-    Meteor.defer(() => {
+  onRun() {
+    this.setState(this.initialState);
+
+    // wait long enough before the initial run to let the DOM clear
+    setTimeout(() => {
       let interp = createInterpreter();
       interp.root = parser.parse(this.editor.source);
       interp.runtime = createRuntime();
-      interp.ctx.update = this.onGfxUpdate;
+      interp.ctx.gfxUpdate = this.onGfxUpdate;
+      interp.ctx.termUpdate = this.onTermUpdate;
       interp.run().catch((err) => {
         console.log(err);
         console.log(err.stack);
       });
-    });
+    }, 25);
   }
 
   render() {
@@ -55,7 +66,7 @@ export default class CApp extends CBase {
         <Row>
           <Col md={6}>
             <CGraphics data={ this.state.gfx } />
-            <CTerm buf={ immutable.List() } />
+            <CTerm buf={ this.state.buf } />
           </Col>
           <Col md={6}>
             <CEditor ref={ (ref) => { this.editor = ref; } }/>
