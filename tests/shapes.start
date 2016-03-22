@@ -1,0 +1,9 @@
+opacity 1/4
+stroke "white"
+
+repeat 400 do
+  fill color(rand(), rand(), rand())
+  rotate rand(-20, 20)
+  rect rand(0, 650), rand(0, 300), rand(50, 100), rand(50, 100)
+  repaint
+end
