@@ -58,8 +58,7 @@ SGRuntime.globals = Object.setPrototypeOf({
 
   input(prompt) {
     return new Promise((resolve) => {
-      this.rterm.getInput(prompt, (input) => {
-        this.termUpdate((buf) => buf.push(`${prompt}${input}`));
+      this.termInput(prompt, (input) => {
         resolve(input);
       });
     });

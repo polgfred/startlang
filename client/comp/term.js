@@ -6,13 +6,19 @@ import ReactDOM from 'react-dom';
 import CBase from './base';
 
 export default class CTerm extends CBase {
+  constructor(props) {
+    super(props);
+
+    this.handleClick = this.handleClick.bind(this);
+  }
+
   shouldComponentUpdate(nextProps) {
     return this.props.buf != nextProps.buf;
   }
 
   render() {
-    return <div className="start-terminal" onClick={this.handleClick.bind(this)}>
-      <CTermOutput buf={this.props.buf} />
+    return <div className="start-terminal" onClick={ this.handleClick }>
+      <CTermOutput buf={ this.props.buf } />
       <CTermInput ref="input" />
     </div>;
   }
@@ -32,21 +38,24 @@ export default class CTerm extends CBase {
 }
 
 export class CTermOutput extends CBase {
+  shouldComponentUpdate(nextProps) {
+    return this.props.buf != nextProps.buf;
+  }
+
   render() {
     let lines = this.props.buf.map((line, i) =>
           <div key={i} className="terminal-output-line">{line}</div>);
 
     return <div className="terminal-output">{lines}</div>;
   }
-
-  shouldComponentUpdate(nextProps) {
-    return this.props.buf != nextProps.buf;
-  }
 }
 
 export class CTermInput extends CBase {
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
+
+    this.handleChange = this.handleChange.bind(this);
+    this.handleKeyUp = this.handleKeyUp.bind(this);
 
     this.state = this.initialState = {
       needsInput: false,
@@ -59,11 +68,11 @@ export class CTermInput extends CBase {
   render() {
     return <div style={{ visibility: this.state.needsInput ? 'visible' : 'hidden' }}
                 className="terminal-command">
-      <span className="terminal-prompt">{this.state.prompt}</span>
-      <input type="text" value={this.state.input}
+      <span className="terminal-prompt">{ this.state.prompt }</span>
+      <input type="text" value={ this.state.input }
              className="terminal-text"
-             onChange={this.handleChange.bind(this)}
-             onKeyUp={this.handleKeyUp.bind(this)} />
+             onChange={ this.handleChange }
+             onKeyUp={ this.handleKeyUp } />
     </div>;
   }
 

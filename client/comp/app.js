@@ -28,6 +28,7 @@ export default class CApp extends CBase {
     this.onRun = this.onRun.bind(this);
     this.onGfxUpdate = this.onGfxUpdate.bind(this);
     this.onTermUpdate = this.onTermUpdate.bind(this);
+    this.onTermInput = this.onTermInput.bind(this);
 
     this.state = this.initialState = {
       gfx: new SGraphics(),
@@ -43,16 +44,24 @@ export default class CApp extends CBase {
     this.setState((state) => ({ buf: mut(state.buf) }));
   }
 
+  onTermInput(prompt, complete) {
+    this.refs.term.getInput(prompt, (input) => {
+      this.onTermUpdate((buf) => buf.push(`${prompt}${input}`));
+      complete(input);
+    });
+  }
+
   onRun() {
     this.setState(this.initialState);
 
     // wait long enough before the initial run to let the DOM clear
     setTimeout(() => {
       let interp = createInterpreter();
-      interp.root = parser.parse(this.editor.source);
+      interp.root = parser.parse(this.refs.editor.source);
       interp.runtime = createRuntime();
       interp.ctx.gfxUpdate = this.onGfxUpdate;
       interp.ctx.termUpdate = this.onTermUpdate;
+      interp.ctx.termInput = this.onTermInput;
       interp.run().catch((err) => {
         console.log(err);
         console.log(err.stack);
@@ -67,10 +76,10 @@ export default class CApp extends CBase {
         <Row>
           <Col className="start-column" md={7}>
             <CGraphics data={ this.state.gfx } />
-            <CTerm buf={ this.state.buf } />
+            <CTerm buf={ this.state.buf } ref="term" />
           </Col>
           <Col className="start-column" md={5}>
-            <CEditor ref={ (ref) => { this.editor = ref; } }/>
+            <CEditor ref="editor" />
           </Col>
         </Row>
       </Grid>
