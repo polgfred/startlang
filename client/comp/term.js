@@ -1,7 +1,6 @@
 'use strict';
 
 import React from 'react';
-import ReactDOM from 'react-dom';
 
 import CBase from './base';
 
@@ -37,7 +36,7 @@ export default class CTerm extends CBase {
   }
 }
 
-export class CTermOutput extends CBase {
+class CTermOutput extends CBase {
   shouldComponentUpdate(nextProps) {
     return this.props.buf != nextProps.buf;
   }
@@ -50,7 +49,7 @@ export class CTermOutput extends CBase {
   }
 }
 
-export class CTermInput extends CBase {
+class CTermInput extends CBase {
   constructor(props) {
     super(props);
 
