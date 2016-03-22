@@ -11,6 +11,7 @@ import {
 import immutable from 'immutable';
 
 import CBase from './base';
+import CNav from './nav';
 import CTerm from './term';
 import CGraphics from './graphics';
 import CEditor from './editor';
@@ -61,7 +62,7 @@ export default class CApp extends CBase {
 
   render() {
     return <div className="start-app mode-split">
-      <AppNav onRun={ this.onRun } />
+      <CNav onRun={ this.onRun } />
       <Grid className="start-body" fluid>
         <Row>
           <Col className="start-column" md={7}>
@@ -74,30 +75,5 @@ export default class CApp extends CBase {
         </Row>
       </Grid>
     </div>;
-  }
-}
-
-class AppNav extends CBase {
-  shouldComponentUpdate() {
-    return false;
-  }
-
-  render() {
-    return <Navbar>
-      <Nav>
-        <NavItem href="#">Link</NavItem>
-        <NavItem href="#">Link</NavItem>
-        <NavDropdown title="Dropdown" id="dropdown-3">
-          <MenuItem>Action</MenuItem>
-          <MenuItem>Another action</MenuItem>
-          <MenuItem>Something else here</MenuItem>
-          <MenuItem divider />
-          <MenuItem href="#">Separated link</MenuItem>
-        </NavDropdown>
-      </Nav>
-      <ButtonToolbar className="pull-right">
-        <Button bsStyle="primary" onClick={ this.props.onRun }>Run</Button>
-      </ButtonToolbar>
-    </Navbar>;
   }
 }
