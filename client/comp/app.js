@@ -64,11 +64,11 @@ export default class CApp extends CBase {
       <AppNav onRun={ this.onRun } />
       <Grid className="start-body" fluid>
         <Row>
-          <Col md={6}>
+          <Col className="start-column" md={7}>
             <CGraphics data={ this.state.gfx } />
             <CTerm buf={ this.state.buf } />
           </Col>
-          <Col md={6}>
+          <Col className="start-column" md={5}>
             <CEditor ref={ (ref) => { this.editor = ref; } }/>
           </Col>
         </Row>
