@@ -71,6 +71,14 @@ body {
     .box-shadow();
   }
 
+  .start-orient {
+    transform: translate(calc(~"50vw - 4px"),calc(~"32.5vh - 30px")) scale(1,-1);
+
+    @media (min-width: 992px) {
+      transform: translate(calc(~"29.1667vw - 4px"),calc(~"32.5vh - 30px")) scale(1,-1);
+    }
+  }
+
   .start-terminal {
     font-size: 14px;
     height: 100%;

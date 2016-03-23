@@ -26,12 +26,6 @@ export default class CGraphics extends CBase {
   }
 
   render() {
-    // TODO: allow for different coordinate systems
-    // let dims = $('svg')[0].getBoundingClientRect(),
-    //     originx = Math.floor(dims.width / 2),
-    //     originy = Math.floor(dims.height / 2);
-    //<g transform={`translate(${originx} ${originy}) scale(1 -1)`}>
-
     let { data: { shapes } } = this.props, elems = [];
 
     // make sure the list hasn't been modified from the front
@@ -53,7 +47,9 @@ export default class CGraphics extends CBase {
       }));
     }
 
-    return <svg className="start-graphics">{ elems }</svg>
+    return <svg className="start-graphics">
+      <g className="start-orient">{ elems }</g>
+    </svg>;
   }
 }
 
