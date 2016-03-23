@@ -62,7 +62,7 @@ class CTermOutput extends CBase {
 
     if (level == 0) {
       for (let i = 0; i < array.length; ++i) {
-        elems.push(<div key={i} className="start-term-line">{ array[i] }</div>);
+        elems.push(<p key={i}>{ array[i] }</p>);
       }
     } else {
       for (let i = 0; i < array.length; ++i) {
