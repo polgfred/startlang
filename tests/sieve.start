@@ -1,4 +1,4 @@
-upper = 10000
+upper = num(input("How high? "))
 marked = list()
 
 i = 2
