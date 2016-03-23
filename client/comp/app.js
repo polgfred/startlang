@@ -26,11 +26,22 @@ export default class CApp extends CBase {
     super(props);
 
     this.onRun = this.onRun.bind(this);
+    this.modeUpdate = this.modeUpdate.bind(this);
 
-    this.state = this.initialState = {
+    this.initialState = {
       gfx: new SGraphics(),
       buf: immutable.List()
     };
+
+    this.state = {
+      mode: 'split',
+      gfx: new SGraphics(),
+      buf: immutable.List()
+    };
+  }
+
+  modeUpdate(ev, mode) {
+    this.setState({ mode });
   }
 
   gfxUpdate(mut) {
@@ -64,13 +75,13 @@ export default class CApp extends CBase {
   }
 
   render() {
-    return <div className="start-app mode-split">
-      <CNav onRun={ this.onRun } />
+    return <div className={`start-app mode-${this.state.mode}`}>
+      <CNav mode={this.state.mode} modeUpdate={this.modeUpdate} onRun={this.onRun} />
       <Grid className="start-body" fluid>
         <Row>
           <Col className="start-column" md={7}>
-            <CGraphics data={ this.state.gfx } />
-            <CTerm buf={ this.state.buf } ref="term" />
+            <CGraphics data={this.state.gfx} />
+            <CTerm buf={this.state.buf} ref="term" />
           </Col>
           <Col className="start-column" md={5}>
             <CEditor ref="editor" />

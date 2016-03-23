@@ -10,8 +10,8 @@ import {
 import CBase from './base';
 
 export default class CNav extends CBase {
-  shouldComponentUpdate() {
-    return false;
+  shouldComponentUpdate(nextProps) {
+    return this.props.mode != nextProps.mode;
   }
 
   render() {
@@ -19,16 +19,20 @@ export default class CNav extends CBase {
       <Nav>
         <NavItem href="#">Link</NavItem>
         <NavItem href="#">Link</NavItem>
-        <NavDropdown title="Dropdown" id="dropdown-3">
-          <MenuItem>Action</MenuItem>
-          <MenuItem>Another action</MenuItem>
-          <MenuItem>Something else here</MenuItem>
-          <MenuItem divider />
-          <MenuItem href="#">Separated link</MenuItem>
+        <NavDropdown title="View" id="dropdown-3">
+          <MenuItem onSelect={this.props.modeUpdate}
+                    active={this.props.mode == 'graphics'}
+                    eventKey="graphics">Graphics</MenuItem>
+          <MenuItem onSelect={this.props.modeUpdate}
+                    active={this.props.mode == 'text'}
+                    eventKey="text">Text</MenuItem>
+          <MenuItem onSelect={this.props.modeUpdate}
+                    active={this.props.mode == 'split'}
+                    eventKey="split">Split</MenuItem>
         </NavDropdown>
       </Nav>
       <ButtonToolbar className="pull-right">
-        <Button bsStyle="primary" onClick={ this.props.onRun }>Run</Button>
+        <Button bsStyle="primary" onClick={this.props.onRun}>Run</Button>
       </ButtonToolbar>
     </Navbar>;
   }
