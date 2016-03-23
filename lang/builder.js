@@ -39,7 +39,7 @@ function wrapLiteral(val, block) {
             });
 }
 
-export class Builder {
+export class SBuilder {
   constructor() {
     // keep track of nested statement blocks so we can inject setup
     // code as necessary
@@ -1150,8 +1150,4 @@ export class Builder {
       value: this.handleValue(block, 'VALUE')
     });
   }
-}
-
-export function createBuilder() {
-  return new Builder();
 }

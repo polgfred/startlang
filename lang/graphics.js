@@ -7,14 +7,11 @@ import immutable from 'immutable';
 import { SRuntime, SBase, handle, handlerKey, assignKey, resultKey } from './runtime';
 
 export class SGRuntime extends SRuntime {
-  constructor() {
+  constructor(app) {
     super();
-    this.buf = immutable.List();
-    this.setMode('split');
-  }
 
-  setMode(mode) {
-    this.mode = mode;
+    // the react component that we'll call methods on
+    this.app = app;
   }
 }
 
@@ -32,8 +29,8 @@ SGRuntime.globals = Object.setPrototypeOf({
   },
 
   reset() {
-    this.gfxUpdate((gfx) => gfx.set('shapes', immutable.List()));
-    this.termUpdate((buf) => buf.clear());
+    this.app.gfxUpdate((gfx) => gfx.set('shapes', immutable.List()));
+    this.app.termUpdate((buf) => buf.clear());
   },
 
   clear() {
@@ -41,24 +38,20 @@ SGRuntime.globals = Object.setPrototypeOf({
     return SGRuntime.globals.repaint.call(this);
   },
 
-  display(mode) {
-    this.setMode(mode);
-  },
-
   print(...values) {
     if (values.length > 0) {
       for (let v of values) {
-        this.termUpdate((buf) => buf.push(handle(v).repr(v)));
+        this.app.termUpdate((buf) => buf.push(handle(v).repr(v)));
       }
     } else {
-      this.termUpdate((buf) => buf.push(''));
+      this.app.termUpdate((buf) => buf.push(''));
     }
     return SGRuntime.globals.repaint.call(this);
   },
 
   input(prompt) {
     return new Promise((resolve) => {
-      this.termInput(prompt, (input) => {
+      this.app.termInput(prompt, (input) => {
         resolve(input);
       });
     });
@@ -67,30 +60,30 @@ SGRuntime.globals = Object.setPrototypeOf({
   // shape creation
 
   rect(x, y, width, height) {
-    this.gfxUpdate((gfx) => gfx.addShape(Rect, { x, y, width, height }));
+    this.app.gfxUpdate((gfx) => gfx.addShape(Rect, { x, y, width, height }));
   },
 
   circle(cx, cy, r) {
-    this.gfxUpdate((gfx) => gfx.addShape(Circle, { cx, cy, r }));
+    this.app.gfxUpdate((gfx) => gfx.addShape(Circle, { cx, cy, r }));
   },
 
   ellipse(cx, cy, rx, ry) {
-    this.gfxUpdate((gfx) => gfx.addShape(Ellipse, { cx, cy, rx, ry }));
+    this.app.gfxUpdate((gfx) => gfx.addShape(Ellipse, { cx, cy, rx, ry }));
   },
 
   line(x1, y1, x2, y2) {
-    this.gfxUpdate((gfx) => gfx.addShape(Line, { x1, y1, x2, y2 }));
+    this.app.gfxUpdate((gfx) => gfx.addShape(Line, { x1, y1, x2, y2 }));
   },
 
   polygon(...points) {
     points = immutable.List.isList(points[0]) ?
       points[0] :
       immutable.List(points);
-    this.gfxUpdate((gfx) => gfx.addShape(Polygon, { points }));
+    this.app.gfxUpdate((gfx) => gfx.addShape(Polygon, { points }));
   },
 
   text(x, y, text) {
-    this.gfxUpdate((gfx) => gfx.addShape(Text, { x, y, text }));
+    this.app.gfxUpdate((gfx) => gfx.addShape(Text, { x, y, text }));
   },
 
   // set shape and text attributes
@@ -101,50 +94,50 @@ SGRuntime.globals = Object.setPrototypeOf({
   },
 
   fill(color) {
-    this.gfxUpdate((gfx) => gfx
+    this.app.gfxUpdate((gfx) => gfx
       .updateSprops((sprops) => sprops
         .set('fill', color)));
   },
 
   stroke(color) {
-    this.gfxUpdate((gfx) => gfx
+    this.app.gfxUpdate((gfx) => gfx
       .updateSprops((sprops) => sprops
         .set('stroke', color)));
   },
 
   opacity(value = 1) {
-    this.gfxUpdate((gfx) => gfx
+    this.app.gfxUpdate((gfx) => gfx
       .updateSprops((sprops) => sprops
         .set('opacity', value)));
   },
 
   anchor(value = 'center') {
-    this.gfxUpdate((gfx) => gfx
+    this.app.gfxUpdate((gfx) => gfx
       .updateSprops((sprops) => sprops
         .set('anchor', value)));
   },
 
   rotate(angle = 0) {
-    this.gfxUpdate((gfx) => gfx
+    this.app.gfxUpdate((gfx) => gfx
       .updateSprops((sprops) => sprops
         .set('rotate', angle)));
   },
 
   scale(scalex = 1, scaley = scalex) {
-    this.gfxUpdate((gfx) => gfx
+    this.app.gfxUpdate((gfx) => gfx
       .updateSprops((sprops) => sprops
         .set('scalex', scalex)
         .set('scaley', scaley)));
   },
 
   align(value = 'start') {
-    this.gfxUpdate((gfx) => gfx
+    this.app.gfxUpdate((gfx) => gfx
       .updateSprops((sprops) => sprops
         .set('align', value)));
   },
 
   font(fface = 'Helvetica', fsize = 32) {
-    this.gfxUpdate((gfx) => gfx
+    this.app.gfxUpdate((gfx) => gfx
       .updateTprops((tprops) => tprops
         .set('fface', fface)
         .set('fsize', fsize)));
@@ -243,7 +236,3 @@ const Text = immutable.Record({
   sprops: SShapeProps(),
   tprops: STextProps()
 });
-
-export function createRuntime() {
-  return new SGRuntime;
-}

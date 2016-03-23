@@ -17,18 +17,15 @@ import CGraphics from './graphics';
 import CEditor from './editor';
 
 import parser from '../../lang/parser.pegjs';
-import { createInterpreter } from '../../lang/interpreter';
-import { createBuilder } from '../../lang/builder';
-import { SGraphics, createRuntime } from '../../lang/graphics';
+import { SInterpreter } from '../../lang/interpreter';
+import { SBuilder } from '../../lang/builder';
+import { SGRuntime, SGraphics } from '../../lang/graphics';
 
 export default class CApp extends CBase {
   constructor(props) {
     super(props);
 
     this.onRun = this.onRun.bind(this);
-    this.onGfxUpdate = this.onGfxUpdate.bind(this);
-    this.onTermUpdate = this.onTermUpdate.bind(this);
-    this.onTermInput = this.onTermInput.bind(this);
 
     this.state = this.initialState = {
       gfx: new SGraphics(),
@@ -36,17 +33,17 @@ export default class CApp extends CBase {
     };
   }
 
-  onGfxUpdate(mut) {
+  gfxUpdate(mut) {
     this.setState((state) => ({ gfx: mut(state.gfx) }));
   }
 
-  onTermUpdate(mut) {
+  termUpdate(mut) {
     this.setState((state) => ({ buf: mut(state.buf) }));
   }
 
-  onTermInput(prompt, complete) {
+  termInput(prompt, complete) {
     this.refs.term.getInput(prompt, (input) => {
-      this.onTermUpdate((buf) => buf.push(`${prompt}${input}`));
+      this.termUpdate((buf) => buf.push(`${prompt}${input}`));
       complete(input);
     });
   }
@@ -56,12 +53,9 @@ export default class CApp extends CBase {
 
     // wait long enough before the initial run to let the DOM clear
     setTimeout(() => {
-      let interp = createInterpreter();
+      let interp = new SInterpreter();
       interp.root = parser.parse(this.refs.editor.source);
-      interp.runtime = createRuntime();
-      interp.ctx.gfxUpdate = this.onGfxUpdate;
-      interp.ctx.termUpdate = this.onTermUpdate;
-      interp.ctx.termInput = this.onTermInput;
+      interp.runtime = new SGRuntime(this);
       interp.run().catch((err) => {
         console.log(err);
         console.log(err.stack);

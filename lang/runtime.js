@@ -646,7 +646,3 @@ export function handle(obj) {
   let handler = obj[handlerKey];
   return typeof handler == 'function' ? handler(obj) : handler;
 }
-
-export function createRuntime() {
-  return new SRuntime;
-}

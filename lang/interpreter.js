@@ -697,7 +697,3 @@ export class SInterpreter {
     }
   }
 }
-
-export function createInterpreter() {
-  return new SInterpreter;
-}
