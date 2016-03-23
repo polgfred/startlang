@@ -62,7 +62,7 @@ body {
     }
   }
 
-  .start-graphics, .start-terminal {
+  .start-graphics, .start-term {
     background-color: #f8f8f8;
     color: #000;
     display: none;
@@ -79,14 +79,14 @@ body {
     }
   }
 
-  .start-terminal {
+  .start-term {
     font-size: 14px;
     height: 100%;
     overflow: scroll;
     padding: 4px 8px;
     .source-font();
 
-    .terminal-text {
+    .start-term-input {
       background-color: #f8f8f8;
       border: 0;
       font-size: 14px;
@@ -106,7 +106,7 @@ body {
   }
 
   &.mode-text {
-    .start-terminal {
+    .start-term {
       display: block;
       height: calc(~"100vh - 20px");
     }
@@ -118,7 +118,7 @@ body {
       height: calc(~"65vh - 60px");
     }
 
-    .start-terminal {
+    .start-term {
       display: block;
       height: calc(~"35vh - 60px");
       margin-top: 10px;

@@ -4,6 +4,9 @@ import React from 'react';
 
 import CBase from './base';
 
+// See graphics.js
+const LIST_SHIFT = 5;
+
 export default class CTerm extends CBase {
   constructor(props) {
     super(props);
@@ -16,8 +19,21 @@ export default class CTerm extends CBase {
   }
 
   render() {
-    return <div className="start-terminal" onClick={ this.handleClick }>
-      <CTermOutput buf={ this.props.buf } />
+    let { buf } = this.props, elems = [];
+
+    // make sure the list hasn't been modified from the front
+    if (buf._origin != 0) {
+      throw new Error('terminal buffer has been modified from the front');
+    }
+    if (buf._root) {
+       elems.push(<CTermOutput key={0} node={buf._root} level={buf._level} />);
+    }
+    if (buf._tail) {
+       elems.push(<CTermOutput key={1} node={buf._tail} level={0} />);
+    }
+
+    return <div className="start-term" onClick={ this.handleClick }>
+      { elems }
       <CTermInput ref="input" />
     </div>;
   }
@@ -32,20 +48,29 @@ export default class CTerm extends CBase {
   }
 
   handleClick() {
-    this.$('.terminal-text').focus();
+    this.$('.start-term-input').focus();
   }
 }
 
 class CTermOutput extends CBase {
   shouldComponentUpdate(nextProps) {
-    return this.props.buf != nextProps.buf;
+    return this.props.node != nextProps.node;
   }
 
   render() {
-    let lines = this.props.buf.map((line, i) =>
-          <div key={i} className="terminal-output-line">{line}</div>);
+    let { node: { array }, level } = this.props, elems = [];
 
-    return <div className="terminal-output">{lines}</div>;
+    if (level == 0) {
+      for (let i = 0; i < array.length; ++i) {
+        elems.push(<div key={i} className="start-term-line">{ array[i] }</div>);
+      }
+    } else {
+      for (let i = 0; i < array.length; ++i) {
+        elems.push(<CTermOutput key={i} node={array[i]} level={level - LIST_SHIFT} />);
+      }
+    }
+
+    return <div className="start-term-output">{ elems }</div>;
   }
 }
 
@@ -66,10 +91,10 @@ class CTermInput extends CBase {
 
   render() {
     return <div style={{ visibility: this.state.needsInput ? 'visible' : 'hidden' }}
-                className="terminal-command">
-      <span className="terminal-prompt">{ this.state.prompt }</span>
+                className="start-term-command">
+      <span className="start-term-prompt">{ this.state.prompt }</span>
       <input type="text" value={ this.state.input }
-             className="terminal-text"
+             className="start-term-input"
              onChange={ this.handleChange }
              onKeyUp={ this.handleKeyUp } />
     </div>;
@@ -78,8 +103,8 @@ class CTermInput extends CBase {
   componentDidUpdate() {
     if (this.state.needsInput) {
       // fixup <input> width based on size of prompt
-      this.$('.terminal-text')
-        .css('width', 'calc(100% - ' + (this.$('.terminal-prompt').width() + 20) + 'px)')
+      this.$('.start-term-input')
+        .css('width', 'calc(100% - ' + (this.$('.start-term-prompt').width() + 20) + 'px)')
         .focus();
     }
   }
