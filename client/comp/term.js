@@ -32,7 +32,7 @@ export default class CTerm extends CBase {
        elems.push(<CTermOutput key={1} node={buf._tail} level={0} />);
     }
 
-    return <div className="start-term" onClick={ this.handleClick }>
+    return <div className="start-term" onClick={this.handleClick}>
       { elems }
       <CTermInput ref="input" />
     </div>;
@@ -92,11 +92,11 @@ class CTermInput extends CBase {
   render() {
     return <div style={{ visibility: this.state.needsInput ? 'visible' : 'hidden' }}
                 className="start-term-command">
-      <span className="start-term-prompt">{ this.state.prompt }</span>
-      <input type="text" value={ this.state.input }
+      <span className="start-term-prompt">{this.state.prompt}</span>
+      <input type="text" value={this.state.input}
              className="start-term-input"
-             onChange={ this.handleChange }
-             onKeyUp={ this.handleKeyUp } />
+             onChange={this.handleChange}
+             onKeyUp={this.handleKeyUp} />
     </div>;
   }
 

@@ -4,6 +4,10 @@ stroke "white"
 repeat 400 do
   fill color(rand(), rand(), rand())
   rotate rand(-20, 20)
-  rect rand(0, 650), rand(0, 300), rand(50, 100), rand(50, 100)
+  if rand() < 1/2 then
+    rect rand(0, 650), rand(0, 500), rand(50, 100), rand(50, 100)
+  else
+    circle rand(50, 700), rand(50, 550), rand(25, 50)
+  end
   repaint
 end
