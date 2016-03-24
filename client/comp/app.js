@@ -65,7 +65,7 @@ export default class CApp extends CBase {
     // wait long enough before the initial run to let the DOM clear
     setTimeout(() => {
       let interp = new SInterpreter();
-      interp.root = parser.parse(this.refs.editor.source);
+      interp.root = parser.parse(this.refs.editor.source + '\n');
       interp.runtime = new SGRuntime(this);
       interp.run().catch((err) => {
         console.log(err);
