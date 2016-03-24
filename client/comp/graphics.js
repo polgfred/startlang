@@ -33,18 +33,10 @@ export default class CGraphics extends CBase {
       throw new Error('shape list has been modified from the front');
     }
     if (shapes._root) {
-      elems.push(React.createElement(CGroup, {
-        key: 0,
-        node: shapes._root,
-        level: shapes._level
-      }));
+      elems.push(<CGroup key={0} node={shapes._root} level={shapes._level} />);
     }
     if (shapes._tail) {
-      elems.push(React.createElement(CGroup, {
-        key: 1,
-        node: shapes._tail,
-        level: 0
-      }));
+      elems.push(<CGroup key={1} node={shapes._tail} level={0} />);
     }
 
     return <svg className="start-graphics">
@@ -70,15 +62,11 @@ class CGroup extends CBase {
       }
     } else {
       for (let i = 0; i < array.length; ++i) {
-        elems.push(React.createElement(CGroup, {
-          key: i,
-          node: array[i],
-          level: level - LIST_SHIFT
-        }));
+        elems.push(<CGroup key={i} node={array[i]} level={level - LIST_SHIFT} />);
       }
     }
 
-    return React.createElement('g', null, elems);
+    return <g>{ elems }</g>;
   }
 }
 
@@ -123,7 +111,7 @@ class CRect extends CShape {
     attrs.width = shape.width;
     attrs.height = shape.height;
 
-    return React.createElement('rect', attrs);
+    return <rect {...attrs} />;
   }
 }
 
@@ -135,7 +123,7 @@ class CCircle extends CShape {
     attrs.cy = shape.cy;
     attrs.r = shape.r;
 
-    return React.createElement('circle', attrs);
+    return <circle {...attrs} />;
   }
 }
 
@@ -148,7 +136,7 @@ class CEllipse extends CShape {
     attrs.rx = shape.rx;
     attrs.ry = shape.ry;
 
-    return React.createElement('ellipse', attrs);
+    return <ellipse {...attrs} />;
   }
 }
 
@@ -161,7 +149,7 @@ class CLine extends CShape {
     attrs.x2 = shape.x2;
     attrs.y2 = shape.y2;
 
-    return React.createElement('line', attrs);
+    return <line {...attrs} />;
   }
 }
 
@@ -171,7 +159,7 @@ class CPolygon extends CShape {
 
     attrs.points = shape.points.join(',');
 
-    return React.createElement('polygon', attrs);
+    return <polygon {...attrs} />;
   }
 }
 
@@ -185,7 +173,7 @@ class CText extends CShape {
     attrs.style.fontFamily = shape.tprops.fface;
     attrs.style.fontSize = shape.tprops.fsize;
 
-    return React.createElement('text', attrs, shape.text);
+    return <text {...attrs}>{ shape.text }</text>;
   }
 }
 
