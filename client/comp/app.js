@@ -12,8 +12,9 @@ import immutable from 'immutable';
 
 import CBase from './base';
 import CNav from './nav';
-import CTerm from './term';
 import CGraphics from './graphics';
+import CTerm from './term';
+import CHelp from './help';
 import CEditor from './editor';
 
 import parser from '../../lang/parser.pegjs';
@@ -34,7 +35,7 @@ export default class CApp extends CBase {
     };
 
     this.state = {
-      mode: 'split',
+      mode: 'help',
       gfx: new SGraphics(),
       buf: immutable.List()
     };
@@ -76,12 +77,15 @@ export default class CApp extends CBase {
 
   render() {
     return <div className={`start-app mode-${this.state.mode}`}>
-      <CNav mode={this.state.mode} modeUpdate={this.modeUpdate} onRun={this.onRun} />
+      <CNav mode={this.state.mode}
+            modeUpdate={this.modeUpdate}
+            onRun={this.onRun} />
       <Grid className="start-body" fluid>
         <Row>
           <Col className="start-column" md={7}>
             <CGraphics data={this.state.gfx} />
             <CTerm buf={this.state.buf} ref="term" />
+            <CHelp />
           </Col>
           <Col className="start-column" md={5}>
             <CEditor ref="editor" />

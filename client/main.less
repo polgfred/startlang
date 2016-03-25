@@ -62,7 +62,7 @@ body {
     }
   }
 
-  .start-graphics, .start-term {
+  .start-graphics, .start-term, .start-help {
     background-color: #f8f8f8;
     color: #000;
     display: none;
@@ -101,6 +101,10 @@ body {
     }
   }
 
+  .start-help {
+    padding: 20px;
+  }
+
   // Window visibility/proportions for different display modes
 
   &.mode-graphics {
@@ -127,6 +131,13 @@ body {
       display: block;
       height: calc(~"35vh - 60px");
       margin-top: 10px;
+    }
+  }
+
+  &.mode-help {
+    .start-help {
+      display: block;
+      height: calc(~"100vh - 110px");
     }
   }
 

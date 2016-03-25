@@ -17,8 +17,6 @@ export default class CNav extends CBase {
   render() {
     return <Navbar>
       <Nav>
-        <NavItem href="#">Link</NavItem>
-        <NavItem href="#">Link</NavItem>
         <NavDropdown title="View" id="dropdown-3">
           <MenuItem onSelect={this.props.modeUpdate}
                     active={this.props.mode == 'graphics'}
@@ -29,6 +27,9 @@ export default class CNav extends CBase {
           <MenuItem onSelect={this.props.modeUpdate}
                     active={this.props.mode == 'split'}
                     eventKey="split">Split</MenuItem>
+          <MenuItem onSelect={this.props.modeUpdate}
+                    active={this.props.mode == 'help'}
+                    eventKey="help">Help</MenuItem>
         </NavDropdown>
       </Nav>
       <ButtonToolbar className="pull-right">
