@@ -33,7 +33,7 @@ export default class CNav extends CBase {
         </NavDropdown>
       </Nav>
       <ButtonToolbar className="pull-right">
-        <Button bsStyle="primary" onClick={this.props.onRun}>Run</Button>
+        <Button bsStyle="primary" onClick={this.props.runProgram}>Run</Button>
       </ButtonToolbar>
     </Navbar>;
   }

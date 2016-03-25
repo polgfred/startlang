@@ -26,7 +26,7 @@ export default class CApp extends CBase {
   constructor(props) {
     super(props);
 
-    this.onRun = this.onRun.bind(this);
+    this.runProgram = this.runProgram.bind(this);
     this.modeUpdate = this.modeUpdate.bind(this);
 
     this.initialState = {
@@ -60,7 +60,7 @@ export default class CApp extends CBase {
     });
   }
 
-  onRun() {
+  runProgram() {
     this.setState(this.initialState);
 
     // wait long enough before the initial run to let the DOM clear
@@ -79,7 +79,7 @@ export default class CApp extends CBase {
     return <div className={`start-app mode-${this.state.mode}`}>
       <CNav mode={this.state.mode}
             modeUpdate={this.modeUpdate}
-            onRun={this.onRun} />
+            runProgram={this.runProgram} />
       <Grid className="start-body" fluid>
         <Row>
           <Col className="start-column" md={7}>
