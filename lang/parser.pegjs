@@ -461,14 +461,12 @@ Reserved
   / 'end'      WB
   / 'repeat'   WB
   / 'do'       WB
-  / 'count'    WB
+  / 'for'      WB
   / 'from'     WB
   / 'to'       WB
   / 'by'       WB
-  / 'for'      WB
   / 'in'       WB
   / 'while'    WB
-  / 'with'     WB
   / 'begin'    WB
   / 'exit'     WB
   / 'break'    WB
