@@ -64,7 +64,7 @@ export default class CApp extends CBase {
     this.setState(this.initialState);
 
     // wait long enough before the initial run to let the DOM clear
-    setTimeout(() => {
+    Meteor.setTimeout(() => {
       let interp = new SInterpreter();
       interp.root = parser.parse(this.refs.editor.source + '\n');
       interp.runtime = new SGRuntime(this);
