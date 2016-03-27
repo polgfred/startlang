@@ -6,9 +6,10 @@ import brace from 'brace';
 import 'brace/mode/text';
 import 'brace/theme/textmate';
 
-import CBase from './base';
-
+import parser from '../../lang/parser.pegjs';
 import StartMode from '../brace_start/start_mode';
+
+import CBase from './base';
 
 export default class CEditor extends CBase {
   shouldComponentUpdate(nextProps) {
@@ -30,8 +31,8 @@ export default class CEditor extends CBase {
     editor.getSession().setMode(new StartMode());
   }
 
-  get source() {
+  getRoot() {
     let editor = ace.edit(this.$()[0]);
-    return editor.getValue();
+    return parser.parse(editor.getValue() + '\n');
   }
 }

@@ -16,8 +16,8 @@ import CGraphics from './graphics';
 import CTerm from './term';
 import CHelp from './help';
 import CEditor from './editor';
+import CBuilder from './builder';
 
-import parser from '../../lang/parser.pegjs';
 import { SInterpreter } from '../../lang/interpreter';
 import { SBuilder } from '../../lang/builder';
 import { SGRuntime, SGraphics } from '../../lang/graphics';
@@ -66,7 +66,7 @@ export default class CApp extends CBase {
     // wait long enough before the initial run to let the DOM clear
     Meteor.setTimeout(() => {
       let interp = new SInterpreter();
-      interp.root = parser.parse(this.refs.editor.source + '\n');
+      interp.root = this.refs.editor.getRoot();
       interp.runtime = new SGRuntime(this);
       interp.run().catch((err) => {
         console.log(err);
@@ -88,7 +88,7 @@ export default class CApp extends CBase {
             <CHelp />
           </Col>
           <Col className="start-column" md={5}>
-            <CEditor ref="editor" />
+            <CBuilder ref="editor" />
           </Col>
         </Row>
       </Grid>
