@@ -28,6 +28,7 @@ export default class CApp extends CBase {
 
     this.runProgram = this.runProgram.bind(this);
     this.updateViewMode = this.updateViewMode.bind(this);
+    this.updateEditMode = this.updateEditMode.bind(this);
 
     this.initialState = {
       gfx: new SGraphics(),
@@ -36,6 +37,7 @@ export default class CApp extends CBase {
 
     this.state = {
       viewMode: 'help',
+      editMode: 'blocks',
       gfx: new SGraphics(),
       buf: immutable.List()
     };
@@ -43,6 +45,10 @@ export default class CApp extends CBase {
 
   updateViewMode(ev, viewMode) {
     this.setState({ viewMode });
+  }
+
+  updateEditMode(ev, editMode) {
+    this.setState({ editMode });
   }
 
   gfxUpdate(mut) {
@@ -77,13 +83,16 @@ export default class CApp extends CBase {
 
   render() {
     let viewMode = this.state.viewMode,
+        editMode = this.state.editMode,
         showGraphics = viewMode == 'graphics' || viewMode == 'split',
         showTerm = viewMode == 'text' || viewMode == 'split',
         showHelp = viewMode == 'help';
 
     return <div className={`start-app start-view-mode-${viewMode}`}>
       <CNav viewMode={viewMode}
+            editMode={editMode}
             updateViewMode={this.updateViewMode}
+            updateEditMode={this.updateEditMode}
             runProgram={this.runProgram} />
       <Grid className="start-body" fluid>
         <Row>
@@ -93,7 +102,8 @@ export default class CApp extends CBase {
             { showHelp && <CHelp /> }
           </Col>
           <Col className="start-column" md={5}>
-            <CBuilder ref="editor" />
+            { editMode == 'blocks' && <CBuilder ref="editor" /> }
+            { editMode == 'source' && <CEditor ref="editor" /> }
           </Col>
         </Row>
       </Grid>

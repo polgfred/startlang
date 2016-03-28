@@ -141,15 +141,40 @@ body {
     }
   }
 
-  .start-editor {
+  .start-editor, .start-builder {
     font-size: 14px;
     height: 100%;
     line-height: 18px;
     .box-shadow();
-    .source-font();
+  }
 
+  .start-editor {
+    .source-font();
     .ace_indent-guide {
       background: none;
     }
+  }
+
+  .start-builder {
+    .blocklyText {
+      .proportional-font();
+    }
+  }
+}
+
+.blocklyToolboxDiv {
+  .blocklyTreeRow {
+    line-height: 20px;
+    height: 24px;
+  }
+  .blocklyTreeLabel {
+    .proportional-font();
+  }
+}
+
+.blocklyWidgetDiv {
+  .blocklyHtmlInput {
+    height: 22px;
+    .proportional-font();
   }
 }

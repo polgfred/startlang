@@ -11,13 +11,14 @@ import CBase from './base';
 
 export default class CNav extends CBase {
   shouldComponentUpdate(nextProps) {
-    return this.props.viewMode != nextProps.viewMode;
+    return this.props.viewMode != nextProps.viewMode ||
+            this.props.editMode != nextProps.editMode;
   }
 
   render() {
     return <Navbar>
       <Nav>
-        <NavDropdown title="View" id="dropdown-3">
+        <NavDropdown title="View" id="dropdown-view-mode">
           <MenuItem onSelect={this.props.updateViewMode}
                     active={this.props.viewMode == 'graphics'}
                     eventKey="graphics">Graphics</MenuItem>
@@ -30,6 +31,14 @@ export default class CNav extends CBase {
           <MenuItem onSelect={this.props.updateViewMode}
                     active={this.props.viewMode == 'help'}
                     eventKey="help">Help</MenuItem>
+        </NavDropdown>
+        <NavDropdown title="Edit" id="dropdown-edit-mode">
+          <MenuItem onSelect={this.props.updateEditMode}
+                    active={this.props.editMode == 'blocks'}
+                    eventKey="blocks">Blocks</MenuItem>
+          <MenuItem onSelect={this.props.updateEditMode}
+                    active={this.props.editMode == 'source'}
+                    eventKey="source">Source</MenuItem>
         </NavDropdown>
       </Nav>
       <ButtonToolbar className="pull-right">

@@ -13,11 +13,11 @@ export default class CBuilder extends CBase {
   }
 
   render() {
-    return <div className="start-editor" />;
+    return <div className="start-builder" />;
   }
 
   componentDidMount() {
-    Blockly.inject($('.start-editor')[0], {
+    this.blockly = Blockly.inject($('.start-builder')[0], {
       toolbox: $('#start-blockly-toolbox')[0],
       collapse: true,
       comments: true,
@@ -45,6 +45,10 @@ export default class CBuilder extends CBase {
     Blockly.Xml.domToWorkspace(
       Blockly.getMainWorkspace(),
       $('#start-blockly-workspace')[0]);
+  }
+
+  componentWillUnmount() {
+    this.blockly.dispose();
   }
 
   getRoot() {
