@@ -27,7 +27,7 @@ export default class CApp extends CBase {
     super(props);
 
     this.runProgram = this.runProgram.bind(this);
-    this.modeUpdate = this.modeUpdate.bind(this);
+    this.updateViewMode = this.updateViewMode.bind(this);
 
     this.initialState = {
       gfx: new SGraphics(),
@@ -35,14 +35,14 @@ export default class CApp extends CBase {
     };
 
     this.state = {
-      mode: 'help',
+      viewMode: 'help',
       gfx: new SGraphics(),
       buf: immutable.List()
     };
   }
 
-  modeUpdate(ev, mode) {
-    this.setState({ mode });
+  updateViewMode(ev, viewMode) {
+    this.setState({ viewMode });
   }
 
   gfxUpdate(mut) {
@@ -76,16 +76,21 @@ export default class CApp extends CBase {
   }
 
   render() {
-    return <div className={`start-app mode-${this.state.mode}`}>
-      <CNav mode={this.state.mode}
-            modeUpdate={this.modeUpdate}
+    let viewMode = this.state.viewMode,
+        showGraphics = viewMode == 'graphics' || viewMode == 'split',
+        showTerm = viewMode == 'text' || viewMode == 'split',
+        showHelp = viewMode == 'help';
+
+    return <div className={`start-app start-view-mode-${viewMode}`}>
+      <CNav viewMode={viewMode}
+            updateViewMode={this.updateViewMode}
             runProgram={this.runProgram} />
       <Grid className="start-body" fluid>
         <Row>
           <Col className="start-column" md={7}>
-            <CGraphics data={this.state.gfx} />
-            <CTerm buf={this.state.buf} ref="term" />
-            <CHelp />
+            { showGraphics && <CGraphics data={this.state.gfx} /> }
+            { showTerm && <CTerm buf={this.state.buf} ref="term" /> }
+            { showHelp && <CHelp /> }
           </Col>
           <Col className="start-column" md={5}>
             <CBuilder ref="editor" />

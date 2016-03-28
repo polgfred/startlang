@@ -11,24 +11,24 @@ import CBase from './base';
 
 export default class CNav extends CBase {
   shouldComponentUpdate(nextProps) {
-    return this.props.mode != nextProps.mode;
+    return this.props.viewMode != nextProps.viewMode;
   }
 
   render() {
     return <Navbar>
       <Nav>
         <NavDropdown title="View" id="dropdown-3">
-          <MenuItem onSelect={this.props.modeUpdate}
-                    active={this.props.mode == 'graphics'}
+          <MenuItem onSelect={this.props.updateViewMode}
+                    active={this.props.viewMode == 'graphics'}
                     eventKey="graphics">Graphics</MenuItem>
-          <MenuItem onSelect={this.props.modeUpdate}
-                    active={this.props.mode == 'text'}
+          <MenuItem onSelect={this.props.updateViewMode}
+                    active={this.props.viewMode == 'text'}
                     eventKey="text">Text</MenuItem>
-          <MenuItem onSelect={this.props.modeUpdate}
-                    active={this.props.mode == 'split'}
+          <MenuItem onSelect={this.props.updateViewMode}
+                    active={this.props.viewMode == 'split'}
                     eventKey="split">Split</MenuItem>
-          <MenuItem onSelect={this.props.modeUpdate}
-                    active={this.props.mode == 'help'}
+          <MenuItem onSelect={this.props.updateViewMode}
+                    active={this.props.viewMode == 'help'}
                     eventKey="help">Help</MenuItem>
         </NavDropdown>
       </Nav>
