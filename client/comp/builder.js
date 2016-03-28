@@ -17,7 +17,7 @@ export default class CBuilder extends CBase {
   }
 
   componentDidMount() {
-    this.blockly = Blockly.inject($('.start-builder')[0], {
+    this.blockly = Blockly.inject(this.$()[0], {
       toolbox: $('#start-blockly-toolbox')[0],
       collapse: true,
       comments: true,

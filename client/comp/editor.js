@@ -20,8 +20,12 @@ export default class CEditor extends CBase {
     return <div className="start-editor" />;
   }
 
+  get editor() {
+    return ace.edit(this.$()[0]);
+  }
+
   componentDidMount() {
-    let editor = ace.edit(this.$()[0]);
+    let editor = this.editor;
     editor.$blockScrolling = Infinity;
     editor.setTheme('ace/theme/textmate');
     editor.setShowFoldWidgets(false);
@@ -31,8 +35,11 @@ export default class CEditor extends CBase {
     editor.getSession().setMode(new StartMode());
   }
 
+  componentWillUnmount() {
+    this.editor.destroy();
+  }
+
   getRoot() {
-    let editor = ace.edit(this.$()[0]);
-    return parser.parse(editor.getValue() + '\n');
+    return parser.parse(this.editor.getValue() + '\n');
   }
 }
