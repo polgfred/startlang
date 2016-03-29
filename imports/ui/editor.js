@@ -8,12 +8,12 @@ import brace from 'brace';
 import 'brace/mode/text';
 import 'brace/theme/textmate';
 
-import parser from '../../lang/parser.pegjs';
-import StartMode from '../brace_start/start_mode';
+import parser from '../lang/parser.pegjs';
+import StartMode from '../ace/start_mode';
 
-import CBase from './base';
+import Base from './base';
 
-export default class CEditor extends CBase {
+export default class Editor extends Base {
   shouldComponentUpdate(nextProps) {
     return false;
   }

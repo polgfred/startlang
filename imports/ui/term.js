@@ -4,12 +4,12 @@ import { $ } from 'meteor/jquery';
 
 import React from 'react';
 
-import CBase from './base';
+import Base from './base';
 
 // See graphics.js
 const LIST_SHIFT = 5;
 
-export default class CTerm extends CBase {
+export default class Term extends Base {
   constructor(props) {
     super(props);
 
@@ -28,15 +28,15 @@ export default class CTerm extends CBase {
       throw new Error('terminal buffer has been modified from the front');
     }
     if (buf._root) {
-       elems.push(<CTermOutput key={0} node={buf._root} level={buf._level} />);
+       elems.push(<TermOutput key={0} node={buf._root} level={buf._level} />);
     }
     if (buf._tail) {
-       elems.push(<CTermOutput key={1} node={buf._tail} level={0} />);
+       elems.push(<TermOutput key={1} node={buf._tail} level={0} />);
     }
 
     return <div className="start-term" onClick={this.handleClick}>
       { elems }
-      <CTermInput ref="input" />
+      <TermInput ref="input" />
     </div>;
   }
 
@@ -54,7 +54,7 @@ export default class CTerm extends CBase {
   }
 }
 
-class CTermOutput extends CBase {
+class TermOutput extends Base {
   shouldComponentUpdate(nextProps) {
     return this.props.node != nextProps.node;
   }
@@ -68,7 +68,7 @@ class CTermOutput extends CBase {
       }
     } else {
       for (let i = 0; i < array.length; ++i) {
-        elems.push(<CTermOutput key={i} node={array[i]} level={level - LIST_SHIFT} />);
+        elems.push(<TermOutput key={i} node={array[i]} level={level - LIST_SHIFT} />);
       }
     }
 
@@ -76,7 +76,7 @@ class CTermOutput extends CBase {
   }
 }
 
-class CTermInput extends CBase {
+class TermInput extends Base {
   constructor(props) {
     super(props);
 

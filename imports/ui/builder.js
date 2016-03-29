@@ -4,12 +4,12 @@ import { $ } from 'meteor/jquery';
 
 import React from 'react';
 
-import { SBuilder } from '../../lang/builder';
-import Blockly from '../../blockly_start';
+import { SBuilder } from '../lang/builder';
+import Blockly from '../blockly';
 
-import CBase from './base';
+import Base from './base';
 
-export default class CBuilder extends CBase {
+export default class Builder extends Base {
   shouldComponentUpdate(nextProps) {
     return false;
   }

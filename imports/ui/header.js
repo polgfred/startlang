@@ -7,9 +7,9 @@ import {
   ButtonToolbar, Button, Grid, Row, Col
 } from 'react-bootstrap';
 
-import CBase from './base';
+import Base from './base';
 
-export default class CNav extends CBase {
+export default class Header extends Base {
   shouldComponentUpdate(nextProps) {
     return this.props.viewMode != nextProps.viewMode ||
             this.props.editMode != nextProps.editMode;

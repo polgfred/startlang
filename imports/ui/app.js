@@ -12,19 +12,19 @@ import {
 
 import immutable from 'immutable';
 
-import CBase from './base';
-import CNav from './nav';
-import CGraphics from './graphics';
-import CTerm from './term';
-import CHelp from './help';
-import CEditor from './editor';
-import CBuilder from './builder';
+import Base from './base';
+import Header from './header';
+import Graphics from './graphics';
+import Term from './term';
+import Help from './help';
+import Editor from './editor';
+import Builder from './builder';
 
-import { SInterpreter } from '../../lang/interpreter';
-import { SBuilder } from '../../lang/builder';
-import { SGRuntime, SGraphics } from '../../lang/graphics';
+import { SInterpreter } from '../lang/interpreter';
+import { SBuilder } from '../lang/builder';
+import { SGRuntime, SGraphics } from '../lang/graphics';
 
-export default class CApp extends CBase {
+export default class App extends Base {
   constructor(props) {
     super(props);
 
@@ -91,21 +91,21 @@ export default class CApp extends CBase {
         showHelp = viewMode == 'help';
 
     return <div className={`start-app start-view-mode-${viewMode}`}>
-      <CNav viewMode={viewMode}
-            editMode={editMode}
-            updateViewMode={this.updateViewMode}
-            updateEditMode={this.updateEditMode}
-            runProgram={this.runProgram} />
+      <Header viewMode={viewMode}
+              editMode={editMode}
+              updateViewMode={this.updateViewMode}
+              updateEditMode={this.updateEditMode}
+              runProgram={this.runProgram} />
       <Grid className="start-body" fluid>
         <Row>
           <Col className="start-column" md={7}>
-            { showGraphics && <CGraphics data={this.state.gfx} /> }
-            { showTerm && <CTerm buf={this.state.buf} ref="term" /> }
-            { showHelp && <CHelp /> }
+            { showGraphics && <Graphics data={this.state.gfx} /> }
+            { showTerm && <Term buf={this.state.buf} ref="term" /> }
+            { showHelp && <Help /> }
           </Col>
           <Col className="start-column" md={5}>
-            { editMode == 'blocks' && <CBuilder ref="editor" /> }
-            { editMode == 'source' && <CEditor ref="editor" /> }
+            { editMode == 'blocks' && <Builder ref="editor" /> }
+            { editMode == 'source' && <Editor ref="editor" /> }
           </Col>
         </Row>
       </Grid>

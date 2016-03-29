@@ -2,7 +2,7 @@
 
 import React from 'react';
 
-import CBase from './base';
+import Base from './base';
 
 // This React implementation depends on the internals of immutable.List
 // (https://facebook.github.io/immutable-js/docs/#/List) to render the
@@ -20,7 +20,7 @@ import CBase from './base';
 // is the level shift we need to do when descending through nodes
 const LIST_SHIFT = 5;
 
-export default class CGraphics extends CBase {
+export default class Graphics extends Base {
   shouldComponentUpdate(nextProps) {
     return this.props.data.shapes != nextProps.data.shapes;
   }
@@ -33,10 +33,10 @@ export default class CGraphics extends CBase {
       throw new Error('shape list has been modified from the front');
     }
     if (shapes._root) {
-      elems.push(<CGroup key={0} node={shapes._root} level={shapes._level} />);
+      elems.push(<Group key={0} node={shapes._root} level={shapes._level} />);
     }
     if (shapes._tail) {
-      elems.push(<CGroup key={1} node={shapes._tail} level={0} />);
+      elems.push(<Group key={1} node={shapes._tail} level={0} />);
     }
 
     return <svg className="start-graphics">
@@ -45,7 +45,7 @@ export default class CGraphics extends CBase {
   }
 }
 
-class CGroup extends CBase {
+class Group extends Base {
   shouldComponentUpdate(nextProps) {
     return this.props.node != nextProps.node;
   }
@@ -62,7 +62,7 @@ class CGroup extends CBase {
       }
     } else {
       for (let i = 0; i < array.length; ++i) {
-        elems.push(<CGroup key={i} node={array[i]} level={level - LIST_SHIFT} />);
+        elems.push(<Group key={i} node={array[i]} level={level - LIST_SHIFT} />);
       }
     }
 
@@ -70,7 +70,7 @@ class CGroup extends CBase {
   }
 }
 
-class CShape extends CBase {
+class Shape extends Base {
   shouldComponentUpdate(nextProps) {
     return this.props.shape != nextProps.shape;
   }
@@ -102,7 +102,7 @@ class CShape extends CBase {
   }
 }
 
-class CRect extends CShape {
+class Rect extends Shape {
   render() {
     let { shape } = this.props, attrs = this.setup();
 
@@ -115,7 +115,7 @@ class CRect extends CShape {
   }
 }
 
-class CCircle extends CShape {
+class Circle extends Shape {
   render() {
     let { shape } = this.props, attrs = this.setup();
 
@@ -127,7 +127,7 @@ class CCircle extends CShape {
   }
 }
 
-class CEllipse extends CShape {
+class Ellipse extends Shape {
   render() {
     let { shape } = this.props, attrs = this.setup();
 
@@ -140,7 +140,7 @@ class CEllipse extends CShape {
   }
 }
 
-class CLine extends CShape {
+class Line extends Shape {
   render() {
     let { shape } = this.props, attrs = this.setup();
 
@@ -153,7 +153,7 @@ class CLine extends CShape {
   }
 }
 
-class CPolygon extends CShape {
+class Polygon extends Shape {
   render() {
     let { shape } = this.props, attrs = this.setup();
 
@@ -163,7 +163,7 @@ class CPolygon extends CShape {
   }
 }
 
-class CText extends CShape {
+class Text extends Shape {
   render() {
     let { shape } = this.props, attrs = this.setup();
 
@@ -178,10 +178,10 @@ class CText extends CShape {
 }
 
 const registry = {
-  'rect': CRect,
-  'circle': CCircle,
-  'ellipse': CEllipse,
-  'line': CLine,
-  'polygon': CPolygon,
-  'text': CText
+  'rect': Rect,
+  'circle': Circle,
+  'ellipse': Ellipse,
+  'line': Line,
+  'polygon': Polygon,
+  'text': Text
 };

@@ -4,9 +4,9 @@ import React from 'react';
 
 import { PageHeader } from 'react-bootstrap';
 
-import CBase from './base';
+import Base from './base';
 
-export default class CHelp extends CBase {
+export default class Help extends Base {
   render() {
     return <div className="start-help">
       <PageHeader>The Start Programming Language</PageHeader>

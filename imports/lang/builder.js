@@ -1,7 +1,5 @@
 'use strict';
 
-import Blockly from '../blockly_start';
-
 let flowMarker = {
   'repeat': 'loop',
   'for': 'loop',
