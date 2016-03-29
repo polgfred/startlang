@@ -9,16 +9,16 @@
   },
   "dependencies": {
     "blockly": "git://github.com/google/blockly#8fb16b61a35f9b8ecb5faf127b1cc9f5f10f6517",
-    "bootstrap": "^3.3.5",
+    "bootstrap": "^3.3.6",
     "brace": "^0.7.0",
-    "classnames": "^2.1.2",
-    "immutable": "^3.7.5",
+    "classnames": "^2.2.3",
+    "immutable": "^3.7.6",
     "meteor-node-stubs": "^0.2.1",
-    "moment": "^2.10.6",
+    "moment": "^2.12.0",
     "node-blockly": "git://github.com/polgfred/node-blockly#20c15c84e938318a407e7e8a79ba6cb15fbe104a",
-    "react": "^0.14.4",
-    "react-bootstrap": "^0.28.3",
-    "react-dom": "^0.14.4"
+    "react": "^0.14.7",
+    "react-bootstrap": "^0.28.4",
+    "react-dom": "^0.14.7"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
