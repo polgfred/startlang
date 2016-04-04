@@ -28,6 +28,7 @@ export default class App extends Base {
   constructor(props) {
     super(props);
 
+    this.handleKeyUp = this.handleKeyUp.bind(this);
     this.runProgram = this.runProgram.bind(this);
     this.updateViewMode = this.updateViewMode.bind(this);
     this.updateEditMode = this.updateEditMode.bind(this);
@@ -80,6 +81,15 @@ export default class App extends Base {
     });
   }
 
+  handleKeyUp(ev) {
+    if (ev.ctrlKey) {
+      if (ev.keyCode == 82) {
+        ev.stopPropagation();
+        this.runProgram();
+      }
+    }
+  }
+
   runProgram() {
     this.refreshState();
 
@@ -115,7 +125,7 @@ export default class App extends Base {
             { showTerm && <Term buf={this.state.buf} ref="term" /> }
             { showHelp && <Help /> }
           </Col>
-          <Col className="start-column" md={5}>
+          <Col className="start-column" md={5} onKeyUp={this.handleKeyUp}>
             { editMode == 'blocks' && <Builder ref="editor" /> }
             { editMode == 'source' && <Editor ref="editor" /> }
           </Col>
