@@ -1,6 +1,7 @@
 'use strict';
 
 import { $ } from 'meteor/jquery';
+import { _ } from 'meteor/underscore';
 
 import React from 'react';
 
@@ -13,7 +14,7 @@ export default class Term extends Base {
   constructor(props) {
     super(props);
 
-    this.handleClick = this.handleClick.bind(this);
+    _.bindAll(this, 'handleClick');
   }
 
   shouldComponentUpdate(nextProps) {
@@ -80,8 +81,7 @@ class TermInput extends Base {
   constructor(props) {
     super(props);
 
-    this.handleChange = this.handleChange.bind(this);
-    this.handleKeyUp = this.handleKeyUp.bind(this);
+    _.bindAll(this, 'handleChange', 'handleKeyUp');
 
     this.state = this.initialState = {
       needsInput: false,

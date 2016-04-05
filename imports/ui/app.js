@@ -1,6 +1,7 @@
 'use strict';
 
 import { Meteor } from 'meteor/meteor';
+import { _ } from 'meteor/underscore';
 
 import React from 'react';
 import ReactDOM from 'react-dom';
@@ -27,10 +28,11 @@ export default class App extends Base {
   constructor(props) {
     super(props);
 
-    this.handleKeyUp = this.handleKeyUp.bind(this);
-    this.runProgram = this.runProgram.bind(this);
-    this.updateViewMode = this.updateViewMode.bind(this);
-    this.updateEditMode = this.updateEditMode.bind(this);
+    _.bindAll(this,
+      'handleKeyUp',
+      'runProgram',
+      'updateViewMode',
+      'updateEditMode');
 
     this.state = {
       viewMode: 'help',
