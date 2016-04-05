@@ -21,7 +21,6 @@ import Editor from './editor';
 import Builder from './builder';
 
 import { SInterpreter } from '../lang/interpreter';
-import { SBuilder } from '../lang/builder';
 import { SGRuntime, SGraphics } from '../lang/graphics';
 
 export default class App extends Base {
