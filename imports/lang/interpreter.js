@@ -276,12 +276,14 @@ export class SInterpreter {
             .set('by', this.result.rv));
         break;
       case 4:
-        let count = ws.get('count');
-        if (count <= ws.get('to')) {
+        let count = ws.get('count'),
+            to = ws.get('to'),
+            by = ws.get('by');
+        if ((by > 0 && count <= to) || (by < 0 && count >= to)) {
           this.set(node.name, count);
           this.frame = this.frame
             .set('ws', ws
-              .set('count', count + ws.get('by')));
+              .set('count', count + by));
           this.push(node.body);
         } else {
           this.pop();
