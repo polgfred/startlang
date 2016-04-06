@@ -35,7 +35,13 @@
           </block>
         </value>
       </block>
-      <block type="controls_forEach"></block>
+      <block type="controls_forEach">
+        <value name="LIST">
+          <block type="variables_get">
+            <field name="VAR">list</field>
+          </block>
+        </value>
+      </block>
       <block type="controls_flow_statements"></block>
     </category>
     <sep></sep>
