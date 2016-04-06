@@ -39,7 +39,7 @@ export default class Builder extends Base {
         controls: true,
         wheel: false,
         maxScale: 2,
-        minScale: 0.1,
+        minScale: 0.5,
         scaleSpeed: 1.1
       }
     });
