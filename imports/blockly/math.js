@@ -2,17 +2,21 @@
 
 let Blockly = require('node-blockly/lib/blockly_compressed');
 
+Blockly.FieldAngle.CLOCKWISE = true;
+Blockly.FieldAngle.OFFSET = 90;
+Blockly.FieldAngle.WRAP = 180;
+
 Blockly.Blocks['math_angle'] = {
   init: function() {
-    this.jsonInit({
-      id: 'math_angle',
-      message0: '%1',
-      args0: [
-        { type: 'field_angle', name: 'ANGLE', angle: 90 }
-      ],
-      output: 'Number',
-      colour: Blockly.Blocks.math.HUE,
-      tooltip: 'An angle.'
+    this.setColour(Blockly.Blocks.math.HUE);
+    this.appendDummyInput()
+        .appendField(new Blockly.FieldAngle('0'), 'ANGLE');
+    this.setOutput(true, 'Number');
+    this.setTooltip('An angle.');
+    this.setHelpUrl('');
+    this.setTooltip(() => {
+      let parent = this.getParent();
+      return (parent && parent.tooltip) || 'An angle.';
     });
   }
 };
