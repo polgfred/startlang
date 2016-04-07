@@ -83,8 +83,9 @@ export class SBuilder {
 
   makeTemporary(value, block, prefix) {
     // get next available temp var with this prefix and make an assignment
-    let temp = 'temp_' + prefix + '_' +
-                (this.temps[prefix] = (this.temps[prefix] || 0) + 1);
+    let count = this.temps[prefix] = (this.temps[prefix] || 0) + 1,
+        temp = `temp_${prefix}_${count}`;
+
     let elem = buildNode('let', block, {
       name: temp,
       value: value
@@ -104,8 +105,9 @@ export class SBuilder {
     //   is called if it might be an arbitrary value expression
     // - assumes val can have len() called on it (a string or list)
     suffix = suffix || '';
-    let where = block.getFieldValue('WHERE' + suffix);
-    let at = this.handleValue(block, 'AT' + suffix);
+    let where = block.getFieldValue(`WHERE${suffix}`);
+    let at = this.handleValue(block, `AT${suffix}`);
+
     // we'll need this in a couple places
     let len = buildNode('call', block, {
                 name: 'len',
@@ -253,8 +255,8 @@ export class SBuilder {
     for (let i = 1; i <= block.elseifCount_; ++i) {
       // create a nested if block inside the else block
       current.fbody = buildNode('if', block, {
-        cond: this.handleValue(block, 'IF' + i),
-        tbody: this.handleStatements(block, 'DO' + i)
+        cond: this.handleValue(block, `IF${i}`),
+        tbody: this.handleStatements(block, `DO${i}`)
       });
 
       current = current.fbody;
@@ -515,7 +517,7 @@ export class SBuilder {
       str = buildNode('binaryOp', block, {
         op: '$',
         left: str,
-        right: this.handleValue(block, 'ADD' + i)
+        right: this.handleValue(block, `ADD${i}`)
       });
     }
 
@@ -743,7 +745,7 @@ export class SBuilder {
     let args = [];
 
     for (let i = 0; i < block.itemCount_; ++i) {
-      args[i] = this.handleValue(block, 'ADD' + i) || wrapLiteral(null, block);
+      args[i] = this.handleValue(block, `ADD${i}`) || wrapLiteral(null, block);
     }
 
     return buildNode('call', block, {
@@ -921,8 +923,8 @@ export class SBuilder {
     let args = [];
 
     for (let i = 0; i < block.itemCount_; ++i) {
-      args.push(wrapLiteral(block.getFieldValue('KEY' + i), block));
-      args.push(this.handleValue(block, 'VALUE' + i) || wrapLiteral(null, block));
+      args.push(wrapLiteral(block.getFieldValue(`KEY${i}`), block));
+      args.push(this.handleValue(block, `VALUE${i}`) || wrapLiteral(null, block));
     }
 
     return buildNode('call', block, {

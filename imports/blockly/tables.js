@@ -62,7 +62,7 @@ Blockly.Blocks['tables_create_with'] = {
     // Reconnect any child blocks.
     for (let i = 0; i < this.itemCount_; i++) {
       if (connections[i]) {
-        this.getInput('VALUE' + i).connection.connect(connections[i]);
+        this.getInput(`VALUE${i}`).connection.connect(connections[i]);
       }
     }
   },
@@ -70,7 +70,7 @@ Blockly.Blocks['tables_create_with'] = {
     let itemBlock = containerBlock.getInputTargetBlock('STACK');
     let i = 0;
     while (itemBlock) {
-      let input = this.getInput('VALUE' + i);
+      let input = this.getInput(`VALUE${i}`);
       itemBlock.valueConnection_ = input && input.connection.targetConnection;
       i++;
       itemBlock = itemBlock.nextConnection && itemBlock.nextConnection.targetBlock();
@@ -82,9 +82,9 @@ Blockly.Blocks['tables_create_with'] = {
       this.removeInput('EMPTY');
     } else {
       let i = 0;
-      while (this.getInput('VALUE' + i)) {
-        this.savedKeys[i] = this.getFieldValue('KEY' + i);
-        this.removeInput('VALUE' + i);
+      while (this.getInput(`VALUE${i}`)) {
+        this.savedKeys[i] = this.getFieldValue(`KEY${i}`);
+        this.removeInput(`VALUE${i}`);
         i++;
       }
     }
@@ -94,14 +94,14 @@ Blockly.Blocks['tables_create_with'] = {
           .appendField(Blockly.Msg.TABLES_CREATE_EMPTY_TITLE);
     } else {
       for (let i = 0; i < this.itemCount_; i++) {
-        let input = this.appendValueInput('VALUE' + i)
+        let input = this.appendValueInput(`VALUE${i}`)
                         .setAlign(Blockly.ALIGN_RIGHT);
         if (i == 0) {
           input.appendField(Blockly.Msg.TABLES_CREATE_WITH_INPUT_WITH)
 
         }
         input.appendField(Blockly.Msg.TABLES_CREATE_WITH_INPUT_KEY)
-             .appendField(new Blockly.FieldTextInput(this.savedKeys[i] || 'key' + (i+1)), 'KEY' + i)
+             .appendField(new Blockly.FieldTextInput(this.savedKeys[i] || `key${i+1}`), `KEY${i}`)
              .appendField(Blockly.Msg.TABLES_CREATE_WITH_INPUT_AS);
       }
     }
@@ -194,7 +194,7 @@ Blockly.Blocks['tables_getIndex'] = {
     this.setOutput(true);
     this.setTooltip(() => {
       let mode = this.getFieldValue('MODE');
-      return Blockly.Msg['TABLES_GET_INDEX_TOOLTIP_' + mode];
+      return Blockly.Msg[`TABLES_GET_INDEX_TOOLTIP_${mode}`];
     });
   },
   mutationToDom: function() {

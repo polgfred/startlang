@@ -50,7 +50,7 @@ Blockly.Blocks['lists_transformers'] = {
       let mode = this.getFieldValue('OP');
       let order = this.getFieldValue('ORDER');
       let TOOLTIPS = {
-        'SORT': Blockly.Msg['MATH_ONLIST_TOOLTIP_SORT_' + order],
+        'SORT': Blockly.Msg[`MATH_ONLIST_TOOLTIP_SORT_${order}`],
         'REVERSE': Blockly.Msg.MATH_ONLIST_TOOLTIP_REVERSE,
         'SHUFFLE': Blockly.Msg.MATH_ONLIST_TOOLTIP_SHUFFLE
       };
