@@ -43,10 +43,6 @@ export default class Builder extends Base {
         scaleSpeed: 1.1
       }
     });
-
-    Blockly.Xml.domToWorkspace(
-      Blockly.getMainWorkspace(),
-      $('#start-blockly-workspace')[0]);
   }
 
   componentWillUnmount() {

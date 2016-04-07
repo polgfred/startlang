@@ -161,11 +161,21 @@ export class SBuilder {
   }
 
   fromWorkspace(ws) {
-    for (let block of ws.getTopBlocks()) {
-      if (block.type == 'control_start') {
-        return this.handleStatements(block);
+    let blocks = ws.getTopBlocks(true), funcs = [], statements = [];
+
+    for (let i = 0; i < blocks.length; ++i) {
+      let block = blocks[i];
+
+      if (block.type.substr(0, 10) == 'procedures') {
+        funcs.push(this.handleStatements(block));
+      } else {
+        statements.push(this.handleStatements(block));
       }
     }
+
+    return buildNode('block', null, {
+      elems: funcs.concat(statements)
+    });
   }
 
   control_start(block) {
@@ -1147,5 +1157,52 @@ export class SBuilder {
       name: block.getFieldValue('VAR'),
       value: this.handleValue(block, 'VALUE')
     });
+  }
+
+  // functions
+
+  procedures_defnoreturn(block) {
+    let [ name, params ] = block.getProcedureDef(),
+        body = this.handleStatements(block, 'STACK');
+
+    return buildNode('begin', block, { name, params, body });
+  }
+
+  procedures_defreturn(block) {
+    let [ name, params ] = block.getProcedureDef(),
+        result = this.handleValue(block, 'RETURN'),
+        body = block.hasStatements_ && this.handleStatements(block, 'STACK'),
+        ret = buildNode('return', block, { result });
+
+    if (!body) {
+      body = buildNode('block', block, {
+        elems: [ ret ]
+      });
+    } else if (body.type != 'block') {
+      body = buildNode('block', block, {
+        elems: [ body, ret ]
+      });
+    } else {
+      body.elems.push(ret);
+    }
+
+    return buildNode('begin', block, { name, params, body });
+  }
+
+  procedures_callnoreturn(block) {
+    let args = [];
+
+    for (let i = 0; i < block.arguments_.length; ++i) {
+      args.push(this.handleValue(block, `ARG${i}`));
+    }
+
+    return buildNode('call', block, {
+      name: block.getFieldValue('NAME'),
+      args
+    });
+  }
+
+  procedures_callreturn(block) {
+    return this.procedures_callnoreturn(block);
   }
 }
