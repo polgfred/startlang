@@ -180,10 +180,6 @@ export class SBuilder {
     });
   }
 
-  control_start(block) {
-    // marker node for start of program, pass control to the next block
-  }
-
   control_exit(block) {
     return buildNode('exit', block);
   }
