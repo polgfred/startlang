@@ -166,7 +166,7 @@ export class SBuilder {
     for (let i = 0; i < blocks.length; ++i) {
       let block = blocks[i];
 
-      if (block.type.substr(0, 10) == 'procedures') {
+      if (block.type.substr(0, 14) == 'procedures_def') {
         funcs.push(this.handleStatements(block));
       } else {
         statements.push(this.handleStatements(block));
@@ -1204,5 +1204,14 @@ export class SBuilder {
 
   procedures_callreturn(block) {
     return this.procedures_callnoreturn(block);
+  }
+
+  procedures_ifreturn(block) {
+    return buildNode('if', block, {
+      cond: this.handleValue(block, 'CONDITION'),
+      tbody: buildNode('return', block, {
+        result: block.hasReturnValue_ ? this.handleValue(block, 'VALUE') : null
+      })
+    });
   }
 }
