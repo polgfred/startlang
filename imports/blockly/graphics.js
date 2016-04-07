@@ -173,11 +173,11 @@ Blockly.Blocks['graphics_scale'] = {
   init: function() {
     this.setColour(Blockly.Blocks.graphics.HUE);
     this.appendValueInput('MULTX')
-        .setCheck('number')
+        .setCheck('Number')
         .setAlign(Blockly.ALIGN_RIGHT)
         .appendField('set scale factor to x');
     this.appendValueInput('MULTY')
-        .setCheck('number')
+        .setCheck('Number')
         .setAlign(Blockly.ALIGN_RIGHT)
         .appendField('y');
     this.setInputsInline(true);
