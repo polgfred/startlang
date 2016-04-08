@@ -469,9 +469,8 @@ export class SBuilder {
   }
 
   math_constrain(block) {
-    let valueOrDefault = (name, default_) => {
-      return this.handleValue(block, name) || wrapLiteral(default_);
-    };
+    let valueOrDefault =
+      (name, default_) => this.handleValue(block, name) || wrapLiteral(default_);
 
     return buildNode('call', block, {
       name: 'clamp',
