@@ -75,7 +75,11 @@ body {
     transform: translate(calc(~"50vw - 4px"),calc(~"32.5vh - 30px")) scale(1,-1);
 
     @media (min-width: 992px) {
-      transform: translate(calc(~"29.1667vw - 4px"),calc(~"32.5vh - 30px")) scale(1,-1);
+      // this width is sensitive to the relative size of the graphics display,
+      // so if the column width changes, this needs to reflect that.
+      // the desired width should be half the real width of the left column,
+      // minus padding, so: (5 / 12) / 2
+      transform: translate(calc(~"20.8333vw - 4px"),calc(~"32.5vh - 30px")) scale(1,-1);
     }
   }
 

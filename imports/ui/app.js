@@ -121,12 +121,12 @@ export default class App extends Base {
               runProgram={this.runProgram} />
       <Grid className="start-body" fluid>
         <Row>
-          <Col className="start-column" md={7}>
+          <Col className="start-column" md={5}>
             { showGraphics && <Graphics data={this.state.gfx} /> }
             { showTerm && <Term buf={this.state.buf} ref="term" /> }
             { showHelp && <Help /> }
           </Col>
-          <Col className="start-column" md={5} onKeyUp={this.handleKeyUp}>
+          <Col className="start-column" md={7} onKeyUp={this.handleKeyUp}>
             { editMode == 'blocks' && <Builder ref="editor" /> }
             { editMode == 'source' && <Editor ref="editor" /> }
           </Col>
