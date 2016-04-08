@@ -163,20 +163,28 @@ export class SBuilder {
   }
 
   fromWorkspace(ws) {
-    let blocks = ws.getTopBlocks(true), funcs = [], statements = [];
+    let blocks = ws.getTopBlocks(true), funcs = [], elems = [];
 
     for (let i = 0; i < blocks.length; ++i) {
-      let block = blocks[i];
+      let stmt = this.handleStatements(blocks[i]);
 
-      if (block.type.substr(0, 14) == 'procedures_def') {
-        funcs.push(this.handleStatements(block));
+      if (stmt.type == 'begin') {
+        // collect functions into their own list
+        funcs.push(stmt);
+      } else if (stmt.type == 'block') {
+        // collect all of this block's statments
+        elems.push(...stmt.elems);
       } else {
-        statements.push(this.handleStatements(block));
+        // push this statement
+        elems.push(stmt);
       }
     }
 
+    // prepend any functions we found
+    elems.unshift(...funcs);
+
     return buildNode('block', null, {
-      elems: funcs.concat(statements)
+      elems
     });
   }
 
