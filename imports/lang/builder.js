@@ -15,7 +15,7 @@ function buildNode(type, block, attrs) {
   }
 
   // show the type first
-  let node = { type: type };
+  let node = { type };
 
   // then the flow marker
   if (flowMarker[type]) {
@@ -28,13 +28,11 @@ function buildNode(type, block, attrs) {
   return node;
 }
 
-function wrapLiteral(val, block) {
+function wrapLiteral(value, block) {
   // if it's already a node, pass it through
-  return val != null && val.type != null ?
-            val :
-            buildNode('literal', block, {
-              value: val
-            });
+  return value != null && value.type != null ?
+            value :
+            buildNode('literal', block, { value });
 }
 
 export class SBuilder {
@@ -43,6 +41,31 @@ export class SBuilder {
     // code as necessary
     this.blocks = [];
     this.temps = {};
+  }
+
+  fromWorkspace(ws) {
+    // build a program tree from the blockly workspace
+    let blocks = ws.getTopBlocks(true), funcs = [], elems = [];
+
+    for (let i = 0; i < blocks.length; ++i) {
+      let stmt = this.handleStatements(blocks[i]);
+
+      if (stmt.type == 'begin') {
+        // collect functions into their own list
+        funcs.push(stmt);
+      } else if (stmt.type == 'block') {
+        // collect all of this block's statments
+        elems.push(...stmt.elems);
+      } else {
+        // push this statement
+        elems.push(stmt);
+      }
+    }
+
+    // prepend any functions we found
+    elems.unshift(...funcs);
+
+    return buildNode('block', null, { elems });
   }
 
   handleValue(block, name) {
@@ -76,28 +99,23 @@ export class SBuilder {
 
     // if there was only one, just return the first, otherwise
     // wrap it in a block node
-    return elems.length == 1 ? elems[0] : buildNode('block', block, {
-      elems: elems
-    });
+    return elems.length == 1 ?
+      elems[0] :
+      buildNode('block', block, { elems });
   }
 
   makeTemporary(value, block, prefix) {
     // get next available temp var with this prefix and make an assignment
     let count = this.temps[prefix] = (this.temps[prefix] || 0) + 1,
-        temp = `temp_${prefix}_${count}`;
+        name = `temp_${prefix}_${count}`;
 
-    let elem = buildNode('let', block, {
-      name: temp,
-      value: value
-    });
+    let elem = buildNode('let', block, { name, value });
 
     // append it to the nearest statements block
     this.blocks[this.blocks.length - 1].push(elem);
 
     // return a var node for the temporary
-    return buildNode('var', block, {
-      name: temp
-    });
+    return buildNode('var', block, { name });
   }
 
   getPosition(val, block, suffix) {
@@ -110,9 +128,9 @@ export class SBuilder {
 
     // we'll need this in a couple places
     let len = buildNode('call', block, {
-                name: 'len',
-                args: [ val ]
-              });
+      name: 'len',
+      args: [ val ]
+    });
 
     switch (where) {
       case 'FIRST':
@@ -162,31 +180,7 @@ export class SBuilder {
     }
   }
 
-  fromWorkspace(ws) {
-    let blocks = ws.getTopBlocks(true), funcs = [], elems = [];
-
-    for (let i = 0; i < blocks.length; ++i) {
-      let stmt = this.handleStatements(blocks[i]);
-
-      if (stmt.type == 'begin') {
-        // collect functions into their own list
-        funcs.push(stmt);
-      } else if (stmt.type == 'block') {
-        // collect all of this block's statments
-        elems.push(...stmt.elems);
-      } else {
-        // push this statement
-        elems.push(stmt);
-      }
-    }
-
-    // prepend any functions we found
-    elems.unshift(...funcs);
-
-    return buildNode('block', null, {
-      elems
-    });
-  }
+  // control
 
   control_exit(block) {
     return buildNode('exit', block);
@@ -1180,13 +1174,9 @@ export class SBuilder {
         ret = buildNode('return', block, { result });
 
     if (!body) {
-      body = buildNode('block', block, {
-        elems: [ ret ]
-      });
+      body = buildNode('block', block, { elems: [ ret ] });
     } else if (body.type != 'block') {
-      body = buildNode('block', block, {
-        elems: [ body, ret ]
-      });
+      body = buildNode('block', block, { elems: [ body, ret ] });
     } else {
       body.elems.push(ret);
     }
