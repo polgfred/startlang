@@ -114,7 +114,8 @@ SRuntime.globals = {
 
   print(...values) {
     if (values.length > 0) {
-      for (let v of values) {
+      for (let i = 0; i < values.length; ++i) {
+        let v = values[i];
         console.log(handle(v).repr(v));
       }
     } else {

@@ -16,37 +16,27 @@ export class SGRuntime extends SRuntime {
 }
 
 SGRuntime.globals = Object.setPrototypeOf({
-  refresh() {
+  repaint() {
     // let the DOM catch up
     return new Promise((resolve) => {
       Meteor.defer(resolve);
     });
   },
 
-  repaint() {
-    // render pending changes to DOM and refresh
-    return SGRuntime.globals.refresh.call(this);
-  },
-
-  reset() {
+  clear() {
     this.app.gfxUpdate((gfx) => gfx.set('shapes', immutable.List()));
     this.app.termUpdate((buf) => buf.clear());
   },
 
-  clear() {
-    SGRuntime.globals.reset.call(this);
-    return SGRuntime.globals.repaint.call(this);
-  },
-
   print(...values) {
     if (values.length > 0) {
-      for (let v of values) {
+      for (let i = 0; i < values.length; ++i) {
+        let v = values[i];
         this.app.termUpdate((buf) => buf.push(handle(v).repr(v)));
       }
     } else {
       this.app.termUpdate((buf) => buf.push(''));
     }
-    return SGRuntime.globals.repaint.call(this);
   },
 
   input(prompt) {

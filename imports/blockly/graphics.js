@@ -107,6 +107,29 @@ Blockly.Blocks['graphics_line'] = {
   }
 };
 
+Blockly.Blocks['graphics_text'] = {
+  init: function() {
+    this.setColour(Blockly.Blocks.graphics.HUE);
+    this.appendValueInput('X')
+        .setCheck('Number')
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField('draw text at')
+        .appendField('x');
+    this.appendValueInput('Y')
+        .setCheck('Number')
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField('y');
+    this.appendValueInput('TEXT')
+        .setCheck('String')
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField('text');
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setTooltip('Display text at (x, y). Text is positioned relative to the baseline.');
+    this.setHelpUrl('');
+  }
+};
+
 Blockly.Blocks['graphics_stroke'] = {
   init: function() {
     this.setColour(Blockly.Blocks.graphics.HUE);
@@ -186,6 +209,32 @@ Blockly.Blocks['graphics_scale'] = {
     this.setTooltip('Set the scale factor to the specified magnitude. For example, ' +
                     'a value of 2 means that shapes will be twice their normal size. ' +
                     'You can set a magnitude in both the x (width) and y (height) dimensions.');
+    this.setHelpUrl('');
+  }
+};
+
+
+Blockly.Blocks['graphics_font'] = {
+  init: function() {
+    let FONTS = [
+      [ 'Arial',            'ARIAL'           ],
+      [ 'Courier New',      'COURIER_NEW'     ],
+      [ 'Helvetica',        'HELVETICA'       ],
+      [ 'Times New Roman',  'TIMES_NEW_ROMAN' ],
+      [ 'Verdana',          'VERDANA'         ]
+    ];
+
+    this.setColour(Blockly.Blocks.graphics.HUE);
+    this.appendValueInput('SIZE')
+        .setCheck('Number')
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField('set display font to')
+        .appendField(new Blockly.FieldDropdown(FONTS), 'FAMILY')
+        .appendField('size');
+    this.setInputsInline(true);
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setTooltip('Set the font family and font size of text drawn on the graphics display.');
     this.setHelpUrl('');
   }
 };

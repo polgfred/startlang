@@ -1090,6 +1090,17 @@ export class SBuilder {
     });
   }
 
+  graphics_text(block) {
+    return buildNode('call', block, {
+      name: 'text',
+      args: [
+        this.handleValue(block, 'X'),
+        this.handleValue(block, 'Y'),
+        this.handleValue(block, 'TEXT')
+      ]
+    });
+  }
+
   graphics_stroke(block) {
     return buildNode('call', block, {
       name: 'stroke',
@@ -1132,6 +1143,24 @@ export class SBuilder {
       args: [
         this.handleValue(block, 'MULTX'),
         this.handleValue(block, 'MULTY')
+      ]
+    });
+  }
+
+  graphics_font(block) {
+    let fonts = {
+      'ARIAL': 'Arial',
+      'COURIER_NEW': 'Courier New',
+      'HELVETICA': 'Helvetica',
+      'TIMES_NEW_ROMAN': 'Times New Roman',
+      'VERDANA': 'Verdana'
+    };
+
+    return buildNode('call', block, {
+      name: 'font',
+      args: [
+        wrapLiteral(fonts[block.getFieldValue('FAMILY')]),
+        this.handleValue(block, 'SIZE')
       ]
     });
   }
