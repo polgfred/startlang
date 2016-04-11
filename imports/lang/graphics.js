@@ -13,6 +13,22 @@ export class SGRuntime extends SRuntime {
     // the react component that we'll call methods on
     this.app = app;
   }
+
+  addShape(type, attrs) {
+    this.app.gfxUpdate((gfx) => gfx.addShape(type, attrs));
+  }
+
+  updateSprops(mut) {
+    this.app.gfxUpdate((gfx) => gfx.updateSprops(mut));
+  }
+
+  updateTprops(mut) {
+    this.app.gfxUpdate((gfx) => gfx.updateTprops(mut));
+  }
+
+  termOutput(line) {
+    this.app.termUpdate((buf) => buf.push(line));
+  }
 }
 
 SGRuntime.globals = Object.setPrototypeOf({
@@ -24,18 +40,17 @@ SGRuntime.globals = Object.setPrototypeOf({
   },
 
   clear() {
-    this.app.gfxUpdate((gfx) => gfx.set('shapes', immutable.List()));
-    this.app.termUpdate((buf) => buf.clear());
+    this.app.clearDisplay();
   },
 
   print(...values) {
     if (values.length > 0) {
       for (let i = 0; i < values.length; ++i) {
         let v = values[i];
-        this.app.termUpdate((buf) => buf.push(handle(v).repr(v)));
+        this.termOutput(handle(v).repr(v));
       }
     } else {
-      this.app.termUpdate((buf) => buf.push(''));
+      this.termOutput('');
     }
   },
 
@@ -50,30 +65,31 @@ SGRuntime.globals = Object.setPrototypeOf({
   // shape creation
 
   rect(x, y, width, height) {
-    this.app.gfxUpdate((gfx) => gfx.addShape(Rect, { x, y, width, height }));
+    this.addShape(Rect, { x, y, width, height });
   },
 
   circle(cx, cy, r) {
-    this.app.gfxUpdate((gfx) => gfx.addShape(Circle, { cx, cy, r }));
+    this.addShape(Circle, { cx, cy, r });
   },
 
   ellipse(cx, cy, rx, ry) {
-    this.app.gfxUpdate((gfx) => gfx.addShape(Ellipse, { cx, cy, rx, ry }));
+    this.addShape(Ellipse, { cx, cy, rx, ry });
   },
 
   line(x1, y1, x2, y2) {
-    this.app.gfxUpdate((gfx) => gfx.addShape(Line, { x1, y1, x2, y2 }));
+    this.addShape(Line, { x1, y1, x2, y2 });
+  },
+
+  text(x, y, text) {
+    this.addShape(Text, { x, y, text });
   },
 
   polygon(...points) {
     points = immutable.List.isList(points[0]) ?
       points[0] :
       immutable.List(points);
-    this.app.gfxUpdate((gfx) => gfx.addShape(Polygon, { points }));
-  },
 
-  text(x, y, text) {
-    this.app.gfxUpdate((gfx) => gfx.addShape(Text, { x, y, text }));
+    this.addShape(Polygon, { points });
   },
 
   // set shape and text attributes
@@ -84,53 +100,39 @@ SGRuntime.globals = Object.setPrototypeOf({
   },
 
   fill(color) {
-    this.app.gfxUpdate((gfx) => gfx
-      .updateSprops((sprops) => sprops
-        .set('fill', color)));
+    this.updateSprops((sprops) => sprops.set('fill', color));
   },
 
   stroke(color) {
-    this.app.gfxUpdate((gfx) => gfx
-      .updateSprops((sprops) => sprops
-        .set('stroke', color)));
+    this.updateSprops((sprops) => sprops.set('stroke', color));
   },
 
   opacity(value = 1) {
-    this.app.gfxUpdate((gfx) => gfx
-      .updateSprops((sprops) => sprops
-        .set('opacity', value)));
+    this.updateSprops((sprops) => sprops.set('opacity', value));
   },
 
   anchor(value = 'center') {
-    this.app.gfxUpdate((gfx) => gfx
-      .updateSprops((sprops) => sprops
-        .set('anchor', value)));
+    this.updateSprops((sprops) => sprops.set('anchor', value));
   },
 
   rotate(angle = 0) {
-    this.app.gfxUpdate((gfx) => gfx
-      .updateSprops((sprops) => sprops
-        .set('rotate', angle)));
+    this.updateSprops((sprops) => sprops.set('rotate', angle));
   },
 
   scale(scalex = 1, scaley = scalex) {
-    this.app.gfxUpdate((gfx) => gfx
-      .updateSprops((sprops) => sprops
-        .set('scalex', scalex)
-        .set('scaley', scaley)));
+    this.updateSprops((sprops) => sprops
+      .set('scalex', scalex)
+      .set('scaley', scaley));
   },
 
   align(value = 'start') {
-    this.app.gfxUpdate((gfx) => gfx
-      .updateSprops((sprops) => sprops
-        .set('align', value)));
+    this.updateSprops((sprops) => sprops.set('align', value));
   },
 
   font(fface = 'Helvetica', fsize = 36) {
-    this.app.gfxUpdate((gfx) => gfx
-      .updateTprops((tprops) => tprops
-        .set('fface', fface)
-        .set('fsize', fsize)));
+    this.updateTprops((tprops) => tprops
+      .set('fface', fface)
+      .set('fsize', fsize));
   }
 }, SRuntime.globals);
 
@@ -157,6 +159,10 @@ export class SGraphics extends immutable.Record({
   sprops: SShapeProps(),
   tprops: STextProps()
 }) {
+  clear() {
+    return this.set('shapes', immutable.List());
+  }
+
   addShape(rec, attrs) {
     // set the current graphics props on the shape
     attrs.sprops = this.sprops;

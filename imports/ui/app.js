@@ -67,6 +67,13 @@ export default class App extends Base {
     this.setState({ editMode });
   }
 
+  clearDisplay() {
+    this.setState((state) => ({
+      gfx: state.gfx.clear(),
+      buf: state.buf.clear()
+    }));
+  }
+
   gfxUpdate(mut) {
     this.setState((state) => ({ gfx: mut(state.gfx) }));
   }
