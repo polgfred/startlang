@@ -85,7 +85,7 @@ class TermInput extends Base {
 
     this.state = this.initialState = {
       needsInput: false,
-      input: null,
+      input: '',
       prompt: null,
       recv: null
     };
@@ -112,7 +112,7 @@ class TermInput extends Base {
   }
 
   getInput(prompt, recv) {
-    this.setState({ needsInput: true, input: '', prompt, recv });
+    this.setState({ needsInput: true, prompt, recv });
   }
 
   handleChange(ev) {
