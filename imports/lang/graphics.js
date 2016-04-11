@@ -126,7 +126,7 @@ SGRuntime.globals = Object.setPrototypeOf({
         .set('align', value)));
   },
 
-  font(fface = 'Helvetica', fsize = 32) {
+  font(fface = 'Helvetica', fsize = 36) {
     this.app.gfxUpdate((gfx) => gfx
       .updateTprops((tprops) => tprops
         .set('fface', fface)
@@ -148,7 +148,7 @@ const SShapeProps = immutable.Record({
 // visual properties that will get applied to text
 const STextProps = immutable.Record({
   fface: 'Helvetica',
-  fsize: 32,
+  fsize: 36,
   align: 'start'
 });
 

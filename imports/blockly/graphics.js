@@ -22,6 +22,7 @@ Blockly.Blocks['graphics_rect'] = {
         .setCheck('Number')
         .setAlign(Blockly.ALIGN_RIGHT)
         .appendField('height');
+    this.setInputsInline(true);
     this.setPreviousStatement(true);
     this.setNextStatement(true);
     this.setTooltip('Display a rectangle with the upper left corner at (x, y), having the specified width and height.');
@@ -45,6 +46,7 @@ Blockly.Blocks['graphics_circle'] = {
         .setCheck('Number')
         .setAlign(Blockly.ALIGN_RIGHT)
         .appendField('radius');
+    this.setInputsInline(true);
     this.setPreviousStatement(true);
     this.setNextStatement(true);
     this.setTooltip('Display a circle with the center at (x, y), having the specified radius.');
@@ -67,11 +69,12 @@ Blockly.Blocks['graphics_ellipse'] = {
     this.appendValueInput('XRADIUS')
         .setCheck('Number')
         .setAlign(Blockly.ALIGN_RIGHT)
-        .appendField('x-radius');
+        .appendField('xradius');
     this.appendValueInput('YRADIUS')
         .setCheck('Number')
         .setAlign(Blockly.ALIGN_RIGHT)
-        .appendField('y-radius');
+        .appendField('yradius');
+    this.setInputsInline(true);
     this.setPreviousStatement(true);
     this.setNextStatement(true);
     this.setTooltip('Display an ellipse (oval) with the center at (x, y), having the specified radii.');
@@ -100,6 +103,7 @@ Blockly.Blocks['graphics_line'] = {
         .setCheck('Number')
         .setAlign(Blockly.ALIGN_RIGHT)
         .appendField('y2');
+    this.setInputsInline(true);
     this.setPreviousStatement(true);
     this.setNextStatement(true);
     this.setTooltip('Display a line from (x1, y1) to (x2, y2).');
@@ -110,19 +114,20 @@ Blockly.Blocks['graphics_line'] = {
 Blockly.Blocks['graphics_text'] = {
   init: function() {
     this.setColour(Blockly.Blocks.graphics.HUE);
+    this.appendValueInput('TEXT')
+        .setCheck('String')
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField('draw text');
     this.appendValueInput('X')
         .setCheck('Number')
         .setAlign(Blockly.ALIGN_RIGHT)
-        .appendField('draw text at')
+        .appendField('at')
         .appendField('x');
     this.appendValueInput('Y')
         .setCheck('Number')
         .setAlign(Blockly.ALIGN_RIGHT)
         .appendField('y');
-    this.appendValueInput('TEXT')
-        .setCheck('String')
-        .setAlign(Blockly.ALIGN_RIGHT)
-        .appendField('text');
+    this.setInputsInline(true);
     this.setPreviousStatement(true);
     this.setNextStatement(true);
     this.setTooltip('Display text at (x, y). Text is positioned relative to the baseline.');
@@ -183,7 +188,7 @@ Blockly.Blocks['graphics_rotate'] = {
     this.appendValueInput('ANGLE')
         .setCheck('Number')
         .setAlign(Blockly.ALIGN_RIGHT)
-        .appendField('set angle of rotation to');
+        .appendField('set angle to');
     this.setInputsInline(true);
     this.setPreviousStatement(true);
     this.setNextStatement(true);
@@ -198,7 +203,8 @@ Blockly.Blocks['graphics_scale'] = {
     this.appendValueInput('MULTX')
         .setCheck('Number')
         .setAlign(Blockly.ALIGN_RIGHT)
-        .appendField('set scale factor to x');
+        .appendField('set scale factor to')
+        .appendField('x');
     this.appendValueInput('MULTY')
         .setCheck('Number')
         .setAlign(Blockly.ALIGN_RIGHT)
@@ -230,6 +236,7 @@ Blockly.Blocks['graphics_font'] = {
         .setAlign(Blockly.ALIGN_RIGHT)
         .appendField('set display font to')
         .appendField(new Blockly.FieldDropdown(FONTS), 'FAMILY')
+        .appendField('with')
         .appendField('size');
     this.setInputsInline(true);
     this.setPreviousStatement(true);
