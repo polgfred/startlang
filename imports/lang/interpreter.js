@@ -9,7 +9,7 @@ export const SFrame = immutable.Record({
   node: null,         // node for this evaluation frame
   ns: false,          // whether to pop a ns off the stack for this frame
   state: 0,           // evaluation state machine state
-  ws: immutable.Map() // evalutaion workspace
+  ws: immutable.Map() // evaluation workspace
 });
 
 export class SInterpreter {
