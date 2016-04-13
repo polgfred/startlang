@@ -24,6 +24,8 @@ import Builder from './builder';
 import { SInterpreter } from '../lang/interpreter';
 import { SGRuntime, SGraphics } from '../lang/graphics';
 
+import Programs from '../api/programs';
+
 export default class App extends Base {
   constructor(props) {
     super(props);
