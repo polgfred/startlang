@@ -1,6 +1,7 @@
 'use strict';
 
 import immutable from 'immutable';
+
 import { handle, assignKey, resultKey } from './runtime';
 
 let hop = Object.prototype.hasOwnProperty; // cache this for performance
@@ -22,15 +23,10 @@ export class SInterpreter {
     this.replace();
   }
 
-  set root(node) {
+  root(node) {
     // push on the root node and global namespace
     this.frame = SFrame({ node });
     this.fst = immutable.Stack();
-  }
-
-  set runtime(ctx) {
-    // set a reference to the runtime context
-    this.ctx = ctx;
   }
 
   run() {

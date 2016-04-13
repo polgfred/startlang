@@ -104,8 +104,8 @@ export default class App extends Base {
     // wait long enough before the initial run to let the DOM clear
     Meteor.setTimeout(() => {
       let interp = new SInterpreter();
-      interp.root = this.refs.editor.getRoot();
-      interp.runtime = new SGRuntime(this);
+      interp.ctx = new SGRuntime(this);
+      interp.root(this.refs.editor.getRoot());
       interp.run().catch((err) => {
         console.log(err);
         console.log(err.stack);
