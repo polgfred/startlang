@@ -1,7 +1,5 @@
 'use strict';
 
-import React from 'react';
-import ReactDOM from 'react-dom';
 import immutable from 'immutable';
 
 import { SRuntime, SBase, handle, handlerKey, assignKey, resultKey } from './runtime';
