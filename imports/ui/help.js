@@ -2,14 +2,12 @@
 
 import React from 'react';
 
-import { PageHeader } from 'react-bootstrap';
-
 import Base from './base';
 
 export default class Help extends Base {
   render() {
     return <div className="start-help">
-      <PageHeader>The Start Programming Language</PageHeader>
+      <h1>The Start Programming Language</h1>
 
       <h3>Introduction</h3>
       <p>

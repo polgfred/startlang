@@ -1,3 +1,8 @@
+$body-font-family: 'Ubuntu Condensed';
+
+@import '{zurb:foundation-sites}/scss/foundation';
+@include foundation-everything;
+
 @font-face {
   font-family: 'Ubuntu Mono';
   font-style: normal;
@@ -16,17 +21,17 @@
        url('fonts/ubuntu-condensed-v7-latin-ext_latin-regular.woff') format('woff');
 }
 
-.source-font {
+@mixin source-font {
   font-family: 'Ubuntu Mono';
   font-weight: 400;
 }
 
-.proportional-font {
+@mixin proportional-font {
   font-family: 'Ubuntu Condensed';
   font-weight: 400;
 }
 
-.box-shadow {
+@mixin box-shadow {
   box-shadow: 2px 2px 6px rgba(0,0,0,0.2);
 }
 
@@ -35,26 +40,27 @@ body {
   height: 100%;
   margin: 0;
   padding: 0;
-  .proportional-font();
 }
 
 .start-app {
-  .navbar {
+  .top-bar {
     border: 0;
     border-radius: 0;
     margin: 4px;
-    .box-shadow();
+    @include box-shadow;
 
     button {
-      margin-top: 8px;
+      margin: 0;
     }
   }
 
   .start-body {
     // force height on main body
-    height: calc(~"100vh - 102px");
+    height: calc(100vh - 102px);
+
     .row {
       height: 100%;
+
       .start-column {
         height: 100%;
         padding: 4px;
@@ -68,18 +74,18 @@ body {
     display: none;
     margin: 0;
     width: 100%;
-    .box-shadow();
+    @include box-shadow;
   }
 
   .x-start-orient {
-    transform: translate(calc(~"50vw - 4px"),calc(~"32.5vh - 30px")) scale(1,-1);
+    transform: translate(calc(50vw - 4px), calc(32.5vh - 30px)) scale(1,-1);
 
     @media (min-width: 992px) {
       // this width is sensitive to the relative size of the graphics display,
       // so if the column width changes, this needs to reflect that.
       // the desired width should be half the real width of the left column,
       // minus padding, so: (5 / 12) / 2
-      transform: translate(calc(~"20.8333vw - 4px"),calc(~"32.5vh - 30px")) scale(1,-1);
+      transform: translate(calc(20.8333vw - 4px), calc(32.5vh - 30px)) scale(1,-1);
     }
   }
 
@@ -88,7 +94,7 @@ body {
     height: 100%;
     overflow: scroll;
     padding: 4px 8px;
-    .source-font();
+    @include source-font;
 
     .start-term-output p {
       margin: 0;
@@ -115,26 +121,26 @@ body {
   &.start-view-mode-graphics {
     .start-graphics {
       display: block;
-      height: calc(~"100vh - 110px");
+      height: calc(100vh - 110px);
     }
   }
 
   &.start-view-mode-text {
     .start-term {
       display: block;
-      height: calc(~"100vh - 110px");
+      height: calc(100vh - 110px);
     }
   }
 
   &.start-view-mode-split {
     .start-graphics {
       display: block;
-      height: calc(~"65vh - 60px");
+      height: calc(65vh - 60px);
     }
 
     .start-term {
       display: block;
-      height: calc(~"35vh - 60px");
+      height: calc(35vh - 60px);
       margin-top: 10px;
     }
   }
@@ -142,7 +148,7 @@ body {
   &.start-view-mode-help {
     .start-help {
       display: block;
-      height: calc(~"100vh - 110px");
+      height: calc(100vh - 110px);
     }
   }
 
@@ -150,11 +156,11 @@ body {
     font-size: 14px;
     height: 100%;
     line-height: 18px;
-    .box-shadow();
+    @include box-shadow;
   }
 
   .start-editor {
-    .source-font();
+    @include source-font;
     .ace_indent-guide {
       background: none;
     }
@@ -162,7 +168,7 @@ body {
 
   .start-builder {
     .blocklyText {
-      .proportional-font();
+      @include proportional-font;
     }
   }
 }
@@ -173,13 +179,13 @@ body {
     height: 24px;
   }
   .blocklyTreeLabel {
-    .proportional-font();
+    @include proportional-font;
   }
 }
 
 .blocklyWidgetDiv {
   .blocklyHtmlInput {
     height: 22px;
-    .proportional-font();
+    @include proportional-font;
   }
 }

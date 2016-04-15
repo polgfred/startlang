@@ -1,15 +1,13 @@
 'use strict';
 
 import { Meteor } from 'meteor/meteor';
+import { $ } from 'meteor/jquery';
 import { _ } from 'meteor/underscore';
 
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-import {
-  Navbar, Nav, NavItem, NavDropdown, MenuItem,
-  ButtonToolbar, Button, Grid, Row, Col
-} from 'react-bootstrap';
+import { Grid, Row, Column } from 'react-foundation';
 
 import immutable from 'immutable';
 
@@ -61,12 +59,12 @@ export default class App extends Base {
     });
   }
 
-  updateViewMode(ev, viewMode) {
-    this.setState({ viewMode });
+  updateViewMode(ev) {
+    this.setState({ viewMode: $(ev.target).data('viewmode') });
   }
 
-  updateEditMode(ev, editMode) {
-    this.setState({ editMode });
+  updateEditMode(ev) {
+    this.setState({ editMode: $(ev.target).data('editmode') });
   }
 
   clearDisplay() {
@@ -128,19 +126,23 @@ export default class App extends Base {
               updateViewMode={this.updateViewMode}
               updateEditMode={this.updateEditMode}
               runProgram={this.runProgram} />
-      <Grid className="start-body" fluid>
-        <Row>
-          <Col className="start-column" md={5}>
+      <div className="start-body">
+        <Row isExpanded>
+          <Column className="start-column" large={5}>
             { showGraphics && <Graphics data={this.state.gfx} /> }
             { showTerm && <Term buf={this.state.buf} ref="term" /> }
             { showHelp && <Help /> }
-          </Col>
-          <Col className="start-column" md={7} onKeyUp={this.handleKeyUp}>
+          </Column>
+          <Column className="start-column" large={7} onKeyUp={this.handleKeyUp}>
             { editMode == 'blocks' && <Builder ref="editor" /> }
             { editMode == 'source' && <Editor ref="editor" /> }
-          </Col>
+          </Column>
         </Row>
-      </Grid>
+      </div>
     </div>;
+  }
+
+  componentDidMount() {
+    $(document).foundation();
   }
 }
