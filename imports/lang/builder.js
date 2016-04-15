@@ -365,12 +365,12 @@ export class SBuilder {
       case 'LOG10':
         return buildNode('call', block, {
           name: 'log',
-          args: [ num, wrapLiteral(10, block) ]
+          args: [ wrapLiteral(10, block), num ]
         });
       case 'POW10':
         return buildNode('call', block, {
           name: 'exp',
-          args: [ num, wrapLiteral(10, block) ]
+          args: [ wrapLiteral(10, block), num ]
         });
       default:
         return buildNode('call', block, {
