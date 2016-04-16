@@ -1,7 +1,7 @@
 $body-font-family: 'Ubuntu Condensed';
 
 @import '{zurb:foundation-sites}/scss/foundation';
-@include foundation-everything;
+@include foundation-everything(true);
 
 @font-face {
   font-family: 'Ubuntu Mono';

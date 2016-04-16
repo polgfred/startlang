@@ -4,7 +4,7 @@ import React from 'react';
 
 import {
   TopBar, TopBarLeft, TopBarRight,
-  Button, Menu, MenuItem
+  Button, Menu, MenuText, MenuItem
 } from 'react-foundation';
 
 import Base from './base';
@@ -18,10 +18,11 @@ export default class Header extends Base {
   render() {
     return <TopBar>
       <TopBarLeft>
-        <Menu isDropdown data-dropdown-menu="start-view-menu">
+        <Menu isDropdown data-dropdown-menu>
+          <MenuText>Start</MenuText>
           <MenuItem>
             <a>View</a>
-            <Menu isVertical>
+            <Menu>
               <MenuItem isActive={this.props.viewMode == 'graphics'}>
                 <a onClick={this.props.updateViewMode} data-viewmode="graphics">Graphics</a>
               </MenuItem>
@@ -36,10 +37,6 @@ export default class Header extends Base {
               </MenuItem>
             </Menu>
           </MenuItem>
-        </Menu>
-      </TopBarLeft>
-      <TopBarLeft>
-        <Menu isDropdown data-dropdown-menu="start-edit-menu">
           <MenuItem>
             <a>Edit</a>
             <Menu>
@@ -53,7 +50,7 @@ export default class Header extends Base {
           </MenuItem>
         </Menu>
       </TopBarLeft>
-      <TopBarRight>
+      <TopBarRight className="text-right">
         <Button onClick={this.props.runProgram}>Run</Button>
       </TopBarRight>
     </TopBar>
