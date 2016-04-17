@@ -1,4 +1,5 @@
 $body-font-family: 'Ubuntu Condensed';
+$font-family-monospace: 'Ubuntu Mono';
 
 @import '{zurb:foundation-sites}/scss/foundation';
 @include foundation-everything(true);
@@ -22,12 +23,12 @@ $body-font-family: 'Ubuntu Condensed';
 }
 
 @mixin source-font {
-  font-family: 'Ubuntu Mono';
+  font-family: $font-family-monospace;
   font-weight: 400;
 }
 
 @mixin proportional-font {
-  font-family: 'Ubuntu Condensed';
+  font-family: $body-font-family;
   font-weight: 400;
 }
 
@@ -57,6 +58,7 @@ body {
   .start-body {
     // force height on main body
     height: calc(100vh - 102px);
+    line-height: 1.25;
 
     .row {
       height: 100%;
@@ -97,13 +99,19 @@ body {
     @include source-font;
 
     .start-term-output p {
+      line-height: 1.25;
       margin: 0;
     }
 
     .start-term-input {
+      // need to de-style some foundation stuff
       background-color: #f8f8f8;
       border: 0;
+      box-shadow: 0 0 0;
+      display: inline;
       font-size: 16px;
+      height: inherit;
+      margin: 0;
       outline: none;
       padding: 0;
       text-decoration: underline;
@@ -155,7 +163,7 @@ body {
   .start-editor, .start-builder {
     font-size: 14px;
     height: 100%;
-    line-height: 18px;
+    line-height: 1.25;
     @include box-shadow;
   }
 
