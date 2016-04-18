@@ -143,6 +143,6 @@ export default class App extends Base {
   }
 
   componentDidMount() {
-    $(document).foundation();
+    this.$().foundation();
   }
 }
