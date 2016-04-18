@@ -1,26 +1,10 @@
-$body-font-family: 'Ubuntu Condensed';
+$body-font-family: 'Ubuntu';
 $font-family-monospace: 'Ubuntu Mono';
 
 @import '{zurb:foundation-sites}/scss/foundation';
 @include foundation-everything(true);
 
-@font-face {
-  font-family: 'Ubuntu Mono';
-  font-style: normal;
-  font-weight: 400;
-  src: local('Ubuntu Mono'), local('UbuntuMono-Regular'),
-       url('fonts/ubuntu-mono-v6-latin-ext_latin-regular.woff2') format('woff2'),
-       url('fonts/ubuntu-mono-v6-latin-ext_latin-regular.woff') format('woff');
-}
-
-@font-face {
-  font-family: 'Ubuntu Condensed';
-  font-style: normal;
-  font-weight: 400;
-  src: local('Ubuntu Condensed'), local('UbuntuCondensed-Regular'),
-       url('fonts/ubuntu-condensed-v7-latin-ext_latin-regular.woff2') format('woff2'),
-       url('fonts/ubuntu-condensed-v7-latin-ext_latin-regular.woff') format('woff');
-}
+@import url("https://fonts.googleapis.com/css?family=Ubuntu:400,700|Ubuntu+Mono:400,700&subset=latin,latin-ext");
 
 @mixin source-font {
   font-family: $font-family-monospace;
