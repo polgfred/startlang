@@ -11,7 +11,7 @@ class StartHighlightRules extends TextHighlightRules {
       start: [
         {
           token: 'keyword',
-          regex: /\b(?:and|b(egin|reak|y)|do|e(lse|nd|xit)|f(or|rom)|i[fn]|l(et|ocal)|n(ext|ot)|or|t(hen|o)|re(peat|turn)|w(hile|ith))\b/
+          regex: /\b(?:and|b(egin|reak|y)|do|e(lse|nd|xit)|f(or|rom)|i[fn]|l(et|ocal)|n(ext|ot)|or|t(hen|o)|re(peat|turn)|while)\b/
         }, {
           token: 'constant.language',
           regex: /\b(?:false|infinity|none|true)\b/
