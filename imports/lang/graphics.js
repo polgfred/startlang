@@ -124,7 +124,7 @@ SGRuntime.globals = Object.setPrototypeOf({
   },
 
   align(value = 'start') {
-    this.updateSprops((sprops) => sprops.set('align', value));
+    this.updateTprops((tprops) => tprops.set('align', value));
   },
 
   font(fface = 'Helvetica', fsize = 36) {
