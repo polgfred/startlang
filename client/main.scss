@@ -36,6 +36,7 @@ body {
     @include box-shadow;
 
     ul.is-dropdown-submenu {
+      z-index: 100;
       @include box-shadow;
     }
 
