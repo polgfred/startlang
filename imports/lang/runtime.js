@@ -200,41 +200,37 @@ const SNumber = Object.setPrototypeOf({
     }
   },
 
-  methods: [
-    'abs',
-    'acos',
-    'asin',
-    'atan',
-    'ceil',
-    'cos',
-    'floor',
-    'round',
-    'sin',
-    'sqrt',
-    'tan',
-    'max',
-    'min'
-  ].reduce((ns, method) => {
-    ns[method] = (...args) => {
-      // forward onto built-in Math function
-      var result = Math[method](...args);
-      // check for numeric (not NaN) result
-      if (result !== result) {
-        throw new Error('result is not a number');
-      }
-      return result;
-    };
-    return ns;
-  }, {
-    log(base, n) {
-      if (n == null) {
-        n = base;
-        return Math.log(n);
-      } else if (base == 10) {
-        return Math.log10(n);
-      } else {
-        return Math.log10(n) / Math.log10(base);
-      }
+  methods: {
+    abs(n) {
+      return Math.abs(n);
+    },
+
+    acos(n) {
+      return Math.acos(n) * 180 / Math.PI;
+    },
+
+    asin(n) {
+      return Math.asin(n) * 180 / Math.PI;
+    },
+
+    atan(n) {
+      return Math.atan(n) * 180 / Math.PI;
+    },
+
+    cbrt(n) {
+      return Math.cbrt(n);
+    },
+
+    ceil(n) {
+      return Math.ceil(n);
+    },
+
+    clamp(n, lo, hi) {
+      return Math.min(Math.max(n, lo), hi);
+    },
+
+    cos(n) {
+      return Math.cos(n * Math.PI / 180);
     },
 
     exp(base, n) {
@@ -246,14 +242,53 @@ const SNumber = Object.setPrototypeOf({
       }
     },
 
+    floor(n) {
+      return Math.floor(n);
+    },
+
+    log(base, n) {
+      if (n == null) {
+        n = base;
+        return Math.log(n);
+      } else if (base == 10) {
+        return Math.log10(n);
+      } else {
+        return Math.log10(n) / Math.log10(base);
+      }
+    },
+
     rand(lo, hi) {
       return Math.floor(Math.random() * (hi - lo + 1)) + lo;
     },
 
-    clamp(n, lo, hi) {
-      return Math.min(Math.max(n, lo), hi);
+    round(n) {
+      return Math.round(n);
+    },
+
+    sign(n) {
+      return Math.sign(n);
+    },
+
+    sin(n) {
+      return Math.sin(n * Math.PI / 180);
+    },
+
+    sqrt(n) {
+      return Math.sqrt(n);
+    },
+
+    tan(n) {
+      return Math.tan(n * Math.PI / 180);
+    },
+
+    max(...args) {
+      return Math.max(...args);
+    },
+
+    min(...args) {
+      return Math.min(...args);
     }
-  }),
+  },
 
   unaryops: {
     // math

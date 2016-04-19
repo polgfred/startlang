@@ -17,7 +17,7 @@ class StartHighlightRules extends TextHighlightRules {
           regex: /\b(?:false|infinity|none|true)\b/
         }, {
           token: 'support.function',
-          regex: /\b(?:a(bs|cos|dd|sin|tan|vg)|c(eil|l(amp|ear)|o(py|s))|diff|e(ndof|xp)|f(irst|loor)|in(pu|ser)t|join|keys|l(ast|en|ist|o(g|wer))|m(ax|in)|num|p(art|ow|rint|ut)|r(and|e(mov|plac|vers)e|ound|sort)|s(huffle|in|leep|ort|plit|qrt|t(artof|r)|u(b|m)|wap)|t(a(ble|n)|ime)|upper)\b/
+          regex: /\b(?:a(bs|cos|dd|sin|tan|vg)|c(brt|eil|l(amp|ear)|o(py|s))|diff|e(ndof|xp)|f(irst|loor)|in(pu|ser)t|join|keys|l(ast|en|ist|o(g|wer))|m(ax|in)|num|p(art|ow|rint|ut)|r(and|e(mov|plac|vers)e|ound|sort)|s(huffle|ig?n|leep|ort|plit|qrt|t(artof|r)|u(b|m)|wap)|t(a(ble|n)|ime)|upper)\b/
         }, {
           token: 'support.function',
           regex: /\b(?:a(lign|nchor)|c(ircle|olor)|display|ellipse|f(ill|ont)|line|poly(gon|line)|opacity|r(e(ct|fresh|paint)|otate)|s(cale|troke)|text)\b/
