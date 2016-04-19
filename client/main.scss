@@ -1,10 +1,11 @@
-$body-font-family: 'Ubuntu';
-$font-family-monospace: 'Ubuntu Mono';
+$body-font-family: 'Rubik';
+$font-family-monospace: 'Roboto Mono';
 
 @import '{zurb:foundation-sites}/scss/foundation';
 @include foundation-everything(true);
 
-@import url("https://fonts.googleapis.com/css?family=Ubuntu:400,700|Ubuntu+Mono:400,700&subset=latin,latin-ext");
+@import url("https://fonts.googleapis.com/css?family=Roboto+Mono:400,700&subset=latin,latin-ext");
+@import url("https://fonts.googleapis.com/css?family=Rubik:400&subset=latin,latin-ext");
 
 @mixin source-font {
   font-family: $font-family-monospace;
@@ -164,7 +165,8 @@ body {
 .blocklyToolboxDiv {
   .blocklyTreeRow {
     height: 1.65rem;
-    padding-right: 0.75rem;
+    padding-right: 1rem;
+    padding-top: 0.125rem;
   }
   .blocklyTreeLabel {
     @include proportional-font;
