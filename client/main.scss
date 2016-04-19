@@ -86,20 +86,15 @@ body {
     @include source-font;
 
     .start-term-output p {
-      height: 1.35rem;
       margin: 0;
     }
 
-    .start-term-input {
-      // need to de-style some foundation stuff
-      background-color: #f8f8f8;
-      border: 0;
-      box-shadow: 0 0 0;
-      display: inline-block;
-      height: 1rem;
-      margin: 0;
-      outline: none;
-      padding: 0;
+    .start-term-command {
+      margin-top: 0.5rem;
+
+      .start-term-input {
+        display: inline-block;
+      }
     }
   }
 
