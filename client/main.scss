@@ -35,6 +35,10 @@ body {
     margin: 0.25rem;
     @include box-shadow;
 
+    ul.is-dropdown-submenu {
+      @include box-shadow;
+    }
+
     button {
       margin: 0;
     }
