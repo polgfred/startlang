@@ -23,29 +23,17 @@ export default class Header extends Base {
           <MenuItem>
             <a>View</a>
             <Menu>
-              <MenuItem isActive={this.props.viewMode == 'graphics'}>
-                <a onClick={this.props.updateViewMode} data-viewmode="graphics">Graphics</a>
-              </MenuItem>
-              <MenuItem isActive={this.props.viewMode == 'text'}>
-                <a onClick={this.props.updateViewMode} data-viewmode="text">Text</a>
-              </MenuItem>
-              <MenuItem isActive={this.props.viewMode == 'split'}>
-                <a onClick={this.props.updateViewMode} data-viewmode="split">Split</a>
-              </MenuItem>
-              <MenuItem isActive={this.props.viewMode == 'help'}>
-                <a onClick={this.props.updateViewMode} data-viewmode="help">Help</a>
-              </MenuItem>
+              { this.viewItem('graphics') }
+              { this.viewItem('text') }
+              { this.viewItem('split') }
+              { this.viewItem('help') }
             </Menu>
           </MenuItem>
           <MenuItem>
             <a>Edit</a>
             <Menu>
-              <MenuItem isActive={this.props.editMode == 'blocks'}>
-                <a onClick={this.props.updateEditMode} data-editmode="blocks">Blocks</a>
-              </MenuItem>
-              <MenuItem isActive={this.props.editMode == 'source'}>
-                <a onClick={this.props.updateEditMode} data-editmode="source">Source</a>
-              </MenuItem>
+              { this.editItem('blocks') }
+              { this.editItem('source') }
             </Menu>
           </MenuItem>
         </Menu>
@@ -53,6 +41,22 @@ export default class Header extends Base {
       <TopBarRight className="text-right">
         <Button onClick={this.props.runProgram}>Run</Button>
       </TopBarRight>
-    </TopBar>
+    </TopBar>;
+  }
+
+  viewItem(mode) {
+    return <MenuItem isActive={this.props.viewMode == mode}>
+      <a onClick={this.props.updateViewMode} data-viewmode={mode}>
+        { mode.charAt(0).toUpperCase() + mode.substr(1) }
+      </a>
+    </MenuItem>;
+  }
+
+  editItem(mode) {
+    return <MenuItem isActive={this.props.editMode == mode}>
+      <a onClick={this.props.updateEditMode} data-editmode={mode}>
+        { mode.charAt(0).toUpperCase() + mode.substr(1) }
+      </a>
+    </MenuItem>;
   }
 }
