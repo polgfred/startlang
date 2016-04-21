@@ -1,8 +1,12 @@
 'use strict';
 
+import { $ } from 'meteor/jquery';
+
 import React from 'react';
 
-import { Breadcrumbs, BreadcrumbItem } from 'react-foundation';
+import {
+  Breadcrumbs, BreadcrumbItem, Menu, MenuItem
+} from 'react-foundation';
 
 import Base from '../base';
 
@@ -11,6 +15,12 @@ export default class Node extends Base {
     return {
       title: null
     };
+  }
+
+  constructor() {
+    super();
+
+    _.bindAll(this, 'crumbClick', 'menuClick');
   }
 
   render() {
@@ -22,6 +32,7 @@ export default class Node extends Base {
         { this.renderCrumbs() }
         <h1>{ this.props.title }</h1>
         { this.renderBody() }
+        { this.renderTOC() }
       </div>;
     } else {
       // forward to child node
@@ -30,16 +41,27 @@ export default class Node extends Base {
       return React.createElement(children[path[level]], {
         parent: this,
         path: path,
-        level: level + 1
+        level: level + 1,
+        updatePath: this.props.updatePath
       });
     }
   }
 
+  renderBody() {
+    return null;
+  }
+
   renderCrumbs() {
-    let node = this, items = [], i = 0;
+    let node = this, items = [], pos = this.props.path.length;
 
     while (node && node.props.title) {
-      items.unshift(<BreadcrumbItem key={i++}>{ node.props.title }</BreadcrumbItem>);
+      let item = node == this?
+                  node.props.title :
+                  <a onClick={this.crumbClick} data-pos={pos}>
+                    { node.props.title }
+                  </a>;
+
+      items.unshift(<BreadcrumbItem key={pos--}>{ item }</BreadcrumbItem>);
       node = node.props.parent;
     }
 
@@ -48,8 +70,32 @@ export default class Node extends Base {
     </Breadcrumbs>;
   }
 
-  renderBody() {
-    return null;
+  renderTOC() {
+    let children = this.constructor.children();
+
+    let mapper = (child, index) => {
+      return <MenuItem key={index}>
+        <a onClick={this.menuClick} data-index={index}>
+          { child.defaultProps.title }
+        </a>
+      </MenuItem>;
+    };
+
+    if (children.length > 0) {
+      return <Menu isVertical>
+        { children.map(mapper) }
+      </Menu>;
+    }
+  }
+
+  crumbClick(ev) {
+    let pos = parseInt($(ev.target).data('pos'), 10);
+    this.props.updatePath(this.props.path.slice(0, pos));
+  }
+
+  menuClick(ev) {
+    let index = parseInt($(ev.target).data('index'), 10);
+    this.props.updatePath(this.props.path.concat(index));
   }
 
   static children() {

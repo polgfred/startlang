@@ -11,13 +11,19 @@ export default class Help extends Node {
     super();
 
     this.state = {
-      path: [0]
+      path: []
     };
+
+    _.bindAll(this, 'updatePath');
   }
 
   render() {
     return <div className="start-help">
-      <Welcome path={this.state.path} />
+      <Welcome path={this.state.path} updatePath={this.updatePath} />
     </div>;
+  }
+
+  updatePath(path) {
+    this.setState({ path });
   }
 }
