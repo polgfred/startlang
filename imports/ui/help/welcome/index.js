@@ -4,6 +4,7 @@ import React from 'react';
 
 import Node from '../node';
 
+// load the top-level chapters
 import Introduction from './introduction';
 import Chapter1 from './chapter1';
 import Chapter2 from './chapter2';

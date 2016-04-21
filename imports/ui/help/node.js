@@ -14,22 +14,23 @@ export default class Node extends Base {
   }
 
   render() {
-    let { parent, path, doc, level = 0 } = this.props,
-        index = path[0],
-        rest = path.slice(1);
+    let { parent, path, level = 0 } = this.props;
 
-    if (index == null) {
+    if (level == path.length) {
+      // render this node
       return <div className="start-help-node">
         { this.renderCrumbs() }
         <h1>{ this.props.title }</h1>
         { this.renderBody() }
       </div>;
     } else {
+      // forward to child node
       let children = this.constructor.children();
-      return React.createElement(children[index], {
+
+      return React.createElement(children[path[level]], {
         parent: this,
-        level: level + 1,
-        path: rest
+        path: path,
+        level: level + 1
       });
     }
   }
