@@ -13,6 +13,7 @@ import Chapter3 from './chapter3';
 export default class Welcome extends Node {
   static get defaultProps() {
     return {
+      level: 0,
       title: "Welcome"
     };
   }

@@ -11,18 +11,12 @@ import {
 import Base from '../base';
 
 export default class Node extends Base {
-  static get defaultProps() {
-    return {
-      title: null
-    };
-  }
-
   static children() {
     return [];
   }
 
   render() {
-    let { path, updatePath, level = 0 } = this.props;
+    let { path, updatePath, level } = this.props;
 
     if (level == path.length) {
       // render this node
