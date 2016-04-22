@@ -2,11 +2,11 @@
 
 import React from 'react';
 
-import Node from './node';
+import Base from '../base';
 
 import Welcome from './welcome';
 
-export default class Help extends Node {
+export default class Help extends Base {
   constructor() {
     super();
 
