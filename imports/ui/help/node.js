@@ -17,8 +17,12 @@ export default class Node extends Base {
     };
   }
 
+  static children() {
+    return [];
+  }
+
   render() {
-    let { parent, path, level = 0 } = this.props;
+    let { path, updatePath, level = 0 } = this.props;
 
     if (level == path.length) {
       // render this node
@@ -34,9 +38,9 @@ export default class Node extends Base {
 
       return React.createElement(children[path[level]], {
         parent: this,
-        path: path,
         level: level + 1,
-        updatePath: this.props.updatePath
+        path,
+        updatePath
       });
     }
   }
@@ -46,15 +50,16 @@ export default class Node extends Base {
   }
 
   renderCrumbs() {
-    let pos = this.props.path.length,
+    let { path, updatePath } = this.props,
+        pos = path.length,
         node = this,
         items = [];
 
     while (node) {
-      let path = this.props.path.slice(0, pos),
+      let next = path.slice(0, pos),
           link = node == this ?
                    node.props.title :
-                   <a onClick={() => this.props.updatePath(path)}>
+                   <a onClick={() => updatePath(next)}>
                      { node.props.title }
                    </a>,
           item = <BreadcrumbItem key={pos--}>
@@ -71,28 +76,25 @@ export default class Node extends Base {
   }
 
   renderTOC() {
-    let children = this.constructor.children(),
+    let { path, updatePath } = this.props,
+        children = this.constructor.children(),
         items = [];
 
-    for (let index = 0; index < children.length; ++index) {
-      let path = this.props.path.concat(index),
-          item = <MenuItem key={index}>
-                   <a onClick={() => this.props.updatePath(path)}>
-                     { children[index].defaultProps.title }
-                   </a>
-                 </MenuItem>;
-
-      items.push(item);
-    }
-
     if (children.length > 0) {
+      for (let index = 0; index < children.length; ++index) {
+        let next = path.concat(index),
+            item = <MenuItem key={index}>
+                     <a onClick={() => updatePath(next)}>
+                       { children[index].defaultProps.title }
+                     </a>
+                   </MenuItem>;
+
+        items.push(item);
+      }
+
       return <Menu isVertical>
         { items }
       </Menu>;
     }
-  }
-
-  static children() {
-    return [];
   }
 }

@@ -11,16 +11,16 @@ export default class Chapter1 extends Node {
     };
   }
 
-  renderBody() {
-    return <div className="start-help-body">
-    </div>;
-  }
-
   static children() {
     return [
       Numbers,
       Text
     ];
+  }
+
+  renderBody() {
+    return <div className="start-help-body">
+    </div>;
   }
 }
 
