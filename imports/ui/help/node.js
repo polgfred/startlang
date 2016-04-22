@@ -17,12 +17,6 @@ export default class Node extends Base {
     };
   }
 
-  constructor() {
-    super();
-
-    _.bindAll(this, 'crumbClick', 'menuClick');
-  }
-
   render() {
     let { parent, path, level = 0 } = this.props;
 
@@ -52,16 +46,22 @@ export default class Node extends Base {
   }
 
   renderCrumbs() {
-    let node = this, items = [], pos = this.props.path.length;
+    let pos = this.props.path.length,
+        node = this,
+        items = [];
 
-    while (node && node.props.title) {
-      let item = node == this?
-                  node.props.title :
-                  <a onClick={this.crumbClick} data-pos={pos}>
-                    { node.props.title }
-                  </a>;
+    while (node) {
+      let path = this.props.path.slice(0, pos),
+          link = node == this ?
+                   node.props.title :
+                   <a onClick={() => this.props.updatePath(path)}>
+                     { node.props.title }
+                   </a>,
+          item = <BreadcrumbItem key={pos--}>
+                   { link }
+                 </BreadcrumbItem>;
 
-      items.unshift(<BreadcrumbItem key={pos--}>{ item }</BreadcrumbItem>);
+      items.unshift(item);
       node = node.props.parent;
     }
 
@@ -71,31 +71,25 @@ export default class Node extends Base {
   }
 
   renderTOC() {
-    let children = this.constructor.children();
+    let children = this.constructor.children(),
+        items = [];
 
-    let mapper = (child, index) => {
-      return <MenuItem key={index}>
-        <a onClick={this.menuClick} data-index={index}>
-          { child.defaultProps.title }
-        </a>
-      </MenuItem>;
-    };
+    for (let index = 0; index < children.length; ++index) {
+      let path = this.props.path.concat(index),
+          item = <MenuItem key={index}>
+                   <a onClick={() => this.props.updatePath(path)}>
+                     { children[index].defaultProps.title }
+                   </a>
+                 </MenuItem>;
+
+      items.push(item);
+    }
 
     if (children.length > 0) {
       return <Menu isVertical>
-        { children.map(mapper) }
+        { items }
       </Menu>;
     }
-  }
-
-  crumbClick(ev) {
-    let pos = parseInt($(ev.target).data('pos'), 10);
-    this.props.updatePath(this.props.path.slice(0, pos));
-  }
-
-  menuClick(ev) {
-    let index = parseInt($(ev.target).data('index'), 10);
-    this.props.updatePath(this.props.path.concat(index));
   }
 
   static children() {

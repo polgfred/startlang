@@ -59,12 +59,12 @@ export default class App extends Base {
     });
   }
 
-  updateViewMode(ev) {
-    this.setState({ viewMode: $(ev.target).data('viewmode') });
+  updateViewMode(viewMode) {
+    this.setState({ viewMode });
   }
 
-  updateEditMode(ev) {
-    this.setState({ editMode: $(ev.target).data('editmode') });
+  updateEditMode(editMode) {
+    this.setState({ editMode });
   }
 
   clearDisplay() {
@@ -127,13 +127,13 @@ export default class App extends Base {
               updateEditMode={this.updateEditMode}
               runProgram={this.runProgram} />
       <div className="start-body">
-        <Row isExpanded>
+        <Row isExpanded onKeyUp={this.handleKeyUp}>
           <Column className="start-column" large={5}>
             { showGraphics && <Graphics data={this.state.gfx} /> }
             { showTerm && <Term buf={this.state.buf} ref="term" /> }
             { showHelp && <Help /> }
           </Column>
-          <Column className="start-column" large={7} onKeyUp={this.handleKeyUp}>
+          <Column className="start-column" large={7}>
             { editMode == 'blocks' && <Builder ref="editor" /> }
             { editMode == 'source' && <Editor ref="editor" /> }
           </Column>

@@ -46,7 +46,7 @@ export default class Header extends Base {
 
   viewItem(mode) {
     return <MenuItem isActive={this.props.viewMode == mode}>
-      <a onClick={this.props.updateViewMode} data-viewmode={mode}>
+      <a onClick={() => this.props.updateViewMode(mode)}>
         { mode.charAt(0).toUpperCase() + mode.substr(1) }
       </a>
     </MenuItem>;
@@ -54,7 +54,7 @@ export default class Header extends Base {
 
   editItem(mode) {
     return <MenuItem isActive={this.props.editMode == mode}>
-      <a onClick={this.props.updateEditMode} data-editmode={mode}>
+      <a onClick={() => this.props.updateEditMode(mode)}>
         { mode.charAt(0).toUpperCase() + mode.substr(1) }
       </a>
     </MenuItem>;
