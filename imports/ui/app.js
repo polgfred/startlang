@@ -115,10 +115,7 @@ export default class App extends Base {
 
   render() {
     let viewMode = this.state.viewMode,
-        editMode = this.state.editMode,
-        showGraphics = viewMode == 'graphics' || viewMode == 'split',
-        showTerm = viewMode == 'text' || viewMode == 'split',
-        showHelp = viewMode == 'help';
+        editMode = this.state.editMode;
 
     return <div className={`start-app start-view-mode-${viewMode}`}>
       <Header viewMode={viewMode}
@@ -129,9 +126,9 @@ export default class App extends Base {
       <div className="start-body">
         <Row isExpanded onKeyUp={this.handleKeyUp}>
           <Column className="start-column" large={5}>
-            { showGraphics && <Graphics data={this.state.gfx} /> }
-            { showTerm && <Term buf={this.state.buf} ref="term" /> }
-            { showHelp && <Help /> }
+            <Graphics data={this.state.gfx} />
+            <Term buf={this.state.buf} ref="term" />
+            <Help />
           </Column>
           <Column className="start-column" large={7}>
             { editMode == 'blocks' && <Builder ref="editor" /> }
