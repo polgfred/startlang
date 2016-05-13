@@ -16,13 +16,13 @@ export default class Node extends Base {
   }
 
   render() {
-    let { path, updatePath, level } = this.props;
+    let { path, updatePath, title, level } = this.props;
 
     if (level == path.length) {
       // render this node
       return <div className="start-help-node">
         { this.renderCrumbs() }
-        <h1>{ this.props.title }</h1>
+        <h1>{ title }</h1>
         { this.renderBody() }
         { this.renderTOC() }
       </div>;
