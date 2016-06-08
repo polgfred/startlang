@@ -106,7 +106,7 @@ class TermInput extends Base {
     if (this.state.needsInput) {
       // fixup <input> width based on size of prompt
       this.$('.start-term-input')
-        .css('width', 'calc(100% - ' + (this.$('.start-term-prompt').width()) + 'px)')
+        .css('width', 'calc(100% - ' + (this.$('.start-term-prompt').width() + 4) + 'px)')
         .focus();
     }
   }
