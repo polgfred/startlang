@@ -124,7 +124,7 @@ export default class App extends Base {
               updateEditMode={this.updateEditMode}
               runProgram={this.runProgram} />
       <div className="start-body">
-        <Row isExpanded onKeyUp={this.handleKeyUp}>
+        <Row  className="start-main" isExpanded onKeyUp={this.handleKeyUp}>
           <Column className="start-column" large={5}>
             <Graphics data={this.state.gfx} />
             <Term buf={this.state.buf} ref="term" />
@@ -133,6 +133,11 @@ export default class App extends Base {
           <Column className="start-column" large={7}>
             { editMode == 'blocks' && <Builder ref="editor" /> }
             { editMode == 'source' && <Editor ref="editor" /> }
+          </Column>
+        </Row>
+        <Row className="start-slider" isExpanded>
+          <Column large={12}>
+            <input type="range" />
           </Column>
         </Row>
       </div>
