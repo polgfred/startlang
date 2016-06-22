@@ -14,7 +14,10 @@ export const SFrame = immutable.Record({
 });
 
 export class SInterpreter {
-  constructor() {
+  constructor(app) {
+    // the react component that we'll call methods on
+    this.app = app;
+
     // setup the internal state
     this.fn = immutable.OrderedMap(); // function table
     this.ns = immutable.OrderedMap(); // top namespace

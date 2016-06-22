@@ -43,6 +43,11 @@ export const resultKey = Symbol('START_RESULT');
 // Environment
 
 export class SRuntime {
+  constructor(app) {
+    // the react component that we'll call methods on
+    this.app = app;
+  }
+
   handle(value) {
     return handle(value);
   }

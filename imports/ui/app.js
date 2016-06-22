@@ -101,11 +101,12 @@ export default class App extends Base {
   runProgram() {
     this.refreshState();
 
+    let interp = this.interp = new SInterpreter(this);
+    interp.ctx = new SGRuntime(this);
+    interp.root(this.refs.editor.getRoot());
+
     // wait long enough before the initial run to let the DOM clear
     Meteor.setTimeout(() => {
-      let interp = new SInterpreter();
-      interp.ctx = new SGRuntime(this);
-      interp.root(this.refs.editor.getRoot());
       interp.run().catch((err) => {
         console.log(err);
         console.log(err.stack);
@@ -124,7 +125,7 @@ export default class App extends Base {
               updateEditMode={this.updateEditMode}
               runProgram={this.runProgram} />
       <div className="start-body">
-        <Row  className="start-main" isExpanded onKeyUp={this.handleKeyUp}>
+        <Row className="start-main" isExpanded onKeyUp={this.handleKeyUp}>
           <Column className="start-column" large={5}>
             <Graphics data={this.state.gfx} />
             <Term buf={this.state.buf} ref="term" />

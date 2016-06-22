@@ -5,13 +5,6 @@ import immutable from 'immutable';
 import { SRuntime, SBase, handle, handlerKey, assignKey, resultKey } from './runtime';
 
 export class SGRuntime extends SRuntime {
-  constructor(app) {
-    super();
-
-    // the react component that we'll call methods on
-    this.app = app;
-  }
-
   addShape(type, attrs) {
     this.app.gfxUpdate((gfx) => gfx.addShape(type, attrs));
   }
