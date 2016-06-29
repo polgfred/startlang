@@ -1,6 +1,5 @@
 'use strict';
 
-import { Meteor } from 'meteor/meteor';
 import { $ } from 'meteor/jquery';
 import { _ } from 'meteor/underscore';
 
@@ -21,8 +20,6 @@ import Builder from './builder';
 
 import { SInterpreter } from '../lang/interpreter';
 import { SGRuntime, SGraphics } from '../lang/graphics';
-
-import Programs from '../api/programs';
 
 export default class App extends Base {
   constructor(props) {
@@ -106,7 +103,7 @@ export default class App extends Base {
     interp.root(this.refs.editor.getRoot());
 
     // wait long enough before the initial run to let the DOM clear
-    Meteor.setTimeout(() => {
+    setTimeout(() => {
       interp.run().catch((err) => {
         console.log(err);
         console.log(err.stack);

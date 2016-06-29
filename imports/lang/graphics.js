@@ -1,5 +1,7 @@
 'use strict';
 
+import { nextTick } from 'process';
+
 import immutable from 'immutable';
 
 import { SRuntime, SBase, handle, handlerKey, assignKey, resultKey } from './runtime';
@@ -26,7 +28,7 @@ SGRuntime.globals = Object.setPrototypeOf({
   repaint() {
     // let the DOM catch up
     return new Promise((resolve) => {
-      Meteor.defer(resolve);
+      nextTick(resolve);
     });
   },
 
