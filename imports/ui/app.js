@@ -112,8 +112,7 @@ export default class App extends Base {
   }
 
   render() {
-    let viewMode = this.state.viewMode,
-        editMode = this.state.editMode;
+    let { viewMode, editMode } = this.state;
 
     return <div className={`start-app start-view-mode-${viewMode}`}>
       <Header viewMode={viewMode}
