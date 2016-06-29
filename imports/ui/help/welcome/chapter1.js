@@ -17,11 +17,6 @@ export default class Chapter1 extends Node {
       Text
     ];
   }
-
-  renderBody() {
-    return <div className="start-help-body">
-    </div>;
-  }
 }
 
 class Numbers extends Node {

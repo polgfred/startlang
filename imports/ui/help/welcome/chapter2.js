@@ -13,6 +13,7 @@ export default class Chapter2 extends Node {
 
   renderBody() {
     return <div className="start-help-body">
+      <p>Placeholder text</p>
     </div>;
   }
 }

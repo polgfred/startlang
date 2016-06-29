@@ -133,13 +133,13 @@ export default class App extends Base {
             { editMode == 'source' && <Editor ref="editor" /> }
           </Column>
         </Row>
-        <Row className="start-slider" isExpanded>
-          <Column large={12}>
-            <input type="range" />
-          </Column>
-        </Row>
       </div>
     </div>;
+    // <Row className="start-slider" isExpanded>
+    //   <Column large={12}>
+    //     <input type="range" />
+    //   </Column>
+    // </Row>
   }
 
   componentDidMount() {
