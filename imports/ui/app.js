@@ -40,19 +40,21 @@ export default class App extends Base {
   }
 
   refreshState() {
-    // reset the graphics and terminal state
-    this.setState((state) => {
-      let newState = {
-        gfx: new SGraphics(),
-        buf: immutable.List()
-      };
+    return new Promise((resolve) => {
+      // reset the graphics and terminal state
+      this.setState((state) => {
+        let newState = {
+          gfx: new SGraphics(),
+          buf: immutable.List()
+        };
 
-      // if we're in help view, switch to split view
-      if (state.viewMode == 'help') {
-        newState.viewMode = 'split';
-      }
+        // if we're in help view, switch to split view
+        if (state.viewMode == 'help') {
+          newState.viewMode = 'split';
+        }
 
-      return newState;
+        return newState;
+      }, resolve);
     });
   }
 
@@ -96,19 +98,16 @@ export default class App extends Base {
   }
 
   runProgram() {
-    this.refreshState();
+    this.refreshState().then(() => {
+      let interp = this.interp = new SInterpreter(this);
+      interp.ctx = new SGRuntime(this);
+      interp.root(this.refs.editor.getRoot());
 
-    let interp = this.interp = new SInterpreter(this);
-    interp.ctx = new SGRuntime(this);
-    interp.root(this.refs.editor.getRoot());
-
-    // wait long enough before the initial run to let the DOM clear
-    setTimeout(() => {
       interp.run().catch((err) => {
         console.log(err);
         console.log(err.stack);
       });
-    }, 25);
+    });
   }
 
   render() {
