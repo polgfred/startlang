@@ -111,7 +111,7 @@ export default class App extends Base {
   }
 
   render() {
-    let { viewMode, editMode } = this.state;
+    let { viewMode, editMode, gfx, buf } = this.state;
 
     return <div className={`start-app start-view-mode-${viewMode}`}>
       <Header viewMode={viewMode}
@@ -122,8 +122,8 @@ export default class App extends Base {
       <div className="start-body">
         <Row className="start-main" isExpanded onKeyUp={this.handleKeyUp}>
           <Column className="start-column" large={5}>
-            <Graphics data={this.state.gfx} />
-            <Term buf={this.state.buf} ref="term" />
+            <Graphics data={gfx} />
+            <Term buf={buf} ref="term" />
             <Help />
           </Column>
           <Column className="start-column" large={7}>
