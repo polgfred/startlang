@@ -1,4 +1,6 @@
-var path = require('path');
+var path = require('path'),
+    webpack = require('webpack'),
+    env = process.env['NODE_ENV'];
 
 module.exports = {
   entry: './src/main.js',
@@ -6,22 +8,25 @@ module.exports = {
     path: path.join(__dirname, 'dist'),
     filename: 'bundle.js'
   },
-  devtool: 'inline-source-map',
   module: {
     loaders: [
       {
-        exclude: [
-          path.resolve(__dirname, 'node_modules')
-        ],
         test: /\.js$/,
-        loaders: [ 'babel' ]
+        loaders: [ 'babel' ],
+        exclude: [ path.resolve(__dirname, 'node_modules') ]
       }, {
         test: /\.pegjs$/,
-        loaders: [ 'pegjs' ]
+        loaders: [ 'babel', 'pegjs' ]
       }, {
         test: /\.scss$/,
         loaders: [ 'style', 'css', 'sass' ]
       }
     ]
-  }
+  },
+  devtool: (env == 'production') ?
+              null :
+              'cheap-module-source-map',
+  plugins: (env == 'production') ?
+              [ new webpack.optimize.UglifyJsPlugin() ] :
+              []
 };
