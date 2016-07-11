@@ -182,21 +182,27 @@ export const SBase = {
 
 // Handler definitions
 
-const SNone = Object.setPrototypeOf({
+const SNone = {
+  __proto__: SBase,
+
   repr() {
     return '*none*';
   }
-}, SBase);
+};
 
-const SBoolean = Object.setPrototypeOf({
+const SBoolean = {
+  __proto__: SBase,
+
   repr(b) {
     return b ? '*true*' : '*false*';
   }
-}, SBase);
+};
 
 Boolean.prototype[handlerKey] = SBoolean;
 
-const SNumber = Object.setPrototypeOf({
+const SNumber = {
+  __proto__: SBase,
+
   repr(n) {
     if (isFinite(n)) {
       return String(n);
@@ -303,7 +309,9 @@ const SNumber = Object.setPrototypeOf({
     '~': (right) => ~right
   },
 
-  binaryops: Object.setPrototypeOf({
+  binaryops: {
+    __proto__: SBase.binaryops,
+
     // math
     '+': checkMathOp((left, right) => left + right),
     '-': checkMathOp((left, right) => left - right),
@@ -314,12 +322,14 @@ const SNumber = Object.setPrototypeOf({
     '&': checkMathOp((left, right) => left & right),
     '|': checkMathOp((left, right) => left | right),
     '^': checkMathOp((left, right) => left ^ right)
-  }, SBase.binaryops)
-}, SBase);
+  }
+};
 
 Number.prototype[handlerKey] = SNumber;
 
-const SString = Object.setPrototypeOf({
+const SString = {
+  __proto__: SBase,
+
   repr(s) {
     return s;
   },
@@ -385,10 +395,12 @@ const SString = Object.setPrototypeOf({
     }
   },
 
-  binaryops: Object.setPrototypeOf({
+  binaryops: {
+    __proto__: SBase.binaryops,
+
     '$': (left, right) => left + handle(right).repr(right)
-  }, SBase.binaryops)
-}, SBase);
+  }
+};
 
 String.prototype[handlerKey] = SString;
 
@@ -400,7 +412,9 @@ function normalizeTimeUnit(unit) {
   return norm;
 }
 
-const STime = Object.setPrototypeOf({
+const STime = {
+  __proto__: SBase,
+
   create(args) {
     if (args.length == 0) {
       return moment();
@@ -445,12 +459,14 @@ const STime = Object.setPrototypeOf({
     }
   },
 
-  binaryops: Object.setPrototypeOf({
+  binaryops: {
+    __proto__: SBase.binaryops,
+
     // comparison operators need to cast to number first
     '=' : (left, right) => +left  == +right,
     '!=': (left, right) => +left !== +right
-  }, SBase.binaryops)
-}, SBase);
+  }
+};
 
 moment.fn[handlerKey] = STime;
 
@@ -465,16 +481,20 @@ function compareElementsReversed(left, right) {
   return -compareElements(left, right);
 }
 
-const SContainer = Object.setPrototypeOf({
+const SContainer = {
+  __proto__: SBase,
+
   binaryops: {
     '=' : (left, right) =>  left.equals(right),
     '!=': (left, right) => !left.equals(right)
   }
-}, SBase);
+};
 
 // Lists
 
-const SList = Object.setPrototypeOf({
+const SList = {
+  __proto__: SContainer,
+
   create(items) {
     return immutable.List(items);
   },
@@ -596,16 +616,20 @@ const SList = Object.setPrototypeOf({
     }
   },
 
-  binaryops: Object.setPrototypeOf({
+  binaryops: {
+    __proto__: SContainer.binaryops,
+
     '$': checkOp((left, right) => left.concat(right))
-  }, SContainer.binaryops)
-}, SContainer);
+  }
+};
 
 immutable.List.prototype[handlerKey] = SList;
 
 // Tables
 
-const STable = Object.setPrototypeOf({
+const STable = {
+  __proto__: SContainer,
+
   create(pairs) {
     return immutable.OrderedMap().withMutations((n) => {
       for (let i = 0; i < pairs.length; i += 2) {
@@ -668,10 +692,12 @@ const STable = Object.setPrototypeOf({
     }
   },
 
-  binaryops: Object.setPrototypeOf({
+  binaryops: {
+    __proto__: SContainer.binaryops,
+
     '$': checkOp((left, right) => left.merge(right))
-  }, SContainer.binaryops)
-}, SContainer);
+  }
+};
 
 immutable.OrderedMap.prototype[handlerKey] = STable;
 

@@ -24,7 +24,9 @@ export class SGRuntime extends SRuntime {
   }
 }
 
-SGRuntime.globals = Object.setPrototypeOf({
+SGRuntime.globals = {
+  __proto__: SRuntime.globals,
+
   repaint() {
     // let the DOM catch up
     return new Promise((resolve) => {
@@ -127,7 +129,7 @@ SGRuntime.globals = Object.setPrototypeOf({
       .set('fface', fface)
       .set('fsize', fsize));
   }
-}, SRuntime.globals);
+};
 
 // visual properties that will get applied to shapes
 const SShapeProps = immutable.Record({
