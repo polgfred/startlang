@@ -1,6 +1,5 @@
 'use strict';
 
-// import readline from 'readline';
 import moment from 'moment';
 import immutable from 'immutable';
 
@@ -121,25 +120,15 @@ SRuntime.globals = {
     if (values.length > 0) {
       for (let i = 0; i < values.length; ++i) {
         let v = values[i];
-        console.log(handle(v).repr(v));
+        this.app.output(handle(v).repr(v));
       }
     } else {
-      console.log();
+      this.app.output();
     }
   },
 
   input(message) {
-    // return new Promise((resolve) => {
-    //   let rl = readline.createInterface({
-    //     input: process.stdin,
-    //     output: process.stdout
-    //   });
-    //
-    //   rl.question(message, (answer) => {
-    //     rl.close();
-    //     resolve(answer);
-    //   });
-    // });
+    return this.app.input(message);
   },
 
   sleep(seconds) {
