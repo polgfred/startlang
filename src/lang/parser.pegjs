@@ -17,7 +17,7 @@
     }
 
     // show the type first
-    let node = { type: type };
+    let node = { type };
 
     // then the flow marker
     if (flowMarker[type]) {
