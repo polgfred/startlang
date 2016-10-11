@@ -39,13 +39,46 @@
   }
 
   // take a series of tests, and (optionally) a final else body, and construct an if-tree
-  function buildIf(tests, fbody) {
+  function buildIfTree(tests, fbody) {
     let [ cond, tbody ] = tests.shift();
     if (tests.length > 0) {
       // insert the next-level tree into the false slot
-      fbody = buildIf(tests, fbody);
+      fbody = buildIfTree(tests, fbody);
     }
     return buildNode('if', { cond, tbody, fbody });
+  }
+
+  // take a chain of equal-precedence exprs and construct a left-folding tree
+  function buildBinaryExpr(type, left, rest) {
+    if (rest.length == 0) {
+      return left;
+    } else {
+      let [ op, right ] = rest.shift(),
+          node = buildNode(type, { op, left, right });
+      return buildBinaryExpr(type, node, rest);
+    }
+  }
+
+  // take a chain of unary ops and construct a right-folding tree
+  function buildUnaryExpr(type, ops, right) {
+    if (ops.length == 0) {
+      return right;
+    } else {
+      let op = ops.pop(),
+          node = buildNode(type, { op, right });
+      return buildUnaryExpr(type, ops, node);
+    }
+  }
+
+  // take a chain of string segments and construct a concatenation expression
+  function buildString(left, rest) {
+    if (rest.length == 0) {
+      return left;
+    } else {
+      let right = rest.shift(),
+          node = buildNode('binaryOp', { op: '$', left, right });
+      return buildString(node, rest);
+    }
   }
 
   // take a base name, indexes, and (optionally) a value, and construct an indexish node
@@ -54,59 +87,6 @@
       return buildNode('index', { name, indexes });
     } else {
       return buildNode('letIndex', { name, indexes, value });
-    }
-  }
-
-  // take a chain of equal-precedence logical exprs and construct a left-folding tree
-  function buildLogicalOp(left, rest) {
-    if (rest.length == 0) {
-      return left;
-    } else {
-      let [ op, right ] = rest.shift(),
-          node = buildNode('logicalOp', { op, left, right });
-      return buildLogicalOp(node, rest);
-    }
-  }
-
-  // take a chain of equal-precedence binary exprs and construct a left-folding tree
-  function buildBinaryOp(left, rest) {
-    if (rest.length == 0) {
-      return left;
-    } else {
-      let [ op, right ] = rest.shift(),
-          node = buildNode('binaryOp', { op, left, right });
-      return buildBinaryOp(node, rest);
-    }
-  }
-
-  // same, but fold right
-  function buildBinaryOpRight(rest, right) {
-    if (rest.length == 0) {
-      return right;
-    } else {
-      let [ op, left ] = rest.pop(),
-          node = buildNode('binaryOp', { op, left, right });
-      return buildBinaryOpRight(rest, node);
-    }
-  }
-
-  function buildUnaryOpRight(ops, right) {
-    if (ops.length == 0) {
-      return right;
-    } else {
-      let op = ops.pop(),
-          node = buildNode('unaryOp', { op, right });
-      return buildUnaryOpRight(ops, node);
-    }
-  }
-
-  function buildString(left, rest) {
-    if (rest.length == 0) {
-      return left;
-    } else {
-      let right = rest.shift(),
-          node = buildNode('binaryOp', { op: '$', left, right });
-      return buildString(node, rest);
     }
   }
 }
@@ -140,14 +120,14 @@ Control
 If
   // one-line if/then[/else]
   = 'if' WB __ cond:Value __ 'then' WB __ tbody:Statement fbody:( __ 'else' WB __ s:Statement { return s; } )? {
-      return buildIf([[ cond, tbody ]], fbody);
+      return buildIfTree([[ cond, tbody ]], fbody);
     }
   // multi-line if/then[/else if/...][/else]
   / 'if' WB __ cond:Value __ 'then' WB __ EOL tbody:Block
       tests:( __ 'else' WB __ 'if' WB __ v:Value __ 'then' WB __ EOL b:Block { return [ v, b ]; } )*
       fbody:( __ 'else' WB __ EOL b:Block { return b; } )?
       __ 'end' {
-      return buildIf([[ cond, tbody ]].concat(tests), fbody);
+      return buildIfTree([[ cond, tbody ]].concat(tests), fbody);
     }
 
 Repeat
@@ -264,7 +244,7 @@ Value 'a value'
 
 ConjExpr
   = first:NotExpr rest:( __ op:ConjOp __ e:NotExpr { return [ op, e ]; } )* {
-      return buildLogicalOp(first, rest);
+      return buildBinaryExpr('logicalOp', first, rest);
     }
 
 ConjOp
@@ -298,7 +278,7 @@ RelOp
 
 ConcatExpr
   = first:BitExpr rest:( __ op:ConcatOp __ e:BitExpr { return [ op, e ]; } )* {
-      return buildBinaryOp(first, rest);
+      return buildBinaryExpr('binaryOp', first, rest);
     }
 
 ConcatOp
@@ -308,7 +288,7 @@ ConcatOp
 
 BitExpr
   = first:AddExpr rest:( __ op:BitOp __ e:AddExpr { return [ op, e ]; } )* {
-      return buildBinaryOp(first, rest);
+      return buildBinaryExpr('binaryOp', first, rest);
     }
 
 BitOp
@@ -318,7 +298,7 @@ BitOp
 
 AddExpr
   = first:MultExpr rest:( __ op:AddOp __ e:MultExpr { return [ op, e ]; } )* {
-      return buildBinaryOp(first, rest);
+      return buildBinaryExpr('binaryOp', first, rest);
     }
 
 AddOp
@@ -327,7 +307,7 @@ AddOp
 
 MultExpr
   = first:UnaryExpr rest:( __ op:MultOp __ e:UnaryExpr { return [ op, e ]; } )* {
-      return buildBinaryOp(first, rest);
+      return buildBinaryExpr('binaryOp', first, rest);
     }
 
 MultOp
@@ -337,7 +317,7 @@ MultOp
 
 UnaryExpr
   = ops:( op:UnaryOp __ { return op; } )* right:CallExpr {
-      return buildUnaryOpRight(ops, right);
+      return buildUnaryExpr('unaryOp', ops, right);
     }
 
 UnaryOp
