@@ -60,7 +60,7 @@ body {
   .x-start-orient {
     transform: translate(calc(50vw - 0.25rem), calc(32.5vh - 1.875rem)) scale(1, -1);
 
-    @media #{$large-up} {
+    @include breakpoint(large up) {
       // this width is sensitive to the relative size of the graphics display,
       // so if the column width changes, this needs to reflect that.
       // the desired width should be half the real width of the left column,
