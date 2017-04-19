@@ -1,7 +1,5 @@
 'use strict';
 
-let Blockly = require('node-blockly/lib/blockly_compressed');
-
 Blockly.Blocks['lists_functions'] = {
   init: function() {
     let OPERATORS =

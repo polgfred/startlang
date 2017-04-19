@@ -1,7 +1,5 @@
 'use strict';
 
-let Blockly = require('node-blockly/lib/blockly_compressed');
-
 Blockly.Blocks['graphics_rect'] = {
   init: function() {
     this.setColour(Blockly.Blocks.graphics.HUE);

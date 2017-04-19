@@ -1,7 +1,5 @@
 'use strict';
 
-let Blockly = require('node-blockly/lib/blockly_compressed');
-
 Blockly.FieldAngle.CLOCKWISE = true;
 Blockly.FieldAngle.OFFSET = 90;
 Blockly.FieldAngle.WRAP = 180;

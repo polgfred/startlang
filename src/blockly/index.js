@@ -12,14 +12,6 @@ import './lists';
 import './tables';
 import './graphics';
 
-export default Blockly = require('node-blockly/lib/blockly_compressed');
-
-// this abomination is brought to you by the fact that requiring this module
-// actully changes the value of Blockly.Blocks in the process. we need the original
-// value from blockly_compressed, extended with the value from blocks_compressed,
-// and then put back where we found it. don't ever write code like this.
-Blockly.Blocks = util._extend(Blockly.Blocks, require('node-blockly/lib/blocks_compressed')(Blockly));
-
 // setup our color scheme
 Blockly.Blocks.control = {};
 Blockly.Blocks.time = {};
@@ -29,3 +21,6 @@ Blockly.Blocks.control.HUE = 290;
 Blockly.Blocks.time.HUE = 0;
 Blockly.Blocks.colour.HUE = 180;
 Blockly.Blocks.graphics.HUE = 180;
+
+// internally, requiring 'blockly' will configure stuff and return the global object
+export default Blockly;

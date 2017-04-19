@@ -1,9 +1,5 @@
 'use strict';
 
-let Blockly = require('node-blockly/lib/blockly_compressed');
-
-Blockly.Msg = require('node-blockly/lib/i18n/en')();
-
 Blockly.Msg.LOGIC_NULL = 'nothing';
 Blockly.Msg.LOGIC_NULL_TOOLTIP = 'Returns nothing.';
 

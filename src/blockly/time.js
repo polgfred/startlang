@@ -1,7 +1,5 @@
 'use strict';
 
-let Blockly = require('node-blockly/lib/blockly_compressed');
-
 Blockly.Blocks['time_sleep'] = {
   init: function() {
     this.setColour(Blockly.Blocks.time.HUE);

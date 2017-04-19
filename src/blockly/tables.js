@@ -1,7 +1,5 @@
 'use strict';
 
-let Blockly = require('node-blockly/lib/blockly_compressed');
-
 Blockly.Blocks.tables = {};
 
 Blockly.Blocks.tables.HUE = 20;

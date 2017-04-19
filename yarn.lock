@@ -784,9 +784,9 @@ block-stream@*:
   dependencies:
     inherits "~2.0.0"
 
-"blockly@git://github.com/google/blockly#9d4baa9":
+blockly@^1.0.0:
   version "1.0.0"
-  resolved "git://github.com/google/blockly#9d4baa9"
+  resolved "https://registry.yarnpkg.com/blockly/-/blockly-1.0.0.tgz#db14ce06cf6a9f3ea0e5b21c11ca89da6af461e8"
 
 boom@2.x.x:
   version "2.10.1"
@@ -2090,10 +2090,6 @@ lodash.words@^3.0.0:
   dependencies:
     lodash._root "^3.0.0"
 
-lodash@^3.8.0:
-  version "3.10.1"
-  resolved "https://registry.yarnpkg.com/lodash/-/lodash-3.10.1.tgz#5bf45e8e49ba4189e17d482789dfd15bd140b7b6"
-
 lodash@^4.0.0, lodash@^4.14.0, lodash@^4.17.2, lodash@^4.2.0:
   version "4.17.4"
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.4.tgz#78203a4d1c328ae1d86dca6460e369b57f4055ae"
@@ -2254,13 +2250,6 @@ nan@^2.3.0, nan@^2.3.2:
 negotiator@0.6.1:
   version "0.6.1"
   resolved "https://registry.yarnpkg.com/negotiator/-/negotiator-0.6.1.tgz#2b327184e8992101177b28563fb5e7102acd0ca9"
-
-"node-blockly@git://github.com/polgfred/node-blockly":
-  version "1.0.1"
-  resolved "git://github.com/polgfred/node-blockly#b7180392ae8e291388a0fa4d5f38790a604fc591"
-  dependencies:
-    lodash "^3.8.0"
-    xmldom "^0.1.19"
 
 node-fetch@^1.0.1:
   version "1.6.3"
@@ -3719,10 +3708,6 @@ wrap-ansi@^2.0.0:
 wrappy@1:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/wrappy/-/wrappy-1.0.2.tgz#b5243d8f3ec1aa35f1364605bc0d1036e30ab69f"
-
-xmldom@^0.1.19:
-  version "0.1.27"
-  resolved "https://registry.yarnpkg.com/xmldom/-/xmldom-0.1.27.tgz#d501f97b3bdb403af8ef9ecc20573187aadac0e9"
 
 xtend@^4.0.0:
   version "4.0.1"
