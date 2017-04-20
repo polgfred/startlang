@@ -10,25 +10,25 @@ module.exports = {
     filename: 'bundle.js'
   },
   module: {
-    loaders: [
+    rules: [
       {
         test: /\.js$/,
-        loaders: [ 'babel-loader' ],
+        use: [ 'babel-loader' ],
         exclude: [ path.resolve(__dirname, 'node_modules') ]
       }, {
         test: /\.pegjs$/,
-        loaders: [ 'babel-loader', 'pegjs-loader' ]
+        use: [ 'babel-loader', 'pegjs-loader' ]
       }, {
         test: /\.scss$/,
-        loaders: [ 'style-loader', 'css-loader', 'sass-loader' ]
+        use: [ 'style-loader', 'css-loader', 'sass-loader' ]
       }, {
         test: /\.(html|xml)$/,
-        loaders: [ 'html-loader' ]
+        use: [ 'html-loader' ]
       }
     ]
   },
   devtool: (env == 'production') ?
-              null :
+              false :
               'cheap-module-source-map',
   plugins: (env == 'production') ?
               [ new webpack.optimize.UglifyJsPlugin() ] :
