@@ -5,7 +5,7 @@ Blockly.Blocks.tables = {};
 Blockly.Blocks.tables.HUE = 20;
 
 Blockly.Blocks['tables_create_empty'] = {
-  init: function() {
+  init() {
     this.appendDummyInput()
         .appendField(Blockly.Msg.TABLES_CREATE_EMPTY_TITLE);
     this.setOutput(true, 'Map');
@@ -16,7 +16,7 @@ Blockly.Blocks['tables_create_empty'] = {
 };
 
 Blockly.Blocks['tables_create_with'] = {
-  init: function() {
+  init() {
     this.savedKeys = [];
     this.setHelpUrl(Blockly.Msg.TABLES_CREATE_WITH_HELPURL);
     this.setColour(Blockly.Blocks.tables.HUE);
@@ -26,16 +26,16 @@ Blockly.Blocks['tables_create_with'] = {
     this.setMutator(new Blockly.Mutator(['tables_create_with_item']));
     this.setTooltip(Blockly.Msg.TABLES_CREATE_WITH_TOOLTIP);
   },
-  mutationToDom: function() {
+  mutationToDom() {
     let container = document.createElement('mutation');
     container.setAttribute('items', this.itemCount_);
     return container;
   },
-  domToMutation: function(xmlElement) {
+  domToMutation(xmlElement) {
     this.itemCount_ = parseInt(xmlElement.getAttribute('items'), 10);
     this.updateShape_();
   },
-  decompose: function(workspace) {
+  decompose(workspace) {
     let containerBlock = workspace.newBlock('tables_create_with_container');
     containerBlock.initSvg();
     let connection = containerBlock.getInput('STACK').connection;
@@ -47,7 +47,7 @@ Blockly.Blocks['tables_create_with'] = {
     }
     return containerBlock;
   },
-  compose: function(containerBlock) {
+  compose(containerBlock) {
     let itemBlock = containerBlock.getInputTargetBlock('STACK');
     // Count number of inputs.
     let connections = [];
@@ -64,7 +64,7 @@ Blockly.Blocks['tables_create_with'] = {
       }
     }
   },
-  saveConnections: function(containerBlock) {
+  saveConnections(containerBlock) {
     let itemBlock = containerBlock.getInputTargetBlock('STACK');
     let i = 0;
     while (itemBlock) {
@@ -74,7 +74,7 @@ Blockly.Blocks['tables_create_with'] = {
       itemBlock = itemBlock.nextConnection && itemBlock.nextConnection.targetBlock();
     }
   },
-  updateShape_: function() {
+  updateShape_() {
     // Delete everything, but save off key values first.
     if (this.getInput('EMPTY')) {
       this.removeInput('EMPTY');
@@ -107,7 +107,7 @@ Blockly.Blocks['tables_create_with'] = {
 };
 
 Blockly.Blocks['tables_create_with_container'] = {
-  init: function() {
+  init() {
     this.setColour(Blockly.Blocks.tables.HUE);
     this.appendDummyInput()
         .appendField(Blockly.Msg.TABLES_CREATE_WITH_CONTAINER_TITLE_ADD);
@@ -118,7 +118,7 @@ Blockly.Blocks['tables_create_with_container'] = {
 };
 
 Blockly.Blocks['tables_create_with_item'] = {
-  init: function() {
+  init() {
     this.setColour(Blockly.Blocks.tables.HUE);
     this.appendDummyInput()
         .appendField(Blockly.Msg.TABLES_CREATE_WITH_ITEM_TITLE);
@@ -130,7 +130,7 @@ Blockly.Blocks['tables_create_with_item'] = {
 };
 
 Blockly.Blocks['tables_size'] = {
-  init: function() {
+  init() {
     this.jsonInit({
       message0: Blockly.Msg.TABLES_SIZE_TITLE,
       args0: [
@@ -149,7 +149,7 @@ Blockly.Blocks['tables_size'] = {
 };
 
 Blockly.Blocks['tables_isEmpty'] = {
-  init: function() {
+  init() {
     this.jsonInit({
       message0: Blockly.Msg.TABLES_ISEMPTY_TITLE,
       args0: [
@@ -168,7 +168,7 @@ Blockly.Blocks['tables_isEmpty'] = {
 };
 
 Blockly.Blocks['tables_getIndex'] = {
-  init: function() {
+  init() {
     let MODE =
         [[Blockly.Msg.TABLES_GET_INDEX_GET, 'GET'],
          [Blockly.Msg.TABLES_GET_INDEX_GET_REMOVE, 'GET_REMOVE'],
@@ -195,17 +195,17 @@ Blockly.Blocks['tables_getIndex'] = {
       return Blockly.Msg[`TABLES_GET_INDEX_TOOLTIP_${mode}`];
     });
   },
-  mutationToDom: function() {
+  mutationToDom() {
     let container = document.createElement('mutation');
     let isStatement = !this.outputConnection;
     container.setAttribute('statement', isStatement);
     return container;
   },
-  domToMutation: function(xmlElement) {
+  domToMutation(xmlElement) {
     let isStatement = (xmlElement.getAttribute('statement') == 'true');
     this.updateStatement_(isStatement);
   },
-  updateStatement_: function(newStatement) {
+  updateStatement_(newStatement) {
     let oldStatement = !this.outputConnection;
     if (newStatement != oldStatement) {
       this.unplug(true, true);
@@ -223,7 +223,7 @@ Blockly.Blocks['tables_getIndex'] = {
 };
 
 Blockly.Blocks['tables_setIndex'] = {
-  init: function() {
+  init() {
     this.setHelpUrl(Blockly.Msg.TABLES_SET_INDEX_HELPURL);
     this.setColour(Blockly.Blocks.tables.HUE);
     this.appendValueInput('TABLE')
@@ -242,7 +242,7 @@ Blockly.Blocks['tables_setIndex'] = {
 };
 
 Blockly.Blocks['tables_keys'] = {
-  init: function() {
+  init() {
     this.jsonInit({
       message0: Blockly.Msg.TABLES_KEYS_TITLE,
       args0: [

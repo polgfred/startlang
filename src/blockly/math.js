@@ -5,7 +5,7 @@ Blockly.FieldAngle.OFFSET = 90;
 Blockly.FieldAngle.WRAP = 180;
 
 Blockly.Blocks['math_angle'] = {
-  init: function() {
+  init() {
     this.setColour(Blockly.Blocks.math.HUE);
     this.appendDummyInput()
         .appendField(new Blockly.FieldAngle('0'), 'ANGLE');

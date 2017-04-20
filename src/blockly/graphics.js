@@ -1,7 +1,7 @@
 'use strict';
 
 Blockly.Blocks['graphics_rect'] = {
-  init: function() {
+  init() {
     this.setColour(Blockly.Blocks.graphics.HUE);
     this.appendValueInput('X')
         .setCheck('Number')
@@ -29,7 +29,7 @@ Blockly.Blocks['graphics_rect'] = {
 };
 
 Blockly.Blocks['graphics_circle'] = {
-  init: function() {
+  init() {
     this.setColour(Blockly.Blocks.graphics.HUE);
     this.appendValueInput('X')
         .setCheck('Number')
@@ -53,7 +53,7 @@ Blockly.Blocks['graphics_circle'] = {
 };
 
 Blockly.Blocks['graphics_ellipse'] = {
-  init: function() {
+  init() {
     this.setColour(Blockly.Blocks.graphics.HUE);
     this.appendValueInput('X')
         .setCheck('Number')
@@ -81,7 +81,7 @@ Blockly.Blocks['graphics_ellipse'] = {
 };
 
 Blockly.Blocks['graphics_line'] = {
-  init: function() {
+  init() {
     this.setColour(Blockly.Blocks.graphics.HUE);
     this.appendValueInput('X1')
         .setCheck('Number')
@@ -110,7 +110,7 @@ Blockly.Blocks['graphics_line'] = {
 };
 
 Blockly.Blocks['graphics_text'] = {
-  init: function() {
+  init() {
     this.setColour(Blockly.Blocks.graphics.HUE);
     this.appendValueInput('TEXT')
         .setCheck('String')
@@ -134,7 +134,7 @@ Blockly.Blocks['graphics_text'] = {
 };
 
 Blockly.Blocks['graphics_stroke'] = {
-  init: function() {
+  init() {
     this.setColour(Blockly.Blocks.graphics.HUE);
     this.appendValueInput('COLOR')
         .setCheck('Colour')
@@ -149,7 +149,7 @@ Blockly.Blocks['graphics_stroke'] = {
 };
 
 Blockly.Blocks['graphics_fill'] = {
-  init: function() {
+  init() {
     this.setColour(Blockly.Blocks.graphics.HUE);
     this.appendValueInput('COLOR')
         .setCheck('Colour')
@@ -164,7 +164,7 @@ Blockly.Blocks['graphics_fill'] = {
 };
 
 Blockly.Blocks['graphics_opacity'] = {
-  init: function() {
+  init() {
     this.setColour(Blockly.Blocks.graphics.HUE);
     this.appendValueInput('AMOUNT')
         .setCheck('Number')
@@ -181,7 +181,7 @@ Blockly.Blocks['graphics_opacity'] = {
 };
 
 Blockly.Blocks['graphics_rotate'] = {
-  init: function() {
+  init() {
     this.setColour(Blockly.Blocks.graphics.HUE);
     this.appendValueInput('ANGLE')
         .setCheck('Number')
@@ -196,7 +196,7 @@ Blockly.Blocks['graphics_rotate'] = {
 };
 
 Blockly.Blocks['graphics_scale'] = {
-  init: function() {
+  init() {
     this.setColour(Blockly.Blocks.graphics.HUE);
     this.appendValueInput('MULTX')
         .setCheck('Number')
@@ -219,7 +219,7 @@ Blockly.Blocks['graphics_scale'] = {
 
 
 Blockly.Blocks['graphics_font'] = {
-  init: function() {
+  init() {
     let FONTS = [
       [ 'Arial',            'ARIAL'           ],
       [ 'Courier New',      'COURIER_NEW'     ],
@@ -245,7 +245,7 @@ Blockly.Blocks['graphics_font'] = {
 };
 
 Blockly.Blocks['graphics_repaint'] = {
-  init: function() {
+  init() {
     this.setColour(Blockly.Blocks.graphics.HUE);
     this.appendDummyInput()
         .appendField('repaint the display');

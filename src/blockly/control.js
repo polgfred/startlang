@@ -1,7 +1,7 @@
 'use strict';
 
 Blockly.Blocks['control_exit'] = {
-  init: function() {
+  init() {
     this.setColour(Blockly.Blocks.control.HUE);
     this.appendDummyInput()
         .appendField('exit program');

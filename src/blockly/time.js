@@ -1,7 +1,7 @@
 'use strict';
 
 Blockly.Blocks['time_sleep'] = {
-  init: function() {
+  init() {
     this.setColour(Blockly.Blocks.time.HUE);
     this.appendValueInput('SECONDS')
         .setCheck('Number')
@@ -17,7 +17,7 @@ Blockly.Blocks['time_sleep'] = {
 };
 
 Blockly.Blocks['time_create_empty'] = {
-  init: function() {
+  init() {
     this.setColour(Blockly.Blocks.time.HUE);
     this.appendDummyInput()
         .appendField('current time');
@@ -29,7 +29,7 @@ Blockly.Blocks['time_create_empty'] = {
 };
 
 Blockly.Blocks['time_create_with'] = {
-  init: function() {
+  init() {
     this.setColour(Blockly.Blocks.time.HUE);
     this.appendValueInput('YEAR')
         .setCheck('Number')
@@ -63,7 +63,7 @@ Blockly.Blocks['time_create_with'] = {
 };
 
 Blockly.Blocks['time_getPart'] = {
-  init: function() {
+  init() {
     let UNITS = [
       [ 'year',        'YEAR'        ],
       [ 'month',       'MONTH'       ],
@@ -89,7 +89,7 @@ Blockly.Blocks['time_getPart'] = {
 };
 
 Blockly.Blocks['time_diff'] = {
-  init: function() {
+  init() {
     let UNITS = [
       [ 'years',        'YEAR'        ],
       [ 'months',       'MONTH'       ],
@@ -120,7 +120,7 @@ Blockly.Blocks['time_diff'] = {
 };
 
 Blockly.Blocks['time_addSubtract'] = {
-  init: function() {
+  init() {
     let MODES = [
       [ 'add',      'ADD' ],
       [ 'subtract', 'SUB' ]
@@ -155,20 +155,20 @@ Blockly.Blocks['time_addSubtract'] = {
     });
     this.setHelpUrl('');
   },
-  setFieldValue: function(value, name) {
+  setFieldValue(value, name) {
     this.constructor.superClass_.setFieldValue.call(this, value, name);
     if (name == 'MODE') {
       this.updateMode_(value);
     }
   },
-  updateMode_: function(mode) {
+  updateMode_(mode) {
     this.timeInput.removeField('FROM_TO');
     this.timeInput.appendField(`${mode == 'ADD' ? 'to' : 'from'} time`, 'FROM_TO');
   }
 };
 
 Blockly.Blocks['time_startEnd'] = {
-  init: function() {
+  init() {
     let MODES = [
       [ 'beginning',  'START' ],
       [ 'end',        'END'   ]

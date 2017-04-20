@@ -1,7 +1,7 @@
 'use strict';
 
 Blockly.Blocks['lists_functions'] = {
-  init: function() {
+  init() {
     let OPERATORS =
         [[Blockly.Msg.MATH_ONLIST_OPERATOR_SUM, 'SUM'],
          [Blockly.Msg.MATH_ONLIST_OPERATOR_MIN, 'MIN'],
@@ -27,7 +27,7 @@ Blockly.Blocks['lists_functions'] = {
 };
 
 Blockly.Blocks['lists_transformers'] = {
-  init: function() {
+  init() {
     let OPERATORS =
         [[Blockly.Msg.MATH_ONLIST_OPERATOR_SORT, 'SORT'],
          [Blockly.Msg.MATH_ONLIST_OPERATOR_REVERSE, 'REVERSE'],
@@ -55,7 +55,7 @@ Blockly.Blocks['lists_transformers'] = {
       return TOOLTIPS[mode];
     });
   },
-  updateOrder_: function(isOrder) {
+  updateOrder_(isOrder) {
     let ORDERS =
         [['smallest first', 'ASC'],
          ['largest first',  'DESC']];
@@ -68,13 +68,13 @@ Blockly.Blocks['lists_transformers'] = {
       this.appendDummyInput('TAIL');
     }
   },
-  mutationToDom: function() {
+  mutationToDom() {
     let container = document.createElement('mutation');
     let isOrder = (this.getField('ORDER') != null);
     container.setAttribute('order', isOrder);
     return container;
   },
-  domToMutation: function(xmlElement) {
+  domToMutation(xmlElement) {
     let isOrder = (xmlElement.getAttribute('order') != 'false');
     this.updateOrder_(isOrder);
   }
