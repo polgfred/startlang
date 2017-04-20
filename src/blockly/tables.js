@@ -36,11 +36,11 @@ Blockly.Blocks['tables_create_with'] = {
     this.updateShape_();
   },
   decompose: function(workspace) {
-    let containerBlock = Blockly.Block.obtain(workspace, 'tables_create_with_container');
+    let containerBlock = workspace.newBlock('tables_create_with_container');
     containerBlock.initSvg();
     let connection = containerBlock.getInput('STACK').connection;
     for (let i = 0; i < this.itemCount_; i++) {
-      let itemBlock = Blockly.Block.obtain(workspace, 'tables_create_with_item');
+      let itemBlock = workspace.newBlock('tables_create_with_item');
       itemBlock.initSvg();
       connection.connect(itemBlock.previousConnection);
       connection = itemBlock.nextConnection;
