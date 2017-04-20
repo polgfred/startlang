@@ -1,7 +1,7 @@
 'use strict';
 
 import $ from 'jquery';
-import { _ } from 'underscore';
+import _ from 'lodash';
 
 import React from 'react';
 import ReactDOM from 'react-dom';
