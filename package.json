@@ -18,9 +18,10 @@
     "react-foundation": "^0.7.0"
   },
   "scripts": {
-    "build": "webpack",
-    "watch": "webpack --watch",
-    "start": "webpack-dev-server --hot --inline"
+    "setup": "mkdir -p dist && ln -sf ../node_modules/blockly dist/",
+    "build": "npm run setup && webpack",
+    "watch": "npm run setup && webpack --watch",
+    "start": "npm run setup && webpack-dev-server --hot --inline"
   },
   "repository": {
     "type": "git",

@@ -27,7 +27,7 @@ export default class Builder extends Base {
       readOnly: false,
       scrollbars: true,
       trashcan: true,
-      media: './blockly-media/',
+      media: './dist/blockly/media/',
       grid: {
         spacing: 25,
         length: 3,
