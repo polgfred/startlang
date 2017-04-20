@@ -9,6 +9,8 @@ import Blockly from '../blockly';
 
 import Base from './base';
 
+import toolbox from './toolbox.xml';
+
 export default class Builder extends Base {
   shouldComponentUpdate(nextProps) {
     return false;
@@ -20,7 +22,7 @@ export default class Builder extends Base {
 
   componentDidMount() {
     this.blockly = Blockly.inject(this.$()[0], {
-      toolbox: $('#start-blockly-toolbox')[0],
+      toolbox,
       collapse: true,
       comments: true,
       disable: true,
