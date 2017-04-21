@@ -5,19 +5,31 @@ import immutable from 'immutable';
 import { handle, assignKey, resultKey } from './runtime';
 
 let hop = Object.prototype.hasOwnProperty; // cache this for performance
+let pop = { pop: true }; // cache generic pop instruction for performance
 
 export const SFrame = immutable.Record({
   node: null,         // node for this evaluation frame
-  ns: false,          // whether to pop a ns off the stack for this frame
   state: 0,           // evaluation state machine state
-  ws: immutable.Map() // evaluation workspace
+  ns: false,          // whether to pop a ns off the stack for this frame
+  // commonly used loop states
+  count: 0,
+  times: 0,
+  from: 0,
+  to: 0,
+  by: 1,
+  // commonly used for gathering indexes or params
+  indexes: immutable.List(),
+  args: immutable.List(),
+  assn: immutable.List(),
+  // less commonly used object references
+  iter: null,
+  left: null
 });
 
 export class SInterpreter {
   constructor(app) {
     // the react component that we'll call methods on
     this.app = app;
-
     // setup the internal state
     this.fn = immutable.OrderedMap(); // function table
     this.ns = immutable.OrderedMap(); // top namespace
@@ -37,10 +49,29 @@ export class SInterpreter {
     // until a node returns a promise
     let loop = () => {
       while (this.frame) {
-        let { node, state, ws } = this.frame;
-        let result = this[`${node.type}Node`](node, state, ws);
-        if (result instanceof Promise) {
-          return result.then(loop);
+        let { node, state } = this.frame, method = `${node.type}Node`, ctrl;
+        // check arity to see if the handler wants a mutable frame
+        if (this[method].length > 2) {
+          // pass a mutable frame so the handler can conveniently deal with
+          // the frame state as a normal object
+          this.frame = this.frame.withMutations((fr) => {
+            ctrl = this[method](node, state, fr);
+          });
+        } else {
+          ctrl = this[method](node, state);
+        }
+        // deal with the result
+        if (ctrl instanceof Promise) {
+          // if we got a promise, we need to wait for it, then handle
+          // any flow instruction returned by the promise
+          return ctrl.then((ctrl) => {
+            if (ctrl) {
+              this.doFlow(ctrl);
+            }
+          }).then(loop);
+        } else if (ctrl) {
+          // handle flow instruction
+          this.doFlow(ctrl);
         }
       }
     };
@@ -52,6 +83,21 @@ export class SInterpreter {
   }
 
   // ** manage stack frames **
+
+  doFlow(ctrl) {
+    // deal with any push or pop instruction returned from the node handler
+    if (ctrl.push) {
+      this.push(ctrl.push);
+    } else if (ctrl.pop) {
+      if (ctrl.pop == 'over') {
+        this.popOver(ctrl.flow);
+      } else if (ctrl.pop == 'until') {
+        this.popUntil(ctrl.flow);
+      } else {
+        this.pop();
+      }
+    }
+  }
 
   push(node) {
     // optimize literals and vars by setting the result register directly
@@ -106,12 +152,13 @@ export class SInterpreter {
     }
   }
 
+  // ** return values **
+
   replace(result) {
     // normalize the result to rvalue/lvalue form if necessary
     if (result == null || !hop.call(result, 'rv')) {
       result = { rv: result };
     }
-    // put the return value into the result register
     this.result = result;
   }
 
@@ -192,245 +239,194 @@ export class SInterpreter {
 
   // ** implementations of AST nodes **
 
-  blockNode(node, state, ws) {
-    let count = ws.get('count', 0);
+  blockNode(node, state, frame) {
+    let { count } = frame;
     if (count < node.elems.length) {
-      this.frame = this.frame
-        .set('ws', ws
-          .set('count', count + 1));
-      this.push(node.elems[count]);
+      frame.count++;
+      return { push: node.elems[count] };
     } else {
-      this.pop();
+      return pop;
     }
   }
 
-  repeatNode(node, state, ws) {
+  repeatNode(node, state, frame) {
     switch (state) {
       case 0:
         if (node.times) {
-          this.frame = this.frame.set('state', 1);
-          this.push(node.times);
+          frame.state = 1;
+          return { push: node.times };
         } else {
-          this.frame = this.frame.set('state', 3);
+          frame.state = 3;
+          break;
         }
-        break;
       case 1:
-        this.frame = this.frame
-          .set('state', 2)
-          .set('ws', ws
-            .set('times', this.result.rv)
-            .set('count', 0));
+        frame.state = 2;
+        frame.times = this.result.rv;
         break;
       case 2:
-        let count = ws.get('count');
-        if (count < ws.get('times')) {
-          this.frame = this.frame
-            .set('ws', ws
-              .set('count', count + 1));
-          this.push(node.body);
+        let { count } = frame;
+        if (count < frame.times) {
+          frame.count++;
+          return { push: node.body };
         } else {
-          this.pop();
+          return pop;
         }
-        break;
       case 3:
         // repeat forever
-        this.push(node.body);
-        break;
+        return { push: node.body };
     }
   }
 
-  forNode(node, state, ws) {
+  forNode(node, state, frame) {
     switch (state) {
       case 0:
-        this.frame = this.frame.set('state', 1);
-        this.push(node.from);
-        break;
+        frame.state = 1;
+        return { push: node.from };
       case 1:
         let res = this.result.rv;
-        this.frame = this.frame
-          .set('state', 2)
-          .set('ws', ws
-            .set('from', res).set('count', res));
-        this.push(node.to);
-        break;
+        frame.state = 2;
+        frame.from = res;
+        frame.count = res;
+        return { push: node.to };
       case 2:
         if (node.by) {
-          this.frame = this.frame
-            .set('state', 3)
-            .set('ws', ws
-              .set('to', this.result.rv));
-          this.push(node.by);
+          frame.state = 3;
+          frame.to = this.result.rv;
+          return { push: node.by };
         } else {
-          this.frame = this.frame
-            .set('state', 4)
-            .set('ws', ws
-              .set('to', this.result.rv)
-              .set('by', 1));
+          frame.state = 4;
+          frame.to = this.result.rv;
+          break;
         }
-        break;
       case 3:
-        this.frame = this.frame
-          .set('state', 4)
-          .set('ws', ws
-            .set('by', this.result.rv));
+        frame.state = 4;
+        frame.by = this.result.rv;
         break;
       case 4:
-        let count = ws.get('count'),
-            to = ws.get('to'),
-            by = ws.get('by');
+        let { count, to, by } = frame;
         if ((by > 0 && count <= to) || (by < 0 && count >= to)) {
           this.set(node.name, count);
-          this.frame = this.frame
-            .set('ws', ws
-              .set('count', count + by));
-          this.push(node.body);
+          frame.count += by;
+          return { push: node.body };
         } else {
-          this.pop();
+          return pop;
         }
-        break;
     }
   }
 
-  forInNode(node, state, ws) {
+  forInNode(node, state, frame) {
     switch (state) {
       case 0:
-        this.frame = this.frame.set('state', 1);
-        this.push(node.range);
-        break;
+        frame.state = 1;
+        return { push: node.range };
       case 1:
-        this.frame = this.frame
-          .set('state', 2)
-          .set('ws', ws
-            .set('iter', this.ctx.enumerate(this.result.rv)));
+        frame.state = 2;
+        frame.iter = this.ctx.enumerate(this.result.rv);
         break;
       case 2:
-        let iter = ws.get('iter');
+        let { iter } = frame;
         if (iter.more) {
           this.set(node.name, iter.value);
           // TODO: iteration should allow async
-          this.frame = this.frame
-            .set('ws', ws
-              .set('iter', iter.next()));
-          this.push(node.body);
+          frame.iter = iter.next();
+          return { push: node.body };
         } else {
-          this.pop();
+          return pop;
         }
-        break;
     }
   }
 
-  whileNode(node, state, ws) {
+  whileNode(node, state, frame) {
     switch (state) {
       case 0:
-        this.frame = this.frame.set('state', 1);
-        this.push(node.cond);
-        break;
+        frame.state = 1;
+        return { push: node.cond };
       case 1:
         if (this.result.rv) {
-          this.frame = this.frame.set('state', 0);
-          this.push(node.body);
+          frame.state = 0;
+          return { push: node.body };
         } else {
-          this.pop();
+          return pop;
         }
-        break;
     }
   }
 
-  ifNode(node, state, ws) {
+  ifNode(node, state, frame) {
     switch (state) {
       case 0:
-        this.frame = this.frame.set('state', 1);
-        this.push(node.cond);
-        break;
+        frame.state = 1;
+        return { push: node.cond };
       case 1:
         if (this.result.rv) {
-          this.frame = this.frame.set('state', 2);
-          this.push(node.tbody);
+          frame.state = 2;
+          return { push: node.tbody };
         } else if (node.fbody) {
-          this.frame = this.frame.set('state', 2);
-          this.push(node.fbody);
+          frame.state = 2;
+          return { push: node.fbody };
         } else {
-          this.pop();
+          return pop;
         }
-        break;
       case 2:
-        this.pop();
-        break;
+        return pop;
     }
   }
 
   beginNode(node) {
     // save the begin node in the function table
     this.fn = this.fn.set(node.name, node);
-    this.pop();
+    return pop;
   }
 
-  callNode(node, state, ws) {
+  callNode(node, state, frame) {
     switch (state) {
       case 0:
-        this.frame = this.frame
-          .set('state', 1)
-          .set('ws', ws
-            .set('args', immutable.List())
-            .set('assn', immutable.List())
-            .set('count', 0));
-        break;
-      case 1:
-        let count = ws.get('count');
+        let { count } = frame;
         if (node.args && count < node.args.length) {
-          this.frame = this.frame.set('state', 2);
-          this.push(node.args[count]);
+          frame.state = 1;
+          return { push: node.args[count] };
         } else if (this.fn.has(node.name)) {
-          this.frame = this.frame.set('state', 3);
+          frame.state = 2;
+          break;
         } else {
-          this.frame = this.frame.set('state', 5);
+          frame.state = 4;
+          break;
         }
+      case 1:
+        let res = this.result;
+        frame.state = 0;
+        frame.args = frame.args.push(res.rv);
+        frame.assn = frame.assn.push(res.lv);
+        frame.count++;
         break;
       case 2:
-        let res = this.result;
-        this.frame = this.frame
-          .set('state', 1)
-          .set('ws', ws
-            .update('args', (args) => args.push(res.rv))
-            .update('assn', (assn) => assn.push(res.lv))
-            .update('count', (count) => count + 1));
-        break;
-      case 3:
         // handle a user-defined function
-        let fn = this.fn.get(node.name),
-            args = ws.get('args');
+        let fn = this.fn.get(node.name);
         // push on a new namespace
         this.pushns();
         // set the arguments in the local ns
         if (fn.params) {
           for (let i = 0; i < fn.params.length; ++i) {
-            this.set(fn.params[i], args.get(i), true);
+            this.set(fn.params[i], frame.args.get(i), true);
           }
         }
-        this.frame = this.frame
-          .set('state', 4)
-          .set('ns', true);
-        this.push(fn.body);
-        break;
+        frame.state = 3;
+        frame.ns = true;
+        return { push: fn.body };
+      case 3:
+        return pop;
       case 4:
-        this.pop();
-        break;
-      case 5:
         // handle a runtime API function
-        let args5 = ws.get('args'),
-            assn5 = ws.get('assn'),
-            result = this.ctx.syscall(node.name, args5.toArray());
+        let result = this.ctx.syscall(node.name, frame.args.toArray());
         if (result instanceof Promise) {
           // if we got a promise, handle the result when fulfilled
           return result.then((result) => {
-            this.handleResult(result, assn5);
-            this.pop();
+            this.handleResult(result, frame.assn);
+            return pop;
           });
         } else {
-          this.handleResult(result, assn5);
-          this.pop();
+          this.handleResult(result, frame.assn);
+          return pop;
         }
-        break;
     }
   }
 
@@ -473,228 +469,187 @@ export class SInterpreter {
   }
 
   breakNode() {
-    this.popOver('loop');
+    return { pop: 'over', flow: 'loop' };
   }
 
   nextNode() {
-    this.popUntil('loop');
+    return { pop: 'until', flow: 'loop' };
   }
 
-  returnNode(node, state, ws) {
+  returnNode(node, state, frame) {
     switch (state) {
       case 0:
         if (node.result) {
-          this.frame = this.frame.set('state', 1);
-          this.push(node.result);
+          frame.state = 1;
+          return { push: node.result };
         } else {
           this.replace();
-          this.popOver('call');
+          return { pop: 'over', flow: 'call' };
         }
-        break;
       case 1:
         this.replace(this.result.rv);
-        this.popOver('call');
-        break;
+        return { pop: 'over', flow: 'call' };
     }
   }
 
-  literalNode(node, state, ws) {
+  literalNode(node) {
     this.replace(node.value);
-    this.pop();
+    return pop;
   }
 
-  varNode(node, state, ws) {
+  varNode(node) {
     // return the rv/lv pair for this var
     this.replace({
       rv: this.get(node.name),
       lv: { name: node.name }
     });
-    this.pop();
+    return pop;
   }
 
-  letNode(node, state, ws) {
+  letNode(node, state, frame) {
     switch (state) {
       case 0:
-        this.frame = this.frame.set('state', 1);
-        this.push(node.value);
-        break;
+        frame.state = 1;
+        return { push: node.value };
       case 1:
         this.set(node.name, this.result.rv, node.top);
-        this.pop();
-        break;
+        return pop;
     }
   }
 
-  indexNode(node, state, ws) {
+  indexNode(node, state, frame) {
     switch (state) {
       case 0:
-        this.frame = this.frame
-          .set('state', 1)
-          .set('ws', ws
-            .set('indexes', immutable.List())
-            .set('count', 0));
-        break;
-      case 1:
-        let count = ws.get('count');
+        let { count } = frame;
         if (count < node.indexes.length) {
-          this.frame = this.frame.set('state', 2);
-          this.push(node.indexes[count]);
+          frame.state = 1;
+          return { push: node.indexes[count] };
         } else {
-          this.frame = this.frame.set('state', 3);
+          frame.state = 2;
+          break;
         }
+      case 1:
+        frame.state = 0;
+        frame.indexes = frame.indexes.push(this.result.rv);
+        frame.count++;
         break;
       case 2:
-        this.frame = this.frame
-          .set('state', 1)
-          .set('ws', ws
-            .update('indexes', (indexes) => indexes.push(this.result.rv))
-            .update('count', (count) => count + 1));
-        break;
-      case 3:
-        let indexes = ws.get('indexes');
+        let { indexes } = frame;
         // return the rv/lv pair for this slot
         this.replace({
           rv: this.getIndex(node.name, indexes),
-          lv: { name: node.name, indexes: indexes }
+          lv: { name: node.name, indexes }
         });
-        this.pop();
-        break;
+        return pop;
     }
   }
 
-  letIndexNode(node, state, ws) {
+  letIndexNode(node, state, frame) {
     switch (state) {
       case 0:
-        this.frame = this.frame
-          .set('state', 1)
-          .set('ws', ws
-            .set('indexes', immutable.List())
-            .set('count', 0));
-        break;
-      case 1:
-        let count = ws.get('count');
+        let { count } = frame;
         if (count < node.indexes.length) {
-          this.frame = this.frame.set('state', 2);
-          this.push(node.indexes[count]);
+          frame.state = 1;
+          return { push: node.indexes[count] };
         } else {
-          this.frame = this.frame.set('state', 3);
+          frame.state = 2;
+          break;
         }
+      case 1:
+        frame.state = 0;
+        frame.indexes = frame.indexes.push(this.result.rv);
+        frame.count++;
         break;
       case 2:
-        this.frame = this.frame
-          .set('state', 1)
-          .set('ws', ws
-            .update('indexes', (indexes) => indexes.push(this.result.rv))
-            .update('count', (count) => count + 1));
-        break;
+        frame.state = 3;
+        return { push: node.value };
       case 3:
-        this.frame = this.frame.set('state', 4);
-        this.push(node.value);
-        break;
-      case 4:
-        let indexes = ws.get('indexes');
-        this.setIndex(node.name, indexes, this.result.rv);
-        this.pop();
-        break;
+        this.setIndex(node.name, frame.indexes, this.result.rv);
+        return pop;
     }
   }
 
-  logicalOpNode(node, state, ws) {
+  logicalOpNode(node, state, frame) {
     switch (node.op) {
       case 'and':
         switch (state) {
           case 0:
-            this.frame = this.frame.set('state', 1);
-            this.push(node.left);
-            break;
+            frame.state = 1;
+            return { push: node.left };
           case 1:
             if (!this.result.rv) {
               this.replace(false);
-              this.pop();
+              return pop;
             } else {
-              this.frame = this.frame.set('state', 2);
-              this.push(node.right);
+              frame.state = 2;
+              return { push: node.right };
             }
-            break;
           case 2:
             this.replace(!!this.result.rv);
-            this.pop();
-            break;
+            return pop;
         }
         break;
 
       case 'or':
         switch (state) {
           case 0:
-            this.frame = this.frame.set('state', 1);
-            this.push(node.left);
-            break;
+            frame.state = 1;
+            return { push: node.left };
           case 1:
             if (this.result.rv) {
               this.replace(true);
-              this.pop();
+              return pop;
             } else {
-              this.frame = this.frame.set('state', 2);
-              this.push(node.right);
+              frame.state = 2;
+              return { push: node.right };
             }
-            break;
           case 2:
             this.replace(!!this.result.rv);
-            this.pop();
-            break;
+            return pop;
         }
         break;
 
       case 'not':
         switch (state) {
           case 0:
-            this.frame = this.frame.set('state', 1);
-            this.push(node.right);
-            break;
+            frame.state = 1;
+            return { push: node.right };
           case 1:
             this.replace(!this.result.rv);
-            this.pop();
-            break;
+            return pop;
         }
         break;
     }
   }
 
-  binaryOpNode(node, state, ws) {
+  binaryOpNode(node, state, frame) {
     switch (state) {
       case 0:
-        this.frame = this.frame.set('state', 1);
-        this.push(node.left);
-        break;
+        frame.state = 1;
+        return { push: node.left };
       case 1:
-        this.frame = this.frame
-          .set('state', 2)
-          .set('ws', ws
-            .set('left', this.result.rv));
-        this.push(node.right);
-        break;
+        frame.state = 2;
+        frame.left = this.result.rv;
+        return { push: node.right };
       case 2:
         this.replace(this.ctx.binaryop(
           node.op,
-          ws.get('left'),
+          frame.left,
           this.result.rv));
-        this.pop();
-        break;
+        return pop;
     }
   }
 
-  unaryOpNode(node, state, ws) {
+  unaryOpNode(node, state, frame) {
     switch (state) {
       case 0:
-        this.frame = this.frame.set('state', 1);
-        this.push(node.right);
-        break;
+        frame.state = 1;
+        return { push: node.right };
       case 1:
         this.replace(this.ctx.unaryop(
           node.op,
           this.result.rv));
-        this.pop();
-        break;
+        return pop;
     }
   }
 }

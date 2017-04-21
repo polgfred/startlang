@@ -1,4 +1,4 @@
-#!/usr/bin/env babel-node
+#!./node_modules/.bin/babel-node
 
 'use strict';
 
