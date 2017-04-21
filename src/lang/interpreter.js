@@ -86,15 +86,17 @@ export class SInterpreter {
 
   doFlow(ctrl) {
     // deal with any push or pop instruction returned from the node handler
-    if (ctrl.push) {
-      this.push(ctrl.push);
+    if (ctrl.type) {
+      // it's a node, push it
+      this.push(ctrl);
     } else if (ctrl.pop) {
-      if (ctrl.pop == 'over') {
+      // it's a pop instruction
+      if (ctrl.pop === true) {
+        this.pop();
+      } else if (ctrl.pop == 'over') {
         this.popOver(ctrl.flow);
       } else if (ctrl.pop == 'until') {
         this.popUntil(ctrl.flow);
-      } else {
-        this.pop();
       }
     }
   }
@@ -243,7 +245,7 @@ export class SInterpreter {
     let { count } = frame;
     if (count < node.elems.length) {
       frame.count++;
-      return { push: node.elems[count] };
+      return node.elems[count];
     } else {
       return pop;
     }
@@ -254,7 +256,7 @@ export class SInterpreter {
       case 0:
         if (node.times) {
           frame.state = 1;
-          return { push: node.times };
+          return node.times;
         } else {
           frame.state = 3;
           break;
@@ -267,13 +269,13 @@ export class SInterpreter {
         let { count } = frame;
         if (count < frame.times) {
           frame.count++;
-          return { push: node.body };
+          return node.body;
         } else {
           return pop;
         }
       case 3:
         // repeat forever
-        return { push: node.body };
+        return node.body;
     }
   }
 
@@ -281,18 +283,18 @@ export class SInterpreter {
     switch (state) {
       case 0:
         frame.state = 1;
-        return { push: node.from };
+        return node.from;
       case 1:
         let res = this.result.rv;
         frame.state = 2;
         frame.from = res;
         frame.count = res;
-        return { push: node.to };
+        return node.to;
       case 2:
         if (node.by) {
           frame.state = 3;
           frame.to = this.result.rv;
-          return { push: node.by };
+          return node.by;
         } else {
           frame.state = 4;
           frame.to = this.result.rv;
@@ -307,7 +309,7 @@ export class SInterpreter {
         if ((by > 0 && count <= to) || (by < 0 && count >= to)) {
           this.set(node.name, count);
           frame.count += by;
-          return { push: node.body };
+          return node.body;
         } else {
           return pop;
         }
@@ -318,7 +320,7 @@ export class SInterpreter {
     switch (state) {
       case 0:
         frame.state = 1;
-        return { push: node.range };
+        return node.range;
       case 1:
         frame.state = 2;
         frame.iter = this.ctx.enumerate(this.result.rv);
@@ -329,7 +331,7 @@ export class SInterpreter {
           this.set(node.name, iter.value);
           // TODO: iteration should allow async
           frame.iter = iter.next();
-          return { push: node.body };
+          return node.body;
         } else {
           return pop;
         }
@@ -340,11 +342,11 @@ export class SInterpreter {
     switch (state) {
       case 0:
         frame.state = 1;
-        return { push: node.cond };
+        return node.cond;
       case 1:
         if (this.result.rv) {
           frame.state = 0;
-          return { push: node.body };
+          return node.body;
         } else {
           return pop;
         }
@@ -355,14 +357,14 @@ export class SInterpreter {
     switch (state) {
       case 0:
         frame.state = 1;
-        return { push: node.cond };
+        return node.cond;
       case 1:
         if (this.result.rv) {
           frame.state = 2;
-          return { push: node.tbody };
+          return node.tbody;
         } else if (node.fbody) {
           frame.state = 2;
-          return { push: node.fbody };
+          return node.fbody;
         } else {
           return pop;
         }
@@ -383,7 +385,7 @@ export class SInterpreter {
         let { count } = frame;
         if (node.args && count < node.args.length) {
           frame.state = 1;
-          return { push: node.args[count] };
+          return node.args[count];
         } else if (this.fn.has(node.name)) {
           frame.state = 2;
           break;
@@ -411,7 +413,7 @@ export class SInterpreter {
         }
         frame.state = 3;
         frame.ns = true;
-        return { push: fn.body };
+        return fn.body;
       case 3:
         return pop;
       case 4:
@@ -481,7 +483,7 @@ export class SInterpreter {
       case 0:
         if (node.result) {
           frame.state = 1;
-          return { push: node.result };
+          return node.result;
         } else {
           this.replace();
           return { pop: 'over', flow: 'call' };
@@ -510,7 +512,7 @@ export class SInterpreter {
     switch (state) {
       case 0:
         frame.state = 1;
-        return { push: node.value };
+        return node.value;
       case 1:
         this.set(node.name, this.result.rv, node.top);
         return pop;
@@ -523,7 +525,7 @@ export class SInterpreter {
         let { count } = frame;
         if (count < node.indexes.length) {
           frame.state = 1;
-          return { push: node.indexes[count] };
+          return node.indexes[count];
         } else {
           frame.state = 2;
           break;
@@ -550,7 +552,7 @@ export class SInterpreter {
         let { count } = frame;
         if (count < node.indexes.length) {
           frame.state = 1;
-          return { push: node.indexes[count] };
+          return node.indexes[count];
         } else {
           frame.state = 2;
           break;
@@ -562,7 +564,7 @@ export class SInterpreter {
         break;
       case 2:
         frame.state = 3;
-        return { push: node.value };
+        return node.value;
       case 3:
         this.setIndex(node.name, frame.indexes, this.result.rv);
         return pop;
@@ -575,14 +577,14 @@ export class SInterpreter {
         switch (state) {
           case 0:
             frame.state = 1;
-            return { push: node.left };
+            return node.left;
           case 1:
             if (!this.result.rv) {
               this.replace(false);
               return pop;
             } else {
               frame.state = 2;
-              return { push: node.right };
+              return node.right;
             }
           case 2:
             this.replace(!!this.result.rv);
@@ -594,14 +596,14 @@ export class SInterpreter {
         switch (state) {
           case 0:
             frame.state = 1;
-            return { push: node.left };
+            return node.left;
           case 1:
             if (this.result.rv) {
               this.replace(true);
               return pop;
             } else {
               frame.state = 2;
-              return { push: node.right };
+              return node.right;
             }
           case 2:
             this.replace(!!this.result.rv);
@@ -613,7 +615,7 @@ export class SInterpreter {
         switch (state) {
           case 0:
             frame.state = 1;
-            return { push: node.right };
+            return node.right;
           case 1:
             this.replace(!this.result.rv);
             return pop;
@@ -626,11 +628,11 @@ export class SInterpreter {
     switch (state) {
       case 0:
         frame.state = 1;
-        return { push: node.left };
+        return node.left;
       case 1:
         frame.state = 2;
         frame.left = this.result.rv;
-        return { push: node.right };
+        return node.right;
       case 2:
         this.replace(this.ctx.binaryop(
           node.op,
@@ -644,7 +646,7 @@ export class SInterpreter {
     switch (state) {
       case 0:
         frame.state = 1;
-        return { push: node.right };
+        return node.right;
       case 1:
         this.replace(this.ctx.unaryop(
           node.op,
