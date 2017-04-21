@@ -20,6 +20,16 @@ let interp,
     parser = PEG.generate(readFileSync(__dirname + '/../src/lang/parser.pegjs', 'utf-8')),
     output = (obj) => console.log(inspect(obj, { colors: true, depth: null })),
     app = {
+      snapshot() {
+        output({
+          fn: interp.fn,
+          ns: interp.ns,
+          st: interp.st,
+          frame: interp.frame,
+          fst: interp.fst
+        });
+      },
+
       output(value) {
         console.log(value);
       },

@@ -37,7 +37,8 @@ export default class App extends Base {
       viewMode: 'help',
       editMode: 'blocks',
       gfx: new SGraphics(),
-      buf: immutable.List()
+      buf: immutable.List(),
+      hist: []
     };
   }
 
@@ -104,11 +105,35 @@ export default class App extends Base {
       let interp = this.interp = new SInterpreter(this);
       interp.ctx = new SGRuntime(this);
       interp.root(this.refs.editor.getRoot());
+      this.clearHistory();
 
       interp.run().catch((err) => {
         console.log(err);
         console.log(err.stack);
+      }).then(() => {
+        console.log(this.state.hist);
       });
+    });
+  }
+
+  clearHistory() {
+    this.setState({ hist: [] });
+  }
+
+  snapshot() {
+    // change hist mutably, but still strigger a state change
+    this.setState((state) => {
+      let interp = this.interp, hist = state.hist;
+      hist.push({
+        fn: interp.fn,
+        ns: interp.ns,
+        st: interp.st,
+        frame: interp.frame,
+        fst: interp.fst,
+        gfx: this.state.gfx,
+        buf: this.state.buf
+      });
+      return { hist };
     });
   }
 

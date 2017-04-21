@@ -135,6 +135,10 @@ SRuntime.globals = {
     return new Promise((resolve) => {
       setTimeout(resolve, seconds * 1000);
     });
+  },
+
+  snapshot() {
+    this.app.snapshot();
   }
 };
 
