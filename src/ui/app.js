@@ -29,16 +29,18 @@ export default class App extends Base {
 
     _.bindAll(this,
       'handleKeyUp',
+      'handleSlider',
       'runProgram',
       'updateViewMode',
       'updateEditMode');
 
     this.state = {
       viewMode: 'help',
-      editMode: 'blocks',
+      editMode: 'source',
       gfx: new SGraphics(),
       buf: immutable.List(),
-      hist: []
+      hist: [],
+      snap: 0
     };
   }
 
@@ -100,6 +102,20 @@ export default class App extends Base {
     }
   }
 
+  handleSlider(ev) {
+    let { hist } = this.state,
+        snap = ev.target.value,
+        current = hist[snap];
+
+    if (current) {
+      this.setState({
+        snap,
+        gfx: current.gfx,
+        buf: current.buf
+      });
+    }
+  }
+
   runProgram() {
     this.refreshState().then(() => {
       let interp = this.interp = new SInterpreter(this);
@@ -110,20 +126,19 @@ export default class App extends Base {
       interp.run().catch((err) => {
         console.log(err);
         console.log(err.stack);
-      }).then(() => {
-        console.log(this.state.hist);
       });
     });
   }
 
   clearHistory() {
-    this.setState({ hist: [] });
+    this.setState({ hist: [], snap: 0 });
   }
 
   snapshot() {
     // change hist mutably, but still strigger a state change
     this.setState((state) => {
       let interp = this.interp, hist = state.hist;
+
       hist.push({
         fn: interp.fn,
         ns: interp.ns,
@@ -133,12 +148,12 @@ export default class App extends Base {
         gfx: this.state.gfx,
         buf: this.state.buf
       });
-      return { hist };
+      return { hist, snap: hist.length };
     });
   }
 
   render() {
-    let { viewMode, editMode, gfx, buf } = this.state;
+    let { viewMode, editMode, gfx, buf, hist, snap } = this.state;
 
     return <div className={`start-app start-view-mode-${viewMode}`}>
       <Header viewMode={viewMode}
@@ -158,13 +173,17 @@ export default class App extends Base {
             { editMode == 'source' && <Editor ref="editor" /> }
           </Column>
         </Row>
+        <Row className="start-slider" isExpanded>
+          <Column large={12}>
+            <input type="range"
+                   min={0}
+                   max={hist.length}
+                   value={snap}
+                   onChange={this.handleSlider} />
+          </Column>
+        </Row>
       </div>
     </div>;
-    // <Row className="start-slider" isExpanded>
-    //   <Column large={12}>
-    //     <input type="range" />
-    //   </Column>
-    // </Row>
   }
 
   componentDidMount() {
