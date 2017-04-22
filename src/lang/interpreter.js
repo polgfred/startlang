@@ -97,6 +97,10 @@ export class SInterpreter {
         this.popOver(ctrl.flow);
       } else if (ctrl.pop == 'until') {
         this.popUntil(ctrl.flow);
+      } else if (ctrl.pop == 'exit') {
+        // clear the stack so the program exits
+        this.frame = null;
+        this.fst = this.fst.clear();
       }
     }
   }
@@ -465,9 +469,7 @@ export class SInterpreter {
   }
 
   exitNode() {
-    // clear the stack so the program exits
-    this.frame = null;
-    this.fst = this.fst.clear();
+    return { pop: 'exit' };
   }
 
   breakNode() {
