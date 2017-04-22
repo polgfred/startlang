@@ -50,28 +50,29 @@ export class SInterpreter {
     let loop = () => {
       while (this.frame) {
         let { node, state } = this.frame, method = `${node.type}Node`, ctrl;
-        // check arity to see if the handler wants a mutable frame
+        // check arity to see if the handler expects a mutable frame
         if (this[method].length > 2) {
-          // pass a mutable frame so the handler can conveniently deal with
-          // the frame state as a normal object
-          this.frame = this.frame.withMutations((fr) => {
-            ctrl = this[method](node, state, fr);
+          this.frame = this.frame.withMutations((frame) => {
+            ctrl = this[method](node, state, frame);
           });
         } else {
           ctrl = this[method](node, state);
         }
         // deal with the result
-        if (ctrl instanceof Promise) {
-          // if we got a promise, we need to wait for it, then handle
-          // any flow instruction returned by the promise
-          return ctrl.then((ctrl) => {
-            if (ctrl) {
-              this.doFlow(ctrl);
-            }
-          }).then(loop);
-        } else if (ctrl) {
-          // handle flow instruction
-          this.doFlow(ctrl);
+        if (ctrl) {
+          // check for a promise
+          if (ctrl.then) {
+            // handle flow and reenter the loop
+            return ctrl.then((ctrl) => {
+              if (ctrl) {
+                this.doFlow(ctrl);
+              }
+              return loop();
+            });
+          } else {
+            // handle flow instruction
+            this.doFlow(ctrl);
+          }
         }
       }
     };
@@ -423,7 +424,7 @@ export class SInterpreter {
       case 4:
         // handle a runtime API function
         let result = this.ctx.syscall(node.name, frame.args.toArray());
-        if (result instanceof Promise) {
+        if (result && result.then) {
           // if we got a promise, handle the result when fulfilled
           return result.then((result) => {
             this.handleResult(result, frame.assn);
