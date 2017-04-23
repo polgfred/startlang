@@ -177,25 +177,26 @@ body {
 
         &::-webkit-slider-thumb {
           -webkit-appearance: none;
-          background-color: #fff;
-          border: 1px solid #aaa;
-          border-radius: 3px;
+          background-color: $primary-color;
+          border-radius: 6px;
           cursor: pointer;
           height: 20px;
-          width: 8px;
+          width: 10px;
         }
       }
     }
 
     .start-vars {
-      height: calc(100vh - 90px);
+      height: calc(100vh - 154px);
       overflow: scroll;
 
       table {
-        .start-vars-name {
+        margin-bottom: 0;
+
+        .start-vars-name, .start-vars-list-index, .start-vars-table-key {
           width: 25%
         }
-        .start-vars-value {
+        .start-vars-value, .start-vars-list-item, .start-vars-table-item {
           width: 75%
         }
         td.start-vars-name {

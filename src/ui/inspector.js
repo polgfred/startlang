@@ -34,8 +34,8 @@ export default class Inspector extends Base {
         <table>
           <thead>
             <tr>
-              <th>Name</th>
-              <th>Value</th>
+              <th className="start-vars-name">Variable</th>
+              <th className="start-vars-value">Value</th>
             </tr>
           </thead>
           <tbody>
@@ -101,12 +101,25 @@ class ListInspector extends Base {
     let elems = [];
 
     this.props.value.forEach((item, i) => {
-      elems.push(<li key={i}>{ inspectorFor(item) }</li>);
+      elems.push(<tr key={i}>
+        <td className="start-vars-list-index">{i + 1}</td>
+        <td className="start-vars-list-item">
+          { inspectorFor(item) }
+        </td>
+      </tr>);
     });
 
-    return <ul className="start-vars-type-list">
-      { elems }
-    </ul>;
+    return <table className="start-vars-type-list">
+      <thead>
+        <tr>
+          <th className="start-vars-list-index">Index</th>
+          <th className="start-vars-list-item">Value</th>
+        </tr>
+      </thead>
+      <tbody>
+        { elems }
+      </tbody>
+    </table>;
   }
 }
 
@@ -117,14 +130,27 @@ class TableInspector extends Base {
     let elems = [];
 
     this.props.value.forEach((value, key) => {
-      elems.push(<li key={key}>
-        { inspectorFor(key) }: { inspectorFor(value) }
-      </li>);
+      elems.push(<tr key={key}>
+        <td className="start-vars-table-key">
+          { inspectorFor(key) }
+        </td>
+        <td className="start-vars-table-item">
+          { inspectorFor(value) }
+        </td>
+      </tr>);
     });
 
-    return <ul className="start-vars-type-list">
-      { elems }
-    </ul>;
+    return <table className="start-vars-type-table">
+      <thead>
+        <tr>
+          <th className="start-vars-table-key">Key</th>
+          <th className="start-vars-table-value">Value</th>
+        </tr>
+      </thead>
+      <tbody>
+        { elems }
+      </tbody>
+    </table>;
   }
 }
 
