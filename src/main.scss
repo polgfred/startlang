@@ -159,6 +159,7 @@ body {
     display: block;
     height: calc(100vh - 100px);
     margin: 0;
+    overflow: hidden;
     padding: 8px;
     width: 100%;
     @include box-shadow;
@@ -187,14 +188,19 @@ body {
     }
 
     .start-vars {
-      .start-vars-name {
-        width: 25%
-      }
-      .start-vars-value {
-        width: 75%
-      }
-      td.start-vars-name {
-        font-weight: bold;
+      height: calc(100vh - 90px);
+      overflow: scroll;
+
+      table {
+        .start-vars-name {
+          width: 25%
+        }
+        .start-vars-value {
+          width: 75%
+        }
+        td.start-vars-name {
+          font-weight: bold;
+        }
       }
     }
   }

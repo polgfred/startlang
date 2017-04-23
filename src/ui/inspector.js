@@ -26,7 +26,7 @@ export default class Inspector extends Base {
       <div className="start-slider">
         <input type="range"
                min={0}
-               max={hist.length}
+               max={hist.length - 1}
                value={snap}
                onChange={this.props.updateSlider} />
       </div>
