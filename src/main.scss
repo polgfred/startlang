@@ -154,21 +154,47 @@ body {
   }
 
   .start-inspector {
-    height: 80px;
+    background-color: #f8f8f8;
+    color: #000;
+    display: block;
+    height: calc(100vh - 100px);
+    margin: 0;
+    padding: 8px;
     width: 100%;
+    @include box-shadow;
 
     .start-slider {
-      width: 100%;
+      padding: 8px;
 
-      input {
-        padding: 8px;
+      input[type=range] {
+        -webkit-appearance: none;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        height: 10px;
+        outline: none;
         width: 100%;
+
+        &::-webkit-slider-thumb {
+          -webkit-appearance: none;
+          background-color: #fff;
+          border: 1px solid #aaa;
+          border-radius: 3px;
+          cursor: pointer;
+          height: 20px;
+          width: 8px;
+        }
       }
     }
 
     .start-vars {
-      .label {
-        margin-right: 5px;
+      .start-vars-name {
+        width: 25%
+      }
+      .start-vars-value {
+        width: 75%
+      }
+      td.start-vars-name {
+        font-weight: bold;
       }
     }
   }

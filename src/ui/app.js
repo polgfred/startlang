@@ -19,6 +19,7 @@ import Term from './term';
 import Help from './help';
 import Editor from './editor';
 import Builder from './builder';
+import Inspector from './inspector';
 
 import { SInterpreter } from '../lang/interpreter';
 import { SGRuntime, SGraphics } from '../lang/graphics';
@@ -29,10 +30,10 @@ export default class App extends Base {
 
     _.bindAll(this,
       'handleKeyUp',
-      'handleSlider',
       'runProgram',
       'updateViewMode',
-      'updateEditMode');
+      'updateEditMode',
+      'updateSlider');
 
     this.state = {
       viewMode: 'help',
@@ -72,10 +73,10 @@ export default class App extends Base {
   }
 
   clearDisplay() {
-    this.setState((state) => ({
+    this.setState({
       gfx: state.gfx.clear(),
       buf: state.buf.clear()
-    }));
+    });
   }
 
   gfxUpdate(mut) {
@@ -102,7 +103,7 @@ export default class App extends Base {
     }
   }
 
-  handleSlider(ev) {
+  updateSlider(ev) {
     let { hist } = this.state,
         snap = ev.target.value,
         current = hist[snap];
@@ -153,7 +154,8 @@ export default class App extends Base {
   }
 
   render() {
-    let { viewMode, editMode, gfx, buf, hist, snap } = this.state;
+    let { viewMode, editMode, gfx, buf, ns, hist, snap } = this.state,
+        inspect = true;
 
     return <div className={`start-app start-view-mode-${viewMode}`}>
       <Header viewMode={viewMode}
@@ -163,24 +165,21 @@ export default class App extends Base {
               runProgram={this.runProgram} />
       <div className="start-body">
         <Row className="start-main" isExpanded onKeyUp={this.handleKeyUp}>
-          <Column className="start-column" large={5}>
+          <Column className="start-column" large={inspect ? 4 : 6}>
             <Graphics data={gfx} />
             <Term buf={buf} ref="term" />
             <Help />
           </Column>
-          <Column className="start-column" large={7}>
+          <Column className="start-column" large={inspect ? 4 : 6}>
             { editMode == 'blocks' && <Builder ref="editor" /> }
             { editMode == 'source' && <Editor ref="editor" /> }
           </Column>
-        </Row>
-        <Row className="start-slider" isExpanded>
-          <Column large={12}>
-            <input type="range"
-                   min={0}
-                   max={hist.length}
-                   value={snap}
-                   onChange={this.handleSlider} />
-          </Column>
+          {inspect &&
+            <Column className="start-column" large={4}>
+              <Inspector hist={hist}
+                         snap={snap}
+                         updateSlider={this.updateSlider} />
+            </Column>}
         </Row>
       </div>
     </div>;
