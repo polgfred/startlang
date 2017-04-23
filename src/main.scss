@@ -1,11 +1,11 @@
-$body-font-family: 'Rubik';
+$body-font-family: 'Roboto';
 $font-family-monospace: 'Roboto Mono';
 
 @import '~foundation-sites/scss/foundation';
 @include foundation-everything(true);
 
 @import url("https://fonts.googleapis.com/css?family=Roboto+Mono:400,700&subset=latin,latin-ext");
-@import url("https://fonts.googleapis.com/css?family=Rubik:400&subset=latin,latin-ext");
+@import url("https://fonts.googleapis.com/css?family=Roboto:400&subset=latin,latin-ext");
 
 @mixin source-font {
   font-family: $font-family-monospace;
