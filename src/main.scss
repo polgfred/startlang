@@ -32,6 +32,10 @@ body {
 }
 
 .start-app {
+  button {
+    margin: 0;
+  }
+
   .top-bar {
     border: 0;
     border-radius: 0;
@@ -45,10 +49,6 @@ body {
       li.is-submenu-item:not(.active):hover > a {
         background-color: #ccc;
       }
-    }
-
-    button {
-      margin: 0;
     }
   }
 
@@ -197,14 +197,23 @@ body {
       table {
         margin-bottom: 0;
 
-        .start-vars-name, .start-vars-list-index, .start-vars-table-key {
+        .start-vars-name, .start-vars-table-key {
           width: 25%
         }
-        .start-vars-value, .start-vars-list-item, .start-vars-table-item {
+        .start-vars-value, .start-vars-table-item {
           width: 75%
         }
-        td.start-vars-name {
+        td.start-vars-name, td.start-vars-table-key {
           font-weight: bold;
+        }
+
+        .start-vars-expando-more {
+          padding-left: 0;
+          padding-right: 0;
+
+          button {
+            width: 100%;
+          }
         }
       }
     }

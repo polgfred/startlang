@@ -1,9 +1,12 @@
 'use strict';
 
+import _ from 'lodash';
 import moment from 'moment';
 import immutable from 'immutable';
 
 import React from 'react';
+
+import { Button, Colors } from 'react-foundation';
 
 import Base from './base';
 
@@ -96,38 +99,66 @@ class TimeInspector extends Base {
 
 moment.fn[inspectorKey] = TimeInspector;
 
-class ListInspector extends Base {
+class ExpandableInspector extends Base {
+  constructor() {
+    super();
+
+    _.bindAll(this, 'handleShowMore');
+
+    this.state = { visible: 5 };
+  }
+
+  handleShowMore(ev) {
+    this.setState((state) => ({ visible: state.visible + 5 }));
+  }
+
+  footer() {
+    return <tfoot>
+      <tr key="trunc">
+        <td colSpan="2" className="start-vars-expando-more">
+          <Button onClick={this.handleShowMore} color={Colors.SECONDARY}>More...</Button>
+        </td>
+      </tr>
+    </tfoot>;
+  }
+}
+
+class ListInspector extends ExpandableInspector {
   render() {
-    let elems = [];
+    let elems = [], more = false;
 
     this.props.value.forEach((item, i) => {
       elems.push(<tr key={i}>
-        <td className="start-vars-list-index">{i + 1}</td>
         <td className="start-vars-list-item">
           { inspectorFor(item) }
         </td>
       </tr>);
+
+      if (i >= this.state.visible - 1) {
+        more = true;
+        return false;
+      }
     });
 
     return <table className="start-vars-type-list">
       <thead>
         <tr>
-          <th className="start-vars-list-index">Index</th>
-          <th className="start-vars-list-item">Value</th>
+          <th className="start-vars-list-item">Items</th>
         </tr>
       </thead>
       <tbody>
         { elems }
       </tbody>
+      { more && this.footer() }
     </table>;
   }
 }
 
 immutable.List.prototype[inspectorKey] = ListInspector;
 
-class TableInspector extends Base {
+class TableInspector extends ExpandableInspector {
   render() {
-    let elems = [];
+    let elems = [], i, more = false;
 
     this.props.value.forEach((value, key) => {
       elems.push(<tr key={key}>
@@ -138,6 +169,11 @@ class TableInspector extends Base {
           { inspectorFor(value) }
         </td>
       </tr>);
+
+      if (++i >= this.state.visible - 1) {
+        more = true;
+        return false;
+      }
     });
 
     return <table className="start-vars-type-table">
@@ -150,6 +186,7 @@ class TableInspector extends Base {
       <tbody>
         { elems }
       </tbody>
+      { more && this.footer() }
     </table>;
   }
 }
