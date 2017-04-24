@@ -21,6 +21,10 @@ $font-family-monospace: 'Roboto Mono';
   box-shadow: 2px 2px 4px #888;
 }
 
+html {
+  font-size: 14px;
+}
+
 body {
   background: #ccc;
   margin: 0;
@@ -139,7 +143,7 @@ body {
   }
 
   .start-editor {
-    font-size: 16px;
+    font-size: 14px;
     @include source-font;
 
     .ace_indent-guide {
