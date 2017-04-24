@@ -8,6 +8,28 @@ let flowMarker = {
   'call': 'call'
 };
 
+let inspectMarker = {
+  'repeat': 'loop',
+  'for': 'loop',
+  'forIn': 'loop',
+  'while': 'loop',
+  'if': 'stmt',
+  'begin': 'stmt',
+  'call': 'stmt',
+  'exit': 'stmt',
+  'break': 'stmt',
+  'next': 'stmt',
+  'return': 'stmt',
+  'literal': 'expr',
+  'var': 'expr',
+  'let': 'stmt',
+  'index': 'expr',
+  'letIndex': 'stmt',
+  'logicalOp': 'expr',
+  'binaryOp': 'expr',
+  'unaryOp': 'expr'
+}
+
 function buildNode(type, block, attrs) {
   // if we're a block with one statement, just return the statement itself
   if (type == 'block' && attrs.elems.length == 1) {
@@ -20,6 +42,11 @@ function buildNode(type, block, attrs) {
   // then the flow marker
   if (flowMarker[type]) {
     node.flow = flowMarker[type];
+  }
+
+  // then the inspect marker
+  if (inspectMarker[type]) {
+    node.inspect = inspectMarker[type];
   }
 
   // then the passed-in attributes

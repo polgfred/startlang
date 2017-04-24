@@ -75,6 +75,8 @@ export class SInterpreter {
           }
         }
       }
+      // take a final snapshot
+      this.app.snapshot();
     };
 
     // return a promise for the eventual termination of the loop
