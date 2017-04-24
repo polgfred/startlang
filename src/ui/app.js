@@ -118,13 +118,13 @@ export default class App extends Base {
   }
 
   runProgram() {
-    this.refreshState().then(() => {
+    return this.refreshState().then(() => {
       let interp = this.interp = new SInterpreter(this);
       interp.ctx = new SGRuntime(this);
       interp.root(this.refs.editor.getRoot());
       this.clearHistory();
 
-      interp.run().catch((err) => {
+      return interp.run().catch((err) => {
         console.log(err);
         console.log(err.stack);
       });
