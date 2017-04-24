@@ -53,7 +53,7 @@ body {
   }
 
   .start-column {
-    padding: 4px;
+    padding: 6px 4px 4px;
   }
 
   .start-graphics, .start-term, .start-help {
@@ -105,39 +105,39 @@ body {
   &.start-view-mode-graphics {
     .start-graphics {
       display: block;
-      height: calc(100vh - 100px);
+      height: calc(100vh - 60px);
     }
   }
 
   &.start-view-mode-text {
     .start-term {
       display: block;
-      height: calc(100vh - 100px);
+      height: calc(100vh - 60px);
     }
   }
 
   &.start-view-mode-split {
     .start-graphics {
       display: block;
-      height: calc(65vh - 55px);
+      height: calc(65vh - 33px);
     }
 
     .start-term {
       display: block;
-      height: calc(35vh - 55px);
-      margin-top: 10px;
+      height: calc(35vh - 33px);
+      margin-top: 6px;
     }
   }
 
   &.start-view-mode-help {
     .start-help {
       display: block;
-      height: calc(100vh - 100px);
+      height: calc(100vh - 60px);
     }
   }
 
   .start-editor, .start-builder {
-    height: calc(100vh - 100px);
+    height: calc(100vh - 60px);
     line-height: 1.35;
     @include box-shadow;
   }
@@ -161,7 +161,7 @@ body {
     background-color: #f8f8f8;
     color: #000;
     display: block;
-    height: calc(100vh - 100px);
+    height: calc(100vh - 60px);
     margin: 0;
     overflow: hidden;
     padding: 8px;
@@ -191,7 +191,7 @@ body {
     }
 
     .start-vars {
-      height: calc(100vh - 154px);
+      height: calc(100vh - 114px);
       overflow: scroll;
 
       table {
