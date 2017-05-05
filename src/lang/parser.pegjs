@@ -373,16 +373,19 @@ IndexExpr
   / PrimaryExpr
 
 Indexes
-  = first:Index rest:( __ index:Index { return index; } )* {
-      return [first].concat(rest);
+  = first:IndexSegment rest:( __ seg:IndexSegment { return seg; } )* {
+      // flatten segments into a single chain of indexes
+      return first.concat(...rest);
     }
 
-Index
-  = '[' __ val:Value __ ']' {
-      return val;
+IndexSegment
+  = '[' __ first:Value rest:( __ ',' __ val:Value { return val; } )* __ ']' {
+      // allow successive indexes separated by commas, e.g. lst[0,1,2]
+      return [first].concat(rest);
     }
   / '.' __ name:Symbol {
-      return buildNode('literal', { value: name });
+      // segment consisting of one literal node
+      return [buildNode('literal', { value: name })];
     }
 
 PrimaryExpr
