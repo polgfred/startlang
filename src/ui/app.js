@@ -146,8 +146,8 @@ export default class App extends Base {
         st: interp.st,
         frame: interp.frame,
         fst: interp.fst,
-        gfx: this.state.gfx,
-        buf: this.state.buf
+        gfx: state.gfx,
+        buf: state.buf
       });
       return { hist, snap: hist.length };
     });
