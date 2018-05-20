@@ -1,8 +1,5 @@
-'use strict';
-
-import $ from 'jquery';
-
-import React from 'react';
+import React, { Component } from 'react';
+import ReactDOM from 'react-dom';
 
 import brace from 'brace';
 import 'brace/mode/text';
@@ -11,9 +8,7 @@ import 'brace/theme/textmate';
 import parser from '../lang/parser.pegjs';
 import StartMode from '../ace/start_mode';
 
-import Base from './base';
-
-export default class Editor extends Base {
+export default class Editor extends Component {
   shouldComponentUpdate(nextProps) {
     return false;
   }
@@ -23,7 +18,7 @@ export default class Editor extends Base {
   }
 
   get editor() {
-    return ace.edit(this.$()[0]);
+    return ace.edit(ReactDOM.findDOMNode(this));
   }
 
   componentDidMount() {

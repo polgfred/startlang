@@ -1,8 +1,9 @@
-var path = require('path'),
+let path = require('path'),
     webpack = require('webpack'),
     env = process.env['NODE_ENV'];
 
 module.exports = {
+  mode: env,
   entry: './src/main.js',
   output: {
     path: path.join(__dirname, 'dist'),
@@ -19,18 +20,16 @@ module.exports = {
         test: /\.pegjs$/,
         use: [ 'babel-loader', 'pegjs-loader' ]
       }, {
-        test: /\.scss$/,
-        use: [ 'style-loader', 'css-loader', 'sass-loader' ]
+        test: /\.css$/,
+        use: [
+          'style-loader',
+          { loader: 'css-loader', options: { importLoaders: 1 } },
+          'postcss-loader'
+        ]
       }, {
         test: /\.(html|xml)$/,
         use: [ 'html-loader' ]
       }
     ]
-  },
-  devtool: (env == 'production') ?
-              false :
-              'cheap-module-source-map',
-  plugins: (env == 'production') ?
-              [ new webpack.optimize.UglifyJsPlugin() ] :
-              []
+  }
 };

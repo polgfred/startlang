@@ -1,22 +1,12 @@
-'use strict';
-
-import $ from 'jquery';
-import _ from 'lodash';
-
-import React from 'react';
+import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
-
-import '../foundation';
-
-import { Row, Column } from 'react-foundation';
-
 import immutable from 'immutable';
+import autobind from 'autobind-decorator';
 
-import Base from './base';
-import Header from './header';
+//import Header from './header';
 import Graphics from './graphics';
-import Term from './term';
-import Help from './help';
+//import Term from './term';
+//import Help from './help';
 import Editor from './editor';
 import Builder from './builder';
 import Inspector from './inspector';
@@ -24,16 +14,19 @@ import Inspector from './inspector';
 import { SInterpreter } from '../lang/interpreter';
 import { SGRuntime, SGraphics } from '../lang/graphics';
 
-export default class App extends Base {
+// these require more porting from foundation
+class Empty extends Component {
+  render() {
+    return null;
+  }
+}
+const Header = Empty;
+const Term = Empty;
+const Help = Empty;
+
+export default class App extends Component {
   constructor(props) {
     super(props);
-
-    _.bindAll(this,
-      'handleKeyUp',
-      'runProgram',
-      'updateViewMode',
-      'updateEditMode',
-      'updateSlider');
 
     this.state = {
       viewMode: 'help',
@@ -64,10 +57,12 @@ export default class App extends Base {
     });
   }
 
+  @autobind
   updateViewMode(viewMode) {
     this.setState({ viewMode });
   }
 
+  @autobind
   updateEditMode(editMode) {
     this.setState({ editMode });
   }
@@ -94,6 +89,7 @@ export default class App extends Base {
     });
   }
 
+  @autobind
   handleKeyUp(ev) {
     if (ev.ctrlKey) {
       if (ev.keyCode == 82) {
@@ -103,6 +99,7 @@ export default class App extends Base {
     }
   }
 
+  @autobind
   updateSlider(ev) {
     let { hist } = this.state,
         snap = ev.target.value,
@@ -117,6 +114,7 @@ export default class App extends Base {
     }
   }
 
+  @autobind
   runProgram() {
     return this.refreshState().then(() => {
       let interp = this.interp = new SInterpreter(this);
@@ -164,28 +162,24 @@ export default class App extends Base {
               updateEditMode={this.updateEditMode}
               runProgram={this.runProgram} />
       <div className="start-body">
-        <Row className="start-main" isExpanded onKeyUp={this.handleKeyUp}>
-          <Column className="start-column" large={inspect ? 4 : 6}>
+        <div onKeyUp={this.handleKeyUp}>
+          <div>
             <Graphics data={gfx} />
             <Term buf={buf} ref="term" />
             <Help />
-          </Column>
-          <Column className="start-column" large={inspect ? 4 : 6}>
+          </div>
+          <div>
             { editMode == 'blocks' && <Builder ref="editor" /> }
             { editMode == 'source' && <Editor ref="editor" /> }
-          </Column>
+          </div>
           {inspect &&
-            <Column className="start-column" large={4}>
+            <div>
               <Inspector hist={hist}
                          snap={snap}
                          updateSlider={this.updateSlider} />
-            </Column>}
-        </Row>
+            </div>}
+        </div>
       </div>
     </div>;
-  }
-
-  componentDidMount() {
-    this.$().foundation();
   }
 }

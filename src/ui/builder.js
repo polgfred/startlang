@@ -1,17 +1,11 @@
-'use strict';
-
-import $ from 'jquery';
-
-import React from 'react';
+import React, { Component } from 'react';
 
 import { SBuilder } from '../lang/builder';
 import Blockly from '../blockly';
 
-import Base from './base';
-
 import toolbox from './toolbox.xml';
 
-export default class Builder extends Base {
+export default class Builder extends Component {
   shouldComponentUpdate(nextProps) {
     return false;
   }
@@ -21,7 +15,7 @@ export default class Builder extends Base {
   }
 
   componentDidMount() {
-    this.blockly = Blockly.inject(this.$()[0], {
+    this.blockly = Blockly.inject(ReactDOM.findDOMNode(this), {
       toolbox,
       collapse: true,
       comments: true,

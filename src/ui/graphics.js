@@ -1,8 +1,4 @@
-'use strict';
-
-import React from 'react';
-
-import Base from './base';
+import React, { Component } from 'react';
 
 // This React implementation depends on the internals of immutable.List
 // (https://facebook.github.io/immutable-js/docs/#/List) to render the
@@ -20,7 +16,7 @@ import Base from './base';
 // is the level shift we need to do when descending through nodes
 const LIST_SHIFT = 5;
 
-export default class Graphics extends Base {
+export default class Graphics extends Component {
   shouldComponentUpdate(nextProps) {
     return this.props.data.shapes != nextProps.data.shapes;
   }
@@ -45,7 +41,7 @@ export default class Graphics extends Base {
   }
 }
 
-class Group extends Base {
+class Group extends Component {
   shouldComponentUpdate(nextProps) {
     return this.props.node != nextProps.node;
   }
@@ -70,7 +66,7 @@ class Group extends Base {
   }
 }
 
-class Shape extends Base {
+class Shape extends Component {
   shouldComponentUpdate(nextProps) {
     return this.props.shape != nextProps.shape;
   }

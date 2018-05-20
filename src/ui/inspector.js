@@ -1,16 +1,12 @@
-'use strict';
-
-import _ from 'lodash';
 import moment from 'moment';
 import immutable from 'immutable';
+import autobind from 'autobind-decorator';
 
-import React from 'react';
+import React, { Component } from 'react';
 
-import { Button, Colors } from 'react-foundation';
+import Button from '@material-ui/core';
 
-import Base from './base';
-
-export default class Inspector extends Base {
+export default class Inspector extends Component {
   render() {
     let { hist, snap } = this.props,
         current = hist[snap] || hist[hist.length - 1],
@@ -52,13 +48,13 @@ export default class Inspector extends Base {
 
 let inspectorKey = Symbol('START_INSPECTOR');
 
-class NoneInspector extends Base {
+class NoneInspector extends Component {
   render() {
     return <span className="start-vars-type-none">*none*</span>;
   }
 }
 
-class BooleanInspector extends Base {
+class BooleanInspector extends Component {
   render() {
     return <span className="start-vars-type-boolean">
       { this.props.value ? '*true*' : '*false*' }
@@ -68,7 +64,7 @@ class BooleanInspector extends Base {
 
 Boolean.prototype[inspectorKey] = BooleanInspector;
 
-class NumberInspector extends Base {
+class NumberInspector extends Component {
   render() {
     let n = this.props.value;
     return <span className="start-vars-type-number">
@@ -79,7 +75,7 @@ class NumberInspector extends Base {
 
 Number.prototype[inspectorKey] = NumberInspector;
 
-class StringInspector extends Base {
+class StringInspector extends Component {
   render() {
     return <span className="start-vars-type-string">
       { this.props.value }
@@ -89,7 +85,7 @@ class StringInspector extends Base {
 
 String.prototype[inspectorKey] = StringInspector;
 
-class TimeInspector extends Base {
+class TimeInspector extends Component {
   render() {
     return <span className="start-vars-type-time">
       { this.props.value.format('l LTS') }
@@ -99,15 +95,14 @@ class TimeInspector extends Base {
 
 moment.fn[inspectorKey] = TimeInspector;
 
-class ExpandableInspector extends Base {
+class ExpandableInspector extends Component {
   constructor() {
     super();
-
-    _.bindAll(this, 'handleShowMore');
 
     this.state = { visible: 5 };
   }
 
+  @autobind
   handleShowMore(ev) {
     this.setState((state) => ({ visible: state.visible + 5 }));
   }
@@ -116,7 +111,7 @@ class ExpandableInspector extends Base {
     return <tfoot>
       <tr key="trunc">
         <td colSpan="2" className="start-vars-expando-more">
-          <Button onClick={this.handleShowMore} color={Colors.SECONDARY}>More...</Button>
+          <Button onClick={this.handleShowMore}>More...</Button>
         </td>
       </tr>
     </tfoot>;

@@ -1,23 +1,21 @@
 $body-font-family: 'Roboto';
 $font-family-monospace: 'Roboto Mono';
-
-@import '~foundation-sites/scss/foundation';
-@include foundation-everything(true);
+$primary-color: '#eee';
 
 @import url("https://fonts.googleapis.com/css?family=Roboto+Mono:400,700&subset=latin,latin-ext");
 @import url("https://fonts.googleapis.com/css?family=Roboto:400&subset=latin,latin-ext");
 
-@mixin source-font {
+@define-mixin source-font {
   font-family: $font-family-monospace;
   font-weight: 400;
 }
 
-@mixin proportional-font {
+@define-mixin proportional-font {
   font-family: $body-font-family;
   font-weight: 400;
 }
 
-@mixin box-shadow {
+@define-mixin box-shadow {
   box-shadow: 2px 2px 4px #888;
 }
 
@@ -40,11 +38,11 @@ body {
     border: 0;
     border-radius: 0;
     margin: 0 4px;
-    @include box-shadow;
+    @mixin box-shadow;
 
     ul.is-dropdown-submenu {
       z-index: 100;
-      @include box-shadow;
+      @mixin box-shadow;
 
       li.is-submenu-item:not(.active):hover > a {
         background-color: #ccc;
@@ -62,25 +60,27 @@ body {
     display: none;
     margin: 0;
     width: 100%;
-    @include box-shadow;
+    @mixin box-shadow;
   }
 
   .x-start-orient {
     transform: translate(calc(50vw - 4px), calc(32.5vh - 30px)) scale(1, -1);
 
-    @include breakpoint(large up) {
-      // this width is sensitive to the relative size of the graphics display,
-      // so if the column width changes, this needs to reflect that.
-      // the desired width should be half the real width of the left column,
-      // minus padding, so: (5 / 12) / 2
+    /*
+    @mixin breakpoint(large up) {
+      this width is sensitive to the relative size of the graphics display,
+      so if the column width changes, this needs to reflect that.
+      the desired width should be half the real width of the left column,
+      minus padding, so: (5 / 12) / 2
       transform: translate(calc(20.8333vw - 4px), calc(32.5vh - 30px)) scale(1, -1);
     }
+    */
   }
 
   .start-term {
     overflow: scroll;
     padding: 4px 8px;
-    @include source-font;
+    @mixin source-font;
 
     .start-term-output p {
       margin: 0;
@@ -139,12 +139,12 @@ body {
   .start-editor, .start-builder {
     height: calc(100vh - 60px);
     line-height: 1.35;
-    @include box-shadow;
+    @mixin box-shadow;
   }
 
   .start-editor {
     font-size: 14px;
-    @include source-font;
+    @mixin source-font;
 
     .ace_indent-guide {
       background: none;
@@ -153,7 +153,7 @@ body {
 
   .start-builder {
     .blocklyText {
-      @include proportional-font;
+      @mixin proportional-font;
     }
   }
 
@@ -166,7 +166,7 @@ body {
     overflow: hidden;
     padding: 8px;
     width: 100%;
-    @include box-shadow;
+    @mixin box-shadow;
 
     .start-slider {
       padding: 8px;
@@ -227,13 +227,13 @@ body {
     padding-top: 2px;
   }
   .blocklyTreeLabel {
-    @include proportional-font;
+    @mixin proportional-font;
   }
 }
 
 .blocklyWidgetDiv {
   .blocklyHtmlInput {
     height: 22px;
-    @include proportional-font;
+    @mixin proportional-font;
   }
 }

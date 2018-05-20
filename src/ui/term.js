@@ -1,22 +1,10 @@
-'use strict';
-
-import $ from 'jquery';
-import _ from 'lodash';
-
-import React from 'react';
-
-import Base from './base';
+import React, { Component } from 'react';
+import ReactDOM from 'react-dom';
 
 // See graphics.js
 const LIST_SHIFT = 5;
 
-export default class Term extends Base {
-  constructor(props) {
-    super(props);
-
-    _.bindAll(this, 'handleClick');
-  }
-
+export default class Term extends Component {
   shouldComponentUpdate(nextProps) {
     return this.props.buf != nextProps.buf;
   }
@@ -47,9 +35,11 @@ export default class Term extends Base {
 
   componentDidUpdate() {
     // scroll to the bottom anytime we're updated
-    this.$().prop('scrollTop', this.$().prop('scrollHeight'));
+    let node = ReactDOM.findDOMNode(this);
+    node.scrollTop = node.scrollHeight;
   }
 
+  @autobind
   handleClick() {
     this.$('.start-term-input').focus();
   }
@@ -80,8 +70,6 @@ class TermOutput extends Base {
 class TermInput extends Base {
   constructor(props) {
     super(props);
-
-    _.bindAll(this, 'handleChange', 'handleKeyUp');
 
     this.state = this.initialState = {
       needsInput: false,
@@ -115,10 +103,12 @@ class TermInput extends Base {
     this.setState({ needsInput: true, prompt, recv });
   }
 
+  @autobind
   handleChange(ev) {
     this.setState({ input: ev.target.value });
   }
 
+  @autobind
   handleKeyUp(ev) {
     if (ev.keyCode == 13) {
       this.state.recv(this.state.input);

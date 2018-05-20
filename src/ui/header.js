@@ -1,15 +1,6 @@
-'use strict';
+import React, { Component } from 'react';
 
-import React from 'react';
-
-import {
-  TopBar, TopBarLeft, TopBarRight,
-  Button, Menu, MenuText, MenuItem
-} from 'react-foundation';
-
-import Base from './base';
-
-export default class Header extends Base {
+export default class Header extends Component {
   shouldComponentUpdate(nextProps) {
     return this.props.viewMode != nextProps.viewMode ||
             this.props.editMode != nextProps.editMode;
