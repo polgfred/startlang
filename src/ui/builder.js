@@ -1,4 +1,7 @@
-import React, { Component } from 'react';
+import React, {
+  Component,
+  createRef,
+} from 'react';
 
 import { SBuilder } from '../lang/builder';
 import Blockly from '../blockly';
@@ -6,16 +9,27 @@ import Blockly from '../blockly';
 import toolbox from './toolbox.xml';
 
 export default class Builder extends Component {
+  constructor(props) {
+    super(props);
+
+    this.editorRef = createRef();
+  }
+
   shouldComponentUpdate(nextProps) {
     return false;
   }
 
   render() {
-    return <div className="start-builder" />;
+    return (
+      <div
+        ref={ this.editorRef }
+        className="start-builder"
+      />
+    );
   }
 
   componentDidMount() {
-    this.blockly = Blockly.inject(ReactDOM.findDOMNode(this), {
+    this.blockly = Blockly.inject(this.editorRef.current, {
       toolbox,
       collapse: true,
       comments: true,

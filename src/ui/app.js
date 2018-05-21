@@ -3,7 +3,9 @@ import ReactDOM from 'react-dom';
 import immutable from 'immutable';
 import autobind from 'autobind-decorator';
 
-//import Header from './header';
+import Grid from '@material-ui/core/Grid'
+
+import Header from './header';
 import Graphics from './graphics';
 //import Term from './term';
 //import Help from './help';
@@ -20,7 +22,6 @@ class Empty extends Component {
     return null;
   }
 }
-const Header = Empty;
 const Term = Empty;
 const Help = Empty;
 
@@ -152,34 +153,44 @@ export default class App extends Component {
   }
 
   render() {
-    let { viewMode, editMode, gfx, buf, ns, hist, snap } = this.state,
-        inspect = true;
+    let { viewMode, editMode, gfx, buf, ns, hist, snap } = this.state;
+    let inspect = false;
 
-    return <div className={`start-app start-view-mode-${viewMode}`}>
-      <Header viewMode={viewMode}
-              editMode={editMode}
-              updateViewMode={this.updateViewMode}
-              updateEditMode={this.updateEditMode}
-              runProgram={this.runProgram} />
-      <div className="start-body">
-        <div onKeyUp={this.handleKeyUp}>
-          <div>
-            <Graphics data={gfx} />
-            <Term buf={buf} ref="term" />
+    return (
+      <div>
+        <Grid container spacing={ 16 }>
+          <Grid item xs={ 12 }>
+            <Header
+              viewMode={ viewMode }
+              editMode={ editMode }
+              updateViewMode={ this.updateViewMode }
+              updateEditMode={ this.updateEditMode }
+              runProgram={ this.runProgram }
+            />
+          </Grid>
+          <Grid item xs={ 6 }>
+            <Graphics data={ gfx } />
+            <Term buf={ buf } ref="term" />
             <Help />
-          </div>
-          <div>
+          </Grid>
+          <Grid item xs={ 6 }>
             { editMode == 'blocks' && <Builder ref="editor" /> }
             { editMode == 'source' && <Editor ref="editor" /> }
-          </div>
-          {inspect &&
-            <div>
-              <Inspector hist={hist}
-                         snap={snap}
-                         updateSlider={this.updateSlider} />
-            </div>}
-        </div>
+          </Grid>
+          <Grid item xs={ false }>
+            {
+              inspect &&
+              <div>
+                <Inspector
+                  hist={ hist }
+                  snap={ snap }
+                  updateSlider={ this.updateSlider }
+                />
+              </div>
+            }
+          </Grid>
+        </Grid>
       </div>
-    </div>;
+    );
   }
 }
