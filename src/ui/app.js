@@ -4,6 +4,7 @@ import immutable from 'immutable';
 import autobind from 'autobind-decorator';
 
 import Grid from '@material-ui/core/Grid'
+import Paper from '@material-ui/core/Paper'
 
 import Header from './header';
 import Graphics from './graphics';
@@ -169,26 +170,47 @@ export default class App extends Component {
             />
           </Grid>
           <Grid item xs={ 6 }>
-            <Graphics data={ gfx } />
-            <Term buf={ buf } ref="term" />
+            <Paper
+              elevation={ 2 }
+              style={{
+                height: 'calc(65vh - 50px)',
+              }}>
+              <Graphics data={ gfx } />
+            </Paper>
+            <Paper
+              elevation={ 2 }
+              style={{
+                height: 'calc(35vh - 50px)',
+              }}>
+              <Term buf={ buf } ref="term" />
+            </Paper>
             <Help />
           </Grid>
           <Grid item xs={ 6 }>
-            { editMode == 'blocks' && <Builder ref="editor" /> }
-            { editMode == 'source' && <Editor ref="editor" /> }
+            <Paper
+              elevation={ 2 }
+              style={{
+                height: 'calc(100vh - 100px)',
+              }}>
+              { editMode == 'blocks' && <Builder ref="editor" /> }
+              { editMode == 'source' && <Editor ref="editor" /> }
+            </Paper>
           </Grid>
-          <Grid item xs={ false }>
-            {
-              inspect &&
-              <div>
-                <Inspector
-                  hist={ hist }
-                  snap={ snap }
-                  updateSlider={ this.updateSlider }
-                />
-              </div>
-            }
-          </Grid>
+          {
+            false &&
+            <Grid item xs={ false }>
+              {
+                inspect &&
+                <div>
+                  <Inspector
+                    hist={ hist }
+                    snap={ snap }
+                    updateSlider={ this.updateSlider }
+                  />
+                </div>
+              }
+            </Grid>
+          }
         </Grid>
       </div>
     );

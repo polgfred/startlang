@@ -24,6 +24,9 @@ export default class Builder extends Component {
       <div
         ref={ this.editorRef }
         className="start-builder"
+        style={{
+          height: '100%'
+        }}
       />
     );
   }
