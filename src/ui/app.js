@@ -70,10 +70,10 @@ export default class App extends Component {
   }
 
   clearDisplay() {
-    this.setState({
+    this.setState((state) => ({
       gfx: state.gfx.clear(),
       buf: state.buf.clear()
-    });
+    }));
   }
 
   gfxUpdate(mut) {
