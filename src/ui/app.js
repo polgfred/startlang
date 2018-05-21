@@ -171,14 +171,14 @@ export default class App extends Component {
           </Grid>
           <Grid item xs={ 6 }>
             <Paper
-              elevation={ 2 }
+              elevation={ 3 }
               style={{
                 height: 'calc(65vh - 50px)',
               }}>
               <Graphics data={ gfx } />
             </Paper>
             <Paper
-              elevation={ 2 }
+              elevation={ 3 }
               style={{
                 height: 'calc(35vh - 50px)',
               }}>
@@ -188,7 +188,7 @@ export default class App extends Component {
           </Grid>
           <Grid item xs={ 6 }>
             <Paper
-              elevation={ 2 }
+              elevation={ 3 }
               style={{
                 height: 'calc(100vh - 100px)',
               }}>

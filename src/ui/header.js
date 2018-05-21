@@ -107,7 +107,11 @@ export default class Header extends Component {
     return (
       <AppBar position="static">
         <Toolbar>
-          <Typography variant="title">
+          <Typography
+            variant="title"
+            style={{
+              marginRight: '24px'
+            }}>
             Start
           </Typography>
           <SettingsMenu
