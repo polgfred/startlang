@@ -105,7 +105,7 @@ export default class Header extends Component {
 
     return (
       <AppBar position="static">
-        <Toolbar>
+        <Toolbar color="light">
           <Typography
             variant="title"
             style={{

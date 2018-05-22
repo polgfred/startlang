@@ -5,7 +5,7 @@ import React, {
 
 import brace from 'brace';
 import 'brace/mode/text';
-import 'brace/theme/textmate';
+import 'brace/theme/github';
 
 import parser from '../lang/parser.pegjs';
 import StartMode from '../ace/start_mode';
@@ -27,6 +27,8 @@ export default class Editor extends Component {
         ref={ this.editorRef }
         className="start-editor"
         style={{
+          fontFamily: 'Roboto Mono',
+          fontSize: 14,
           height: '100%'
         }}
       />
@@ -37,7 +39,7 @@ export default class Editor extends Component {
     let editor = this.editor = brace.edit(this.editorRef.current);
 
     editor.$blockScrolling = Infinity;
-    editor.setTheme('ace/theme/textmate');
+    editor.setTheme('ace/theme/github');
     editor.setShowFoldWidgets(false);
     editor.setShowPrintMargin(false);
     editor.getSession().setTabSize(2);

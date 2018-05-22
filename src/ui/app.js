@@ -4,6 +4,12 @@ import autobind from 'autobind-decorator';
 
 import Grid from '@material-ui/core/Grid'
 import Paper from '@material-ui/core/Paper'
+import deepOrange from '@material-ui/core/colors/deepOrange'
+import teal from '@material-ui/core/colors/teal'
+import {
+  MuiThemeProvider,
+  createMuiTheme,
+} from '@material-ui/core/styles'
 
 import Header from './header';
 import Graphics from './graphics';
@@ -24,6 +30,13 @@ class Empty extends Component {
 }
 const Term = Empty;
 const Help = Empty;
+
+const theme = createMuiTheme({
+  palette: {
+    primary: teal,
+    secondary: deepOrange,
+  }
+});
 
 export default class App extends Component {
   constructor(props) {
@@ -153,65 +166,69 @@ export default class App extends Component {
   }
 
   render() {
-    let { viewMode, editMode, gfx, buf, ns, hist, snap } = this.state;
+    let { viewMode, editMode, gfx, buf, hist, snap } = this.state;
     let inspect = false;
 
     return (
-      <div>
-        <Grid container spacing={ 16 }>
-          <Grid item xs={ 12 }>
-            <Header
-              viewMode={ viewMode }
-              editMode={ editMode }
-              updateViewMode={ this.updateViewMode }
-              updateEditMode={ this.updateEditMode }
-              runProgram={ this.runProgram }
-            />
-          </Grid>
-          <Grid item xs={ 6 }>
-            <Paper
-              elevation={ 3 }
-              style={{
-                height: 'calc(65vh - 50px)',
-              }}>
-              <Graphics data={ gfx } />
-            </Paper>
-            <Paper
-              elevation={ 3 }
-              style={{
-                height: 'calc(35vh - 50px)',
-              }}>
-              <Term buf={ buf } ref="term" />
-            </Paper>
-            <Help />
-          </Grid>
-          <Grid item xs={ 6 }>
-            <Paper
-              elevation={ 3 }
-              style={{
-                height: 'calc(100vh - 100px)',
-              }}>
-              { editMode == 'blocks' && <Builder ref="editor" /> }
-              { editMode == 'source' && <Editor ref="editor" /> }
-            </Paper>
-          </Grid>
-          {
-            false &&
-            <Grid item xs={ false }>
-              {
-                inspect &&
-                <div>
-                  <Inspector
-                    hist={ hist }
-                    snap={ snap }
-                    updateSlider={ this.updateSlider }
-                  />
-                </div>
-              }
+      <MuiThemeProvider theme={ theme }>
+        <div style={{
+          backgroundColor: theme.palette.background.default,
+        }}>
+          <Grid container spacing={ 16 }>
+            <Grid item xs={ 12 }>
+              <Header
+                viewMode={ viewMode }
+                editMode={ editMode }
+                updateViewMode={ this.updateViewMode }
+                updateEditMode={ this.updateEditMode }
+                runProgram={ this.runProgram }
+              />
             </Grid>
-          }
-        </Grid>
-      </div>
+            <Grid item xs={ 6 }>
+              <Paper
+                elevation={ 3 }
+                style={{
+                  height: 'calc(65vh - 50px)',
+                }}>
+                <Graphics data={ gfx } />
+              </Paper>
+              <Paper
+                elevation={ 3 }
+                style={{
+                  height: 'calc(35vh - 50px)',
+                }}>
+                <Term buf={ buf } ref="term" />
+              </Paper>
+              <Help />
+            </Grid>
+            <Grid item xs={ 6 }>
+              <Paper
+                elevation={ 3 }
+                style={{
+                  height: 'calc(100vh - 100px)',
+                }}>
+                { editMode == 'blocks' && <Builder ref="editor" /> }
+                { editMode == 'source' && <Editor ref="editor" /> }
+              </Paper>
+            </Grid>
+            {
+              false &&
+              <Grid item xs={ false }>
+                {
+                  inspect &&
+                  <div>
+                    <Inspector
+                      hist={ hist }
+                      snap={ snap }
+                      updateSlider={ this.updateSlider }
+                    />
+                  </div>
+                }
+              </Grid>
+            }
+          </Grid>
+        </div>
+      </MuiThemeProvider>
     );
   }
 }
