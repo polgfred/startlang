@@ -15,7 +15,7 @@ export default class Builder extends Component {
     this.editorRef = createRef();
   }
 
-  shouldComponentUpdate(nextProps) {
+  shouldComponentUpdate() {
     return false;
   }
 

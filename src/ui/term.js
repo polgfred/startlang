@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
-import ReactDOM from 'react-dom';
+
+import autobind from 'autobind-decorator';
 
 // See graphics.js
 const LIST_SHIFT = 5;

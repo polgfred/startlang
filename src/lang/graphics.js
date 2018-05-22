@@ -4,7 +4,7 @@ import { nextTick } from 'process';
 
 import immutable from 'immutable';
 
-import { SRuntime, SBase, handle, handlerKey, assignKey, resultKey } from './runtime';
+import { SRuntime, handle } from './runtime';
 
 export class SGRuntime extends SRuntime {
   addShape(type, attrs) {

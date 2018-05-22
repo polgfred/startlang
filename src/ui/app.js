@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import ReactDOM from 'react-dom';
 import immutable from 'immutable';
 import autobind from 'autobind-decorator';
 

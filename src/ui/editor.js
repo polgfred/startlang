@@ -17,7 +17,7 @@ export default class Editor extends Component {
     this.editorRef = createRef();
   }
 
-  shouldComponentUpdate(nextProps) {
+  shouldComponentUpdate() {
     return false;
   }
 
@@ -34,7 +34,7 @@ export default class Editor extends Component {
   }
 
   componentDidMount() {
-    let editor = this.editor = ace.edit(this.editorRef.current);
+    let editor = this.editor = brace.edit(this.editorRef.current);
 
     editor.$blockScrolling = Infinity;
     editor.setTheme('ace/theme/textmate');

@@ -1,16 +1,17 @@
-'use strict';
+import React, { Component } from 'react';
 
-import $ from 'jquery';
+// these require more porting from foundation
+class Empty extends Component {
+  render() {
+    return null;
+  }
+};
+const Breadcrumbs = Empty;
+const BreadcrumbItem = Empty;
+const Menu = Empty;
+const MenuItem = Empty;
 
-import React from 'react';
-
-import {
-  Breadcrumbs, BreadcrumbItem, Menu, MenuItem
-} from 'react-foundation';
-
-import Base from '../base';
-
-export default class Node extends Base {
+export default class Node extends Component {
   static children() {
     return [];
   }

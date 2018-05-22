@@ -1,6 +1,5 @@
 import React, {
   Component,
-  Children,
 } from 'react';
 
 import autobind from 'autobind-decorator';

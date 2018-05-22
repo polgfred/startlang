@@ -1,4 +1,4 @@
-import ace, { acequire } from 'brace';
+import { acequire } from 'brace';
 
 let { Mode: TextMode } = acequire('ace/mode/text');
 let { TextHighlightRules } = acequire('ace/mode/text_highlight_rules');

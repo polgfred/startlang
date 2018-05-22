@@ -103,7 +103,7 @@ class ExpandableInspector extends Component {
   }
 
   @autobind
-  handleShowMore(ev) {
+  handleShowMore() {
     this.setState((state) => ({ visible: state.visible + 5 }));
   }
 

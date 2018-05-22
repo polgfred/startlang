@@ -1,22 +1,16 @@
-'use strict';
+import React, { Component } from 'react';
 
-import _ from 'lodash';
-
-import React from 'react';
-
-import Base from '../base';
+import autobind from 'autobind-decorator';
 
 import Welcome from './welcome';
 
-export default class Help extends Base {
+export default class Help extends Component {
   constructor() {
     super();
 
     this.state = {
       path: []
     };
-
-    _.bindAll(this, 'updatePath');
   }
 
   render() {
@@ -25,6 +19,7 @@ export default class Help extends Base {
     </div>;
   }
 
+  @autobind
   updatePath(path) {
     this.setState({ path });
   }

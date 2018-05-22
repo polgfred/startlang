@@ -1,7 +1,5 @@
 'use strict';
 
-import React from 'react';
-
 import Node from '../node';
 
 // load the top-level chapters
