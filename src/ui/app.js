@@ -1,11 +1,12 @@
-import React, { Component } from 'react';
+import React, {
+  Component,
+  createRef,
+} from 'react';
 import immutable from 'immutable';
 import autobind from 'autobind-decorator';
 
 import Grid from '@material-ui/core/Grid'
 import Paper from '@material-ui/core/Paper'
-import deepOrange from '@material-ui/core/colors/deepOrange'
-import teal from '@material-ui/core/colors/teal'
 import {
   MuiThemeProvider,
   createMuiTheme,
@@ -13,8 +14,8 @@ import {
 
 import Header from './header';
 import Graphics from './graphics';
-//import Term from './term';
-//import Help from './help';
+import Term from './term';
+import Help from './help';
 import Editor from './editor';
 import Builder from './builder';
 import Inspector from './inspector';
@@ -22,25 +23,23 @@ import Inspector from './inspector';
 import { SInterpreter } from '../lang/interpreter';
 import { SGRuntime, SGraphics } from '../lang/graphics';
 
-// these require more porting from foundation
-class Empty extends Component {
-  render() {
-    return null;
-  }
-}
-const Term = Empty;
-const Help = Empty;
-
 const theme = createMuiTheme({
   palette: {
-    primary: teal,
-    secondary: deepOrange,
+    primary: {
+      main: '#4db6ac'
+    },
+    secondary: {
+      main: '#ff8a65',
+    },
   }
 });
 
 export default class App extends Component {
   constructor(props) {
     super(props);
+
+		this.editorRef = createRef();
+		this.termRef = createRef();
 
     this.state = {
       viewMode: 'help',
@@ -97,7 +96,7 @@ export default class App extends Component {
   }
 
   termInput(prompt, complete) {
-    this.refs.term.getInput(prompt, (input) => {
+    this.termRef.current.getInput(prompt, (input) => {
       this.termUpdate((buf) => buf.push(`${prompt}${input}`));
       complete(input);
     });
@@ -133,7 +132,7 @@ export default class App extends Component {
     return this.refreshState().then(() => {
       let interp = this.interp = new SInterpreter(this);
       interp.ctx = new SGRuntime(this);
-      interp.root(this.refs.editor.getRoot());
+      interp.root(this.editorRef.current.getRoot());
       this.clearHistory();
 
       return interp.run().catch((err) => {
@@ -197,7 +196,7 @@ export default class App extends Component {
                 style={{
                   height: 'calc(35vh - 50px)',
                 }}>
-                <Term buf={ buf } ref="term" />
+                <Term buf={ buf } ref={ this.termRef } />
               </Paper>
               <Help />
             </Grid>
@@ -207,8 +206,8 @@ export default class App extends Component {
                 style={{
                   height: 'calc(100vh - 100px)',
                 }}>
-                { editMode == 'blocks' && <Builder ref="editor" /> }
-                { editMode == 'source' && <Editor ref="editor" /> }
+                { editMode == 'blocks' && <Builder ref={ this.editorRef } /> }
+                { editMode == 'source' && <Editor ref={ this.editorRef } /> }
               </Paper>
             </Grid>
             {

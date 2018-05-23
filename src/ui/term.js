@@ -1,4 +1,9 @@
-import React, { Component } from 'react';
+import React, {
+  Component,
+  createRef,
+} from 'react';
+
+import { findDOMNode } from 'react-dom';
 
 import autobind from 'autobind-decorator';
 
@@ -6,71 +11,113 @@ import autobind from 'autobind-decorator';
 const LIST_SHIFT = 5;
 
 export default class Term extends Component {
+  constructor(props) {
+    super(props);
+
+    this.termInputRef = createRef();
+  }
+
   shouldComponentUpdate(nextProps) {
     return this.props.buf != nextProps.buf;
   }
 
   render() {
-    let { buf } = this.props, elems = [];
+    let { buf } = this.props;
+    let elems = [];
 
     // make sure the list hasn't been modified from the front
     if (buf._origin != 0) {
       throw new Error('terminal buffer has been modified from the front');
     }
+
     if (buf._root) {
-       elems.push(<TermOutput key={0} node={buf._root} level={buf._level} />);
+       elems.push(
+         <TermOutput
+           key={ 0 }
+           node={ buf._root }
+           level={ buf._level }
+         />
+			 );
     }
     if (buf._tail) {
-       elems.push(<TermOutput key={1} node={buf._tail} level={0} />);
+       elems.push(
+         <TermOutput
+           key={ 1 }
+           node={ buf._tail }
+           level={ 0 }
+         />
+			 );
     }
 
-    return <div className="start-term" onClick={this.handleClick}>
-      { elems }
-      <TermInput ref="input" />
-    </div>;
+    return (
+      <div
+        className="start-term"
+        onClick={ this.handleClick }>
+        { elems }
+        <TermInput ref={ this.termInputRef } />
+      </div>
+    );
   }
 
   getInput(prompt, recv) {
-    this.refs.input.getInput(prompt, recv);
+    this.termInputRef.current.getInput(prompt, recv);
   }
 
   componentDidUpdate() {
     // scroll to the bottom anytime we're updated
-    let node = ReactDOM.findDOMNode(this);
+    let node = findDOMNode(this);
     node.scrollTop = node.scrollHeight;
   }
 
   @autobind
   handleClick() {
-    this.$('.start-term-input').focus();
+    this.termInputRef.current.focusInput();
   }
 }
 
-class TermOutput extends Base {
+class TermOutput extends Component {
   shouldComponentUpdate(nextProps) {
     return this.props.node != nextProps.node;
   }
 
   render() {
-    let { node: { array }, level } = this.props, elems = [];
+    let { node: { array }, level } = this.props;
+    let elems = [];
 
     if (level == 0) {
       for (let i = 0; i < array.length; ++i) {
-        elems.push(<p key={i}>{ array[i] }</p>);
+        elems.push(
+          <p key={ i }>
+            { array[i] }
+          </p>
+        );
       }
     } else {
       for (let i = 0; i < array.length; ++i) {
-        elems.push(<TermOutput key={i} node={array[i]} level={level - LIST_SHIFT} />);
+        elems.push(
+          <TermOutput
+            key={ i }
+            node={ array[i] }
+            level={ level - LIST_SHIFT }
+          />
+				);
       }
     }
 
-    return <div className="start-term-output">{ elems }</div>;
+    return (
+      <div className="start-term-output">
+        { elems }
+      </div>
+    );
   }
 }
 
-class TermInput extends Base {
+class TermInput extends Component {
   constructor(props) {
     super(props);
+
+    this.promptRef = createRef();
+    this.inputRef = createRef();
 
     this.state = this.initialState = {
       needsInput: false,
@@ -81,27 +128,43 @@ class TermInput extends Base {
   }
 
   render() {
-    return <div style={{ visibility: this.state.needsInput ? 'visible' : 'hidden' }}
-                className="start-term-command">
-      <span className="start-term-prompt">{this.state.prompt}</span>
-      <input type="text" value={this.state.input}
-             className="start-term-input"
-             onChange={this.handleChange}
-             onKeyUp={this.handleKeyUp} />
-    </div>;
+    return (
+      <div
+        className="start-term-command"
+        style={{
+          visibility: this.state.needsInput ? 'visible' : 'hidden'
+        }}>
+        <span
+          ref={ this.promptRef }
+          className="start-term-prompt">
+          { this.state.prompt }
+        </span>
+        <input
+          ref={ this.inputRef }
+          type="text"
+          value={ this.state.input }
+          className="start-term-input"
+          onChange={ this.handleChange }
+          onKeyUp={ this.handleKeyUp }
+        />
+      </div>
+    );
   }
 
   componentDidUpdate() {
     if (this.state.needsInput) {
       // fixup <input> width based on size of prompt
-      this.$('.start-term-input')
-        .css('width', 'calc(100% - ' + (this.$('.start-term-prompt').width() + 4) + 'px)')
-        .focus();
+      this.inputRef.current.style.width = this.promptRef.current.offsetWidth + 4 + 'px';
+      this.focusInput();
     }
   }
 
   getInput(prompt, recv) {
     this.setState({ needsInput: true, prompt, recv });
+  }
+
+  focusInput() {
+    this.inputRef.current.focus();
   }
 
   @autobind
