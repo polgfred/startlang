@@ -15,7 +15,7 @@ import {
 import Header from './header';
 import Graphics from './graphics';
 import Term from './term';
-import Help from './help';
+// import Help from './help';
 import Editor from './editor';
 import Builder from './builder';
 import Inspector from './inspector';
@@ -187,18 +187,17 @@ export default class App extends Component {
               <Paper
                 elevation={ 3 }
                 style={{
-                  height: 'calc(65vh - 50px)',
+                  height: 'calc(60vh - 50px)',
                 }}>
                 <Graphics data={ gfx } />
               </Paper>
               <Paper
                 elevation={ 3 }
                 style={{
-                  height: 'calc(35vh - 50px)',
+                  height: 'calc(30vh - 50px)',
                 }}>
                 <Term buf={ buf } ref={ this.termRef } />
               </Paper>
-              <Help />
             </Grid>
             <Grid item xs={ 6 }>
               <Paper
