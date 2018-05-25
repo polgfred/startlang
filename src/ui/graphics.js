@@ -22,22 +22,35 @@ export default class Graphics extends Component {
   }
 
   render() {
-    let { data: { shapes } } = this.props, elems = [];
+    let { data: { shapes } } = this.props;
 
     // make sure the list hasn't been modified from the front
     if (shapes._origin != 0) {
       throw new Error('shape list has been modified from the front');
     }
-    if (shapes._root) {
-      elems.push(<Group key={0} node={shapes._root} level={shapes._level} />);
-    }
-    if (shapes._tail) {
-      elems.push(<Group key={1} node={shapes._tail} level={0} />);
-    }
 
-    return <svg className="start-graphics">
-      <g className="start-orient">{ elems }</g>
-    </svg>;
+    return (
+      <svg className="start-graphics">
+        <g className="start-orient">
+          {
+            shapes._root && (
+              <Group
+                node={ shapes._root }
+                level={ shapes._level }
+              />
+            )
+          }
+          {
+            shapes._tail && (
+              <Group
+                node={ shapes._tail }
+                level={ 0 }
+              />
+            )
+          }
+        </g>
+      </svg>
+    );
   }
 }
 
@@ -47,22 +60,30 @@ class Group extends Component {
   }
 
   render() {
-    let { node: { array }, level } = this.props, elems = [];
+    let { node: { array }, level } = this.props;
 
-    if (level == 0) {
-      for (let i = 0; i < array.length; ++i) {
-        elems.push(React.createElement(registry[array[i].type], {
-          key: i,
-          shape: array[i]
-        }));
-      }
-    } else {
-      for (let i = 0; i < array.length; ++i) {
-        elems.push(<Group key={i} node={array[i]} level={level - LIST_SHIFT} />);
-      }
-    }
-
-    return <g>{ elems }</g>;
+    return (
+      <g>
+        {
+          level == 0 ? (
+            array.map((elem, index) => (
+              React.createElement(registry[elem.type], {
+                key: index,
+                shape: elem
+              })
+            ))
+          ) : (
+            array.map((elem, index) => (
+              <Group
+                key={ index }
+                node={ elem }
+                level={ level - LIST_SHIFT }
+              />
+            ))
+          )
+        }
+      </g>
+    );
   }
 }
 
@@ -72,7 +93,9 @@ class Shape extends Component {
   }
 
   setup() {
-    let { shape: { sprops } } = this.props, attrs = { style: {} }, trans = '';
+    let { shape: { sprops } } = this.props;
+    let attrs = { style: {} };
+    let trans = '';
 
     if (sprops.stroke) {
       attrs.style.stroke = sprops.stroke;
@@ -100,68 +123,84 @@ class Shape extends Component {
 
 class Rect extends Shape {
   render() {
-    let { shape } = this.props, attrs = this.setup();
+    let { shape } = this.props;
+    let attrs = this.setup();
 
     attrs.x = shape.x;
     attrs.y = shape.y;
     attrs.width = shape.width;
     attrs.height = shape.height;
 
-    return <rect {...attrs} />;
+    return (
+      <rect {...attrs} />
+    );
   }
 }
 
 class Circle extends Shape {
   render() {
-    let { shape } = this.props, attrs = this.setup();
+    let { shape } = this.props;
+    let attrs = this.setup();
 
     attrs.cx = shape.cx;
     attrs.cy = shape.cy;
     attrs.r = shape.r;
 
-    return <circle {...attrs} />;
+    return (
+      <circle {...attrs} />
+    );
   }
 }
 
 class Ellipse extends Shape {
   render() {
-    let { shape } = this.props, attrs = this.setup();
+    let { shape } = this.props;
+    let attrs = this.setup();
 
     attrs.cx = shape.cx;
     attrs.cy = shape.cy;
     attrs.rx = shape.rx;
     attrs.ry = shape.ry;
 
-    return <ellipse {...attrs} />;
+    return (
+      <ellipse {...attrs} />
+    );
   }
 }
 
 class Line extends Shape {
   render() {
-    let { shape } = this.props, attrs = this.setup();
+    let { shape } = this.props;
+    let attrs = this.setup();
 
     attrs.x1 = shape.x1;
     attrs.y1 = shape.y1;
     attrs.x2 = shape.x2;
     attrs.y2 = shape.y2;
 
-    return <line {...attrs} />;
+    return (
+      <line {...attrs} />
+    );
   }
 }
 
 class Polygon extends Shape {
   render() {
-    let { shape } = this.props, attrs = this.setup();
+    let { shape } = this.props;
+    let attrs = this.setup();
 
     attrs.points = shape.points.join(',');
 
-    return <polygon {...attrs} />;
+    return (
+      <polygon {...attrs} />
+    );
   }
 }
 
 class Text extends Shape {
   render() {
-    let { shape } = this.props, attrs = this.setup();
+    let { shape } = this.props;
+    let attrs = this.setup();
 
     attrs.x = shape.x;
     attrs.y = shape.y;
@@ -169,7 +208,11 @@ class Text extends Shape {
     attrs.style.fontFamily = shape.tprops.fface;
     attrs.style.fontSize = shape.tprops.fsize;
 
-    return <text {...attrs}>{ shape.text }</text>;
+    return (
+      <text {...attrs}>
+        { shape.text }
+      </text>
+    );
   }
 }
 

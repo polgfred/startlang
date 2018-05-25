@@ -1,11 +1,13 @@
 import React, {
   Component,
-  createRef,
 } from 'react';
 
-import { findDOMNode } from 'react-dom';
+// import { findDOMNode } from 'react-dom';
 
 import autobind from 'autobind-decorator';
+
+import Button from '@material-ui/core/Button';
+import TextField from '@material-ui/core/TextField';
 
 // See graphics.js
 const LIST_SHIFT = 5;
@@ -13,111 +15,6 @@ const LIST_SHIFT = 5;
 export default class Term extends Component {
   constructor(props) {
     super(props);
-
-    this.termInputRef = createRef();
-  }
-
-  shouldComponentUpdate(nextProps) {
-    return this.props.buf != nextProps.buf;
-  }
-
-  render() {
-    let { buf } = this.props;
-    let elems = [];
-
-    // make sure the list hasn't been modified from the front
-    if (buf._origin != 0) {
-      throw new Error('terminal buffer has been modified from the front');
-    }
-
-    if (buf._root) {
-       elems.push(
-         <TermOutput
-           key={ 0 }
-           node={ buf._root }
-           level={ buf._level }
-         />
-			 );
-    }
-    if (buf._tail) {
-       elems.push(
-         <TermOutput
-           key={ 1 }
-           node={ buf._tail }
-           level={ 0 }
-         />
-			 );
-    }
-
-    return (
-      <div
-        className="start-term"
-        onClick={ this.handleClick }>
-        { elems }
-        <TermInput ref={ this.termInputRef } />
-      </div>
-    );
-  }
-
-  getInput(prompt, recv) {
-    this.termInputRef.current.getInput(prompt, recv);
-  }
-
-  componentDidUpdate() {
-    // scroll to the bottom anytime we're updated
-    let node = findDOMNode(this);
-    node.scrollTop = node.scrollHeight;
-  }
-
-  @autobind
-  handleClick() {
-    this.termInputRef.current.focusInput();
-  }
-}
-
-class TermOutput extends Component {
-  shouldComponentUpdate(nextProps) {
-    return this.props.node != nextProps.node;
-  }
-
-  render() {
-    let { node: { array }, level } = this.props;
-    let elems = [];
-
-    if (level == 0) {
-      for (let i = 0; i < array.length; ++i) {
-        elems.push(
-          <p key={ i }>
-            { array[i] }
-          </p>
-        );
-      }
-    } else {
-      for (let i = 0; i < array.length; ++i) {
-        elems.push(
-          <TermOutput
-            key={ i }
-            node={ array[i] }
-            level={ level - LIST_SHIFT }
-          />
-				);
-      }
-    }
-
-    return (
-      <div className="start-term-output">
-        { elems }
-      </div>
-    );
-  }
-}
-
-class TermInput extends Component {
-  constructor(props) {
-    super(props);
-
-    this.promptRef = createRef();
-    this.inputRef = createRef();
 
     this.state = this.initialState = {
       needsInput: false,
@@ -127,44 +24,85 @@ class TermInput extends Component {
     };
   }
 
-  render() {
+  shouldComponentUpdate(nextProps, nextState) {
     return (
-      <div
-        className="start-term-command"
-        style={{
-          visibility: this.state.needsInput ? 'visible' : 'hidden'
+      this.props.buf != nextProps.buf
+      || this.state.needsInput != nextState.needsInput
+      || this.state.input != nextState.input
+      || this.state.prompt != nextState.prompt
+    );
+  }
+
+  render() {
+    let { buf } = this.props;
+
+    // make sure the list hasn't been modified from the front
+    if (buf._origin != 0) {
+      throw new Error('terminal buffer has been modified from the front');
+    }
+
+    let {
+      needsInput,
+      input,
+      prompt,
+    } = this.state;
+
+    return (
+      <div className="start-term">
+        <div
+          className="start-term-command"
+          style={{
+            display: needsInput ? 'block' : 'none',
+          }}>
+          <TextField
+            type="string"
+            margin="normal"
+            value={ input }
+            label={ prompt }
+            onChange={ this.handleChange }
+            onKeyUp={ this.handleKeyUp }
+            autoFocus={ true }
+          />
+          <Button
+            color="primary"
+            size="small"
+            variant="raised"
+            onClick={ this.handleAccept }
+            style={{
+              marginLeft: '12px',
+            }}>
+            OK
+          </Button>
+        </div>
+        <div style={{
+          fontFamily: 'Roboto',
+          fontSize: '14px',
+          height: `calc(35vh - ${ needsInput ? 152 : 80 }px)`,
+          overflow: 'scroll',
         }}>
-        <span
-          ref={ this.promptRef }
-          className="start-term-prompt">
-          { this.state.prompt }
-        </span>
-        <input
-          ref={ this.inputRef }
-          type="text"
-          value={ this.state.input }
-          className="start-term-input"
-          onChange={ this.handleChange }
-          onKeyUp={ this.handleKeyUp }
-        />
+          {
+            buf._root && (
+              <TermOutput
+                node={ buf._root }
+                level={ buf._level }
+              />
+            )
+          }
+          {
+            buf._tail && (
+              <TermOutput
+                node={ buf._tail }
+                level={ 0 }
+              />
+            )
+          }
+        </div>
       </div>
     );
   }
 
-  componentDidUpdate() {
-    if (this.state.needsInput) {
-      // fixup <input> width based on size of prompt
-      this.inputRef.current.style.width = this.promptRef.current.offsetWidth + 4 + 'px';
-      this.focusInput();
-    }
-  }
-
   getInput(prompt, recv) {
     this.setState({ needsInput: true, prompt, recv });
-  }
-
-  focusInput() {
-    this.inputRef.current.focus();
   }
 
   @autobind
@@ -173,10 +111,57 @@ class TermInput extends Component {
   }
 
   @autobind
+  handleAccept() {
+    this.state.recv(this.state.input);
+    this.setState(this.initialState);
+  }
+
+  @autobind
   handleKeyUp(ev) {
     if (ev.keyCode == 13) {
-      this.state.recv(this.state.input);
-      this.setState(this.initialState);
+      this.handleAccept();
     }
+  }
+
+  componentDidUpdate() {
+    // scroll to the bottom anytime we're updated
+    // FIXME: this doesn't work anymore
+    // let node = findDOMNode(this);
+    // node.scrollTop = node.scrollHeight;
+  }
+}
+
+class TermOutput extends Component {
+  shouldComponentUpdate(nextProps) {
+    return (
+      this.props.node != nextProps.node
+      || this.props.level != nextProps.level
+    );
+  }
+
+  render() {
+    let { node: { array }, level } = this.props;
+
+    return (
+      <div className="start-term-output">
+        {
+          level == 0 ? (
+            array.map((elem, index) => (
+              <p key={ index }>
+                { elem }
+              </p>
+            ))
+          ) : (
+            array.map((elem, index) => (
+              <TermOutput
+                key={ index }
+                node={ elem }
+                level={ level - LIST_SHIFT }
+              />
+            ))
+          )
+        }
+      </div>
+    );
   }
 }
