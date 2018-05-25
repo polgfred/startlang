@@ -26,10 +26,10 @@ import { SGRuntime, SGraphics } from '../lang/graphics';
 const theme = createMuiTheme({
   palette: {
     primary: {
-      main: '#4db6ac'
+      main: '#6b9da0'
     },
     secondary: {
-      main: '#ff8a65',
+      main: '#ffd1aa',
     },
   }
 });
