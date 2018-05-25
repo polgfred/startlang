@@ -30,7 +30,12 @@ export default class Graphics extends Component {
     }
 
     return (
-      <svg className="start-graphics">
+      <svg
+        className="start-graphics"
+        style={{
+          height: 'calc(65vh - 80px)',
+          width: '100%',
+        }}>
         <g className="start-orient">
           {
             shapes._root && (

@@ -38,8 +38,8 @@ export default class App extends Component {
   constructor(props) {
     super(props);
 
-		this.editorRef = createRef();
-		this.termRef = createRef();
+    this.editorRef = createRef();
+    this.termRef = createRef();
 
     this.state = {
       viewMode: 'help',
@@ -97,7 +97,7 @@ export default class App extends Component {
 
   termInput(prompt, complete) {
     this.termRef.current.getInput(prompt, (input) => {
-      this.termUpdate((buf) => buf.push(`${prompt}${input}`));
+      //this.termUpdate((buf) => buf.push(`${prompt}${input}`));
       complete(input);
     });
   }
@@ -187,14 +187,17 @@ export default class App extends Component {
               <Paper
                 elevation={ 3 }
                 style={{
-                  height: 'calc(60vh - 50px)',
+                  height: 'calc(65vh - 80px)',
+                  padding: '10px',
                 }}>
                 <Graphics data={ gfx } />
               </Paper>
               <Paper
                 elevation={ 3 }
                 style={{
-                  height: 'calc(30vh - 50px)',
+                  height: 'calc(35vh - 80px)',
+                  marginTop: '20px',
+                  padding: '10px',
                 }}>
                 <Term buf={ buf } ref={ this.termRef } />
               </Paper>
