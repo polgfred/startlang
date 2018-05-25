@@ -166,7 +166,8 @@ export default class App extends Component {
 
   render() {
     let { viewMode, editMode, gfx, buf, hist, snap } = this.state;
-    let inspect = false;
+    let inspect = true;
+    let columns = inspect ? 4 : 6;
 
     return (
       <MuiThemeProvider theme={ theme }>
@@ -183,7 +184,7 @@ export default class App extends Component {
                 runProgram={ this.runProgram }
               />
             </Grid>
-            <Grid item xs={ 6 }>
+            <Grid item xs={ columns }>
               <Paper
                 elevation={ 3 }
                 style={{
@@ -202,7 +203,25 @@ export default class App extends Component {
                 <Term buf={ buf } ref={ this.termRef } />
               </Paper>
             </Grid>
-            <Grid item xs={ 6 }>
+            {
+              inspect && (
+                <Grid item xs={ columns }>
+                  <Paper
+                    elevation={ 3 }
+                    style={{
+                      height: 'calc(100vh - 120px)',
+                      padding: '10px',
+                    }}>
+                    <Inspector
+                      hist={ hist }
+                      snap={ snap }
+                      updateSlider={ this.updateSlider }
+                    />
+                  </Paper>
+                </Grid>
+              )
+            }
+            <Grid item xs={ columns }>
               <Paper
                 elevation={ 3 }
                 style={{
@@ -212,21 +231,6 @@ export default class App extends Component {
                 { editMode == 'source' && <Editor ref={ this.editorRef } /> }
               </Paper>
             </Grid>
-            {
-              false &&
-              <Grid item xs={ false }>
-                {
-                  inspect &&
-                  <div>
-                    <Inspector
-                      hist={ hist }
-                      snap={ snap }
-                      updateSlider={ this.updateSlider }
-                    />
-                  </div>
-                }
-              </Grid>
-            }
           </Grid>
         </div>
       </MuiThemeProvider>
