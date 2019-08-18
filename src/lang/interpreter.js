@@ -1,3 +1,5 @@
+/* eslint-disable no-case-declarations */
+
 import immutable from 'immutable';
 
 import { handle, assignKey, resultKey } from './runtime';

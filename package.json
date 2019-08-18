@@ -6,6 +6,7 @@
   "scripts": {
     "build": "webpack",
     "start": "node --require @babel/register ./src/server",
+    "run_script": "node --require @babel/register ./tools/run_script",
     "format": "prettier --write ./src/**/*.js",
     "lint": "eslint --config .eslintrc.js ./src"
   },

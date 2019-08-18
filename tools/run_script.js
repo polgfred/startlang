@@ -1,6 +1,4 @@
-#!./node_modules/.bin/babel-node
-
-'use strict';
+/* eslint-disable no-console */
 
 import readline from 'readline';
 
@@ -13,41 +11,43 @@ import { SRuntime } from '../src/lang/runtime';
 import { SInterpreter } from '../src/lang/interpreter';
 
 let interp,
-    start,
-    end,
-    options = {},
-    parserOptions = {},
-    parser = PEG.generate(readFileSync(__dirname + '/../src/lang/parser.pegjs', 'utf-8')),
-    output = (obj) => console.log(inspect(obj, { colors: true, depth: null })),
-    app = {
-      snapshot() {
-        output({
-          fn: interp.fn,
-          ns: interp.ns,
-          st: interp.st,
-          frame: interp.frame,
-          fst: interp.fst
+  start,
+  end,
+  options = {},
+  parserOptions = {},
+  parser = PEG.generate(
+    readFileSync(__dirname + '/../src/lang/parser.pegjs', 'utf-8')
+  ),
+  output = obj => console.log(inspect(obj, { colors: true, depth: null })),
+  app = {
+    snapshot() {
+      output({
+        fn: interp.fn,
+        ns: interp.ns,
+        st: interp.st,
+        frame: interp.frame,
+        fst: interp.fst,
+      });
+    },
+
+    output(value) {
+      console.log(value);
+    },
+
+    input(message) {
+      return new Promise(resolve => {
+        let rl = readline.createInterface({
+          input: process.stdin,
+          output: process.stdout,
         });
-      },
 
-      output(value) {
-        console.log(value);
-      },
-
-      input(message) {
-        return new Promise((resolve) => {
-          let rl = readline.createInterface({
-            input: process.stdin,
-            output: process.stdout
-          });
-
-          rl.question(message, (answer) => {
-            rl.close();
-            resolve(answer);
-          });
+        rl.question(message, answer => {
+          rl.close();
+          resolve(answer);
         });
-      }
-    };
+      });
+    },
+  };
 
 if (process.argv.indexOf('--ast') != -1) {
   options.ast = true;
@@ -69,9 +69,9 @@ if (process.argv.indexOf('--meta') != -1) {
 
 Promise.resolve()
   .then(() => readFileSync(process.argv[2], 'utf-8'))
-  .catch((err) => process.argv[2] + '\n')
-  .then((source) => parser.parse(source, parserOptions))
-  .then((root) => {
+  .catch(() => process.argv[2] + '\n')
+  .then(source => parser.parse(source, parserOptions))
+  .then(root => {
     if (options.ast) {
       output(root);
       process.exit();
@@ -82,12 +82,13 @@ Promise.resolve()
     interp.root(root);
 
     if (options.time) {
-      start = new Date;
+      start = new Date();
       console.error('start', start);
     }
 
     return interp.run();
-  }).catch((err) => {
+  })
+  .catch(err => {
     if (err.stack) {
       console.log(err.stack);
     }
@@ -95,9 +96,10 @@ Promise.resolve()
     if (interp.frame) {
       output(interp.frame.node);
     }
-  }).then(() => {
+  })
+  .then(() => {
     if (options.time) {
-      end = new Date;
+      end = new Date();
       console.error('end', end);
       console.error('time (ms)', end - start);
     }

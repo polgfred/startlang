@@ -669,15 +669,6 @@ export class SBuilder {
     });
   }
 
-  // time
-
-  time_sleep(block) {
-    return buildNode('call', block, {
-      name: 'sleep',
-      args: [this.handleValue(block, 'SECONDS')],
-    });
-  }
-
   time_create_empty(block) {
     return buildNode('call', block, {
       name: 'time',
