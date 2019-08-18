@@ -3,6 +3,10 @@ import ReactDOM from 'react-dom';
 
 import App from './ui/app';
 
-document.addEventListener('DOMContentLoaded', () => {
-  ReactDOM.render(<App />, document.getElementById('start-wrapper'));
-}, false);
+document.addEventListener(
+  'DOMContentLoaded',
+  () => {
+    ReactDOM.render(<App />, document.getElementById('start-wrapper'));
+  },
+  false
+);

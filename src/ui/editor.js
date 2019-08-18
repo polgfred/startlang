@@ -1,39 +1,17 @@
-import React, { Component, createRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 
 import brace from 'brace';
 import 'brace/mode/text';
 import 'brace/theme/github';
 
-import parser from '../lang/parser.pegjs';
+// import parser from '../lang/parser.pegjs';
 import StartMode from '../ace/start_mode';
 
-export default class Editor extends Component {
-  constructor(props) {
-    super(props);
+export default function Editor() {
+  const ref = useRef();
 
-    this.editorRef = createRef();
-  }
-
-  shouldComponentUpdate() {
-    return false;
-  }
-
-  render() {
-    return (
-      <div
-        ref={this.editorRef}
-        className="start-editor"
-        style={{
-          fontFamily: 'Roboto Mono',
-          fontSize: 14,
-          height: '100%',
-        }}
-      />
-    );
-  }
-
-  componentDidMount() {
-    let editor = (this.editor = brace.edit(this.editorRef.current));
+  useEffect(() => {
+    const editor = brace.edit(ref.current);
 
     editor.$blockScrolling = Infinity;
     editor.setTheme('ace/theme/github');
@@ -42,13 +20,25 @@ export default class Editor extends Component {
     editor.getSession().setTabSize(2);
     editor.getSession().setUseSoftTabs(true);
     editor.getSession().setMode(new StartMode());
-  }
 
-  componentWillUnmount() {
-    this.editor.destroy();
-  }
+    return () => {
+      editor.destroy();
+    };
+  }, []);
 
-  getRoot() {
-    return parser.parse(this.editor.getValue() + '\n');
-  }
+  return (
+    <div
+      ref={ref}
+      className="start-editor"
+      style={{
+        fontFamily: 'Roboto Mono',
+        fontSize: 14,
+        height: '100%',
+      }}
+    />
+  );
 }
+
+// getRoot() {
+//   return parser.parse(this.editor.getValue() + '\n');
+// }

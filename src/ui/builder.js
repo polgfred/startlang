@@ -1,35 +1,15 @@
-import React, { Component, createRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 
-import { SBuilder } from '../lang/builder';
+// import { SBuilder } from '../lang/builder';
 import Blockly from '../blockly';
 
 import toolbox from './toolbox.xml';
 
-export default class Builder extends Component {
-  constructor(props) {
-    super(props);
+export default function Builder() {
+  const ref = useRef();
 
-    this.editorRef = createRef();
-  }
-
-  shouldComponentUpdate() {
-    return false;
-  }
-
-  render() {
-    return (
-      <div
-        ref={this.editorRef}
-        className="start-builder"
-        style={{
-          height: '100%',
-        }}
-      />
-    );
-  }
-
-  componentDidMount() {
-    this.blockly = Blockly.inject(this.editorRef.current, {
+  useEffect(() => {
+    const blockly = Blockly.inject(ref.current, {
       toolbox,
       collapse: true,
       comments: true,
@@ -53,13 +33,24 @@ export default class Builder extends Component {
         scaleSpeed: 1.1,
       },
     });
-  }
 
-  componentWillUnmount() {
-    this.blockly.dispose();
-  }
+    return () => {
+      blockly.dispose();
+    };
+  }, []);
 
-  getRoot() {
-    return new SBuilder().fromWorkspace(Blockly.getMainWorkspace());
-  }
+  return (
+    <div
+      ref={ref}
+      className="start-builder"
+      style={{
+        height: '100%',
+      }}
+    />
+  );
 }
+
+//
+// getRoot() {
+//   return new SBuilder().fromWorkspace(Blockly.getMainWorkspace());
+// }

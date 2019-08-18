@@ -1,6 +1,5 @@
-import React, { Component, createRef } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import immutable from 'immutable';
-import autobind from 'autobind-decorator';
 
 import Grid from '@material-ui/core/Grid';
 import Paper from '@material-ui/core/Paper';
@@ -12,7 +11,7 @@ import Term from './term';
 // import Help from './help';
 import Editor from './editor';
 import Builder from './builder';
-import Inspector from './inspector';
+// import Inspector from './inspector';
 
 import { SInterpreter } from '../lang/interpreter';
 import { SGRuntime, SGraphics } from '../lang/graphics';
@@ -28,211 +27,194 @@ const theme = createMuiTheme({
   },
 });
 
-export default class App extends Component {
-  constructor(props) {
-    super(props);
+export default function App() {
+  const [viewMode, setViewMode] = useState('help');
+  const [editMode, setEditMode] = useState('source');
+  const [gfx, setGfx] = useState(new SGraphics());
+  const [buf, setBuf] = useState(immutable.List());
+  // const [{ hist, snap }, setHistory] = useState({
+  //   hist: [],
+  //   snap: 0,
+  // });
 
-    this.editorRef = createRef();
-    this.termRef = createRef();
+  const refreshState = useCallback(() => {
+    // reset the graphics and terminal state
+    setGfx(gfx => gfx.clear());
+    setBuf(buf => buf.clear());
 
-    this.state = {
-      viewMode: 'help',
-      editMode: 'source',
-      gfx: new SGraphics(),
-      buf: immutable.List(),
-      hist: [],
-      snap: 0,
+    // if we're in help view, switch to split view
+    if (viewMode == 'help') {
+      setViewMode('split');
+    }
+  }, [viewMode, setViewMode, setGfx, setBuf]);
+
+  const clearDisplay = useCallback(() => {
+    setGfx(gfx => gfx.clear());
+    setBuf(buf => buf.clear());
+  }, [setGfx, setBuf]);
+
+  const clearHistory = useCallback(() => {
+    // setHistory({ hist: [], snap: 0 });
+  }, []);
+
+  const gfxUpdate = useCallback(
+    mut => {
+      setGfx(gfx => mut(gfx));
+    },
+    [setGfx]
+  );
+
+  const termUpdate = useCallback(
+    mut => {
+      setBuf(buf => mut(buf));
+    },
+    [setBuf]
+  );
+
+  const termInput = useCallback((prompt, complete) => {
+    // termRef.current.getInput(prompt, input => {
+    //this.termUpdate((buf) => buf.push(`${prompt}${input}`));
+    complete();
+    // });
+  }, []);
+
+  // TODO: get history working
+  // updateSlider(ev) {
+  //   let { hist } = this.state,
+  //     snap = ev.target.value,
+  //     current = hist[snap];
+  //
+  //   if (current) {
+  //     this.setState({
+  //       snap,
+  //       gfx: current.gfx,
+  //       buf: current.buf,
+  //     });
+  //   }
+  // }
+  //
+  // snapshot() {
+  //   // change hist mutably, but still strigger a state change
+  //   this.setState(state => {
+  //     let interp = this.interp,
+  //       hist = state.hist;
+  //
+  //     hist.push({
+  //       fn: interp.fn,
+  //       ns: interp.ns,
+  //       st: interp.st,
+  //       frame: interp.frame,
+  //       fst: interp.fst,
+  //       gfx: state.gfx,
+  //       buf: state.buf,
+  //     });
+  //     return { hist, snap: hist.length };
+  //   });
+  // }
+
+  const snapshot = useCallback(() => {}, []);
+
+  const runProgram = useCallback(() => {
+    refreshState();
+    // TODO: how do we want to wait for the state to clear before running?
+    const bindings = {
+      clearDisplay,
+      gfxUpdate,
+      termUpdate,
+      termInput,
+      snapshot,
     };
-  }
+    const interp = (this.interp = new SInterpreter(bindings));
+    interp.ctx = new SGRuntime(bindings);
+    // interp.root(editorRef.current.getRoot());
+    clearHistory();
 
-  refreshState() {
-    return new Promise(resolve => {
-      // reset the graphics and terminal state
-      this.setState(state => {
-        let newState = {
-          gfx: new SGraphics(),
-          buf: immutable.List(),
-        };
-
-        // if we're in help view, switch to split view
-        if (state.viewMode == 'help') {
-          newState.viewMode = 'split';
-        }
-
-        return newState;
-      }, resolve);
+    return interp.run().catch(err => {
+      // debugg errors
+      console.log(err); // eslint-disable-line no-console
+      console.log(err.stack); // eslint-disable-line no-console
     });
-  }
+  }, [
+    refreshState,
+    clearDisplay,
+    clearHistory,
+    gfxUpdate,
+    termUpdate,
+    termInput,
+    snapshot,
+  ]);
 
-  @autobind
-  updateViewMode(viewMode) {
-    this.setState({ viewMode });
-  }
+  const inspect = false;
+  const columns = inspect ? 4 : 6;
 
-  @autobind
-  updateEditMode(editMode) {
-    this.setState({ editMode });
-  }
-
-  clearDisplay() {
-    this.setState(state => ({
-      gfx: state.gfx.clear(),
-      buf: state.buf.clear(),
-    }));
-  }
-
-  gfxUpdate(mut) {
-    this.setState(state => ({ gfx: mut(state.gfx) }));
-  }
-
-  termUpdate(mut) {
-    this.setState(state => ({ buf: mut(state.buf) }));
-  }
-
-  termInput(prompt, complete) {
-    this.termRef.current.getInput(prompt, input => {
-      //this.termUpdate((buf) => buf.push(`${prompt}${input}`));
-      complete(input);
-    });
-  }
-
-  @autobind
-  handleKeyUp(ev) {
-    if (ev.ctrlKey) {
-      if (ev.keyCode == 82) {
-        ev.stopPropagation();
-        this.runProgram();
-      }
-    }
-  }
-
-  @autobind
-  updateSlider(ev) {
-    let { hist } = this.state,
-      snap = ev.target.value,
-      current = hist[snap];
-
-    if (current) {
-      this.setState({
-        snap,
-        gfx: current.gfx,
-        buf: current.buf,
-      });
-    }
-  }
-
-  @autobind
-  runProgram() {
-    return this.refreshState().then(() => {
-      let interp = (this.interp = new SInterpreter(this));
-      interp.ctx = new SGRuntime(this);
-      interp.root(this.editorRef.current.getRoot());
-      this.clearHistory();
-
-      return interp.run().catch(err => {
-        console.log(err);
-        console.log(err.stack);
-      });
-    });
-  }
-
-  clearHistory() {
-    this.setState({ hist: [], snap: 0 });
-  }
-
-  snapshot() {
-    // change hist mutably, but still strigger a state change
-    this.setState(state => {
-      let interp = this.interp,
-        hist = state.hist;
-
-      hist.push({
-        fn: interp.fn,
-        ns: interp.ns,
-        st: interp.st,
-        frame: interp.frame,
-        fst: interp.fst,
-        gfx: state.gfx,
-        buf: state.buf,
-      });
-      return { hist, snap: hist.length };
-    });
-  }
-
-  render() {
-    let { viewMode, editMode, gfx, buf, hist, snap } = this.state;
-    let inspect = true;
-    let columns = inspect ? 4 : 6;
-
-    return (
-      <MuiThemeProvider theme={theme}>
-        <div
-          style={{
-            backgroundColor: theme.palette.background.default,
-          }}
-        >
-          <Grid container spacing={16}>
-            <Grid item xs={12}>
-              <Header
-                viewMode={viewMode}
-                editMode={editMode}
-                updateViewMode={this.updateViewMode}
-                updateEditMode={this.updateEditMode}
-                runProgram={this.runProgram}
-              />
-            </Grid>
-            <Grid item xs={columns}>
-              <Paper
-                elevation={3}
-                style={{
-                  height: 'calc(65vh - 80px)',
-                  padding: '10px',
-                }}
-              >
-                <Graphics data={gfx} />
-              </Paper>
-              <Paper
-                elevation={3}
-                style={{
-                  height: 'calc(35vh - 80px)',
-                  marginTop: '20px',
-                  padding: '10px',
-                }}
-              >
-                <Term buf={buf} ref={this.termRef} />
-              </Paper>
-            </Grid>
-            {inspect && (
-              <Grid item xs={columns}>
-                <Paper
-                  elevation={3}
-                  style={{
-                    height: 'calc(100vh - 120px)',
-                    padding: '10px',
-                  }}
-                >
-                  <Inspector
-                    hist={hist}
-                    snap={snap}
-                    updateSlider={this.updateSlider}
-                  />
-                </Paper>
-              </Grid>
-            )}
-            <Grid item xs={columns}>
-              <Paper
-                elevation={3}
-                style={{
-                  height: 'calc(100vh - 100px)',
-                }}
-              >
-                {editMode == 'blocks' && <Builder ref={this.editorRef} />}
-                {editMode == 'source' && <Editor ref={this.editorRef} />}
-              </Paper>
-            </Grid>
+  return (
+    <MuiThemeProvider theme={theme}>
+      <div
+        style={{
+          backgroundColor: theme.palette.background.default,
+        }}
+      >
+        <Grid container spacing={16}>
+          <Grid item xs={12}>
+            <Header
+              viewMode={viewMode}
+              editMode={editMode}
+              updateViewMode={setViewMode}
+              updateEditMode={setEditMode}
+              runProgram={runProgram}
+            />
           </Grid>
-        </div>
-      </MuiThemeProvider>
-    );
-  }
+          <Grid item xs={columns}>
+            <Paper
+              elevation={3}
+              style={{
+                height: 'calc(65vh - 80px)',
+                padding: '10px',
+              }}
+            >
+              <Graphics data={gfx} />
+            </Paper>
+            <Paper
+              elevation={3}
+              style={{
+                height: 'calc(35vh - 80px)',
+                marginTop: '20px',
+                padding: '10px',
+              }}
+            >
+              <Term buf={buf} />
+            </Paper>
+          </Grid>
+          {inspect && (
+            <Grid item xs={columns}>
+              <Paper
+                elevation={3}
+                style={{
+                  height: 'calc(100vh - 120px)',
+                  padding: '10px',
+                }}
+              >
+                {/* <Inspector
+                  hist={hist}
+                  snap={snap}
+                  updateSlider={() => {} updateSlider}
+                /> */}
+              </Paper>
+            </Grid>
+          )}
+          <Grid item xs={columns}>
+            <Paper
+              elevation={3}
+              style={{
+                height: 'calc(100vh - 100px)',
+              }}
+            >
+              {editMode == 'blocks' && <Builder />}
+              {editMode == 'source' && <Editor />}
+            </Paper>
+          </Grid>
+        </Grid>
+      </div>
+    </MuiThemeProvider>
+  );
 }

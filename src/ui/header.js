@@ -1,6 +1,4 @@
-import React, { Component } from 'react';
-
-import autobind from 'autobind-decorator';
+import React, { useCallback, useState } from 'react';
 
 import AppBar from '@material-ui/core/AppBar';
 import Button from '@material-ui/core/Button';
@@ -9,104 +7,78 @@ import MenuItem from '@material-ui/core/MenuItem';
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 
-class SettingsMenu extends Component {
-  constructor(props) {
-    super(props);
+function SettingsMenu({ option, mode, choices, updateMode }) {
+  const [anchor, setAnchor] = useState();
 
-    this.state = {
-      open: false,
-      anchorEl: null,
-    };
-  }
+  const openMenu = useCallback(
+    ev => {
+      setAnchor(ev.currentTarget);
+    },
+    [setAnchor]
+  );
 
-  @autobind
-  openMenu(ev) {
-    this.setState({
-      open: true,
-      anchorEl: ev.currentTarget,
-    });
-  }
+  const closeMenu = useCallback(() => {
+    setAnchor(null);
+  }, [setAnchor]);
 
-  @autobind
-  closeMenu() {
-    this.setState({
-      open: false,
-      anchorEl: null,
-    });
-  }
+  const handleUpdateMode = useCallback(
+    value => {
+      updateMode(value);
+      closeMenu();
+    },
+    [updateMode, closeMenu]
+  );
 
-  @autobind
-  updateMode(value) {
-    this.props.updateMode(value);
-    this.closeMenu();
-  }
-
-  render() {
-    let { option, mode, choices } = this.props;
-
-    let { open, anchorEl } = this.state;
-
-    return (
-      <>
-        <Button onClick={this.openMenu}>{option}</Button>
-        <Menu open={open} anchorEl={anchorEl} onClose={this.closeMenu}>
-          {choices.map(value => (
-            <MenuItem
-              key={`menu-item-${option}-${value}`}
-              selected={mode == value}
-              onClick={() => this.updateMode(value)}
-            >
-              {value.charAt(0).toUpperCase() + value.substr(1)}
-            </MenuItem>
-          ))}
-        </Menu>
-      </>
-    );
-  }
+  return (
+    <>
+      <Button onClick={openMenu}>{option}</Button>
+      <Menu open={!!anchor} anchorEl={anchor} onClose={closeMenu}>
+        {choices.map(value => (
+          <MenuItem
+            key={`menu-item-${option}-${value}`}
+            selected={mode == value}
+            onClick={() => handleUpdateMode(value)}
+          >
+            {value.charAt(0).toUpperCase() + value.substr(1)}
+          </MenuItem>
+        ))}
+      </Menu>
+    </>
+  );
 }
 
-export default class Header extends Component {
-  shouldComponentUpdate(nextProps) {
-    let { viewMode, editMode } = this.props;
-
-    return viewMode != nextProps.viewMode || editMode != nextProps.editMode;
-  }
-
-  render() {
-    let {
-      viewMode,
-      editMode,
-      updateViewMode,
-      updateEditMode,
-      runProgram,
-    } = this.props;
-
-    return (
-      <AppBar position="static">
-        <Toolbar color="light">
-          <Typography
-            variant="title"
-            style={{
-              marginRight: '24px',
-            }}
-          >
-            Start
-          </Typography>
-          <SettingsMenu
-            option="view"
-            mode={viewMode}
-            updateMode={updateViewMode}
-            choices={['graphics', 'text', 'split', 'help']}
-          />
-          <SettingsMenu
-            option="edit"
-            mode={editMode}
-            updateMode={updateEditMode}
-            choices={['blocks', 'source']}
-          />
-          <Button onClick={runProgram}>Run</Button>
-        </Toolbar>
-      </AppBar>
-    );
-  }
+export default function Header({
+  viewMode,
+  editMode,
+  updateViewMode,
+  updateEditMode,
+  runProgram,
+}) {
+  return (
+    <AppBar position="static">
+      <Toolbar color="light">
+        <Typography
+          variant="title"
+          style={{
+            marginRight: '24px',
+          }}
+        >
+          Start
+        </Typography>
+        <SettingsMenu
+          option="view"
+          mode={viewMode}
+          updateMode={updateViewMode}
+          choices={['graphics', 'text', 'split', 'help']}
+        />
+        <SettingsMenu
+          option="edit"
+          mode={editMode}
+          updateMode={updateEditMode}
+          choices={['blocks', 'source']}
+        />
+        <Button onClick={runProgram}>Run</Button>
+      </Toolbar>
+    </AppBar>
+  );
 }

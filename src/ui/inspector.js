@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 
 import moment from 'moment';
 import immutable from 'immutable';
-import autobind from 'autobind-decorator';
 
 import Button from '@material-ui/core/Button';
 import Table from '@material-ui/core/Table';
@@ -160,7 +159,6 @@ class ExpandableInspector extends Component {
     this.state = { visible: 5 };
   }
 
-  @autobind
   handleShowMore() {
     this.setState(state => ({ visible: state.visible + 5 }));
   }
