@@ -9,5 +9,6 @@ module.exports = {
         'color-mod-function': true,
       },
     },
+    'postcss-mixins': {},
   },
 };

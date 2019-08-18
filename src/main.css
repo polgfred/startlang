@@ -1,17 +1,17 @@
-$body-font-family: 'Roboto';
-$font-family-monospace: 'Roboto Mono';
-$primary-color: '#eee';
+@import url('https://fonts.googleapis.com/css?family=Roboto+Mono:400,700&subset=latin,latin-ext');
+@import url('https://fonts.googleapis.com/css?family=Roboto:400&subset=latin,latin-ext');
 
-@import url("https://fonts.googleapis.com/css?family=Roboto+Mono:400,700&subset=latin,latin-ext");
-@import url("https://fonts.googleapis.com/css?family=Roboto:400&subset=latin,latin-ext");
+:root {
+  --primary: #eee;
+}
 
 @define-mixin source-font {
-  font-family: $font-family-monospace;
+  font-family: Roboto Mono;
   font-weight: 400;
 }
 
 @define-mixin proportional-font {
-  font-family: $body-font-family;
+  font-family: Roboto;
   font-weight: 400;
 }
 
@@ -34,7 +34,7 @@ body {
     margin: 0;
   }
 
-  .top-bar {
+  & .top-bar {
     border: 0;
     border-radius: 0;
     margin: 0 4px;
@@ -50,11 +50,13 @@ body {
     }
   }
 
-  .start-column {
+  & .start-column {
     padding: 6px 4px 4px;
   }
 
-  .start-graphics, .start-term, .start-help {
+  & .start-graphics,
+  & .start-term,
+  & .start-help {
     background-color: #f8f8f8;
     color: #000;
     display: none;
@@ -63,7 +65,7 @@ body {
     @mixin box-shadow;
   }
 
-  .x-start-orient {
+  & .x-start-orient {
     transform: translate(calc(50vw - 4px), calc(32.5vh - 30px)) scale(1, -1);
 
     /*
@@ -77,30 +79,30 @@ body {
     */
   }
 
-  .start-term {
+  & .start-term {
     overflow: scroll;
     padding: 4px 8px;
     @mixin source-font;
 
-    .start-term-output p {
+    & .start-term-output p {
       margin: 0;
     }
 
-    .start-term-command {
+    & .start-term-command {
       margin-top: 8px;
 
-      .start-term-input {
+      & .start-term-input {
         display: inline-block;
       }
     }
   }
 
-  .start-help {
+  & .start-help {
     overflow: scroll;
     padding: 20px;
   }
 
-  // Window visibility/proportions for different display modes
+  /* Window visibility/proportions for different display modes */
 
   &.start-view-mode-graphics {
     .start-graphics {
@@ -122,7 +124,7 @@ body {
       height: calc(65vh - 33px);
     }
 
-    .start-term {
+    & .start-term {
       display: block;
       height: calc(35vh - 33px);
       margin-top: 6px;
@@ -136,28 +138,29 @@ body {
     }
   }
 
-  .start-editor, .start-builder {
+  & .start-editor,
+  & .start-builder {
     height: calc(100vh - 60px);
     line-height: 1.35;
     @mixin box-shadow;
   }
 
-  .start-editor {
+  & .start-editor {
     font-size: 14px;
     @mixin source-font;
 
-    .ace_indent-guide {
+    & .ace_indent-guide {
       background: none;
     }
   }
 
-  .start-builder {
+  & .start-builder {
     .blocklyText {
       @mixin proportional-font;
     }
   }
 
-  .start-inspector {
+  & .start-inspector {
     background-color: #f8f8f8;
     color: #000;
     display: block;
@@ -168,10 +171,10 @@ body {
     width: 100%;
     @mixin box-shadow;
 
-    .start-slider {
+    & .start-slider {
       padding: 8px;
 
-      input[type=range] {
+      & input[type='range'] {
         -webkit-appearance: none;
         border: 1px solid #ccc;
         border-radius: 8px;
@@ -190,28 +193,33 @@ body {
       }
     }
 
-    .start-vars {
+    & .start-vars {
       height: calc(100vh - 114px);
       overflow: scroll;
 
-      table {
+      & table {
         margin-bottom: 0;
 
-        .start-vars-name, .start-vars-table-key {
-          width: 25%
+        & .start-vars-name,
+        & .start-vars-table-key {
+          width: 25%;
         }
-        .start-vars-value, .start-vars-table-item {
-          width: 75%
+
+        & .start-vars-value,
+        & .start-vars-table-item {
+          width: 75%;
         }
-        td.start-vars-name, td.start-vars-table-key {
+
+        & td.start-vars-name,
+        & td.start-vars-table-key {
           font-weight: bold;
         }
 
-        .start-vars-expando-more {
+        & .start-vars-expando-more {
           padding-left: 0;
           padding-right: 0;
 
-          button {
+          & button {
             width: 100%;
           }
         }
@@ -221,18 +229,18 @@ body {
 }
 
 .blocklyToolboxDiv {
-  .blocklyTreeRow {
+  & .blocklyTreeRow {
     height: 26px;
     padding-right: 16px;
     padding-top: 2px;
   }
-  .blocklyTreeLabel {
+  & .blocklyTreeLabel {
     @mixin proportional-font;
   }
 }
 
 .blocklyWidgetDiv {
-  .blocklyHtmlInput {
+  & .blocklyHtmlInput {
     height: 22px;
     @mixin proportional-font;
   }
