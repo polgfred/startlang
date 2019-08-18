@@ -1,5 +1,3 @@
-'use strict';
-
 import Node from '../node';
 
 // load the top-level chapters

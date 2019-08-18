@@ -1,5 +1,3 @@
-'use strict';
-
 let flowMarker = {
   repeat: 'loop',
   for: 'loop',

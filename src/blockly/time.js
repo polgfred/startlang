@@ -1,5 +1,3 @@
-'use strict';
-
 Blockly.Blocks['time_sleep'] = {
   init() {
     this.setColour(Blockly.Blocks.time.HUE);

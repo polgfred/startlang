@@ -1,5 +1,3 @@
-'use strict';
-
 import immutable from 'immutable';
 
 import { handle, assignKey, resultKey } from './runtime';

@@ -1,5 +1,3 @@
-'use strict';
-
 // wrap up and extend the blockly stuff, and expose it like a proper ES6 module
 
 import './msg';

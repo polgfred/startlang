@@ -1,5 +1,3 @@
-'use strict';
-
 Blockly.Blocks['lists_functions'] = {
   init() {
     let OPERATORS = [

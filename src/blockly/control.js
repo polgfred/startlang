@@ -1,5 +1,3 @@
-'use strict';
-
 Blockly.Blocks['control_exit'] = {
   init() {
     this.setColour(Blockly.Blocks.control.HUE);

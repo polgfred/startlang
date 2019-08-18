@@ -1,5 +1,3 @@
-'use strict';
-
 Blockly.Blocks.tables = {};
 
 Blockly.Blocks.tables.HUE = 20;

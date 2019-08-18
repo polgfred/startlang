@@ -1,5 +1,3 @@
-'use strict';
-
 Blockly.Blocks['graphics_rect'] = {
   init() {
     this.setColour(Blockly.Blocks.graphics.HUE);
