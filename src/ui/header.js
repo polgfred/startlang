@@ -1,15 +1,13 @@
-import React, {
-  Component,
-} from 'react';
+import React, { Component } from 'react';
 
 import autobind from 'autobind-decorator';
 
-import AppBar from '@material-ui/core/AppBar'
-import Button from '@material-ui/core/Button'
-import Menu from '@material-ui/core/Menu'
-import MenuItem from '@material-ui/core/MenuItem'
-import Toolbar from '@material-ui/core/Toolbar'
-import Typography from '@material-ui/core/Typography'
+import AppBar from '@material-ui/core/AppBar';
+import Button from '@material-ui/core/Button';
+import Menu from '@material-ui/core/Menu';
+import MenuItem from '@material-ui/core/MenuItem';
+import Toolbar from '@material-ui/core/Toolbar';
+import Typography from '@material-ui/core/Typography';
 
 class SettingsMenu extends Component {
   constructor(props) {
@@ -44,37 +42,23 @@ class SettingsMenu extends Component {
   }
 
   render() {
-    let {
-      option,
-      mode,
-      choices,
-    } = this.props;
+    let { option, mode, choices } = this.props;
 
-    let {
-      open,
-      anchorEl,
-    } = this.state;
+    let { open, anchorEl } = this.state;
 
     return (
       <>
-        <Button
-          onClick={ this.openMenu }>
-          { option }
-        </Button>
-        <Menu
-          open={ open }
-          anchorEl={ anchorEl }
-          onClose={ this.closeMenu }>
-          {
-            choices.map(value => (
-              <MenuItem
-                key={`menu-item-${option}-${value}`}
-                selected={ mode == value }
-                onClick={ () => this.updateMode(value) }>
-                { value.charAt(0).toUpperCase() + value.substr(1) }
-              </MenuItem>
-            ))
-          }
+        <Button onClick={this.openMenu}>{option}</Button>
+        <Menu open={open} anchorEl={anchorEl} onClose={this.closeMenu}>
+          {choices.map(value => (
+            <MenuItem
+              key={`menu-item-${option}-${value}`}
+              selected={mode == value}
+              onClick={() => this.updateMode(value)}
+            >
+              {value.charAt(0).toUpperCase() + value.substr(1)}
+            </MenuItem>
+          ))}
         </Menu>
       </>
     );
@@ -83,15 +67,9 @@ class SettingsMenu extends Component {
 
 export default class Header extends Component {
   shouldComponentUpdate(nextProps) {
-    let {
-      viewMode,
-      editMode,
-    } = this.props;
+    let { viewMode, editMode } = this.props;
 
-    return (
-      viewMode != nextProps.viewMode
-      || editMode != nextProps.editMode
-    );
+    return viewMode != nextProps.viewMode || editMode != nextProps.editMode;
   }
 
   render() {
@@ -109,33 +87,24 @@ export default class Header extends Component {
           <Typography
             variant="title"
             style={{
-              marginRight: '24px'
-            }}>
+              marginRight: '24px',
+            }}
+          >
             Start
           </Typography>
           <SettingsMenu
             option="view"
-            mode={ viewMode }
-            updateMode={ updateViewMode }
-            choices={[
-              'graphics',
-              'text',
-              'split',
-              'help',
-            ]}
+            mode={viewMode}
+            updateMode={updateViewMode}
+            choices={['graphics', 'text', 'split', 'help']}
           />
           <SettingsMenu
             option="edit"
-            mode={ editMode }
-            updateMode={ updateEditMode }
-            choices={[
-              'blocks',
-              'source',
-            ]}
+            mode={editMode}
+            updateMode={updateEditMode}
+            choices={['blocks', 'source']}
           />
-          <Button onClick={ runProgram }>
-            Run
-          </Button>
+          <Button onClick={runProgram}>Run</Button>
         </Toolbar>
       </AppBar>
     );

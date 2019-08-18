@@ -65,8 +65,9 @@ export class SRuntime {
 
   syscall(name, args) {
     // try to find the function to call
-    let fn = (args.length > 0 && handle(args[0]).methods[name]) ||
-              this.constructor.globals[name];
+    let fn =
+      (args.length > 0 && handle(args[0]).methods[name]) ||
+      this.constructor.globals[name];
     if (!fn) {
       throw new Error(`object not found or not a function: ${name}`);
     }
@@ -111,8 +112,8 @@ SRuntime.globals = {
 
   swap(a, b) {
     return {
-      [assignKey]: [ b, a ],
-      [resultKey]: null
+      [assignKey]: [b, a],
+      [resultKey]: null,
     };
   },
 
@@ -132,14 +133,14 @@ SRuntime.globals = {
   },
 
   sleep(seconds) {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       setTimeout(resolve, seconds * 1000);
     });
   },
 
   snapshot() {
     this.app.snapshot();
-  }
+  },
 };
 
 // Handler defaults
@@ -163,14 +164,14 @@ export const SBase = {
 
   binaryops: {
     // standard comparison operators
-    '=' : (left, right) => left === right,
+    '=': (left, right) => left === right,
     '!=': (left, right) => left !== right,
 
-    '<' : checkOp((left, right) => left <  right),
+    '<': checkOp((left, right) => left < right),
     '<=': checkOp((left, right) => left <= right),
-    '>' : checkOp((left, right) => left >  right),
-    '>=': checkOp((left, right) => left >= right)
-  }
+    '>': checkOp((left, right) => left > right),
+    '>=': checkOp((left, right) => left >= right),
+  },
 };
 
 // Handler definitions
@@ -180,7 +181,7 @@ const SNone = {
 
   repr() {
     return '*none*';
-  }
+  },
 };
 
 const SBoolean = {
@@ -188,7 +189,7 @@ const SBoolean = {
 
   repr(b) {
     return b ? '*true*' : '*false*';
-  }
+  },
 };
 
 Boolean.prototype[handlerKey] = SBoolean;
@@ -210,15 +211,15 @@ const SNumber = {
     },
 
     acos(n) {
-      return Math.acos(n) * 180 / Math.PI;
+      return (Math.acos(n) * 180) / Math.PI;
     },
 
     asin(n) {
-      return Math.asin(n) * 180 / Math.PI;
+      return (Math.asin(n) * 180) / Math.PI;
     },
 
     atan(n) {
-      return Math.atan(n) * 180 / Math.PI;
+      return (Math.atan(n) * 180) / Math.PI;
     },
 
     cbrt(n) {
@@ -234,7 +235,7 @@ const SNumber = {
     },
 
     cos(n) {
-      return Math.cos(n * Math.PI / 180);
+      return Math.cos((n * Math.PI) / 180);
     },
 
     exp(base, n) {
@@ -274,7 +275,7 @@ const SNumber = {
     },
 
     sin(n) {
-      return Math.sin(n * Math.PI / 180);
+      return Math.sin((n * Math.PI) / 180);
     },
 
     sqrt(n) {
@@ -282,7 +283,7 @@ const SNumber = {
     },
 
     tan(n) {
-      return Math.tan(n * Math.PI / 180);
+      return Math.tan((n * Math.PI) / 180);
     },
 
     max(...args) {
@@ -291,15 +292,15 @@ const SNumber = {
 
     min(...args) {
       return Math.min(...args);
-    }
+    },
   },
 
   unaryops: {
     // math
-    '+': (right) => +right,
-    '-': (right) => -right,
+    '+': right => +right,
+    '-': right => -right,
     // bitwise
-    '~': (right) => ~right
+    '~': right => ~right,
   },
 
   binaryops: {
@@ -314,8 +315,8 @@ const SNumber = {
     // bitwise
     '&': checkMathOp((left, right) => left & right),
     '|': checkMathOp((left, right) => left | right),
-    '^': checkMathOp((left, right) => left ^ right)
-  }
+    '^': checkMathOp((left, right) => left ^ right),
+  },
 };
 
 Number.prototype[handlerKey] = SNumber;
@@ -331,7 +332,7 @@ const SString = {
     return {
       value: s.charAt(index),
       more: index < s.length,
-      next: () => SString.enumerate(s, index + 1)
+      next: () => SString.enumerate(s, index + 1),
     };
   },
 
@@ -372,7 +373,12 @@ const SString = {
     },
 
     reverse(s) {
-      return { [assignKey]: s.split('').reverse().join('') };
+      return {
+        [assignKey]: s
+          .split('')
+          .reverse()
+          .join(''),
+      };
     },
 
     split(s, delim) {
@@ -385,14 +391,14 @@ const SString = {
 
     lower(s) {
       return s.toLowerCase();
-    }
+    },
   },
 
   binaryops: {
     __proto__: SBase.binaryops,
 
-    '$': (left, right) => left + handle(right).repr(right)
-  }
+    $: (left, right) => left + handle(right).repr(right),
+  },
 };
 
 String.prototype[handlerKey] = SString;
@@ -449,16 +455,16 @@ const STime = {
 
     diff(t1, t2, unit) {
       return t2.diff(t1, normalizeTimeUnit(unit));
-    }
+    },
   },
 
   binaryops: {
     __proto__: SBase.binaryops,
 
     // comparison operators need to cast to number first
-    '=' : (left, right) => +left  == +right,
-    '!=': (left, right) => +left !== +right
-  }
+    '=': (left, right) => +left == +right,
+    '!=': (left, right) => +left !== +right,
+  },
 };
 
 moment.fn[handlerKey] = STime;
@@ -467,7 +473,11 @@ moment.fn[handlerKey] = STime;
 
 function compareElements(left, right) {
   let h = handle(left);
-  return h.binaryops['<'](left, right) ? -1 : (h.binaryops['>'](left, right) ? 1 : 0);
+  return h.binaryops['<'](left, right)
+    ? -1
+    : h.binaryops['>'](left, right)
+    ? 1
+    : 0;
 }
 
 function compareElementsReversed(left, right) {
@@ -478,9 +488,9 @@ const SContainer = {
   __proto__: SBase,
 
   binaryops: {
-    '=' : (left, right) =>  left.equals(right),
-    '!=': (left, right) => !left.equals(right)
-  }
+    '=': (left, right) => left.equals(right),
+    '!=': (left, right) => !left.equals(right),
+  },
 };
 
 // Lists
@@ -493,7 +503,7 @@ const SList = {
   },
 
   repr(l) {
-    return '[ ' + l.map((el) => handle(el).repr(el)).join(', ') + ' ]';
+    return '[ ' + l.map(el => handle(el).repr(el)).join(', ') + ' ]';
   },
 
   getindex(l, index) {
@@ -508,7 +518,7 @@ const SList = {
     return {
       value: l.get(index),
       more: index < l.size,
-      next: () => SList.enumerate(l, index + 1)
+      next: () => SList.enumerate(l, index + 1),
     };
   },
 
@@ -552,14 +562,14 @@ const SList = {
         // remove and return a single element
         return {
           [resultKey]: l.get(start),
-          [assignKey]: l.splice(start, 1)
-        }
+          [assignKey]: l.splice(start, 1),
+        };
       } else {
         end = adjustIndex(end, l.size);
         // inclusive
         return {
           [resultKey]: l.slice(start, end + 1),
-          [assignKey]: l.splice(start, end - start + 1)
+          [assignKey]: l.splice(start, end - start + 1),
         };
       }
     },
@@ -569,7 +579,9 @@ const SList = {
     },
 
     sum(l) {
-      return l.reduce((total, item) => handle(total).binaryops['+'](total, item));
+      return l.reduce((total, item) =>
+        handle(total).binaryops['+'](total, item)
+      );
     },
 
     min(l) {
@@ -598,22 +610,22 @@ const SList = {
 
     shuffle(l) {
       return {
-        [assignKey]: immutable.List().withMutations((m) => {
+        [assignKey]: immutable.List().withMutations(m => {
           for (let i = 0; i < l.size; ++i) {
             let j = Math.floor(Math.random() * i);
             m.set(i, m.get(j));
             m.set(j, l.get(i));
           }
-        })
+        }),
       };
-    }
+    },
   },
 
   binaryops: {
     __proto__: SContainer.binaryops,
 
-    '$': checkOp((left, right) => left.concat(right))
-  }
+    $: checkOp((left, right) => left.concat(right)),
+  },
 };
 
 immutable.List.prototype[handlerKey] = SList;
@@ -624,7 +636,7 @@ const STable = {
   __proto__: SContainer,
 
   create(pairs) {
-    return immutable.OrderedMap().withMutations((n) => {
+    return immutable.OrderedMap().withMutations(n => {
       for (let i = 0; i < pairs.length; i += 2) {
         n.set(pairs[i], pairs[i + 1]);
       }
@@ -632,7 +644,9 @@ const STable = {
   },
 
   repr(t) {
-    let pairs = t.map((val, key) => handle(key).repr(key) + ': ' + handle(val).repr(val));
+    let pairs = t.map(
+      (val, key) => handle(key).repr(key) + ': ' + handle(val).repr(val)
+    );
     return '[ ' + pairs.join(', ') + ' ]';
   },
 
@@ -659,11 +673,11 @@ const STable = {
 
     put(t, ...pairs) {
       return {
-        [assignKey]: t.withMutations((n) => {
+        [assignKey]: t.withMutations(n => {
           for (let i = 0; i < pairs.length; i += 2) {
             n.set(pairs[i], pairs[i + 1]);
           }
-        })
+        }),
       };
     },
 
@@ -672,24 +686,22 @@ const STable = {
       let o = immutable.List().asMutable();
 
       return {
-        [assignKey]:
-          t.withMutations((n) => {
-            for (let i = 0; i < keys.length; ++i) {
-              o.push(t.get(keys[i]));
-              n.delete(keys[i]);
-            }
-          }),
-        [resultKey]:
-          o.size == 1 ? o.first() : o.asImmutable()
+        [assignKey]: t.withMutations(n => {
+          for (let i = 0; i < keys.length; ++i) {
+            o.push(t.get(keys[i]));
+            n.delete(keys[i]);
+          }
+        }),
+        [resultKey]: o.size == 1 ? o.first() : o.asImmutable(),
       };
-    }
+    },
   },
 
   binaryops: {
     __proto__: SContainer.binaryops,
 
-    '$': checkOp((left, right) => left.merge(right))
-  }
+    $: checkOp((left, right) => left.merge(right)),
+  },
 };
 
 immutable.OrderedMap.prototype[handlerKey] = STable;

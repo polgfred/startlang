@@ -1,7 +1,4 @@
-import React, {
-  Component,
-  createRef,
-} from 'react';
+import React, { Component, createRef } from 'react';
 
 import brace from 'brace';
 import 'brace/mode/text';
@@ -24,19 +21,19 @@ export default class Editor extends Component {
   render() {
     return (
       <div
-        ref={ this.editorRef }
+        ref={this.editorRef}
         className="start-editor"
         style={{
           fontFamily: 'Roboto Mono',
           fontSize: 14,
-          height: '100%'
+          height: '100%',
         }}
       />
     );
   }
 
   componentDidMount() {
-    let editor = this.editor = brace.edit(this.editorRef.current);
+    let editor = (this.editor = brace.edit(this.editorRef.current));
 
     editor.$blockScrolling = Infinity;
     editor.setTheme('ace/theme/github');

@@ -22,7 +22,9 @@ export default class Graphics extends Component {
   }
 
   render() {
-    let { data: { shapes } } = this.props;
+    let {
+      data: { shapes },
+    } = this.props;
 
     // make sure the list hasn't been modified from the front
     if (shapes._origin != 0) {
@@ -35,24 +37,11 @@ export default class Graphics extends Component {
         style={{
           height: 'calc(65vh - 80px)',
           width: '100%',
-        }}>
+        }}
+      >
         <g className="start-orient">
-          {
-            shapes._root && (
-              <Group
-                node={ shapes._root }
-                level={ shapes._level }
-              />
-            )
-          }
-          {
-            shapes._tail && (
-              <Group
-                node={ shapes._tail }
-                level={ 0 }
-              />
-            )
-          }
+          {shapes._root && <Group node={shapes._root} level={shapes._level} />}
+          {shapes._tail && <Group node={shapes._tail} level={0} />}
         </g>
       </svg>
     );
@@ -65,28 +54,23 @@ class Group extends Component {
   }
 
   render() {
-    let { node: { array }, level } = this.props;
+    let {
+      node: { array },
+      level,
+    } = this.props;
 
     return (
       <g>
-        {
-          level == 0 ? (
-            array.map((elem, index) => (
+        {level == 0
+          ? array.map((elem, index) =>
               React.createElement(registry[elem.type], {
                 key: index,
-                shape: elem
+                shape: elem,
               })
-            ))
-          ) : (
-            array.map((elem, index) => (
-              <Group
-                key={ index }
-                node={ elem }
-                level={ level - LIST_SHIFT }
-              />
-            ))
-          )
-        }
+            )
+          : array.map((elem, index) => (
+              <Group key={index} node={elem} level={level - LIST_SHIFT} />
+            ))}
       </g>
     );
   }
@@ -98,7 +82,9 @@ class Shape extends Component {
   }
 
   setup() {
-    let { shape: { sprops } } = this.props;
+    let {
+      shape: { sprops },
+    } = this.props;
     let attrs = { style: {} };
     let trans = '';
 
@@ -136,9 +122,7 @@ class Rect extends Shape {
     attrs.width = shape.width;
     attrs.height = shape.height;
 
-    return (
-      <rect {...attrs} />
-    );
+    return <rect {...attrs} />;
   }
 }
 
@@ -151,9 +135,7 @@ class Circle extends Shape {
     attrs.cy = shape.cy;
     attrs.r = shape.r;
 
-    return (
-      <circle {...attrs} />
-    );
+    return <circle {...attrs} />;
   }
 }
 
@@ -167,9 +149,7 @@ class Ellipse extends Shape {
     attrs.rx = shape.rx;
     attrs.ry = shape.ry;
 
-    return (
-      <ellipse {...attrs} />
-    );
+    return <ellipse {...attrs} />;
   }
 }
 
@@ -183,9 +163,7 @@ class Line extends Shape {
     attrs.x2 = shape.x2;
     attrs.y2 = shape.y2;
 
-    return (
-      <line {...attrs} />
-    );
+    return <line {...attrs} />;
   }
 }
 
@@ -196,9 +174,7 @@ class Polygon extends Shape {
 
     attrs.points = shape.points.join(',');
 
-    return (
-      <polygon {...attrs} />
-    );
+    return <polygon {...attrs} />;
   }
 }
 
@@ -213,19 +189,15 @@ class Text extends Shape {
     attrs.style.fontFamily = shape.tprops.fface;
     attrs.style.fontSize = shape.tprops.fsize;
 
-    return (
-      <text {...attrs}>
-        { shape.text }
-      </text>
-    );
+    return <text {...attrs}>{shape.text}</text>;
   }
 }
 
 const registry = {
-  'rect': Rect,
-  'circle': Circle,
-  'ellipse': Ellipse,
-  'line': Line,
-  'polygon': Polygon,
-  'text': Text
+  rect: Rect,
+  circle: Circle,
+  ellipse: Ellipse,
+  line: Line,
+  polygon: Polygon,
+  text: Text,
 };

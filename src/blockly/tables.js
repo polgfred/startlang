@@ -6,13 +6,12 @@ Blockly.Blocks.tables.HUE = 20;
 
 Blockly.Blocks['tables_create_empty'] = {
   init() {
-    this.appendDummyInput()
-        .appendField(Blockly.Msg.TABLES_CREATE_EMPTY_TITLE);
+    this.appendDummyInput().appendField(Blockly.Msg.TABLES_CREATE_EMPTY_TITLE);
     this.setOutput(true, 'Map');
     this.setColour(Blockly.Blocks.tables.HUE);
     this.setTooltip(Blockly.Msg.TABLES_CREATE_EMPTY_TOOLTIP);
     this.setHelpUrl(Blockly.Msg.TABLES_CREATE_EMPTY_HELPURL);
-  }
+  },
 };
 
 Blockly.Blocks['tables_create_with'] = {
@@ -53,7 +52,8 @@ Blockly.Blocks['tables_create_with'] = {
     let connections = [];
     while (itemBlock) {
       connections.push(itemBlock.valueConnection_);
-      itemBlock = itemBlock.nextConnection && itemBlock.nextConnection.targetBlock();
+      itemBlock =
+        itemBlock.nextConnection && itemBlock.nextConnection.targetBlock();
     }
     this.itemCount_ = connections.length;
     this.updateShape_();
@@ -71,7 +71,8 @@ Blockly.Blocks['tables_create_with'] = {
       let input = this.getInput(`VALUE${i}`);
       itemBlock.valueConnection_ = input && input.connection.targetConnection;
       i++;
-      itemBlock = itemBlock.nextConnection && itemBlock.nextConnection.targetBlock();
+      itemBlock =
+        itemBlock.nextConnection && itemBlock.nextConnection.targetBlock();
     }
   },
   updateShape_() {
@@ -88,45 +89,52 @@ Blockly.Blocks['tables_create_with'] = {
     }
     // Rebuild block.
     if (this.itemCount_ == 0) {
-      this.appendDummyInput('EMPTY')
-          .appendField(Blockly.Msg.TABLES_CREATE_EMPTY_TITLE);
+      this.appendDummyInput('EMPTY').appendField(
+        Blockly.Msg.TABLES_CREATE_EMPTY_TITLE
+      );
     } else {
       for (let i = 0; i < this.itemCount_; i++) {
-        let input = this.appendValueInput(`VALUE${i}`)
-                        .setAlign(Blockly.ALIGN_RIGHT);
+        let input = this.appendValueInput(`VALUE${i}`).setAlign(
+          Blockly.ALIGN_RIGHT
+        );
         if (i == 0) {
-          input.appendField(Blockly.Msg.TABLES_CREATE_WITH_INPUT_WITH)
-
+          input.appendField(Blockly.Msg.TABLES_CREATE_WITH_INPUT_WITH);
         }
-        input.appendField(Blockly.Msg.TABLES_CREATE_WITH_INPUT_KEY)
-             .appendField(new Blockly.FieldTextInput(this.savedKeys[i] || `key${i+1}`), `KEY${i}`)
-             .appendField(Blockly.Msg.TABLES_CREATE_WITH_INPUT_AS);
+        input
+          .appendField(Blockly.Msg.TABLES_CREATE_WITH_INPUT_KEY)
+          .appendField(
+            new Blockly.FieldTextInput(this.savedKeys[i] || `key${i + 1}`),
+            `KEY${i}`
+          )
+          .appendField(Blockly.Msg.TABLES_CREATE_WITH_INPUT_AS);
       }
     }
-  }
+  },
 };
 
 Blockly.Blocks['tables_create_with_container'] = {
   init() {
     this.setColour(Blockly.Blocks.tables.HUE);
-    this.appendDummyInput()
-        .appendField(Blockly.Msg.TABLES_CREATE_WITH_CONTAINER_TITLE_ADD);
+    this.appendDummyInput().appendField(
+      Blockly.Msg.TABLES_CREATE_WITH_CONTAINER_TITLE_ADD
+    );
     this.appendStatementInput('STACK');
     this.setTooltip(Blockly.Msg.TABLES_CREATE_WITH_CONTAINER_TOOLTIP);
     this.contextMenu = false;
-  }
+  },
 };
 
 Blockly.Blocks['tables_create_with_item'] = {
   init() {
     this.setColour(Blockly.Blocks.tables.HUE);
-    this.appendDummyInput()
-        .appendField(Blockly.Msg.TABLES_CREATE_WITH_ITEM_TITLE);
+    this.appendDummyInput().appendField(
+      Blockly.Msg.TABLES_CREATE_WITH_ITEM_TITLE
+    );
     this.setPreviousStatement(true);
     this.setNextStatement(true);
     this.setTooltip(Blockly.Msg.TABLES_CREATE_WITH_ITEM_TOOLTIP);
     this.contextMenu = false;
-  }
+  },
 };
 
 Blockly.Blocks['tables_size'] = {
@@ -137,15 +145,15 @@ Blockly.Blocks['tables_size'] = {
         {
           type: 'input_value',
           name: 'VALUE',
-          check: ['Map']
-        }
+          check: ['Map'],
+        },
       ],
       output: 'Number',
       colour: Blockly.Blocks.tables.HUE,
       tooltip: Blockly.Msg.TABLES_SIZE_TOOLTIP,
-      helpUrl: Blockly.Msg.TABLES_SIZE_HELPURL
+      helpUrl: Blockly.Msg.TABLES_SIZE_HELPURL,
     });
-  }
+  },
 };
 
 Blockly.Blocks['tables_isEmpty'] = {
@@ -156,37 +164,38 @@ Blockly.Blocks['tables_isEmpty'] = {
         {
           type: 'input_value',
           name: 'VALUE',
-          check: ['Map']
-        }
+          check: ['Map'],
+        },
       ],
       output: 'Boolean',
       colour: Blockly.Blocks.tables.HUE,
       tooltip: Blockly.Msg.TABLES_ISEMPTY_TOOLTIP,
-      helpUrl: Blockly.Msg.TABLES_ISEMPTY_HELPURL
+      helpUrl: Blockly.Msg.TABLES_ISEMPTY_HELPURL,
     });
-  }
+  },
 };
 
 Blockly.Blocks['tables_getIndex'] = {
   init() {
-    let MODE =
-        [[Blockly.Msg.TABLES_GET_INDEX_GET, 'GET'],
-         [Blockly.Msg.TABLES_GET_INDEX_GET_REMOVE, 'GET_REMOVE'],
-         [Blockly.Msg.TABLES_GET_INDEX_REMOVE, 'REMOVE']];
+    let MODE = [
+      [Blockly.Msg.TABLES_GET_INDEX_GET, 'GET'],
+      [Blockly.Msg.TABLES_GET_INDEX_GET_REMOVE, 'GET_REMOVE'],
+      [Blockly.Msg.TABLES_GET_INDEX_REMOVE, 'REMOVE'],
+    ];
     this.setHelpUrl(Blockly.Msg.TABLES_GET_INDEX_HELPURL);
     this.setColour(Blockly.Blocks.tables.HUE);
-    let modeMenu = new Blockly.FieldDropdown(MODE, (value) => {
+    let modeMenu = new Blockly.FieldDropdown(MODE, value => {
       this.updateStatement_(value == 'REMOVE');
     });
     this.appendValueInput('VALUE')
-        .setCheck('Map')
-        .appendField(Blockly.Msg.TABLES_GET_INDEX_INPUT_IN_TABLE);
-    this.appendDummyInput()
-        .appendField(modeMenu, 'MODE');
+      .setCheck('Map')
+      .appendField(Blockly.Msg.TABLES_GET_INDEX_INPUT_IN_TABLE);
+    this.appendDummyInput().appendField(modeMenu, 'MODE');
     this.appendValueInput('AT').setCheck('String');
     if (Blockly.Msg.TABLES_GET_INDEX_TAIL) {
-      this.appendDummyInput('TAIL')
-          .appendField(Blockly.Msg.TABLES_GET_INDEX_TAIL);
+      this.appendDummyInput('TAIL').appendField(
+        Blockly.Msg.TABLES_GET_INDEX_TAIL
+      );
     }
     this.setInputsInline(true);
     this.setOutput(true);
@@ -202,7 +211,7 @@ Blockly.Blocks['tables_getIndex'] = {
     return container;
   },
   domToMutation(xmlElement) {
-    let isStatement = (xmlElement.getAttribute('statement') == 'true');
+    let isStatement = xmlElement.getAttribute('statement') == 'true';
     this.updateStatement_(isStatement);
   },
   updateStatement_(newStatement) {
@@ -219,7 +228,7 @@ Blockly.Blocks['tables_getIndex'] = {
         this.setOutput(true);
       }
     }
-  }
+  },
 };
 
 Blockly.Blocks['tables_setIndex'] = {
@@ -227,18 +236,18 @@ Blockly.Blocks['tables_setIndex'] = {
     this.setHelpUrl(Blockly.Msg.TABLES_SET_INDEX_HELPURL);
     this.setColour(Blockly.Blocks.tables.HUE);
     this.appendValueInput('TABLE')
-        .setCheck('Map')
-        .appendField(Blockly.Msg.TABLES_SET_INDEX_INPUT_IN_TABLE);
-    this.appendDummyInput()
-        .appendField('set');
+      .setCheck('Map')
+      .appendField(Blockly.Msg.TABLES_SET_INDEX_INPUT_IN_TABLE);
+    this.appendDummyInput().appendField('set');
     this.appendValueInput('AT').setCheck('String');
-    this.appendValueInput('TO')
-        .appendField(Blockly.Msg.TABLES_SET_INDEX_INPUT_TO);
+    this.appendValueInput('TO').appendField(
+      Blockly.Msg.TABLES_SET_INDEX_INPUT_TO
+    );
     this.setInputsInline(true);
     this.setPreviousStatement(true);
     this.setNextStatement(true);
     this.setTooltip(Blockly.Msg.TABLES_SET_INDEX_TOOLTIP);
-  }
+  },
 };
 
 Blockly.Blocks['tables_keys'] = {
@@ -249,13 +258,13 @@ Blockly.Blocks['tables_keys'] = {
         {
           type: 'input_value',
           name: 'VALUE',
-          check: ['Map']
-        }
+          check: ['Map'],
+        },
       ],
       output: 'Array',
       colour: Blockly.Blocks.tables.HUE,
       tooltip: Blockly.Msg.TABLES_KEYS_TOOLTIP,
-      helpUrl: Blockly.Msg.TABLES_KEYS_HELPURL
+      helpUrl: Blockly.Msg.TABLES_KEYS_HELPURL,
     });
-  }
+  },
 };

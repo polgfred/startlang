@@ -8,19 +8,19 @@ import { SRuntime, handle } from './runtime';
 
 export class SGRuntime extends SRuntime {
   addShape(type, attrs) {
-    this.app.gfxUpdate((gfx) => gfx.addShape(type, attrs));
+    this.app.gfxUpdate(gfx => gfx.addShape(type, attrs));
   }
 
   updateSprops(mut) {
-    this.app.gfxUpdate((gfx) => gfx.updateSprops(mut));
+    this.app.gfxUpdate(gfx => gfx.updateSprops(mut));
   }
 
   updateTprops(mut) {
-    this.app.gfxUpdate((gfx) => gfx.updateTprops(mut));
+    this.app.gfxUpdate(gfx => gfx.updateTprops(mut));
   }
 
   termOutput(line) {
-    this.app.termUpdate((buf) => buf.push(line));
+    this.app.termUpdate(buf => buf.push(line));
   }
 }
 
@@ -29,7 +29,7 @@ SGRuntime.globals = {
 
   repaint() {
     // let the DOM catch up
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       nextTick(resolve);
     });
   },
@@ -50,8 +50,8 @@ SGRuntime.globals = {
   },
 
   input(prompt) {
-    return new Promise((resolve) => {
-      this.app.termInput(prompt, (input) => {
+    return new Promise(resolve => {
+      this.app.termInput(prompt, input => {
         resolve(input);
       });
     });
@@ -80,9 +80,9 @@ SGRuntime.globals = {
   },
 
   polygon(...points) {
-    points = immutable.List.isList(points[0]) ?
-      points[0] :
-      immutable.List(points);
+    points = immutable.List.isList(points[0])
+      ? points[0]
+      : immutable.List(points);
 
     this.addShape(Polygon, { points });
   },
@@ -90,45 +90,43 @@ SGRuntime.globals = {
   // set shape and text attributes
 
   color(r, g, b) {
-    let hex = (v) => ('0' + Math.round(255 * v).toString(16)).substr(-2);
+    let hex = v => ('0' + Math.round(255 * v).toString(16)).substr(-2);
     return `#${hex(r)}${hex(g)}${hex(b)}`;
   },
 
   fill(color) {
-    this.updateSprops((sprops) => sprops.set('fill', color));
+    this.updateSprops(sprops => sprops.set('fill', color));
   },
 
   stroke(color) {
-    this.updateSprops((sprops) => sprops.set('stroke', color));
+    this.updateSprops(sprops => sprops.set('stroke', color));
   },
 
   opacity(value = 1) {
-    this.updateSprops((sprops) => sprops.set('opacity', value));
+    this.updateSprops(sprops => sprops.set('opacity', value));
   },
 
   anchor(value = 'center') {
-    this.updateSprops((sprops) => sprops.set('anchor', value));
+    this.updateSprops(sprops => sprops.set('anchor', value));
   },
 
   rotate(angle = 0) {
-    this.updateSprops((sprops) => sprops.set('rotate', angle));
+    this.updateSprops(sprops => sprops.set('rotate', angle));
   },
 
   scale(scalex = 1, scaley = scalex) {
-    this.updateSprops((sprops) => sprops
-      .set('scalex', scalex)
-      .set('scaley', scaley));
+    this.updateSprops(sprops =>
+      sprops.set('scalex', scalex).set('scaley', scaley)
+    );
   },
 
   align(value = 'start') {
-    this.updateTprops((tprops) => tprops.set('align', value));
+    this.updateTprops(tprops => tprops.set('align', value));
   },
 
   font(fface = 'Helvetica', fsize = 36) {
-    this.updateTprops((tprops) => tprops
-      .set('fface', fface)
-      .set('fsize', fsize));
-  }
+    this.updateTprops(tprops => tprops.set('fface', fface).set('fsize', fsize));
+  },
 };
 
 // visual properties that will get applied to shapes
@@ -139,20 +137,20 @@ const SShapeProps = immutable.Record({
   anchor: 'center',
   rotate: 0,
   scalex: 1,
-  scaley: 1
+  scaley: 1,
 });
 
 // visual properties that will get applied to text
 const STextProps = immutable.Record({
   fface: 'Helvetica',
   fsize: 36,
-  align: 'start'
+  align: 'start',
 });
 
 export class SGraphics extends immutable.Record({
   shapes: immutable.List(),
   sprops: SShapeProps(),
-  tprops: STextProps()
+  tprops: STextProps(),
 }) {
   clear() {
     return this.set('shapes', immutable.List());
@@ -162,19 +160,19 @@ export class SGraphics extends immutable.Record({
     // set the current graphics props on the shape
     attrs.sprops = this.sprops;
     attrs.tprops = this.tprops;
-    return this.update('shapes', (shapes) => shapes.push(rec(attrs)));
+    return this.update('shapes', shapes => shapes.push(rec(attrs)));
   }
 
   removeShapes(num) {
-    return this.update('shapes', (shapes) => shapes.skipLast(num));
+    return this.update('shapes', shapes => shapes.skipLast(num));
   }
 
   updateSprops(mut) {
-    return this.update('sprops', (sprops) => mut(sprops));
+    return this.update('sprops', sprops => mut(sprops));
   }
 
   updateTprops(mut) {
-    return this.update('tprops', (tprops) => mut(tprops));
+    return this.update('tprops', tprops => mut(tprops));
   }
 }
 
@@ -184,7 +182,7 @@ const Rect = immutable.Record({
   y: 0,
   width: 0,
   height: 0,
-  sprops: SShapeProps()
+  sprops: SShapeProps(),
 });
 
 const Circle = immutable.Record({
@@ -192,7 +190,7 @@ const Circle = immutable.Record({
   cx: 0,
   cy: 0,
   r: 0,
-  sprops: SShapeProps()
+  sprops: SShapeProps(),
 });
 
 const Ellipse = immutable.Record({
@@ -201,7 +199,7 @@ const Ellipse = immutable.Record({
   cy: 0,
   rx: 0,
   ry: 0,
-  sprops: SShapeProps()
+  sprops: SShapeProps(),
 });
 
 const Line = immutable.Record({
@@ -210,13 +208,13 @@ const Line = immutable.Record({
   y1: 0,
   x2: 0,
   y2: 0,
-  sprops: SShapeProps()
+  sprops: SShapeProps(),
 });
 
 const Polygon = immutable.Record({
   type: 'polygon',
   points: immutable.List(),
-  sprops: SShapeProps()
+  sprops: SShapeProps(),
 });
 
 const Text = immutable.Record({
@@ -225,5 +223,5 @@ const Text = immutable.Record({
   y: 0,
   text: '',
   sprops: SShapeProps(),
-  tprops: STextProps()
+  tprops: STextProps(),
 });

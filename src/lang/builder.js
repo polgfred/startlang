@@ -1,34 +1,34 @@
 'use strict';
 
 let flowMarker = {
-  'repeat': 'loop',
-  'for': 'loop',
-  'forIn': 'loop',
-  'while': 'loop',
-  'call': 'call'
+  repeat: 'loop',
+  for: 'loop',
+  forIn: 'loop',
+  while: 'loop',
+  call: 'call',
 };
 
 let inspectMarker = {
-  'repeat': 'loop',
-  'for': 'loop',
-  'forIn': 'loop',
-  'while': 'loop',
-  'if': 'stmt',
-  'begin': 'stmt',
-  'call': 'stmt',
-  'exit': 'stmt',
-  'break': 'stmt',
-  'next': 'stmt',
-  'return': 'stmt',
-  'literal': 'expr',
-  'var': 'expr',
-  'let': 'stmt',
-  'index': 'expr',
-  'letIndex': 'stmt',
-  'logicalOp': 'expr',
-  'binaryOp': 'expr',
-  'unaryOp': 'expr'
-}
+  repeat: 'loop',
+  for: 'loop',
+  forIn: 'loop',
+  while: 'loop',
+  if: 'stmt',
+  begin: 'stmt',
+  call: 'stmt',
+  exit: 'stmt',
+  break: 'stmt',
+  next: 'stmt',
+  return: 'stmt',
+  literal: 'expr',
+  var: 'expr',
+  let: 'stmt',
+  index: 'expr',
+  letIndex: 'stmt',
+  logicalOp: 'expr',
+  binaryOp: 'expr',
+  unaryOp: 'expr',
+};
 
 function buildNode(type, block, attrs) {
   // if we're a block with one statement, just return the statement itself
@@ -57,9 +57,9 @@ function buildNode(type, block, attrs) {
 
 function wrapLiteral(value, block) {
   // if it's already a node, pass it through
-  return value != null && value.type != null ?
-            value :
-            buildNode('literal', block, { value });
+  return value != null && value.type != null
+    ? value
+    : buildNode('literal', block, { value });
 }
 
 export class SBuilder {
@@ -72,7 +72,9 @@ export class SBuilder {
 
   fromWorkspace(ws) {
     // build a program tree from the blockly workspace
-    let blocks = ws.getTopBlocks(true), funcs = [], elems = [];
+    let blocks = ws.getTopBlocks(true),
+      funcs = [],
+      elems = [];
 
     for (let i = 0; i < blocks.length; ++i) {
       let stmt = this.handleStatements(blocks[i]);
@@ -126,15 +128,13 @@ export class SBuilder {
 
     // if there was only one, just return the first, otherwise
     // wrap it in a block node
-    return elems.length == 1 ?
-      elems[0] :
-      buildNode('block', block, { elems });
+    return elems.length == 1 ? elems[0] : buildNode('block', block, { elems });
   }
 
   makeTemporary(value, block, prefix) {
     // get next available temp var with this prefix and make an assignment
-    let count = this.temps[prefix] = (this.temps[prefix] || 0) + 1,
-        name = `temp_${prefix}_${count}`;
+    let count = (this.temps[prefix] = (this.temps[prefix] || 0) + 1),
+      name = `temp_${prefix}_${count}`;
 
     let elem = buildNode('let', block, { name, value });
 
@@ -156,7 +156,7 @@ export class SBuilder {
     // we'll need this in a couple places
     let len = buildNode('call', block, {
       name: 'len',
-      args: [ val ]
+      args: [val],
     });
 
     switch (where) {
@@ -178,7 +178,7 @@ export class SBuilder {
             // len - at
             return buildNode('binaryOp', block, {
               name: '-',
-              args: [ len, at ]
+              args: [len, at],
             });
           }
         } else {
@@ -187,9 +187,9 @@ export class SBuilder {
             op: '+',
             left: buildNode('binaryOp', block, {
               name: '-',
-              args: [ len, at ]
+              args: [len, at],
             }),
-            right: wrapLiteral(1, block)
+            right: wrapLiteral(1, block),
           });
         }
       case 'RANDOM':
@@ -200,9 +200,9 @@ export class SBuilder {
             wrapLiteral(1, block),
             buildNode('call', block, {
               name: 'len',
-              args: [ val ]
-            })
-          ]
+              args: [val],
+            }),
+          ],
         });
     }
   }
@@ -218,7 +218,7 @@ export class SBuilder {
   controls_repeat_ext(block) {
     return buildNode('repeat', block, {
       times: this.handleValue(block, 'TIMES'),
-      body: this.handleStatements(block, 'DO')
+      body: this.handleStatements(block, 'DO'),
     });
   }
 
@@ -229,13 +229,13 @@ export class SBuilder {
       // reverse the condition
       cond = buildNode('logicalOp', block, {
         op: 'not',
-        right: cond
+        right: cond,
       });
     }
 
     return buildNode('while', block, {
       cond: cond,
-      body: this.handleStatements(block, 'DO')
+      body: this.handleStatements(block, 'DO'),
     });
   }
 
@@ -245,7 +245,7 @@ export class SBuilder {
       from: this.handleValue(block, 'FROM'),
       to: this.handleValue(block, 'TO'),
       by: this.handleValue(block, 'BY'),
-      body: this.handleStatements(block, 'DO')
+      body: this.handleStatements(block, 'DO'),
     });
   }
 
@@ -253,14 +253,14 @@ export class SBuilder {
     return buildNode('forIn', block, {
       name: block.getFieldValue('VAR'),
       range: this.handleValue(block, 'LIST'),
-      body: this.handleStatements(block, 'DO')
+      body: this.handleStatements(block, 'DO'),
     });
   }
 
   controls_flow_statements(block) {
     let FLOWS = {
-      'BREAK':   'break',
-      'CONTINUE': 'next'
+      BREAK: 'break',
+      CONTINUE: 'next',
     };
 
     return buildNode(FLOWS[block.getFieldValue('FLOW')], block);
@@ -272,7 +272,7 @@ export class SBuilder {
     // the top-level if block
     let top = buildNode('if', block, {
       cond: this.handleValue(block, 'IF0'),
-      tbody: this.handleStatements(block, 'DO0')
+      tbody: this.handleStatements(block, 'DO0'),
     });
 
     let current = top;
@@ -281,7 +281,7 @@ export class SBuilder {
       // create a nested if block inside the else block
       current.fbody = buildNode('if', block, {
         cond: this.handleValue(block, `IF${i}`),
-        tbody: this.handleStatements(block, `DO${i}`)
+        tbody: this.handleStatements(block, `DO${i}`),
       });
 
       current = current.fbody;
@@ -297,18 +297,18 @@ export class SBuilder {
 
   logic_compare(block) {
     let OPERATORS = {
-      'EQ':   '=',
-      'NEQ':  '!=',
-      'LT':   '<',
-      'LTE':  '<=',
-      'GT':   '>',
-      'GTE':  '>='
+      EQ: '=',
+      NEQ: '!=',
+      LT: '<',
+      LTE: '<=',
+      GT: '>',
+      GTE: '>=',
     };
 
     return buildNode('binaryOp', block, {
       op: OPERATORS[block.getFieldValue('OP')],
       left: this.handleValue(block, 'A'),
-      right: this.handleValue(block, 'B')
+      right: this.handleValue(block, 'B'),
     });
   }
 
@@ -316,14 +316,14 @@ export class SBuilder {
     return buildNode('logicalOp', block, {
       op: block.getFieldValue('OP').toLowerCase(),
       left: this.handleValue(block, 'A'),
-      right: this.handleValue(block, 'B')
+      right: this.handleValue(block, 'B'),
     });
   }
 
   logic_negate(block) {
     return buildNode('logicalOp', block, {
       op: 'not',
-      right: this.handleValue(block, 'BOOL')
+      right: this.handleValue(block, 'BOOL'),
     });
   }
 
@@ -347,10 +347,10 @@ export class SBuilder {
 
   math_arithmetic(block) {
     let OPERATORS = {
-      'ADD':      '+',
-      'MINUS':    '-',
-      'MULTIPLY': '*',
-      'DIVIDE':   '/'
+      ADD: '+',
+      MINUS: '-',
+      MULTIPLY: '*',
+      DIVIDE: '/',
     };
 
     let op = block.getFieldValue('OP');
@@ -358,27 +358,24 @@ export class SBuilder {
     if (op == 'POWER') {
       return buildNode('call', block, {
         name: 'exp',
-        args: [
-          this.handleValue(block, 'A'),
-          this.handleValue(block, 'B')
-        ]
+        args: [this.handleValue(block, 'A'), this.handleValue(block, 'B')],
       });
     } else {
       return buildNode('binaryOp', block, {
         op: OPERATORS[op],
         left: this.handleValue(block, 'A'),
-        right: this.handleValue(block, 'B')
+        right: this.handleValue(block, 'B'),
       });
     }
   }
 
   math_single(block) {
     let FUNCS = {
-      'ROOT':       'sqrt',
-      'LN':         'log',
-      'ROUNDUP':    'ceil',
-      'ROUNDDOWN':  'floor'
-    }
+      ROOT: 'sqrt',
+      LN: 'log',
+      ROUNDUP: 'ceil',
+      ROUNDDOWN: 'floor',
+    };
 
     let func = block.getFieldValue('OP');
     let num = this.handleValue(block, 'NUM');
@@ -387,22 +384,22 @@ export class SBuilder {
       case 'NEG':
         return buildNode('unaryOp', block, {
           op: '-',
-          right: num
+          right: num,
         });
       case 'LOG10':
         return buildNode('call', block, {
           name: 'log',
-          args: [ wrapLiteral(10, block), num ]
+          args: [wrapLiteral(10, block), num],
         });
       case 'POW10':
         return buildNode('call', block, {
           name: 'exp',
-          args: [ wrapLiteral(10, block), num ]
+          args: [wrapLiteral(10, block), num],
         });
       default:
         return buildNode('call', block, {
           name: FUNCS[func] || func.toLowerCase(),
-          args: [ num ]
+          args: [num],
         });
     }
   }
@@ -426,9 +423,9 @@ export class SBuilder {
         left: buildNode('binaryOp', block, {
           op: '%',
           left: num,
-          right: wrapLiteral(denom, block)
+          right: wrapLiteral(denom, block),
         }),
-        right: wrapLiteral(test, block)
+        right: wrapLiteral(test, block),
       });
     }
 
@@ -437,7 +434,7 @@ export class SBuilder {
       return buildNode('binaryOp', block, {
         op: op,
         left: num,
-        right: wrapLiteral(0, block)
+        right: wrapLiteral(0, block),
       });
     }
 
@@ -474,10 +471,10 @@ export class SBuilder {
       value: buildNode('binaryOp', block, {
         op: sign,
         left: buildNode('var', block, {
-          name: name
+          name: name,
         }),
-        right: delta
-      })
+        right: delta,
+      }),
     });
   }
 
@@ -485,38 +482,35 @@ export class SBuilder {
     return buildNode('binaryOp', block, {
       op: '%',
       left: this.handleValue(block, 'DIVIDEND'),
-      right: this.handleValue(block, 'DIVISOR')
+      right: this.handleValue(block, 'DIVISOR'),
     });
   }
 
   math_constrain(block) {
-    let valueOrDefault =
-      (name, default_) => this.handleValue(block, name) || wrapLiteral(default_);
+    let valueOrDefault = (name, default_) =>
+      this.handleValue(block, name) || wrapLiteral(default_);
 
     return buildNode('call', block, {
       name: 'clamp',
       args: [
         this.handleValue(block, 'VALUE'),
         valueOrDefault('LOW', 0),
-        valueOrDefault('HIGH', Infinity)
-      ]
+        valueOrDefault('HIGH', Infinity),
+      ],
     });
   }
 
   math_random_int(block) {
     return buildNode('call', block, {
       name: 'rand',
-      args: [
-        this.handleValue(block, 'FROM'),
-        this.handleValue(block, 'TO')
-      ]
+      args: [this.handleValue(block, 'FROM'), this.handleValue(block, 'TO')],
     });
   }
 
   math_random_float(block) {
     return buildNode('call', block, {
       name: 'rand',
-      args: []
+      args: [],
     });
   }
 
@@ -533,7 +527,7 @@ export class SBuilder {
       str = buildNode('binaryOp', block, {
         op: '$',
         left: wrapLiteral('', block),
-        right: str
+        right: str,
       });
     }
 
@@ -541,7 +535,7 @@ export class SBuilder {
       str = buildNode('binaryOp', block, {
         op: '$',
         left: str,
-        right: this.handleValue(block, `ADD${i}`)
+        right: this.handleValue(block, `ADD${i}`),
       });
     }
 
@@ -558,15 +552,15 @@ export class SBuilder {
         left: buildNode('var', block, {
           name: name,
         }),
-        right: this.handleValue(block, 'TEXT')
-      })
+        right: this.handleValue(block, 'TEXT'),
+      }),
     });
   }
 
   text_length(block) {
     return buildNode('call', block, {
       name: 'len',
-      args: [ this.handleValue(block, 'VALUE') ]
+      args: [this.handleValue(block, 'VALUE')],
     });
   }
 
@@ -574,7 +568,7 @@ export class SBuilder {
     return buildNode('binaryOp', block, {
       op: '=',
       left: this.text_length(block),
-      right: wrapLiteral(0, block)
+      right: wrapLiteral(0, block),
     });
   }
 
@@ -583,10 +577,7 @@ export class SBuilder {
 
     return buildNode('call', block, {
       name: mode,
-      args: [
-        this.handleValue(block, 'VALUE'),
-        this.handleValue(block, 'FIND')
-      ]
+      args: [this.handleValue(block, 'VALUE'), this.handleValue(block, 'FIND')],
     });
   }
 
@@ -599,7 +590,7 @@ export class SBuilder {
 
     return buildNode('index', block, {
       name: val.name,
-      indexes: [ this.getPosition(val, block) ]
+      indexes: [this.getPosition(val, block)],
     });
   }
 
@@ -615,47 +606,47 @@ export class SBuilder {
       args: [
         val,
         this.getPosition(val, block, '1'),
-        this.getPosition(val, block, '2')
-      ]
+        this.getPosition(val, block, '2'),
+      ],
     });
   }
 
   text_changeCase(block) {
     let CASES = {
-      'UPPERCASE': 'upper',
-      'LOWERCASE': 'lower',
-      'TITLECASE': 'title'
+      UPPERCASE: 'upper',
+      LOWERCASE: 'lower',
+      TITLECASE: 'title',
     };
 
     return buildNode('call', block, {
       name: CASES[block.getFieldValue('CASE')],
-      args: [ this.handleValue(block, 'TEXT') ]
+      args: [this.handleValue(block, 'TEXT')],
     });
   }
 
   text_trim(block) {
     let TRIMS = {
-      'LEFT':   'ltrim',
-      'RIGHT':  'rtrim',
-      'BOTH':   'trim'
+      LEFT: 'ltrim',
+      RIGHT: 'rtrim',
+      BOTH: 'trim',
     };
 
     return buildNode('call', block, {
       name: TRIMS[block.getFieldValue('MODE')],
-      args: [ this.handleValue(block, 'TEXT') ]
+      args: [this.handleValue(block, 'TEXT')],
     });
   }
 
   text_prompt_ext(block) {
     let input = buildNode('call', block, {
       name: 'input',
-      args: [ this.handleValue(block, 'TEXT') ]
+      args: [this.handleValue(block, 'TEXT')],
     });
 
     if (block.getFieldValue('TYPE') == 'NUMBER') {
       input = buildNode('call', block, {
         name: 'num',
-        args: [ input ]
+        args: [input],
       });
     }
 
@@ -667,7 +658,7 @@ export class SBuilder {
 
     return buildNode('call', block, {
       name: 'print',
-      args: text ? [ text ] : []
+      args: text ? [text] : [],
     });
   }
 
@@ -676,7 +667,7 @@ export class SBuilder {
   time_sleep(block) {
     return buildNode('call', block, {
       name: 'sleep',
-      args: [ this.handleValue(block, 'SECONDS') ]
+      args: [this.handleValue(block, 'SECONDS')],
     });
   }
 
@@ -685,14 +676,14 @@ export class SBuilder {
   time_sleep(block) {
     return buildNode('call', block, {
       name: 'sleep',
-      args: [ this.handleValue(block, 'SECONDS') ]
+      args: [this.handleValue(block, 'SECONDS')],
     });
   }
 
   time_create_empty(block) {
     return buildNode('call', block, {
       name: 'time',
-      args: []
+      args: [],
     });
   }
 
@@ -705,8 +696,8 @@ export class SBuilder {
         this.handleValue(block, 'DAY'),
         this.handleValue(block, 'HOUR'),
         this.handleValue(block, 'MINUTE'),
-        this.handleValue(block, 'SECOND')
-      ]
+        this.handleValue(block, 'SECOND'),
+      ],
     });
   }
 
@@ -715,8 +706,8 @@ export class SBuilder {
       name: 'part',
       args: [
         this.handleValue(block, 'TIME'),
-        wrapLiteral(block.getFieldValue('UNIT').toLowerCase(), block)
-      ]
+        wrapLiteral(block.getFieldValue('UNIT').toLowerCase(), block),
+      ],
     });
   }
 
@@ -728,8 +719,8 @@ export class SBuilder {
       args: [
         this.handleValue(block, 'TIME'),
         this.handleValue(block, 'VALUE'),
-        wrapLiteral(block.getFieldValue('UNIT').toLowerCase(), block)
-      ]
+        wrapLiteral(block.getFieldValue('UNIT').toLowerCase(), block),
+      ],
     });
   }
 
@@ -740,8 +731,8 @@ export class SBuilder {
       name: `${mode}of`,
       args: [
         this.handleValue(block, 'TIME'),
-        wrapLiteral(block.getFieldValue('UNIT').toLowerCase(), block)
-      ]
+        wrapLiteral(block.getFieldValue('UNIT').toLowerCase(), block),
+      ],
     });
   }
 
@@ -751,8 +742,8 @@ export class SBuilder {
       args: [
         this.handleValue(block, 'TIME1'),
         this.handleValue(block, 'TIME2'),
-        wrapLiteral(block.getFieldValue('UNIT').toLowerCase(), block)
-      ]
+        wrapLiteral(block.getFieldValue('UNIT').toLowerCase(), block),
+      ],
     });
   }
 
@@ -761,7 +752,7 @@ export class SBuilder {
   lists_create_empty(block) {
     return buildNode('call', block, {
       name: 'list',
-      args: []
+      args: [],
     });
   }
 
@@ -774,14 +765,14 @@ export class SBuilder {
 
     return buildNode('call', block, {
       name: 'list',
-      args: args
+      args: args,
     });
   }
 
   lists_length(block) {
     return buildNode('call', block, {
       name: 'len',
-      args: [ this.handleValue(block, 'VALUE') ]
+      args: [this.handleValue(block, 'VALUE')],
     });
   }
 
@@ -789,21 +780,21 @@ export class SBuilder {
     return buildNode('binaryOp', block, {
       op: '=',
       left: this.lists_length(block),
-      right: wrapLiteral(0, block)
+      right: wrapLiteral(0, block),
     });
   }
 
   lists_functions(block) {
     let OPERATORS = {
-      'SUM': 'sum',
-      'MIN': 'min',
-      'MAX': 'max',
-      'AVERAGE': 'avg'
+      SUM: 'sum',
+      MIN: 'min',
+      MAX: 'max',
+      AVERAGE: 'avg',
     };
 
     return buildNode('call', block, {
       name: OPERATORS[block.getFieldValue('OP')],
-      args: [ this.handleValue(block, 'LIST') ]
+      args: [this.handleValue(block, 'LIST')],
     });
   }
 
@@ -819,7 +810,7 @@ export class SBuilder {
 
     return buildNode('call', block, {
       name: op,
-      args: [ this.handleValue(block, 'LIST') ]
+      args: [this.handleValue(block, 'LIST')],
     });
   }
 
@@ -828,10 +819,7 @@ export class SBuilder {
 
     return buildNode('call', block, {
       name: mode,
-      args: [
-        this.handleValue(block, 'VALUE'),
-        this.handleValue(block, 'FIND')
-      ]
+      args: [this.handleValue(block, 'VALUE'), this.handleValue(block, 'FIND')],
     });
   }
 
@@ -854,14 +842,14 @@ export class SBuilder {
         }
         return buildNode('index', block, {
           name: val.name,
-          indexes: [ pos ]
+          indexes: [pos],
         });
 
       case 'GET_REMOVE':
       case 'REMOVE':
         return buildNode('call', block, {
           name: 'remove',
-          args: [ val, pos ]
+          args: [val, pos],
         });
     }
   }
@@ -882,14 +870,14 @@ export class SBuilder {
       case 'SET':
         return buildNode('letIndex', block, {
           name: val.name,
-          indexes: [ pos ],
-          value: to
+          indexes: [pos],
+          value: to,
         });
 
       case 'INSERT':
         return buildNode('call', block, {
           name: 'insert',
-          args: [ val, pos, to ]
+          args: [val, pos, to],
         });
     }
   }
@@ -906,8 +894,8 @@ export class SBuilder {
       args: [
         val,
         this.getPosition(val, block, '1'),
-        this.getPosition(val, block, '2')
-      ]
+        this.getPosition(val, block, '2'),
+      ],
     });
   }
 
@@ -920,16 +908,16 @@ export class SBuilder {
           name: 'split',
           args: [
             this.handleValue(block, 'INPUT'),
-            this.handleValue(block, 'DELIM')
-          ]
+            this.handleValue(block, 'DELIM'),
+          ],
         });
       case 'JOIN':
         return buildNode('call', block, {
           name: 'join',
           args: [
             this.handleValue(block, 'INPUT'),
-            this.handleValue(block, 'DELIM')
-          ]
+            this.handleValue(block, 'DELIM'),
+          ],
         });
     }
   }
@@ -939,7 +927,7 @@ export class SBuilder {
   tables_create_empty(block) {
     return buildNode('call', block, {
       name: 'table',
-      args: []
+      args: [],
     });
   }
 
@@ -948,19 +936,21 @@ export class SBuilder {
 
     for (let i = 0; i < block.itemCount_; ++i) {
       args.push(wrapLiteral(block.getFieldValue(`KEY${i}`), block));
-      args.push(this.handleValue(block, `VALUE${i}`) || wrapLiteral(null, block));
+      args.push(
+        this.handleValue(block, `VALUE${i}`) || wrapLiteral(null, block)
+      );
     }
 
     return buildNode('call', block, {
       name: 'table',
-      args: args
+      args: args,
     });
   }
 
   tables_size(block) {
     return buildNode('call', block, {
       name: 'len',
-      args: [ this.handleValue(block, 'VALUE') ]
+      args: [this.handleValue(block, 'VALUE')],
     });
   }
 
@@ -968,7 +958,7 @@ export class SBuilder {
     return buildNode('binaryOp', block, {
       op: '=',
       left: this.tables_size(block),
-      right: wrapLiteral(0, block)
+      right: wrapLiteral(0, block),
     });
   }
 
@@ -991,14 +981,14 @@ export class SBuilder {
         }
         return buildNode('index', block, {
           name: val.name,
-          indexes: [ at ]
+          indexes: [at],
         });
 
       case 'GET_REMOVE':
       case 'REMOVE':
         return buildNode('call', block, {
           name: 'remove',
-          args: [ val, at ]
+          args: [val, at],
         });
     }
   }
@@ -1016,15 +1006,15 @@ export class SBuilder {
 
     return buildNode('letIndex', block, {
       name: val.name,
-      indexes: [ at ],
-      value: to
+      indexes: [at],
+      value: to,
     });
   }
 
   tables_keys(block) {
     return buildNode('call', block, {
       name: 'keys',
-      args: [ this.handleValue(block, 'VALUE') ]
+      args: [this.handleValue(block, 'VALUE')],
     });
   }
 
@@ -1037,17 +1027,17 @@ export class SBuilder {
   colour_random(block) {
     let rand = buildNode('call', block, {
       name: 'rand',
-      args: []
+      args: [],
     });
 
     return buildNode('call', block, {
       name: 'color',
-      args: [ rand, rand, rand ]
+      args: [rand, rand, rand],
     });
   }
 
   colour_rgb(block) {
-    let convert = (val) => {
+    let convert = val => {
       if (val.type == 'literal') {
         val.value /= 100;
         return val;
@@ -1055,7 +1045,7 @@ export class SBuilder {
         return buildNode('binaryOp', block, {
           op: '/',
           left: val,
-          right: wrapLiteral(100, block)
+          right: wrapLiteral(100, block),
         });
       }
     };
@@ -1065,8 +1055,8 @@ export class SBuilder {
       args: [
         convert(this.handleValue(block, 'RED')),
         convert(this.handleValue(block, 'GREEN')),
-        convert(this.handleValue(block, 'BLUE'))
-      ]
+        convert(this.handleValue(block, 'BLUE')),
+      ],
     });
   }
 
@@ -1077,8 +1067,8 @@ export class SBuilder {
         this.handleValue(block, 'X'),
         this.handleValue(block, 'Y'),
         this.handleValue(block, 'WIDTH'),
-        this.handleValue(block, 'HEIGHT')
-      ]
+        this.handleValue(block, 'HEIGHT'),
+      ],
     });
   }
 
@@ -1088,8 +1078,8 @@ export class SBuilder {
       args: [
         this.handleValue(block, 'X'),
         this.handleValue(block, 'Y'),
-        this.handleValue(block, 'RADIUS')
-      ]
+        this.handleValue(block, 'RADIUS'),
+      ],
     });
   }
 
@@ -1100,8 +1090,8 @@ export class SBuilder {
         this.handleValue(block, 'X'),
         this.handleValue(block, 'Y'),
         this.handleValue(block, 'XRADIUS'),
-        this.handleValue(block, 'YRADIUS')
-      ]
+        this.handleValue(block, 'YRADIUS'),
+      ],
     });
   }
 
@@ -1112,8 +1102,8 @@ export class SBuilder {
         this.handleValue(block, 'X1'),
         this.handleValue(block, 'Y1'),
         this.handleValue(block, 'X2'),
-        this.handleValue(block, 'Y2')
-      ]
+        this.handleValue(block, 'Y2'),
+      ],
     });
   }
 
@@ -1123,44 +1113,36 @@ export class SBuilder {
       args: [
         this.handleValue(block, 'X'),
         this.handleValue(block, 'Y'),
-        this.handleValue(block, 'TEXT')
-      ]
+        this.handleValue(block, 'TEXT'),
+      ],
     });
   }
 
   graphics_stroke(block) {
     return buildNode('call', block, {
       name: 'stroke',
-      args: [
-        this.handleValue(block, 'COLOR')
-      ]
+      args: [this.handleValue(block, 'COLOR')],
     });
   }
 
   graphics_fill(block) {
     return buildNode('call', block, {
       name: 'fill',
-      args: [
-        this.handleValue(block, 'COLOR')
-      ]
+      args: [this.handleValue(block, 'COLOR')],
     });
   }
 
   graphics_opacity(block) {
     return buildNode('call', block, {
       name: 'opacity',
-      args: [
-        this.handleValue(block, 'AMOUNT')
-      ]
+      args: [this.handleValue(block, 'AMOUNT')],
     });
   }
 
   graphics_rotate(block) {
     return buildNode('call', block, {
       name: 'rotate',
-      args: [
-        this.handleValue(block, 'ANGLE')
-      ]
+      args: [this.handleValue(block, 'ANGLE')],
     });
   }
 
@@ -1169,33 +1151,33 @@ export class SBuilder {
       name: 'scale',
       args: [
         this.handleValue(block, 'MULTX'),
-        this.handleValue(block, 'MULTY')
-      ]
+        this.handleValue(block, 'MULTY'),
+      ],
     });
   }
 
   graphics_font(block) {
     let fonts = {
-      'ARIAL': 'Arial',
-      'COURIER_NEW': 'Courier New',
-      'HELVETICA': 'Helvetica',
-      'TIMES_NEW_ROMAN': 'Times New Roman',
-      'VERDANA': 'Verdana'
+      ARIAL: 'Arial',
+      COURIER_NEW: 'Courier New',
+      HELVETICA: 'Helvetica',
+      TIMES_NEW_ROMAN: 'Times New Roman',
+      VERDANA: 'Verdana',
     };
 
     return buildNode('call', block, {
       name: 'font',
       args: [
         wrapLiteral(fonts[block.getFieldValue('FAMILY')]),
-        this.handleValue(block, 'SIZE')
-      ]
+        this.handleValue(block, 'SIZE'),
+      ],
     });
   }
 
   graphics_repaint(block) {
     return buildNode('call', block, {
       name: 'repaint',
-      args: []
+      args: [],
     });
   }
 
@@ -1203,36 +1185,36 @@ export class SBuilder {
 
   variables_get(block) {
     return buildNode('var', block, {
-      name: block.getFieldValue('VAR')
+      name: block.getFieldValue('VAR'),
     });
   }
 
   variables_set(block) {
     return buildNode('let', block, {
       name: block.getFieldValue('VAR'),
-      value: this.handleValue(block, 'VALUE')
+      value: this.handleValue(block, 'VALUE'),
     });
   }
 
   // functions
 
   procedures_defnoreturn(block) {
-    let [ name, params ] = block.getProcedureDef(),
-        body = this.handleStatements(block, 'STACK');
+    let [name, params] = block.getProcedureDef(),
+      body = this.handleStatements(block, 'STACK');
 
     return buildNode('begin', block, { name, params, body });
   }
 
   procedures_defreturn(block) {
-    let [ name, params ] = block.getProcedureDef(),
-        result = this.handleValue(block, 'RETURN'),
-        body = block.hasStatements_ && this.handleStatements(block, 'STACK'),
-        ret = buildNode('return', block, { result });
+    let [name, params] = block.getProcedureDef(),
+      result = this.handleValue(block, 'RETURN'),
+      body = block.hasStatements_ && this.handleStatements(block, 'STACK'),
+      ret = buildNode('return', block, { result });
 
     if (!body) {
-      body = buildNode('block', block, { elems: [ ret ] });
+      body = buildNode('block', block, { elems: [ret] });
     } else if (body.type != 'block') {
-      body = buildNode('block', block, { elems: [ body, ret ] });
+      body = buildNode('block', block, { elems: [body, ret] });
     } else {
       body.elems.push(ret);
     }
@@ -1249,7 +1231,7 @@ export class SBuilder {
 
     return buildNode('call', block, {
       name: block.getFieldValue('NAME'),
-      args
+      args,
     });
   }
 
@@ -1261,8 +1243,8 @@ export class SBuilder {
     return buildNode('if', block, {
       cond: this.handleValue(block, 'CONDITION'),
       tbody: buildNode('return', block, {
-        result: block.hasReturnValue_ ? this.handleValue(block, 'VALUE') : null
-      })
+        result: block.hasReturnValue_ ? this.handleValue(block, 'VALUE') : null,
+      }),
     });
   }
 }

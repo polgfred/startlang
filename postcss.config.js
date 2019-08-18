@@ -1,8 +1,13 @@
 module.exports = {
   plugins: {
-    'postcss-cssnext': {},
-    'postcss-simple-vars': {},
-    'postcss-nested': {},
-    'postcss-mixins': {},
-  }
-}
+    'postcss-preset-env': {
+      stage: 4,
+      autoprefixer: true,
+      preserve: false,
+      features: {
+        'nesting-rules': true,
+        'color-mod-function': true,
+      },
+    },
+  },
+};

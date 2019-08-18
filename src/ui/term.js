@@ -1,6 +1,4 @@
-import React, {
-  Component,
-} from 'react';
+import React, { Component } from 'react';
 
 // import { findDOMNode } from 'react-dom';
 
@@ -20,16 +18,16 @@ export default class Term extends Component {
       needsInput: false,
       input: '',
       prompt: null,
-      recv: null
+      recv: null,
     };
   }
 
   shouldComponentUpdate(nextProps, nextState) {
     return (
-      this.props.buf != nextProps.buf
-      || this.state.needsInput != nextState.needsInput
-      || this.state.input != nextState.input
-      || this.state.prompt != nextState.prompt
+      this.props.buf != nextProps.buf ||
+      this.state.needsInput != nextState.needsInput ||
+      this.state.input != nextState.input ||
+      this.state.prompt != nextState.prompt
     );
   }
 
@@ -41,11 +39,7 @@ export default class Term extends Component {
       throw new Error('terminal buffer has been modified from the front');
     }
 
-    let {
-      needsInput,
-      input,
-      prompt,
-    } = this.state;
+    let { needsInput, input, prompt } = this.state;
 
     return (
       <div className="start-term">
@@ -53,49 +47,39 @@ export default class Term extends Component {
           className="start-term-command"
           style={{
             display: needsInput ? 'block' : 'none',
-          }}>
+          }}
+        >
           <TextField
             type="string"
             margin="normal"
-            value={ input }
-            label={ prompt }
-            onChange={ this.handleChange }
-            onKeyUp={ this.handleKeyUp }
-            autoFocus={ true }
+            value={input}
+            label={prompt}
+            onChange={this.handleChange}
+            onKeyUp={this.handleKeyUp}
+            autoFocus={true}
           />
           <Button
             color="primary"
             size="small"
             variant="raised"
-            onClick={ this.handleAccept }
+            onClick={this.handleAccept}
             style={{
               marginLeft: '12px',
-            }}>
+            }}
+          >
             OK
           </Button>
         </div>
-        <div style={{
-          fontFamily: 'Roboto',
-          fontSize: '14px',
-          height: `calc(35vh - ${ needsInput ? 152 : 80 }px)`,
-          overflow: 'scroll',
-        }}>
-          {
-            buf._root && (
-              <TermOutput
-                node={ buf._root }
-                level={ buf._level }
-              />
-            )
-          }
-          {
-            buf._tail && (
-              <TermOutput
-                node={ buf._tail }
-                level={ 0 }
-              />
-            )
-          }
+        <div
+          style={{
+            fontFamily: 'Roboto',
+            fontSize: '14px',
+            height: `calc(35vh - ${needsInput ? 152 : 80}px)`,
+            overflow: 'scroll',
+          }}
+        >
+          {buf._root && <TermOutput node={buf._root} level={buf._level} />}
+          {buf._tail && <TermOutput node={buf._tail} level={0} />}
         </div>
       </div>
     );
@@ -134,33 +118,23 @@ export default class Term extends Component {
 class TermOutput extends Component {
   shouldComponentUpdate(nextProps) {
     return (
-      this.props.node != nextProps.node
-      || this.props.level != nextProps.level
+      this.props.node != nextProps.node || this.props.level != nextProps.level
     );
   }
 
   render() {
-    let { node: { array }, level } = this.props;
+    let {
+      node: { array },
+      level,
+    } = this.props;
 
     return (
       <div className="start-term-output">
-        {
-          level == 0 ? (
-            array.map((elem, index) => (
-              <p key={ index }>
-                { elem }
-              </p>
-            ))
-          ) : (
-            array.map((elem, index) => (
-              <TermOutput
-                key={ index }
-                node={ elem }
-                level={ level - LIST_SHIFT }
-              />
-            ))
-          )
-        }
+        {level == 0
+          ? array.map((elem, index) => <p key={index}>{elem}</p>)
+          : array.map((elem, index) => (
+              <TermOutput key={index} node={elem} level={level - LIST_SHIFT} />
+            ))}
       </div>
     );
   }

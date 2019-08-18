@@ -1,7 +1,4 @@
-import React, {
-  Component,
-  createRef,
-} from 'react';
+import React, { Component, createRef } from 'react';
 
 import { SBuilder } from '../lang/builder';
 import Blockly from '../blockly';
@@ -22,10 +19,10 @@ export default class Builder extends Component {
   render() {
     return (
       <div
-        ref={ this.editorRef }
+        ref={this.editorRef}
         className="start-builder"
         style={{
-          height: '100%'
+          height: '100%',
         }}
       />
     );
@@ -45,7 +42,7 @@ export default class Builder extends Component {
         spacing: 25,
         length: 3,
         colour: '#ccc',
-        snap: true
+        snap: true,
       },
       zoom: {
         enabled: true,
@@ -53,8 +50,8 @@ export default class Builder extends Component {
         wheel: false,
         maxScale: 2,
         minScale: 0.5,
-        scaleSpeed: 1.1
-      }
+        scaleSpeed: 1.1,
+      },
     });
   }
 

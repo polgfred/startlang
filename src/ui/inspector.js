@@ -1,6 +1,4 @@
-import React, {
-  Component,
-} from 'react';
+import React, { Component } from 'react';
 
 import moment from 'moment';
 import immutable from 'immutable';
@@ -16,11 +14,7 @@ import TableRow from '@material-ui/core/TableRow';
 
 export default class Inspector extends Component {
   render() {
-    let {
-      hist,
-      snap,
-      updateSlider,
-    } = this.props;
+    let { hist, snap, updateSlider } = this.props;
 
     let current = hist[snap] || hist[hist.length - 1];
 
@@ -31,18 +25,20 @@ export default class Inspector extends Component {
           fontFamily: 'Roboto',
           fontSize: 14,
           height: 'calc(100vh - 120px)',
-        }}>
+        }}
+      >
         <div
           className="start-slider"
           style={{
             marginBottom: '20px',
-          }}>
+          }}
+        >
           <input
             type="range"
-            min={ 0 }
-            max={ hist.length - 1 }
-            value={ snap }
-            onChange={ updateSlider }
+            min={0}
+            max={hist.length - 1}
+            value={snap}
+            onChange={updateSlider}
             style={{
               margin: '0 10px',
               width: 'calc(100% - 20px)',
@@ -54,10 +50,13 @@ export default class Inspector extends Component {
           style={{
             height: 'calc(100vh - 160px)',
             overflow: 'scroll',
-          }}>
-          <Table style={{
-            width: '100%',
-          }}>
+          }}
+        >
+          <Table
+            style={{
+              width: '100%',
+            }}
+          >
             <TableHead>
               <TableRow>
                 <TableCell
@@ -65,35 +64,34 @@ export default class Inspector extends Component {
                   style={{
                     fontWeight: 'bold',
                     width: '25%',
-                  }}>
+                  }}
+                >
                   Variable
                 </TableCell>
-                <TableCell className="start-vars-value"
+                <TableCell
+                  className="start-vars-value"
                   style={{
                     width: '75%',
-                  }}>
+                  }}
+                >
                   Value
                 </TableCell>
               </TableRow>
             </TableHead>
-            {
-              current && (
-                <TableBody>
-                  {
-                    current.ns.map((value, key) => (
-                      <TableRow key={ key }>
-                        <TableCell className="start-vars-name">
-                          { key }
-                        </TableCell>
-                        <TableCell className="start-vars-value">
-                          { inspectorFor(value) }
-                        </TableCell>
-                      </TableRow>
-                    )).toList()
-                  }
-                </TableBody>
-              )
-            }
+            {current && (
+              <TableBody>
+                {current.ns
+                  .map((value, key) => (
+                    <TableRow key={key}>
+                      <TableCell className="start-vars-name">{key}</TableCell>
+                      <TableCell className="start-vars-value">
+                        {inspectorFor(value)}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                  .toList()}
+              </TableBody>
+            )}
           </Table>
         </div>
       </div>
@@ -105,11 +103,7 @@ let inspectorKey = Symbol('START_INSPECTOR');
 
 class NoneInspector extends Component {
   render() {
-    return (
-      <span className="start-vars-type-none">
-        *none*
-      </span>
-    );
+    return <span className="start-vars-type-none">*none*</span>;
   }
 }
 
@@ -117,11 +111,7 @@ class BooleanInspector extends Component {
   render() {
     return (
       <span className="start-vars-type-boolean">
-        {
-          this.props.value ?
-            '*true*' :
-            '*false*'
-        }
+        {this.props.value ? '*true*' : '*false*'}
       </span>
     );
   }
@@ -135,11 +125,7 @@ class NumberInspector extends Component {
 
     return (
       <span className="start-vars-type-number">
-        {
-          isFinite(value) ?
-            value :
-            (value > 0 ? '*infinity*' : '-*infinity')
-        }
+        {isFinite(value) ? value : value > 0 ? '*infinity*' : '-*infinity'}
       </span>
     );
   }
@@ -149,11 +135,7 @@ Number.prototype[inspectorKey] = NumberInspector;
 
 class StringInspector extends Component {
   render() {
-    return (
-      <span className="start-vars-type-string">
-        { this.props.value }
-      </span>
-    );
+    return <span className="start-vars-type-string">{this.props.value}</span>;
   }
 }
 
@@ -163,7 +145,7 @@ class TimeInspector extends Component {
   render() {
     return (
       <span className="start-vars-type-time">
-        { this.props.value.format('l LTS') }
+        {this.props.value.format('l LTS')}
       </span>
     );
   }
@@ -180,7 +162,7 @@ class ExpandableInspector extends Component {
 
   @autobind
   handleShowMore() {
-    this.setState((state) => ({ visible: state.visible + 5 }));
+    this.setState(state => ({ visible: state.visible + 5 }));
   }
 
   footer() {
@@ -188,9 +170,7 @@ class ExpandableInspector extends Component {
       <TableFooter>
         <TableRow key="trunc">
           <TableCell colSpan="2" className="start-vars-expando-more">
-            <Button
-              color="secondary"
-              onClick={ this.handleShowMore }>
+            <Button color="secondary" onClick={this.handleShowMore}>
               More
             </Button>
           </TableCell>
@@ -211,34 +191,30 @@ class ListInspector extends ExpandableInspector {
         style={{
           marginBottom: '10px',
           width: '100%',
-        }}>
+        }}
+      >
         <TableHead>
           <TableRow>
             <TableCell
               className="start-vars-list-item"
               style={{
                 width: '75%',
-              }}>
+              }}
+            >
               Items
             </TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
-          {
-            value.take(visible).map((item, index) => (
-              <TableRow key={ index }>
-                <TableCell className="start-vars-list-item">
-                  { inspectorFor(item) }
-                </TableCell>
-              </TableRow>
-            ))
-          }
+          {value.take(visible).map((item, index) => (
+            <TableRow key={index}>
+              <TableCell className="start-vars-list-item">
+                {inspectorFor(item)}
+              </TableCell>
+            </TableRow>
+          ))}
         </TableBody>
-        {
-          value.size > visible && (
-            this.footer()
-          )
-        }
+        {value.size > visible && this.footer()}
       </Table>
     );
   }
@@ -257,44 +233,44 @@ class TableInspector extends ExpandableInspector {
         style={{
           marginBottom: '10px',
           width: '100%',
-        }}>
+        }}
+      >
         <TableHead>
           <TableRow>
             <TableCell
               className="start-vars-table-key"
               style={{
                 width: '25%',
-              }}>
+              }}
+            >
               Key
             </TableCell>
             <TableCell
               className="start-vars-table-value"
               style={{
                 width: '75%',
-              }}>
+              }}
+            >
               Value
             </TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
-          {
-            value.take(visible).map((value, key) => (
-              <TableRow key={ key }>
+          {value
+            .take(visible)
+            .map((value, key) => (
+              <TableRow key={key}>
                 <TableCell className="start-vars-table-key">
-                  { inspectorFor(key) }
+                  {inspectorFor(key)}
                 </TableCell>
                 <TableCell className="start-vars-table-item">
-                  { inspectorFor(value) }
+                  {inspectorFor(value)}
                 </TableCell>
               </TableRow>
-            )).toList()
-          }
+            ))
+            .toList()}
         </TableBody>
-        {
-          value.size > visible && (
-            this.footer()
-          )
-        }
+        {value.size > visible && this.footer()}
       </Table>
     );
   }
@@ -303,11 +279,7 @@ class TableInspector extends ExpandableInspector {
 immutable.OrderedMap.prototype[inspectorKey] = TableInspector;
 
 function inspectorFor(value) {
-  let inspector = (
-    value == null ?
-      NoneInspector :
-      value[inspectorKey]
-  );
+  let inspector = value == null ? NoneInspector : value[inspectorKey];
 
   return React.createElement(inspector, { value });
 }
