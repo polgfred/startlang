@@ -63,7 +63,7 @@ export default function Header({
             marginRight: '24px',
           }}
         >
-          Start
+          START
         </Typography>
         <SettingsMenu
           option="view"
