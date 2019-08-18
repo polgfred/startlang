@@ -18,7 +18,8 @@ export default class Inspector extends Component {
   render() {
     let {
       hist,
-      snap, updateSlider,
+      snap,
+      updateSlider,
     } = this.props;
 
     let current = hist[snap] || hist[hist.length - 1];
