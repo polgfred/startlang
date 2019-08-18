@@ -8,13 +8,8 @@ import TextField from '@material-ui/core/TextField';
 // See graphics.js
 const LIST_SHIFT = 5;
 
-export default function Term({ buf }) {
-  const [{ needsInput, input, prompt, recv }, setState] = useState({
-    needsInput: false,
-    input: '',
-    prompt: null,
-    recv: null,
-  });
+export default function Term({ buf, prompt, handleInput }) {
+  const [{ input }, setInput] = useState('');
 
   // shouldComponentUpdate(nextProps, nextState) {
   //   return (
@@ -25,23 +20,17 @@ export default function Term({ buf }) {
   //   );
   // }
 
-  // const getInput = useCallback((prompt, recv) => {
-  //   setState({ needsInput: true, input: '', prompt, recv });
-  // }, []);
-
-  const handleChange = useCallback(ev => {
-    setState(state => ({ ...state, input: ev.target.value }));
-  }, []);
-
   const handleAccept = useCallback(() => {
-    recv(input);
-    setState({
-      needsInput: false,
-      input: '',
-      prompt: null,
-      recv: null,
-    });
-  }, [input, recv]);
+    handleInput(input);
+    setInput('');
+  }, [input, handleInput]);
+
+  const handleChange = useCallback(
+    ev => {
+      setInput(ev.target.value);
+    },
+    [setInput]
+  );
 
   const handleKeyUp = useCallback(
     ev => {
@@ -69,7 +58,7 @@ export default function Term({ buf }) {
       <div
         className="start-term-command"
         style={{
-          display: needsInput ? 'block' : 'none',
+          display: prompt ? 'block' : 'none',
         }}
       >
         <TextField
@@ -97,7 +86,7 @@ export default function Term({ buf }) {
         style={{
           fontFamily: 'Roboto',
           fontSize: '14px',
-          height: `calc(35vh - ${needsInput ? 152 : 80}px)`,
+          height: `calc(35vh - ${prompt ? 152 : 80}px)`,
           overflow: 'scroll',
         }}
       >

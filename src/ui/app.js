@@ -32,6 +32,7 @@ export default function App() {
   const [editMode, setEditMode] = useState('source');
   const [gfx, setGfx] = useState(new SGraphics());
   const [buf, setBuf] = useState(immutable.List());
+  const [{ prompt, onInputComplete }, setInputState] = useState({});
   // const [{ hist, snap }, setHistory] = useState({
   //   hist: [],
   //   snap: 0,
@@ -46,37 +47,38 @@ export default function App() {
     if (viewMode == 'help') {
       setViewMode('split');
     }
-  }, [viewMode, setViewMode, setGfx, setBuf]);
+  }, [viewMode]);
 
   const clearDisplay = useCallback(() => {
     setGfx(gfx => gfx.clear());
     setBuf(buf => buf.clear());
-  }, [setGfx, setBuf]);
+  }, []);
 
   const clearHistory = useCallback(() => {
     // setHistory({ hist: [], snap: 0 });
   }, []);
 
-  const gfxUpdate = useCallback(
-    mut => {
-      setGfx(gfx => mut(gfx));
-    },
-    [setGfx]
-  );
-
-  const termUpdate = useCallback(
-    mut => {
-      setBuf(buf => mut(buf));
-    },
-    [setBuf]
-  );
-
-  const termInput = useCallback((prompt, complete) => {
-    // termRef.current.getInput(prompt, input => {
-    //this.termUpdate((buf) => buf.push(`${prompt}${input}`));
-    complete();
-    // });
+  const gfxUpdate = useCallback(mut => {
+    setGfx(gfx => mut(gfx));
   }, []);
+
+  const termUpdate = useCallback(mut => {
+    setBuf(buf => mut(buf));
+  }, []);
+
+  const termInput = useCallback((prompt, onInputComplete) => {
+    setInputState({ prompt, onInputComplete });
+  }, []);
+
+  const handleInput = useCallback(
+    input => {
+      if (onInputComplete) {
+        onInputComplete(input);
+        setInputState({});
+      }
+    },
+    [onInputComplete]
+  );
 
   // TODO: get history working
   // updateSlider(ev) {
@@ -124,7 +126,7 @@ export default function App() {
       termInput,
       snapshot,
     };
-    const interp = (this.interp = new SInterpreter(bindings));
+    const interp = new SInterpreter(bindings);
     interp.ctx = new SGRuntime(bindings);
     // interp.root(editorRef.current.getRoot());
     clearHistory();
@@ -182,7 +184,7 @@ export default function App() {
                 padding: '10px',
               }}
             >
-              <Term buf={buf} />
+              <Term buf={buf} prompt={prompt} handleInput={handleInput} />
             </Paper>
           </Grid>
           {inspect && (
