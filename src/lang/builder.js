@@ -1,4 +1,4 @@
-let flowMarker = {
+const flowMarker = {
   repeat: 'loop',
   for: 'loop',
   forIn: 'loop',
@@ -6,7 +6,7 @@ let flowMarker = {
   call: 'call',
 };
 
-let inspectMarker = {
+const inspectMarker = {
   repeat: 'loop',
   for: 'loop',
   forIn: 'loop',
@@ -35,7 +35,7 @@ function buildNode(type, block, attrs) {
   }
 
   // show the type first
-  let node = { type };
+  const node = { type };
 
   // then the flow marker
   if (flowMarker[type]) {
@@ -70,12 +70,12 @@ export class SBuilder {
 
   fromWorkspace(ws) {
     // build a program tree from the blockly workspace
-    let blocks = ws.getTopBlocks(true),
+    const blocks = ws.getTopBlocks(true),
       funcs = [],
       elems = [];
 
     for (let i = 0; i < blocks.length; ++i) {
-      let stmt = this.handleStatements(blocks[i]);
+      const stmt = this.handleStatements(blocks[i]);
 
       if (stmt.type == 'begin') {
         // collect functions into their own list
@@ -97,12 +97,12 @@ export class SBuilder {
 
   handleValue(block, name) {
     // just dispatch on block type
-    let target = name ? block.getInputTargetBlock(name) : block;
+    const target = name ? block.getInputTargetBlock(name) : block;
     return target && this[target.type](target);
   }
 
   handleStatements(block, name) {
-    let elems = [];
+    const elems = [];
 
     // push the current statement block onto the stack
     this.blocks.push(elems);
@@ -112,7 +112,7 @@ export class SBuilder {
       let target = name ? block.getInputTargetBlock(name) : block;
 
       while (target) {
-        let stmt = this[target.type](target);
+        const stmt = this[target.type](target);
         // if we get nothing back, don't create a statement
         if (stmt) {
           elems.push(stmt);
@@ -131,10 +131,10 @@ export class SBuilder {
 
   makeTemporary(value, block, prefix) {
     // get next available temp var with this prefix and make an assignment
-    let count = (this.temps[prefix] = (this.temps[prefix] || 0) + 1),
+    const count = (this.temps[prefix] = (this.temps[prefix] || 0) + 1),
       name = `temp_${prefix}_${count}`;
 
-    let elem = buildNode('let', block, { name, value });
+    const elem = buildNode('const', block, { name, value });
 
     // append it to the nearest statements block
     this.blocks[this.blocks.length - 1].push(elem);
@@ -148,11 +148,11 @@ export class SBuilder {
     //   is called if it might be an arbitrary value expression
     // - assumes val can have len() called on it (a string or list)
     suffix = suffix || '';
-    let where = block.getFieldValue(`WHERE${suffix}`);
-    let at = this.handleValue(block, `AT${suffix}`);
+    const where = block.getFieldValue(`WHERE${suffix}`);
+    const at = this.handleValue(block, `AT${suffix}`);
 
     // we'll need this in a couple places
-    let len = buildNode('call', block, {
+    const len = buildNode('call', block, {
       name: 'len',
       args: [val],
     });
@@ -256,7 +256,7 @@ export class SBuilder {
   }
 
   controls_flow_statements(block) {
-    let FLOWS = {
+    const FLOWS = {
       BREAK: 'break',
       CONTINUE: 'next',
     };
@@ -268,7 +268,7 @@ export class SBuilder {
 
   controls_if(block) {
     // the top-level if block
-    let top = buildNode('if', block, {
+    const top = buildNode('if', block, {
       cond: this.handleValue(block, 'IF0'),
       tbody: this.handleStatements(block, 'DO0'),
     });
@@ -294,7 +294,7 @@ export class SBuilder {
   }
 
   logic_compare(block) {
-    let OPERATORS = {
+    const OPERATORS = {
       EQ: '=',
       NEQ: '!=',
       LT: '<',
@@ -344,14 +344,14 @@ export class SBuilder {
   }
 
   math_arithmetic(block) {
-    let OPERATORS = {
+    const OPERATORS = {
       ADD: '+',
       MINUS: '-',
       MULTIPLY: '*',
       DIVIDE: '/',
     };
 
-    let op = block.getFieldValue('OP');
+    const op = block.getFieldValue('OP');
 
     if (op == 'POWER') {
       return buildNode('call', block, {
@@ -368,15 +368,15 @@ export class SBuilder {
   }
 
   math_single(block) {
-    let FUNCS = {
+    const FUNCS = {
       ROOT: 'sqrt',
       LN: 'log',
       ROUNDUP: 'ceil',
       ROUNDDOWN: 'floor',
     };
 
-    let func = block.getFieldValue('OP');
-    let num = this.handleValue(block, 'NUM');
+    const func = block.getFieldValue('OP');
+    const num = this.handleValue(block, 'NUM');
 
     switch (func) {
       case 'NEG':
@@ -411,8 +411,8 @@ export class SBuilder {
   }
 
   math_number_property(block) {
-    let prop = block.getFieldValue('PROPERTY');
-    let num = this.handleValue(block, 'NUMBER_TO_CHECK');
+    const prop = block.getFieldValue('PROPERTY');
+    const num = this.handleValue(block, 'NUMBER_TO_CHECK');
 
     // construct an 'x % y == z' test
     function buildModTest(denom, test) {
@@ -453,8 +453,8 @@ export class SBuilder {
   }
 
   math_change(block) {
-    let name = block.getFieldValue('VAR');
-    let delta = this.handleValue(block, 'DELTA');
+    const name = block.getFieldValue('VAR');
+    const delta = this.handleValue(block, 'DELTA');
     let sign = '+';
 
     if (delta.type == 'literal' && delta.value < 0) {
@@ -464,7 +464,7 @@ export class SBuilder {
       sign = '-';
     }
 
-    return buildNode('let', block, {
+    return buildNode('const', block, {
       name: name,
       value: buildNode('binaryOp', block, {
         op: sign,
@@ -485,7 +485,7 @@ export class SBuilder {
   }
 
   math_constrain(block) {
-    let valueOrDefault = (name, default_) =>
+    const valueOrDefault = (name, default_) =>
       this.handleValue(block, name) || wrapLiteral(default_);
 
     return buildNode('call', block, {
@@ -541,9 +541,9 @@ export class SBuilder {
   }
 
   text_append(block) {
-    let name = block.getFieldValue('VAR');
+    const name = block.getFieldValue('VAR');
 
-    return buildNode('let', block, {
+    return buildNode('const', block, {
       name: name,
       value: buildNode('binaryOp', block, {
         op: '$',
@@ -571,7 +571,7 @@ export class SBuilder {
   }
 
   text_indexOf(block) {
-    let mode = block.getFieldValue('END').toLowerCase();
+    const mode = block.getFieldValue('END').toLowerCase();
 
     return buildNode('call', block, {
       name: mode,
@@ -610,7 +610,7 @@ export class SBuilder {
   }
 
   text_changeCase(block) {
-    let CASES = {
+    const CASES = {
       UPPERCASE: 'upper',
       LOWERCASE: 'lower',
       TITLECASE: 'title',
@@ -623,7 +623,7 @@ export class SBuilder {
   }
 
   text_trim(block) {
-    let TRIMS = {
+    const TRIMS = {
       LEFT: 'ltrim',
       RIGHT: 'rtrim',
       BOTH: 'trim',
@@ -652,7 +652,7 @@ export class SBuilder {
   }
 
   text_print(block) {
-    let text = this.handleValue(block, 'TEXT');
+    const text = this.handleValue(block, 'TEXT');
 
     return buildNode('call', block, {
       name: 'print',
@@ -701,7 +701,7 @@ export class SBuilder {
   }
 
   time_addSubtract(block) {
-    let mode = block.getFieldValue('MODE').toLowerCase();
+    const mode = block.getFieldValue('MODE').toLowerCase();
 
     return buildNode('call', block, {
       name: mode,
@@ -714,7 +714,7 @@ export class SBuilder {
   }
 
   time_startEnd(block) {
-    let mode = block.getFieldValue('MODE').toLowerCase();
+    const mode = block.getFieldValue('MODE').toLowerCase();
 
     return buildNode('call', block, {
       name: `${mode}of`,
@@ -746,7 +746,7 @@ export class SBuilder {
   }
 
   lists_create_with(block) {
-    let args = [];
+    const args = [];
 
     for (let i = 0; i < block.itemCount_; ++i) {
       args[i] = this.handleValue(block, `ADD${i}`) || wrapLiteral(null, block);
@@ -774,7 +774,7 @@ export class SBuilder {
   }
 
   lists_functions(block) {
-    let OPERATORS = {
+    const OPERATORS = {
       SUM: 'sum',
       MIN: 'min',
       MAX: 'max',
@@ -789,7 +789,7 @@ export class SBuilder {
 
   lists_transformers(block) {
     let op = block.getFieldValue('OP');
-    let order = block.getFieldValue('ORDER');
+    const order = block.getFieldValue('ORDER');
 
     if (op == 'SORT' && order == 'DESC') {
       op = 'rsort';
@@ -804,7 +804,7 @@ export class SBuilder {
   }
 
   lists_indexOf(block) {
-    let mode = block.getFieldValue('END').toLowerCase();
+    const mode = block.getFieldValue('END').toLowerCase();
 
     return buildNode('call', block, {
       name: mode,
@@ -813,7 +813,7 @@ export class SBuilder {
   }
 
   lists_getIndex(block) {
-    let mode = block.getFieldValue('MODE');
+    const mode = block.getFieldValue('MODE');
     let val = this.handleValue(block, 'VALUE');
 
     if (mode == 'REMOVE' && val.type != 'var') {
@@ -821,7 +821,7 @@ export class SBuilder {
       return;
     }
 
-    let pos = this.getPosition(val, block);
+    const pos = this.getPosition(val, block);
 
     switch (mode) {
       case 'GET':
@@ -844,16 +844,16 @@ export class SBuilder {
   }
 
   lists_setIndex(block) {
-    let mode = block.getFieldValue('MODE');
-    let val = this.handleValue(block, 'LIST');
+    const mode = block.getFieldValue('MODE');
+    const val = this.handleValue(block, 'LIST');
 
     if (val.type != 'var') {
       // changing a temporary has no effect
       return;
     }
 
-    let pos = this.getPosition(val, block);
-    let to = this.handleValue(block, 'TO');
+    const pos = this.getPosition(val, block);
+    const to = this.handleValue(block, 'TO');
 
     switch (mode) {
       case 'SET':
@@ -889,7 +889,7 @@ export class SBuilder {
   }
 
   lists_split(block) {
-    let mode = block.getFieldValue('MODE');
+    const mode = block.getFieldValue('MODE');
 
     switch (mode) {
       case 'SPLIT':
@@ -921,7 +921,7 @@ export class SBuilder {
   }
 
   tables_create_with(block) {
-    let args = [];
+    const args = [];
 
     for (let i = 0; i < block.itemCount_; ++i) {
       args.push(wrapLiteral(block.getFieldValue(`KEY${i}`), block));
@@ -952,7 +952,7 @@ export class SBuilder {
   }
 
   tables_getIndex(block) {
-    let mode = block.getFieldValue('MODE');
+    const mode = block.getFieldValue('MODE');
     let val = this.handleValue(block, 'VALUE');
 
     if (mode == 'REMOVE' && val.type != 'var') {
@@ -960,7 +960,7 @@ export class SBuilder {
       return;
     }
 
-    let at = this.handleValue(block, 'AT');
+    const at = this.handleValue(block, 'AT');
 
     switch (mode) {
       case 'GET':
@@ -983,15 +983,15 @@ export class SBuilder {
   }
 
   tables_setIndex(block) {
-    let val = this.handleValue(block, 'TABLE');
+    const val = this.handleValue(block, 'TABLE');
 
     if (val.type != 'var') {
       // changing a temporary has no effect
       return;
     }
 
-    let at = this.handleValue(block, 'AT');
-    let to = this.handleValue(block, 'TO');
+    const at = this.handleValue(block, 'AT');
+    const to = this.handleValue(block, 'TO');
 
     return buildNode('letIndex', block, {
       name: val.name,
@@ -1014,7 +1014,7 @@ export class SBuilder {
   }
 
   colour_random(block) {
-    let rand = buildNode('call', block, {
+    const rand = buildNode('call', block, {
       name: 'rand',
       args: [],
     });
@@ -1026,7 +1026,7 @@ export class SBuilder {
   }
 
   colour_rgb(block) {
-    let convert = val => {
+    const convert = val => {
       if (val.type == 'literal') {
         val.value /= 100;
         return val;
@@ -1146,7 +1146,7 @@ export class SBuilder {
   }
 
   graphics_font(block) {
-    let fonts = {
+    const fonts = {
       ARIAL: 'Arial',
       COURIER_NEW: 'Courier New',
       HELVETICA: 'Helvetica',
@@ -1179,7 +1179,7 @@ export class SBuilder {
   }
 
   variables_set(block) {
-    return buildNode('let', block, {
+    return buildNode('const', block, {
       name: block.getFieldValue('VAR'),
       value: this.handleValue(block, 'VALUE'),
     });
@@ -1188,17 +1188,17 @@ export class SBuilder {
   // functions
 
   procedures_defnoreturn(block) {
-    let [name, params] = block.getProcedureDef(),
-      body = this.handleStatements(block, 'STACK');
+    const [name, params] = block.getProcedureDef();
+    const body = this.handleStatements(block, 'STACK');
 
     return buildNode('begin', block, { name, params, body });
   }
 
   procedures_defreturn(block) {
-    let [name, params] = block.getProcedureDef(),
-      result = this.handleValue(block, 'RETURN'),
-      body = block.hasStatements_ && this.handleStatements(block, 'STACK'),
-      ret = buildNode('return', block, { result });
+    const [name, params] = block.getProcedureDef();
+    const result = this.handleValue(block, 'RETURN');
+    let body = block.hasStatements_ && this.handleStatements(block, 'STACK');
+    const ret = buildNode('return', block, { result });
 
     if (!body) {
       body = buildNode('block', block, { elems: [ret] });
@@ -1212,7 +1212,7 @@ export class SBuilder {
   }
 
   procedures_callnoreturn(block) {
-    let args = [];
+    const args = [];
 
     for (let i = 0; i < block.arguments_.length; ++i) {
       args.push(this.handleValue(block, `ARG${i}`));
