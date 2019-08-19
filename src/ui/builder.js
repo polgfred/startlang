@@ -1,11 +1,11 @@
 import React, { useEffect, useRef } from 'react';
 
-// import { SBuilder } from '../lang/builder';
+import { SBuilder } from '../lang/builder';
 import Blockly from '../blockly';
 
 import toolbox from './toolbox.xml';
 
-export default function Builder() {
+export default function Builder({ setParser }) {
   const ref = useRef();
 
   useEffect(() => {
@@ -34,10 +34,16 @@ export default function Builder() {
       },
     });
 
+    setParser(() => {
+      return () => {
+        return new SBuilder().fromWorkspace(Blockly.getMainWorkspace());
+      };
+    });
+
     return () => {
       blockly.dispose();
     };
-  }, []);
+  }, [setParser]);
 
   return (
     <div
@@ -49,8 +55,3 @@ export default function Builder() {
     />
   );
 }
-
-//
-// getRoot() {
-//   return new SBuilder().fromWorkspace(Blockly.getMainWorkspace());
-// }

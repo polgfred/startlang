@@ -32,27 +32,24 @@ export default function App() {
   const [editMode, setEditMode] = useState('source');
   const [gfx, setGfx] = useState(new SGraphics());
   const [buf, setBuf] = useState(immutable.List());
+  const [parser, setParser] = useState();
   const [{ prompt, onInputComplete }, setInputState] = useState({});
   // const [{ hist, snap }, setHistory] = useState({
   //   hist: [],
   //   snap: 0,
   // });
 
-  const refreshState = useCallback(() => {
-    // reset the graphics and terminal state
-    setGfx(gfx => gfx.clear());
-    setBuf(buf => buf.clear());
-
-    // if we're in help view, switch to split view
-    if (viewMode == 'help') {
-      setViewMode('split');
-    }
-  }, [viewMode]);
-
   const clearDisplay = useCallback(() => {
     setGfx(gfx => gfx.clear());
     setBuf(buf => buf.clear());
   }, []);
+
+  const refreshState = useCallback(() => {
+    clearDisplay();
+    if (viewMode == 'help') {
+      setViewMode('split');
+    }
+  }, [viewMode, clearDisplay]);
 
   const clearHistory = useCallback(() => {
     // setHistory({ hist: [], snap: 0 });
@@ -128,7 +125,7 @@ export default function App() {
     };
     const interp = new SInterpreter(bindings);
     interp.ctx = new SGRuntime(bindings);
-    // interp.root(editorRef.current.getRoot());
+    interp.root(parser());
     clearHistory();
 
     return interp.run().catch(err => {
@@ -143,6 +140,7 @@ export default function App() {
     gfxUpdate,
     termUpdate,
     termInput,
+    parser,
     snapshot,
   ]);
 
@@ -211,8 +209,8 @@ export default function App() {
                 height: 'calc(100vh - 100px)',
               }}
             >
-              {editMode == 'blocks' && <Builder />}
-              {editMode == 'source' && <Editor />}
+              {editMode == 'blocks' && <Builder setParser={setParser} />}
+              {editMode == 'source' && <Editor setParser={setParser} />}
             </Paper>
           </Grid>
         </Grid>

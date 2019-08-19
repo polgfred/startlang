@@ -4,10 +4,10 @@ import brace from 'brace';
 import 'brace/mode/text';
 import 'brace/theme/github';
 
-// import parser from '../lang/parser.pegjs';
+import parser from '../lang/parser.pegjs';
 import StartMode from '../ace/start_mode';
 
-export default function Editor() {
+export default function Editor({ setParser }) {
   const ref = useRef();
 
   useEffect(() => {
@@ -21,10 +21,16 @@ export default function Editor() {
     editor.getSession().setUseSoftTabs(true);
     editor.getSession().setMode(new StartMode());
 
+    setParser(() => {
+      return () => {
+        return parser.parse(editor.getValue() + '\n');
+      };
+    });
+
     return () => {
       editor.destroy();
     };
-  }, []);
+  }, [setParser]);
 
   return (
     <div
@@ -38,7 +44,3 @@ export default function Editor() {
     />
   );
 }
-
-// getRoot() {
-//   return parser.parse(this.editor.getValue() + '\n');
-// }
