@@ -21,13 +21,13 @@ let interp,
   output = obj => console.log(inspect(obj, { colors: true, depth: null })),
   app = {
     snapshot() {
-      output({
-        fn: interp.fn,
-        ns: interp.ns,
-        st: interp.st,
-        frame: interp.frame,
-        fst: interp.fst,
-      });
+      // output({
+      //   fn: interp.fn,
+      //   ns: interp.ns,
+      //   st: interp.st,
+      //   frame: interp.frame,
+      //   fst: interp.fst,
+      // });
     },
 
     output(value) {

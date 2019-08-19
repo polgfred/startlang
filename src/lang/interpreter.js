@@ -1,61 +1,63 @@
 /* eslint-disable no-case-declarations */
 
-import immutable from 'immutable';
+import { produce, original } from 'immer';
 
 import { handle, assignKey, resultKey } from './runtime';
 
 let hop = Object.prototype.hasOwnProperty; // cache this for performance
 let pop = { pop: true }; // cache generic pop instruction for performance
 
-export const SFrame = immutable.Record({
-  node: null, // node for this evaluation frame
-  state: 0, // evaluation state machine state
-  ns: false, // whether to pop a ns off the stack for this frame
-  // commonly used loop states
-  count: 0,
-  times: 0,
-  from: 0,
-  to: 0,
-  by: 1,
-  // commonly used for gathering indexes or params
-  indexes: immutable.List(),
-  args: immutable.List(),
-  assn: immutable.List(),
-  // less commonly used object references
-  iter: null,
-  left: null,
-});
+function makeFrame(node) {
+  return {
+    node, // node for this evaluation frame
+    state: 0, // evaluation state machine state
+    ns: false, // whether to pop a ns off the stack for this frame
+    // commonly used loop states
+    count: 0,
+    times: 0,
+    from: 0,
+    to: 0,
+    by: 1,
+    // commonly used for gathering indexes or params
+    indexes: [],
+    args: [],
+    assn: [],
+    // less commonly used object references
+    iter: null,
+    left: null,
+  };
+}
 
 export class SInterpreter {
   constructor(app) {
     // the react component that we'll call methods on
     this.app = app;
     // setup the internal state
-    this.fn = immutable.OrderedMap(); // function table
-    this.ns = immutable.OrderedMap(); // top namespace
-    this.st = immutable.Stack(); // namespace stack
+    this.fn = {}; // function table
+    this.ns = {}; // top namespace
+    this.st = []; // namespace stack
     // set an empty result value
     this.replace();
   }
 
   root(node) {
     // push on the root node and global namespace
-    this.frame = SFrame({ node });
-    this.fst = immutable.Stack();
+    this.frame = makeFrame(node);
+    this.fst = [];
   }
 
   run() {
     // set up an entry point that loops until the stack is exhausted, or
     // until a node returns a promise
-    let loop = () => {
+    const loop = () => {
       while (this.frame) {
-        let { node, state } = this.frame,
-          method = `${node.type}Node`,
-          ctrl;
+        const { node, state } = this.frame;
+        const method = `${node.type}Node`;
+        let ctrl;
         // check arity to see if the handler expects a mutable frame
         if (this[method].length > 2) {
-          this.frame = this.frame.withMutations(frame => {
-            ctrl = this[method](node, state, frame);
+          this.frame = produce(this.frame, frame => {
+            ctrl = this[method](node, state, frame, this.frame);
           });
         } else {
           ctrl = this[method](node, state);
@@ -105,7 +107,7 @@ export class SInterpreter {
       } else if (ctrl.pop == 'exit') {
         // clear the stack so the program exits
         this.frame = null;
-        this.fst = this.fst.clear();
+        this.fst = [];
       }
     }
   }
@@ -122,20 +124,22 @@ export class SInterpreter {
       });
     } else {
       // push a new frame onto the stack for this node
-      this.fst = this.fst.push(this.frame);
-      this.frame = SFrame({ node });
+      this.fst = this.fst.concat(this.frame);
+      this.frame = makeFrame(node);
     }
   }
 
   pop() {
     if (this.frame.ns) {
       // pop off the corresponding namespace
-      this.ns = this.st.first();
-      this.st = this.st.pop();
+      this.st = produce(this.st, st => {
+        this.ns = original(st.pop());
+      });
     }
     // pop this frame off the stack
-    this.frame = this.fst.first();
-    this.fst = this.fst.pop();
+    this.fst = produce(this.fst, fst => {
+      this.frame = original(fst.pop());
+    });
   }
 
   popOver(flow) {
@@ -177,59 +181,51 @@ export class SInterpreter {
 
   pushns() {
     // push on a new namespace
-    this.st = this.st.push(this.ns);
-    this.ns = immutable.OrderedMap();
+    this.st = this.st.concat(this.ns);
+    this.ns = {};
   }
 
   get(name) {
     // look in the top frame
-    if (this.st.size == 0 || (this.ns.size > 0 && this.ns.has(name))) {
-      return this.ns.get(name);
+    if (this.st.length == 0 || hop.call(this.ns, name)) {
+      return this.ns[name];
     }
     // look up the namespace stack
-    let ns = this.st.find(ns => ns.size > 0 && ns.has(name));
-    if (ns) {
-      return ns.get(name);
+    for (let i = this.st.length - 1; i >= 0; --i) {
+      const ns = this.st[i];
+      if (hop.call(ns, name)) {
+        return ns[name];
+      }
     }
   }
 
   set(name, value, top = false) {
     // look in the top frame
-    if (top || this.st.size == 0 || (this.ns.size > 0 && this.ns.has(name))) {
-      this.ns = this.ns.set(name, value);
+    if (top || this.st.length == 0 || hop.call(this.ns, name)) {
+      this.ns = produce(this.ns, ns => {
+        ns[name] = value;
+      });
       return;
     }
     // look up the namespace stack
-    this.st = this.st.withMutations(st => {
-      let saved = new Array(st.size),
-        i = 0,
-        ns;
+    this.st = produce(this.st, st => {
       // loop until we hit the root ns
-      for (;;) {
-        ns = st.first();
-        if (st.size == 1 || (ns.size > 0 && ns.has(name))) {
-          break;
+      for (let i = st.length - 1; i >= 0; --i) {
+        const ns = st[i];
+        if (i == 0 || hop.call(ns, name)) {
+          ns[name] = value;
+          return;
         }
-        // keep track of the intermediate ns
-        saved[i++] = ns;
-        st.pop();
-      }
-      // set the value in the target namespace
-      st.pop();
-      st.push(ns.set(name, value));
-      // push the intermediate namespaces back on in reverse order
-      for (--i; i >= 0; --i) {
-        st.push(saved[i]);
       }
     });
   }
 
   getIndex(name, indexes) {
-    let max = indexes.size - 1;
+    const max = indexes.length - 1;
     // recurse into nested containers
-    let next = (b, i) => {
-      let h = handle(b),
-        idx = indexes.get(i);
+    const next = (b, i) => {
+      const h = handle(b);
+      const idx = indexes[i];
       return i == max
         ? h.getindex.call(this.ctx, b, idx)
         : next(h.getindex.call(this.ctx, b, idx), i + 1);
@@ -239,11 +235,11 @@ export class SInterpreter {
   }
 
   setIndex(name, indexes, value) {
-    let max = indexes.size - 1;
+    const max = indexes.length - 1;
     // recurse into nested containers
-    let next = (b, i) => {
-      let h = handle(b),
-        idx = indexes.get(i);
+    const next = (b, i) => {
+      const h = handle(b);
+      const idx = indexes[i];
       return i == max
         ? h.setindex.call(this.ctx, b, idx, value)
         : h.setindex.call(
@@ -259,8 +255,11 @@ export class SInterpreter {
 
   // ** implementations of AST nodes **
 
-  blockNode(node, state, frame) {
-    let { count } = frame;
+  // NOTE: if method takes a 3rd `frame` parameter, the body will be
+  // called from within an immer producer
+
+  blockNode(node, state, frame, orig) {
+    const { count } = orig;
     if (count < node.elems.length) {
       frame.count++;
       return node.elems[count];
@@ -269,7 +268,7 @@ export class SInterpreter {
     }
   }
 
-  repeatNode(node, state, frame) {
+  repeatNode(node, state, frame, orig) {
     switch (state) {
       case 0:
         if (node.times) {
@@ -284,8 +283,8 @@ export class SInterpreter {
         frame.times = this.result.rv;
         break;
       case 2:
-        let { count } = frame;
-        if (count < frame.times) {
+        const { count, times } = orig;
+        if (count < times) {
           frame.count++;
           return node.body;
         } else {
@@ -297,13 +296,13 @@ export class SInterpreter {
     }
   }
 
-  forNode(node, state, frame) {
+  forNode(node, state, frame, orig) {
     switch (state) {
       case 0:
         frame.state = 1;
         return node.from;
       case 1:
-        let res = this.result.rv;
+        const res = this.result.rv;
         frame.state = 2;
         frame.from = res;
         frame.count = res;
@@ -323,7 +322,7 @@ export class SInterpreter {
         frame.by = this.result.rv;
         break;
       case 4:
-        let { count, to, by } = frame;
+        const { count, to, by } = orig;
         if ((by > 0 && count <= to) || (by < 0 && count >= to)) {
           this.set(node.name, count);
           frame.count += by;
@@ -334,7 +333,7 @@ export class SInterpreter {
     }
   }
 
-  forInNode(node, state, frame) {
+  forInNode(node, state, frame, orig) {
     switch (state) {
       case 0:
         frame.state = 1;
@@ -344,7 +343,7 @@ export class SInterpreter {
         frame.iter = this.ctx.enumerate(this.result.rv);
         break;
       case 2:
-        let { iter } = frame;
+        const { iter } = orig;
         if (iter.more) {
           this.set(node.name, iter.value);
           // TODO: iteration should allow async
@@ -393,18 +392,20 @@ export class SInterpreter {
 
   beginNode(node) {
     // save the begin node in the function table
-    this.fn = this.fn.set(node.name, node);
+    this.fn = produce(this.fn, fn => {
+      fn[node.name] = node;
+    });
     return pop;
   }
 
-  callNode(node, state, frame) {
+  callNode(node, state, frame, orig) {
     switch (state) {
       case 0:
-        let { count } = frame;
+        const { count } = orig;
         if (node.args && count < node.args.length) {
           frame.state = 1;
           return node.args[count];
-        } else if (this.fn.has(node.name)) {
+        } else if (hop.call(this.fn, node.name)) {
           frame.state = 2;
           break;
         } else {
@@ -412,21 +413,22 @@ export class SInterpreter {
           break;
         }
       case 1:
-        let res = this.result;
+        const res = this.result;
         frame.state = 0;
-        frame.args = frame.args.push(res.rv);
-        frame.assn = frame.assn.push(res.lv);
+        frame.args.push(res.rv);
+        frame.assn.push(res.lv);
         frame.count++;
         break;
       case 2:
         // handle a user-defined function
-        let fn = this.fn.get(node.name);
+        const fn = this.fn[node.name];
         // push on a new namespace
         this.pushns();
         // set the arguments in the local ns
         if (fn.params) {
           for (let i = 0; i < fn.params.length; ++i) {
-            this.set(fn.params[i], frame.args.get(i), true);
+            // extract the proxied object
+            this.set(fn.params[i], orig.args[i], true);
           }
         }
         frame.state = 3;
@@ -436,15 +438,16 @@ export class SInterpreter {
         return pop;
       case 4:
         // handle a runtime API function
-        let result = this.ctx.syscall(node.name, frame.args.toArray());
+        // extract the proxied object
+        const result = this.ctx.syscall(node.name, orig.args);
         if (result && result.then) {
           // if we got a promise, handle the result when fulfilled
           return result.then(result => {
-            this.handleResult(result, frame.assn);
+            this.handleResult(result, orig.assn);
             return pop;
           });
         } else {
-          this.handleResult(result, frame.assn);
+          this.handleResult(result, orig.assn);
           return pop;
         }
     }
@@ -453,10 +456,10 @@ export class SInterpreter {
   handleResult(res, assn) {
     // handle the result of a runtime function
     if (res) {
-      let repl = res[assignKey],
-        i,
-        r,
-        a;
+      let repl = res[assignKey];
+      let i;
+      let r;
+      let a;
       if (repl) {
         // if this result contains replacement args, assign them
         if (!Array.isArray(repl)) {
@@ -467,7 +470,7 @@ export class SInterpreter {
           r = repl[i];
           if (r !== undefined) {
             // we have a replacement for this slot
-            if ((a = assn.get(i))) {
+            if ((a = assn[i])) {
               // this slot can be assigned to
               if (a.indexes) {
                 this.setIndex(a.name, a.indexes, r);
@@ -538,10 +541,10 @@ export class SInterpreter {
     }
   }
 
-  indexNode(node, state, frame) {
+  indexNode(node, state, frame, orig) {
     switch (state) {
       case 0:
-        let { count } = frame;
+        const { count } = orig;
         if (count < node.indexes.length) {
           frame.state = 1;
           return node.indexes[count];
@@ -551,11 +554,11 @@ export class SInterpreter {
         }
       case 1:
         frame.state = 0;
-        frame.indexes = frame.indexes.push(this.result.rv);
+        frame.indexes.push(this.result.rv);
         frame.count++;
         break;
       case 2:
-        let { indexes } = frame;
+        const indexes = orig.indexes;
         // return the rv/lv pair for this slot
         this.replace({
           rv: this.getIndex(node.name, indexes),
@@ -565,10 +568,10 @@ export class SInterpreter {
     }
   }
 
-  letIndexNode(node, state, frame) {
+  letIndexNode(node, state, frame, orig) {
     switch (state) {
       case 0:
-        let { count } = frame;
+        const { count } = orig;
         if (count < node.indexes.length) {
           frame.state = 1;
           return node.indexes[count];
@@ -578,14 +581,14 @@ export class SInterpreter {
         }
       case 1:
         frame.state = 0;
-        frame.indexes = frame.indexes.push(this.result.rv);
+        frame.indexes.push(this.result.rv);
         frame.count++;
         break;
       case 2:
         frame.state = 3;
         return node.value;
       case 3:
-        this.setIndex(node.name, frame.indexes, this.result.rv);
+        this.setIndex(node.name, orig.indexes, this.result.rv);
         return pop;
     }
   }
@@ -643,7 +646,7 @@ export class SInterpreter {
     }
   }
 
-  binaryOpNode(node, state, frame) {
+  binaryOpNode(node, state, frame, orig) {
     switch (state) {
       case 0:
         frame.state = 1;
@@ -653,7 +656,7 @@ export class SInterpreter {
         frame.left = this.result.rv;
         return node.right;
       case 2:
-        this.replace(this.ctx.binaryop(node.op, frame.left, this.result.rv));
+        this.replace(this.ctx.binaryop(node.op, orig.left, this.result.rv));
         return pop;
     }
   }
