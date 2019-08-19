@@ -30,18 +30,18 @@ body {
   @mixin proportional-font;
 }
 
-.start-app {
+.x-start-app {
   & .top-bar {
     border: 0;
     border-radius: 0;
     margin: 0 4px;
     @mixin box-shadow;
 
-    ul.is-dropdown-submenu {
+    & ul.is-dropdown-submenu {
       z-index: 100;
       @mixin box-shadow;
 
-      li.is-submenu-item:not(.active):hover > a {
+      & li.is-submenu-item:not(.active):hover > a {
         background-color: #ccc;
       }
     }
@@ -102,21 +102,21 @@ body {
   /* Window visibility/proportions for different display modes */
 
   &.start-view-mode-graphics {
-    .start-graphics {
+    & .start-graphics {
       display: block;
       height: calc(100vh - 60px);
     }
   }
 
   &.start-view-mode-text {
-    .start-term {
+    & .start-term {
       display: block;
       height: calc(100vh - 60px);
     }
   }
 
   &.start-view-mode-split {
-    .start-graphics {
+    & .start-graphics {
       display: block;
       height: calc(65vh - 33px);
     }
@@ -129,7 +129,7 @@ body {
   }
 
   &.start-view-mode-help {
-    .start-help {
+    & .start-help {
       display: block;
       height: calc(100vh - 60px);
     }
@@ -143,16 +143,18 @@ body {
   }
 
   & .start-editor {
-    font-size: 14px;
-    @mixin source-font;
+    &.ace_editor {
+      font-size: 14px;
+      @mixin source-font;
 
-    & .ace_indent-guide {
-      background: none;
+      & .ace_indent-guide {
+        background: none;
+      }
     }
   }
 
   & .start-builder {
-    .blocklyText {
+    & .blocklyText {
       @mixin proportional-font;
     }
   }
