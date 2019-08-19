@@ -1,35 +1,35 @@
 // Language Nodes
 
 {
-  let flowMarker = {
-    'repeat': 'loop',
-    'for': 'loop',
-    'forIn': 'loop',
-    'while': 'loop',
-    'call': 'call'
+  const flowMarker = {
+    repeat: 'loop',
+    for: 'loop',
+    forIn: 'loop',
+    while: 'loop',
+    call: 'call'
   };
 
-  let inspectMarker = {
-    'repeat': 'loop',
-    'for': 'loop',
-    'forIn': 'loop',
-    'while': 'loop',
-    'if': 'stmt',
-    'begin': 'stmt',
-    'call': 'stmt',
-    'exit': 'stmt',
-    'break': 'stmt',
-    'next': 'stmt',
-    'return': 'stmt',
-    'literal': 'expr',
-    'var': 'expr',
-    'let': 'stmt',
-    'index': 'expr',
-    'letIndex': 'stmt',
-    'logicalOp': 'expr',
-    'binaryOp': 'expr',
-    'unaryOp': 'expr'
-  }
+  const inspectMarker = {
+    repeat: 'loop',
+    for: 'loop',
+    forIn: 'loop',
+    while: 'loop',
+    if: 'stmt',
+    begin: 'stmt',
+    call: 'stmt',
+    exit: 'stmt',
+    break: 'stmt',
+    next: 'stmt',
+    return: 'stmt',
+    literal: 'expr',
+    var: 'expr',
+    let: 'stmt',
+    index: 'expr',
+    letIndex: 'stmt',
+    logicalOp: 'expr',
+    binaryOp: 'expr',
+    unaryOp: 'expr'
+  };
 
   // build an object for this node
   function buildNode(type, attrs) {
@@ -39,7 +39,7 @@
     }
 
     // show the type first
-    let node = { type };
+    const node = { type };
 
     // then the flow marker
     if (flowMarker[type]) {
@@ -67,7 +67,7 @@
 
   // take a series of tests, and (optionally) a final else body, and construct an if-tree
   function buildIfTree(tests, fbody) {
-    let [ cond, tbody ] = tests.shift();
+    const [cond, tbody] = tests.shift();
     if (tests.length > 0) {
       // insert the next-level tree into the false slot
       fbody = buildIfTree(tests, fbody);
@@ -80,8 +80,8 @@
     if (rest.length == 0) {
       return left;
     } else {
-      let [ op, right ] = rest.shift(),
-          node = buildNode(type, { op, left, right });
+      const [op, right] = rest.shift();
+      const node = buildNode(type, { op, left, right });
       return buildBinaryExpr(type, node, rest);
     }
   }
@@ -91,8 +91,8 @@
     if (ops.length == 0) {
       return right;
     } else {
-      let op = ops.pop(),
-          node = buildNode(type, { op, right });
+      const op = ops.pop();
+      const node = buildNode(type, { op, right });
       return buildUnaryExpr(type, ops, node);
     }
   }
@@ -102,8 +102,8 @@
     if (rest.length == 0) {
       return left;
     } else {
-      let right = rest.shift(),
-          node = buildNode('binaryOp', { op: '$', left, right });
+      const right = rest.shift();
+      const node = buildNode('binaryOp', { op: '$', left, right });
       return buildString(node, rest);
     }
   }
@@ -147,14 +147,14 @@ Control
 If
   // one-line if/then[/else]
   = 'if' WB __ cond:Value __ 'then' WB __ tbody:Statement fbody:( __ 'else' WB __ s:Statement { return s; } )? {
-      return buildIfTree([[ cond, tbody ]], fbody);
+      return buildIfTree([[cond, tbody]], fbody);
     }
   // multi-line if/then[/else if/...][/else]
   / 'if' WB __ cond:Value __ 'then' WB __ EOL tbody:Block
-      tests:( __ 'else' WB __ 'if' WB __ v:Value __ 'then' WB __ EOL b:Block { return [ v, b ]; } )*
+      tests:( __ 'else' WB __ 'if' WB __ v:Value __ 'then' WB __ EOL b:Block { return [v, b]; } )*
       fbody:( __ 'else' WB __ EOL b:Block { return b; } )?
       __ 'end' {
-      return buildIfTree([[ cond, tbody ]].concat(tests), fbody);
+      return buildIfTree([[cond, tbody]].concat(tests), fbody);
     }
 
 Repeat
@@ -270,7 +270,7 @@ Value 'a value'
 // Conditions
 
 ConjExpr
-  = first:NotExpr rest:( __ op:ConjOp __ e:NotExpr { return [ op, e ]; } )* {
+  = first:NotExpr rest:( __ op:ConjOp __ e:NotExpr { return [op, e]; } )* {
       return buildBinaryExpr('logicalOp', first, rest);
     }
 
@@ -304,7 +304,7 @@ RelOp
 // Concatenation
 
 ConcatExpr
-  = first:BitExpr rest:( __ op:ConcatOp __ e:BitExpr { return [ op, e ]; } )* {
+  = first:BitExpr rest:( __ op:ConcatOp __ e:BitExpr { return [op, e]; } )* {
       return buildBinaryExpr('binaryOp', first, rest);
     }
 
@@ -314,7 +314,7 @@ ConcatOp
 // Math
 
 BitExpr
-  = first:AddExpr rest:( __ op:BitOp __ e:AddExpr { return [ op, e ]; } )* {
+  = first:AddExpr rest:( __ op:BitOp __ e:AddExpr { return [op, e]; } )* {
       return buildBinaryExpr('binaryOp', first, rest);
     }
 
@@ -324,7 +324,7 @@ BitOp
   / '^'
 
 AddExpr
-  = first:MultExpr rest:( __ op:AddOp __ e:MultExpr { return [ op, e ]; } )* {
+  = first:MultExpr rest:( __ op:AddOp __ e:MultExpr { return [op, e]; } )* {
       return buildBinaryExpr('binaryOp', first, rest);
     }
 
@@ -333,7 +333,7 @@ AddOp
   / '-'
 
 MultExpr
-  = first:UnaryExpr rest:( __ op:MultOp __ e:UnaryExpr { return [ op, e ]; } )* {
+  = first:UnaryExpr rest:( __ op:MultOp __ e:UnaryExpr { return [op, e]; } )* {
       return buildBinaryExpr('binaryOp', first, rest);
     }
 
@@ -400,10 +400,9 @@ PrimaryExpr
 String 'a string'
   = '"' rest:StringSegment* '"' {
       // if the first segment isn't a string literal, prepend an empty string
-      let first = (rest.length > 0 && rest[0].type == 'literal' && typeof rest[0].value == 'string') ?
+      const first = (rest.length > 0 && rest[0].type == 'literal' && typeof rest[0].value == 'string') ?
                     rest.shift() :
                     buildNode('literal', { value: '' });
-
       return buildString(first, rest);
     }
 
