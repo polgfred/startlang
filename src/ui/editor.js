@@ -4,7 +4,7 @@ import brace from 'brace';
 import 'brace/mode/text';
 import 'brace/theme/github';
 
-import parser from '../lang/parser.pegjs';
+import { parse } from '../lang/parser.pegjs';
 import StartMode from '../ace/start_mode';
 
 export default function Editor({ setParser }) {
@@ -23,7 +23,7 @@ export default function Editor({ setParser }) {
 
     setParser(() => {
       return () => {
-        return parser.parse(editor.getValue() + '\n');
+        return parse(editor.getValue() + '\n');
       };
     });
 

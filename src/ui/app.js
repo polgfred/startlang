@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import immutable from 'immutable';
 
 import Grid from '@material-ui/core/Grid';
@@ -32,7 +32,7 @@ export default function App() {
   const [editMode, setEditMode] = useState('source');
   const [gfx, setGfx] = useState(new SGraphics());
   const [buf, setBuf] = useState(immutable.List());
-  const [parser, setParser] = useState();
+  const [parser, setParser] = useState(() => {});
   const [{ prompt, onInputComplete }, setInputState] = useState({});
   // const [{ hist, snap }, setHistory] = useState({
   //   hist: [],
@@ -113,16 +113,20 @@ export default function App() {
 
   const snapshot = useCallback(() => {}, []);
 
-  const runProgram = useCallback(() => {
-    refreshState();
-    // TODO: how do we want to wait for the state to clear before running?
-    const bindings = {
+  const bindings = useMemo(
+    () => ({
       clearDisplay,
       gfxUpdate,
       termUpdate,
       termInput,
       snapshot,
-    };
+    }),
+    [clearDisplay, gfxUpdate, termUpdate, termInput, snapshot]
+  );
+
+  const runProgram = useCallback(() => {
+    refreshState();
+    // TODO: how do we want to wait for the state to clear before running?
     const interp = new SInterpreter(bindings);
     interp.ctx = new SGRuntime(bindings);
     interp.root(parser());
@@ -133,16 +137,7 @@ export default function App() {
       console.log(err); // eslint-disable-line no-console
       console.log(err.stack); // eslint-disable-line no-console
     });
-  }, [
-    refreshState,
-    clearDisplay,
-    clearHistory,
-    gfxUpdate,
-    termUpdate,
-    termInput,
-    parser,
-    snapshot,
-  ]);
+  }, [bindings, parser, refreshState, clearHistory]);
 
   const inspect = false;
   const columns = inspect ? 4 : 6;
