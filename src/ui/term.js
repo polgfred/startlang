@@ -9,7 +9,7 @@ import TextField from '@material-ui/core/TextField';
 const LIST_SHIFT = 5;
 
 export default function Term({ buf, prompt, handleInput }) {
-  const [{ input }, setInput] = useState('');
+  const [input, setInput] = useState('');
 
   // shouldComponentUpdate(nextProps, nextState) {
   //   return (
