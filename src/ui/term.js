@@ -1,6 +1,4 @@
-import React, { useCallback, useState } from 'react';
-
-// import { findDOMNode } from 'react-dom';
+import React, { useCallback, useLayoutEffect, useRef, useState } from 'react';
 
 import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
@@ -10,15 +8,6 @@ const LIST_SHIFT = 5;
 
 export default function Term({ buf, prompt, handleInput }) {
   const [input, setInput] = useState('');
-
-  // shouldComponentUpdate(nextProps, nextState) {
-  //   return (
-  //     this.props.buf != nextProps.buf ||
-  //     this.state.needsInput != nextState.needsInput ||
-  //     this.state.input != nextState.input ||
-  //     this.state.prompt != nextState.prompt
-  //   );
-  // }
 
   const handleAccept = useCallback(() => {
     handleInput(input);
@@ -41,12 +30,10 @@ export default function Term({ buf, prompt, handleInput }) {
     [handleAccept]
   );
 
-  // componentDidUpdate() {
-  //   // scroll to the bottom anytime we're updated
-  //   // FIXME: this doesn't work anymore
-  //   // let node = findDOMNode(this);
-  //   // node.scrollTop = node.scrollHeight;
-  // }
+  const scrollRef = useRef();
+  useLayoutEffect(() => {
+    scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+  });
 
   // make sure the list hasn't been modified from the front
   if (buf._origin != 0) {
@@ -83,6 +70,7 @@ export default function Term({ buf, prompt, handleInput }) {
         </Button>
       </div>
       <div
+        ref={scrollRef}
         style={{
           fontFamily: 'Roboto',
           fontSize: '14px',
@@ -98,12 +86,6 @@ export default function Term({ buf, prompt, handleInput }) {
 }
 
 function TermOutput({ node: { array }, level }) {
-  // shouldComponentUpdate(nextProps) {
-  //   return (
-  //     this.props.node != nextProps.node || this.props.level != nextProps.level
-  //   );
-  // }
-
   return (
     <div className="start-term-output">
       {level == 0
