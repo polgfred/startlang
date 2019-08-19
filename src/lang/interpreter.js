@@ -1,11 +1,13 @@
+/* eslint-disable no-console */
 /* eslint-disable no-case-declarations */
 
 import { produce, original } from 'immer';
 
 import { handle, assignKey, resultKey } from './runtime';
 
-let hop = Object.prototype.hasOwnProperty; // cache this for performance
-let pop = { pop: true }; // cache generic pop instruction for performance
+const hop = Object.prototype.hasOwnProperty; // cache this for performance
+
+const popOut = { pop: 'out' };
 
 function makeFrame(node) {
   return {
@@ -28,39 +30,29 @@ function makeFrame(node) {
   };
 }
 
-export class SInterpreter {
-  constructor(app) {
-    // the react component that we'll call methods on
-    this.app = app;
-    // setup the internal state
-    this.fn = {}; // function table
-    this.ns = {}; // top namespace
-    this.st = []; // namespace stack
-    // set an empty result value
-    this.replace();
-  }
+export function makeInterpreter(app, ctx, node) {
+  let fn = {}; // function table
+  let st = []; // namespace stack
+  let ns = {}; // top namespace
+  let fst = []; // frame stack
+  let frame = makeFrame(node); // top frame
+  let result; // last expression return value
 
-  root(node) {
-    // push on the root node and global namespace
-    this.frame = makeFrame(node);
-    this.fst = [];
-  }
-
-  run() {
+  function run() {
     // set up an entry point that loops until the stack is exhausted, or
     // until a node returns a promise
-    const loop = () => {
-      while (this.frame) {
-        const { node, state } = this.frame;
-        const method = `${node.type}Node`;
+    function loop() {
+      while (frame) {
+        const { node, state } = frame;
+        const method = nodes[node.type];
         let ctrl;
         // check arity to see if the handler expects a mutable frame
-        if (this[method].length > 2) {
-          this.frame = produce(this.frame, frame => {
-            ctrl = this[method](node, state, frame, this.frame);
+        if (method.length > 2) {
+          frame = produce(frame, df => {
+            ctrl = method(node, state, df, frame);
           });
         } else {
-          ctrl = this[method](node, state);
+          ctrl = method(node, state);
         }
         // deal with the result
         if (ctrl) {
@@ -69,19 +61,19 @@ export class SInterpreter {
             // handle flow and reenter the loop
             return ctrl.then(ctrl => {
               if (ctrl) {
-                this.doFlow(ctrl);
+                doFlow(ctrl);
               }
               return loop();
             });
           } else {
             // handle flow instruction
-            this.doFlow(ctrl);
+            doFlow(ctrl);
           }
         }
       }
       // take a final snapshot
-      this.app.snapshot();
-    };
+      app.snapshot();
+    }
 
     // return a promise for the eventual termination of the loop
     return new Promise(resolve => {
@@ -91,63 +83,69 @@ export class SInterpreter {
 
   // ** manage stack frames **
 
-  doFlow(ctrl) {
+  function doFlow(ctrl) {
     // deal with any push or pop instruction returned from the node handler
     if (ctrl.type) {
       // it's a node, push it
-      this.push(ctrl);
+      push(ctrl);
     } else if (ctrl.pop) {
       // it's a pop instruction
-      if (ctrl.pop === true) {
-        this.pop();
+      if (ctrl.pop == 'out') {
+        pop();
       } else if (ctrl.pop == 'over') {
-        this.popOver(ctrl.flow);
+        popOver(ctrl.flow);
       } else if (ctrl.pop == 'until') {
-        this.popUntil(ctrl.flow);
+        popUntil(ctrl.flow);
       } else if (ctrl.pop == 'exit') {
         // clear the stack so the program exits
-        this.frame = null;
-        this.fst = [];
+        frame = null;
+        fst = [];
       }
     }
   }
 
-  push(node) {
+  function push(node) {
     // optimize literals and vars by setting the result register directly
     if (node.type == 'literal') {
-      this.replace(node.value);
+      setResult(node.value);
     } else if (node.type == 'var') {
       // return the rv/lv pair for this assignment
-      this.replace({
-        rv: this.get(node.name),
+      setResult({
+        rv: get(node.name),
         lv: { name: node.name },
       });
     } else {
       // push a new frame onto the stack for this node
-      this.fst = this.fst.concat(this.frame);
-      this.frame = makeFrame(node);
+      fst = fst.concat(frame);
+      frame = makeFrame(node);
     }
   }
 
-  pop() {
-    if (this.frame.ns) {
+  function pushns() {
+    // push on a new namespace
+    st = st.concat(ns);
+    ns = {};
+  }
+
+  function pop() {
+    if (frame.ns) {
       // pop off the corresponding namespace
-      this.st = produce(this.st, st => {
-        this.ns = original(st.pop());
+      st = produce(st, dst => {
+        ns = original(dst.pop());
       });
     }
     // pop this frame off the stack
-    this.fst = produce(this.fst, fst => {
-      this.frame = original(fst.pop());
+    fst = produce(fst, dfst => {
+      frame = original(dfst.pop());
     });
   }
 
-  popOver(flow) {
+  function popOver(flow) {
     // pop frames off including a loop or function call node
-    while (this.frame) {
-      let { node } = this.frame;
+    while (frame) {
+      let { node } = frame;
       // pop the target frame
-      this.pop();
+      pop();
       // break here if we're popping the target frame
       if (node.flow == flow) {
         break;
@@ -155,311 +153,103 @@ export class SInterpreter {
     }
   }
 
-  popUntil(flow) {
+  function popUntil(flow) {
     // pop frames off until hitting a loop or function call node
-    while (this.frame) {
+    while (frame) {
       // break here if we're popping the target frame
-      if (this.frame.node.flow == flow) {
+      if (frame.node.flow == flow) {
         break;
       }
       // pop the target frame
-      this.pop();
+      pop();
     }
   }
 
   // ** return values **
 
-  replace(result) {
+  function setResult(res) {
     // normalize the result to rvalue/lvalue form if necessary
-    if (result == null || !hop.call(result, 'rv')) {
-      result = { rv: result };
+    if (res == null || !hop.call(res, 'rv')) {
+      res = { rv: res };
     }
-    this.result = result;
+    result = res;
   }
 
   // ** namespace access **
 
-  pushns() {
-    // push on a new namespace
-    this.st = this.st.concat(this.ns);
-    this.ns = {};
-  }
-
-  get(name) {
+  function get(name) {
     // look in the top frame
-    if (this.st.length == 0 || hop.call(this.ns, name)) {
-      return this.ns[name];
+    if (st.length == 0 || hop.call(ns, name)) {
+      return ns[name];
     }
     // look up the namespace stack
-    for (let i = this.st.length - 1; i >= 0; --i) {
-      const ns = this.st[i];
+    for (let i = st.length - 1; i >= 0; --i) {
+      const ns = st[i];
       if (hop.call(ns, name)) {
         return ns[name];
       }
     }
   }
 
-  set(name, value, top = false) {
+  function set(name, value, top = false) {
     // look in the top frame
-    if (top || this.st.length == 0 || hop.call(this.ns, name)) {
-      this.ns = produce(this.ns, ns => {
-        ns[name] = value;
+    if (top || st.length == 0 || hop.call(ns, name)) {
+      ns = produce(ns, dns => {
+        dns[name] = value;
       });
       return;
     }
     // look up the namespace stack
-    this.st = produce(this.st, st => {
+    st = produce(st, dst => {
       // loop until we hit the root ns
       for (let i = st.length - 1; i >= 0; --i) {
-        const ns = st[i];
+        const dns = dst[i];
         if (i == 0 || hop.call(ns, name)) {
-          ns[name] = value;
-          return;
+          dns[name] = value;
+          break;
         }
       }
     });
   }
 
-  getIndex(name, indexes) {
+  function getIndex(name, indexes) {
     const max = indexes.length - 1;
     // recurse into nested containers
     const next = (b, i) => {
       const h = handle(b);
       const idx = indexes[i];
       return i == max
-        ? h.getindex.call(this.ctx, b, idx)
-        : next(h.getindex.call(this.ctx, b, idx), i + 1);
+        ? h.getindex.call(ctx, b, idx)
+        : next(h.getindex.call(ctx, b, idx), i + 1);
     };
 
-    return next(this.get(name), 0);
+    return next(get(name), 0);
   }
 
-  setIndex(name, indexes, value) {
+  function setIndex(name, indexes, value) {
     const max = indexes.length - 1;
     // recurse into nested containers
     const next = (b, i) => {
       const h = handle(b);
       const idx = indexes[i];
       return i == max
-        ? h.setindex.call(this.ctx, b, idx, value)
+        ? h.setindex.call(ctx, b, idx, value)
         : h.setindex.call(
-            this.ctx,
+            ctx,
             b,
             idx,
-            next(h.getindex.call(this.ctx, b, idx), i + 1)
+            next(h.getindex.call(ctx, b, idx), i + 1)
           );
     };
 
-    this.set(name, next(this.get(name), 0));
+    set(name, next(get(name), 0));
   }
 
-  // ** implementations of AST nodes **
-
-  // NOTE: if method takes a 3rd `frame` parameter, the body will be
-  // called from within an immer producer
-
-  blockNode(node, state, frame, orig) {
-    const { count } = orig;
-    if (count < node.elems.length) {
-      frame.count++;
-      return node.elems[count];
-    } else {
-      return pop;
-    }
-  }
-
-  repeatNode(node, state, frame, orig) {
-    switch (state) {
-      case 0:
-        if (node.times) {
-          frame.state = 1;
-          return node.times;
-        } else {
-          frame.state = 3;
-          break;
-        }
-      case 1:
-        frame.state = 2;
-        frame.times = this.result.rv;
-        break;
-      case 2:
-        const { count, times } = orig;
-        if (count < times) {
-          frame.count++;
-          return node.body;
-        } else {
-          return pop;
-        }
-      case 3:
-        // repeat forever
-        return node.body;
-    }
-  }
-
-  forNode(node, state, frame, orig) {
-    switch (state) {
-      case 0:
-        frame.state = 1;
-        return node.from;
-      case 1:
-        const res = this.result.rv;
-        frame.state = 2;
-        frame.from = res;
-        frame.count = res;
-        return node.to;
-      case 2:
-        if (node.by) {
-          frame.state = 3;
-          frame.to = this.result.rv;
-          return node.by;
-        } else {
-          frame.state = 4;
-          frame.to = this.result.rv;
-          break;
-        }
-      case 3:
-        frame.state = 4;
-        frame.by = this.result.rv;
-        break;
-      case 4:
-        const { count, to, by } = orig;
-        if ((by > 0 && count <= to) || (by < 0 && count >= to)) {
-          this.set(node.name, count);
-          frame.count += by;
-          return node.body;
-        } else {
-          return pop;
-        }
-    }
-  }
-
-  forInNode(node, state, frame, orig) {
-    switch (state) {
-      case 0:
-        frame.state = 1;
-        return node.range;
-      case 1:
-        frame.state = 2;
-        frame.iter = this.ctx.enumerate(this.result.rv);
-        break;
-      case 2:
-        const { iter } = orig;
-        if (iter.more) {
-          this.set(node.name, iter.value);
-          // TODO: iteration should allow async
-          frame.iter = iter.next();
-          return node.body;
-        } else {
-          return pop;
-        }
-    }
-  }
-
-  whileNode(node, state, frame) {
-    switch (state) {
-      case 0:
-        frame.state = 1;
-        return node.cond;
-      case 1:
-        if (this.result.rv) {
-          frame.state = 0;
-          return node.body;
-        } else {
-          return pop;
-        }
-    }
-  }
-
-  ifNode(node, state, frame) {
-    switch (state) {
-      case 0:
-        frame.state = 1;
-        return node.cond;
-      case 1:
-        if (this.result.rv) {
-          frame.state = 2;
-          return node.tbody;
-        } else if (node.fbody) {
-          frame.state = 2;
-          return node.fbody;
-        } else {
-          return pop;
-        }
-      case 2:
-        return pop;
-    }
-  }
-
-  beginNode(node) {
-    // save the begin node in the function table
-    this.fn = produce(this.fn, fn => {
-      fn[node.name] = node;
-    });
-    return pop;
-  }
-
-  callNode(node, state, frame, orig) {
-    switch (state) {
-      case 0:
-        const { count } = orig;
-        if (node.args && count < node.args.length) {
-          frame.state = 1;
-          return node.args[count];
-        } else if (hop.call(this.fn, node.name)) {
-          frame.state = 2;
-          break;
-        } else {
-          frame.state = 4;
-          break;
-        }
-      case 1:
-        const res = this.result;
-        frame.state = 0;
-        frame.args.push(res.rv);
-        frame.assn.push(res.lv);
-        frame.count++;
-        break;
-      case 2:
-        // handle a user-defined function
-        const fn = this.fn[node.name];
-        // push on a new namespace
-        this.pushns();
-        // set the arguments in the local ns
-        if (fn.params) {
-          for (let i = 0; i < fn.params.length; ++i) {
-            // extract the proxied object
-            this.set(fn.params[i], orig.args[i], true);
-          }
-        }
-        frame.state = 3;
-        frame.ns = true;
-        return fn.body;
-      case 3:
-        return pop;
-      case 4:
-        // handle a runtime API function
-        // extract the proxied object
-        const result = this.ctx.syscall(node.name, orig.args);
-        if (result && result.then) {
-          // if we got a promise, handle the result when fulfilled
-          return result.then(result => {
-            this.handleResult(result, orig.assn);
-            return pop;
-          });
-        } else {
-          this.handleResult(result, orig.assn);
-          return pop;
-        }
-    }
-  }
-
-  handleResult(res, assn) {
+  function handleResult(res, assn) {
     // handle the result of a runtime function
     if (res) {
       let repl = res[assignKey];
-      let i;
-      let r;
-      let a;
+      let i, r, a;
       if (repl) {
         // if this result contains replacement args, assign them
         if (!Array.isArray(repl)) {
@@ -473,9 +263,9 @@ export class SInterpreter {
             if ((a = assn[i])) {
               // this slot can be assigned to
               if (a.indexes) {
-                this.setIndex(a.name, a.indexes, r);
+                setIndex(a.name, a.indexes, r);
               } else {
-                this.set(a.name, r);
+                set(a.name, r);
               }
             }
           }
@@ -485,190 +275,415 @@ export class SInterpreter {
       }
     }
     // put it in the result register
-    this.replace(res);
+    setResult(res);
   }
 
-  exitNode() {
-    return { pop: 'exit' };
-  }
+  // ** implementations of AST nodes **
 
-  breakNode() {
-    return { pop: 'over', flow: 'loop' };
-  }
+  // NOTE: if method takes a 3rd `frame` parameter, the body will be
+  // called from within an immer producer
 
-  nextNode() {
-    return { pop: 'until', flow: 'loop' };
-  }
+  const nodes = {
+    block(node, state, frame, orig) {
+      const { count } = orig;
+      if (count < node.elems.length) {
+        frame.count++;
+        return node.elems[count];
+      } else {
+        return popOut;
+      }
+    },
 
-  returnNode(node, state, frame) {
-    switch (state) {
-      case 0:
-        if (node.result) {
+    repeat(node, state, frame, orig) {
+      switch (state) {
+        case 0:
+          if (node.times) {
+            frame.state = 1;
+            return node.times;
+          } else {
+            frame.state = 3;
+            break;
+          }
+        case 1:
+          frame.state = 2;
+          frame.times = result.rv;
+          break;
+        case 2:
+          const { count, times } = orig;
+          if (count < times) {
+            frame.count++;
+            return node.body;
+          } else {
+            return popOut;
+          }
+        case 3:
+          // repeat forever
+          return node.body;
+      }
+    },
+
+    for(node, state, frame, orig) {
+      switch (state) {
+        case 0:
           frame.state = 1;
-          return node.result;
-        } else {
-          this.replace();
+          return node.from;
+        case 1:
+          const res = result.rv;
+          frame.state = 2;
+          frame.from = res;
+          frame.count = res;
+          return node.to;
+        case 2:
+          if (node.by) {
+            frame.state = 3;
+            frame.to = result.rv;
+            return node.by;
+          } else {
+            frame.state = 4;
+            frame.to = result.rv;
+            break;
+          }
+        case 3:
+          frame.state = 4;
+          frame.by = result.rv;
+          break;
+        case 4:
+          const { count, to, by } = orig;
+          if ((by > 0 && count <= to) || (by < 0 && count >= to)) {
+            set(node.name, count);
+            frame.count += by;
+            return node.body;
+          } else {
+            return popOut;
+          }
+      }
+    },
+
+    forIn(node, state, frame, orig) {
+      switch (state) {
+        case 0:
+          frame.state = 1;
+          return node.range;
+        case 1:
+          frame.state = 2;
+          frame.iter = ctx.enumerate(result.rv);
+          break;
+        case 2:
+          const { iter } = orig;
+          if (iter.more) {
+            set(node.name, iter.value);
+            // TODO: iteration should allow async
+            frame.iter = iter.next();
+            return node.body;
+          } else {
+            return popOut;
+          }
+      }
+    },
+
+    while(node, state, frame) {
+      switch (state) {
+        case 0:
+          frame.state = 1;
+          return node.cond;
+        case 1:
+          if (result.rv) {
+            frame.state = 0;
+            return node.body;
+          } else {
+            return popOut;
+          }
+      }
+    },
+
+    if(node, state, frame) {
+      switch (state) {
+        case 0:
+          frame.state = 1;
+          return node.cond;
+        case 1:
+          if (result.rv) {
+            frame.state = 2;
+            return node.tbody;
+          } else if (node.fbody) {
+            frame.state = 2;
+            return node.fbody;
+          } else {
+            return popOut;
+          }
+        case 2:
+          return popOut;
+      }
+    },
+
+    begin(node) {
+      // save the begin node in the function table
+      fn = produce(fn, dfn => {
+        dfn[node.name] = node;
+      });
+      return popOut;
+    },
+
+    call(node, state, frame, orig) {
+      switch (state) {
+        case 0:
+          const { count } = orig;
+          if (node.args && count < node.args.length) {
+            frame.state = 1;
+            return node.args[count];
+          } else if (hop.call(fn, node.name)) {
+            frame.state = 2;
+            break;
+          } else {
+            frame.state = 4;
+            break;
+          }
+        case 1:
+          frame.state = 0;
+          frame.args.push(result.rv);
+          frame.assn.push(result.lv);
+          frame.count++;
+          break;
+        case 2:
+          // handle a user-defined function
+          const ufn = fn[node.name];
+          // push on a new namespace
+          pushns();
+          // set the arguments in the local ns
+          if (ufn.params) {
+            for (let i = 0; i < ufn.params.length; ++i) {
+              set(ufn.params[i], orig.args[i], true);
+            }
+          }
+          frame.state = 3;
+          frame.ns = true;
+          return ufn.body;
+        case 3:
+          return popOut;
+        case 4:
+          // handle a runtime API function
+          const res = ctx.syscall(node.name, orig.args);
+          if (res && res.then) {
+            // if we got a promise, handle the result when fulfilled
+            return res.then(res => {
+              handleResult(res, orig.assn);
+              return popOut;
+            });
+          } else {
+            handleResult(res, orig.assn);
+            return popOut;
+          }
+      }
+    },
+
+    exit() {
+      return { pop: 'exit' };
+    },
+
+    break() {
+      return { pop: 'over', flow: 'loop' };
+    },
+
+    next() {
+      return { pop: 'until', flow: 'loop' };
+    },
+
+    return(node, state, frame) {
+      switch (state) {
+        case 0:
+          if (node.result) {
+            frame.state = 1;
+            return node.result;
+          } else {
+            setResult();
+            return { pop: 'over', flow: 'call' };
+          }
+        case 1:
+          setResult(result.rv);
           return { pop: 'over', flow: 'call' };
-        }
-      case 1:
-        this.replace(this.result.rv);
-        return { pop: 'over', flow: 'call' };
-    }
-  }
+      }
+    },
 
-  literalNode(node) {
-    this.replace(node.value);
-    return pop;
-  }
+    literal(node) {
+      setResult(node.value);
+      return popOut;
+    },
 
-  varNode(node) {
-    // return the rv/lv pair for this var
-    this.replace({
-      rv: this.get(node.name),
-      lv: { name: node.name },
-    });
-    return pop;
-  }
+    var(node) {
+      // return the rv/lv pair for this var
+      setResult({
+        rv: get(node.name),
+        lv: { name: node.name },
+      });
+      return popOut;
+    },
 
-  letNode(node, state, frame) {
-    switch (state) {
-      case 0:
-        frame.state = 1;
-        return node.value;
-      case 1:
-        this.set(node.name, this.result.rv, node.top);
-        return pop;
-    }
-  }
-
-  indexNode(node, state, frame, orig) {
-    switch (state) {
-      case 0:
-        const { count } = orig;
-        if (count < node.indexes.length) {
+    let(node, state, frame) {
+      switch (state) {
+        case 0:
           frame.state = 1;
-          return node.indexes[count];
-        } else {
-          frame.state = 2;
-          break;
-        }
-      case 1:
-        frame.state = 0;
-        frame.indexes.push(this.result.rv);
-        frame.count++;
-        break;
-      case 2:
-        const indexes = orig.indexes;
-        // return the rv/lv pair for this slot
-        this.replace({
-          rv: this.getIndex(node.name, indexes),
-          lv: { name: node.name, indexes },
-        });
-        return pop;
-    }
-  }
+          return node.value;
+        case 1:
+          set(node.name, result.rv, node.top);
+          return popOut;
+      }
+    },
 
-  letIndexNode(node, state, frame, orig) {
-    switch (state) {
-      case 0:
-        const { count } = orig;
-        if (count < node.indexes.length) {
+    index(node, state, frame, orig) {
+      switch (state) {
+        case 0:
+          const { count } = orig;
+          if (count < node.indexes.length) {
+            frame.state = 1;
+            return node.indexes[count];
+          } else {
+            frame.state = 2;
+            break;
+          }
+        case 1:
+          frame.state = 0;
+          frame.indexes.push(result.rv);
+          frame.count++;
+          break;
+        case 2:
+          const indexes = orig.indexes;
+          // return the rv/lv pair for this slot
+          setResult({
+            rv: getIndex(node.name, indexes),
+            lv: { name: node.name, indexes },
+          });
+          return popOut;
+      }
+    },
+
+    letIndex(node, state, frame, orig) {
+      switch (state) {
+        case 0:
+          const { count } = orig;
+          if (count < node.indexes.length) {
+            frame.state = 1;
+            return node.indexes[count];
+          } else {
+            frame.state = 2;
+            break;
+          }
+        case 1:
+          frame.state = 0;
+          frame.indexes.push(result.rv);
+          frame.count++;
+          break;
+        case 2:
+          frame.state = 3;
+          return node.value;
+        case 3:
+          setIndex(node.name, orig.indexes, result.rv);
+          return popOut;
+      }
+    },
+
+    logicalOp(node, state, frame) {
+      switch (node.op) {
+        case 'and':
+          switch (state) {
+            case 0:
+              frame.state = 1;
+              return node.left;
+            case 1:
+              if (!result.rv) {
+                setResult(false);
+                return popOut;
+              } else {
+                frame.state = 2;
+                return node.right;
+              }
+            case 2:
+              setResult(!!result.rv);
+              return popOut;
+          }
+          break;
+
+        case 'or':
+          switch (state) {
+            case 0:
+              frame.state = 1;
+              return node.left;
+            case 1:
+              if (result.rv) {
+                setResult(true);
+                return popOut;
+              } else {
+                frame.state = 2;
+                return node.right;
+              }
+            case 2:
+              setResult(!!result.rv);
+              return popOut;
+          }
+          break;
+
+        case 'not':
+          switch (state) {
+            case 0:
+              frame.state = 1;
+              return node.right;
+            case 1:
+              setResult(!result.rv);
+              return popOut;
+          }
+          break;
+      }
+    },
+
+    binaryOp(node, state, frame, orig) {
+      switch (state) {
+        case 0:
           frame.state = 1;
-          return node.indexes[count];
-        } else {
+          return node.left;
+        case 1:
           frame.state = 2;
-          break;
-        }
-      case 1:
-        frame.state = 0;
-        frame.indexes.push(this.result.rv);
-        frame.count++;
-        break;
-      case 2:
-        frame.state = 3;
-        return node.value;
-      case 3:
-        this.setIndex(node.name, orig.indexes, this.result.rv);
-        return pop;
-    }
-  }
+          frame.left = result.rv;
+          return node.right;
+        case 2:
+          setResult(ctx.binaryop(node.op, orig.left, result.rv));
+          return popOut;
+      }
+    },
 
-  logicalOpNode(node, state, frame) {
-    switch (node.op) {
-      case 'and':
-        switch (state) {
-          case 0:
-            frame.state = 1;
-            return node.left;
-          case 1:
-            if (!this.result.rv) {
-              this.replace(false);
-              return pop;
-            } else {
-              frame.state = 2;
-              return node.right;
-            }
-          case 2:
-            this.replace(!!this.result.rv);
-            return pop;
-        }
-        break;
+    unaryOp(node, state, frame) {
+      switch (state) {
+        case 0:
+          frame.state = 1;
+          return node.right;
+        case 1:
+          setResult(ctx.unaryop(node.op, result.rv));
+          return popOut;
+      }
+    },
+  };
 
-      case 'or':
-        switch (state) {
-          case 0:
-            frame.state = 1;
-            return node.left;
-          case 1:
-            if (this.result.rv) {
-              this.replace(true);
-              return pop;
-            } else {
-              frame.state = 2;
-              return node.right;
-            }
-          case 2:
-            this.replace(!!this.result.rv);
-            return pop;
-        }
-        break;
+  // set an empty result value
+  setResult();
 
-      case 'not':
-        switch (state) {
-          case 0:
-            frame.state = 1;
-            return node.right;
-          case 1:
-            this.replace(!this.result.rv);
-            return pop;
-        }
-        break;
-    }
-  }
+  return {
+    run,
 
-  binaryOpNode(node, state, frame, orig) {
-    switch (state) {
-      case 0:
-        frame.state = 1;
-        return node.left;
-      case 1:
-        frame.state = 2;
-        frame.left = this.result.rv;
-        return node.right;
-      case 2:
-        this.replace(this.ctx.binaryop(node.op, orig.left, this.result.rv));
-        return pop;
-    }
-  }
-
-  unaryOpNode(node, state, frame) {
-    switch (state) {
-      case 0:
-        frame.state = 1;
-        return node.right;
-      case 1:
-        this.replace(this.ctx.unaryop(node.op, this.result.rv));
-        return pop;
-    }
-  }
+    get fn() {
+      return fn;
+    },
+    get ns() {
+      return ns;
+    },
+    get st() {
+      return st;
+    },
+    get frame() {
+      return frame;
+    },
+    get fst() {
+      return fst;
+    },
+    get result() {
+      return result;
+    },
+  };
 }

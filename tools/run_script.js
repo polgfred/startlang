@@ -8,7 +8,7 @@ import { inspect } from 'util';
 import PEG from 'pegjs';
 
 import { SRuntime } from '../src/lang/runtime';
-import { SInterpreter } from '../src/lang/interpreter';
+import { makeInterpreter } from '../src/lang/interpreter';
 
 let interp,
   start,
@@ -77,9 +77,7 @@ Promise.resolve()
       process.exit();
     }
 
-    interp = new SInterpreter(app);
-    interp.ctx = new SRuntime(app);
-    interp.root(root);
+    interp = makeInterpreter(app, new SRuntime(app), root);
 
     if (options.time) {
       start = new Date();
