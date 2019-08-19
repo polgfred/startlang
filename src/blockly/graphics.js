@@ -231,7 +231,7 @@ Blockly.Blocks['graphics_scale'] = {
 
 Blockly.Blocks['graphics_font'] = {
   init() {
-    let FONTS = [
+    const FONTS = [
       ['Arial', 'ARIAL'],
       ['Courier New', 'COURIER_NEW'],
       ['Helvetica', 'HELVETICA'],

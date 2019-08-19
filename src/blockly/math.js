@@ -12,7 +12,7 @@ Blockly.Blocks['math_angle'] = {
     this.setTooltip('An angle.');
     this.setHelpUrl('');
     this.setTooltip(() => {
-      let parent = this.getParent();
+      const parent = this.getParent();
       return (parent && parent.tooltip) || 'An angle.';
     });
   },

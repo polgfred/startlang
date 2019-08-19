@@ -2,7 +2,7 @@ import Blockly from 'blockly';
 
 Blockly.Blocks['lists_functions'] = {
   init() {
-    let OPERATORS = [
+    const OPERATORS = [
       [Blockly.Msg.MATH_ONLIST_OPERATOR_SUM, 'SUM'],
       [Blockly.Msg.MATH_ONLIST_OPERATOR_MIN, 'MIN'],
       [Blockly.Msg.MATH_ONLIST_OPERATOR_MAX, 'MAX'],
@@ -15,8 +15,8 @@ Blockly.Blocks['lists_functions'] = {
       .setCheck('Array')
       .appendField(new Blockly.FieldDropdown(OPERATORS), 'OP');
     this.setTooltip(() => {
-      let mode = this.getFieldValue('OP');
-      let TOOLTIPS = {
+      const mode = this.getFieldValue('OP');
+      const TOOLTIPS = {
         SUM: Blockly.Msg.MATH_ONLIST_TOOLTIP_SUM,
         MIN: Blockly.Msg.MATH_ONLIST_TOOLTIP_MIN,
         MAX: Blockly.Msg.MATH_ONLIST_TOOLTIP_MAX,
@@ -29,7 +29,7 @@ Blockly.Blocks['lists_functions'] = {
 
 Blockly.Blocks['lists_transformers'] = {
   init() {
-    let OPERATORS = [
+    const OPERATORS = [
       [Blockly.Msg.MATH_ONLIST_OPERATOR_SORT, 'SORT'],
       [Blockly.Msg.MATH_ONLIST_OPERATOR_REVERSE, 'REVERSE'],
       [Blockly.Msg.MATH_ONLIST_OPERATOR_SHUFFLE, 'SHUFFLE'],
@@ -50,9 +50,9 @@ Blockly.Blocks['lists_transformers'] = {
     this.setInputsInline(true);
     this.updateOrder_(true);
     this.setTooltip(() => {
-      let mode = this.getFieldValue('OP');
-      let order = this.getFieldValue('ORDER');
-      let TOOLTIPS = {
+      const mode = this.getFieldValue('OP');
+      const order = this.getFieldValue('ORDER');
+      const TOOLTIPS = {
         SORT: Blockly.Msg[`MATH_ONLIST_TOOLTIP_SORT_${order}`],
         REVERSE: Blockly.Msg.MATH_ONLIST_TOOLTIP_REVERSE,
         SHUFFLE: Blockly.Msg.MATH_ONLIST_TOOLTIP_SHUFFLE,
@@ -61,7 +61,7 @@ Blockly.Blocks['lists_transformers'] = {
     });
   },
   updateOrder_(isOrder) {
-    let ORDERS = [['smallest first', 'ASC'], ['largest first', 'DESC']];
+    const ORDERS = [['smallest first', 'ASC'], ['largest first', 'DESC']];
     if (isOrder) {
       this.removeInput('TAIL');
       this.appendDummyInput('TAIL').appendField(
@@ -74,13 +74,13 @@ Blockly.Blocks['lists_transformers'] = {
     }
   },
   mutationToDom() {
-    let container = document.createElement('mutation');
-    let isOrder = this.getField('ORDER') != null;
+    const container = document.createElement('mutation');
+    const isOrder = this.getField('ORDER') != null;
     container.setAttribute('order', isOrder);
     return container;
   },
   domToMutation(xmlElement) {
-    let isOrder = xmlElement.getAttribute('order') != 'false';
+    const isOrder = xmlElement.getAttribute('order') != 'false';
     this.updateOrder_(isOrder);
   },
 };

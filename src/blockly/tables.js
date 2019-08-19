@@ -22,7 +22,7 @@ Blockly.Blocks['tables_create_with'] = {
     this.setTooltip(Blockly.Msg.TABLES_CREATE_WITH_TOOLTIP);
   },
   mutationToDom() {
-    let container = document.createElement('mutation');
+    const container = document.createElement('mutation');
     container.setAttribute('items', this.itemCount_);
     return container;
   },
@@ -31,11 +31,11 @@ Blockly.Blocks['tables_create_with'] = {
     this.updateShape_();
   },
   decompose(workspace) {
-    let containerBlock = workspace.newBlock('tables_create_with_container');
+    const containerBlock = workspace.newBlock('tables_create_with_container');
     containerBlock.initSvg();
     let connection = containerBlock.getInput('STACK').connection;
     for (let i = 0; i < this.itemCount_; i++) {
-      let itemBlock = workspace.newBlock('tables_create_with_item');
+      const itemBlock = workspace.newBlock('tables_create_with_item');
       itemBlock.initSvg();
       connection.connect(itemBlock.previousConnection);
       connection = itemBlock.nextConnection;
@@ -45,7 +45,7 @@ Blockly.Blocks['tables_create_with'] = {
   compose(containerBlock) {
     let itemBlock = containerBlock.getInputTargetBlock('STACK');
     // Count number of inputs.
-    let connections = [];
+    const connections = [];
     while (itemBlock) {
       connections.push(itemBlock.valueConnection_);
       itemBlock =
@@ -64,7 +64,7 @@ Blockly.Blocks['tables_create_with'] = {
     let itemBlock = containerBlock.getInputTargetBlock('STACK');
     let i = 0;
     while (itemBlock) {
-      let input = this.getInput(`VALUE${i}`);
+      const input = this.getInput(`VALUE${i}`);
       itemBlock.valueConnection_ = input && input.connection.targetConnection;
       i++;
       itemBlock =
@@ -90,7 +90,7 @@ Blockly.Blocks['tables_create_with'] = {
       );
     } else {
       for (let i = 0; i < this.itemCount_; i++) {
-        let input = this.appendValueInput(`VALUE${i}`).setAlign(
+        const input = this.appendValueInput(`VALUE${i}`).setAlign(
           Blockly.ALIGN_RIGHT
         );
         if (i == 0) {
@@ -173,14 +173,14 @@ Blockly.Blocks['tables_isEmpty'] = {
 
 Blockly.Blocks['tables_getIndex'] = {
   init() {
-    let MODE = [
+    const MODE = [
       [Blockly.Msg.TABLES_GET_INDEX_GET, 'GET'],
       [Blockly.Msg.TABLES_GET_INDEX_GET_REMOVE, 'GET_REMOVE'],
       [Blockly.Msg.TABLES_GET_INDEX_REMOVE, 'REMOVE'],
     ];
     this.setHelpUrl(Blockly.Msg.TABLES_GET_INDEX_HELPURL);
     this.setColour(Blockly.Msg.TABLES_HUE);
-    let modeMenu = new Blockly.FieldDropdown(MODE, value => {
+    const modeMenu = new Blockly.FieldDropdown(MODE, value => {
       this.updateStatement_(value == 'REMOVE');
     });
     this.appendValueInput('VALUE')
@@ -196,22 +196,22 @@ Blockly.Blocks['tables_getIndex'] = {
     this.setInputsInline(true);
     this.setOutput(true);
     this.setTooltip(() => {
-      let mode = this.getFieldValue('MODE');
+      const mode = this.getFieldValue('MODE');
       return Blockly.Msg[`TABLES_GET_INDEX_TOOLTIP_${mode}`];
     });
   },
   mutationToDom() {
-    let container = document.createElement('mutation');
-    let isStatement = !this.outputConnection;
+    const container = document.createElement('mutation');
+    const isStatement = !this.outputConnection;
     container.setAttribute('statement', isStatement);
     return container;
   },
   domToMutation(xmlElement) {
-    let isStatement = xmlElement.getAttribute('statement') == 'true';
+    const isStatement = xmlElement.getAttribute('statement') == 'true';
     this.updateStatement_(isStatement);
   },
   updateStatement_(newStatement) {
-    let oldStatement = !this.outputConnection;
+    const oldStatement = !this.outputConnection;
     if (newStatement != oldStatement) {
       this.unplug(true, true);
       if (newStatement) {

@@ -1,5 +1,16 @@
 import Blockly from 'blockly';
 
+const UNITS = [
+  ['year', 'YEAR'],
+  ['month', 'MONTH'],
+  ['date', 'DATE'],
+  ['day', 'DAY'],
+  ['hour', 'HOUR'],
+  ['minute', 'MINUTE'],
+  ['second', 'SECOND'],
+  ['millisecond', 'MILLISECOND'],
+];
+
 Blockly.Blocks['time_sleep'] = {
   init() {
     this.setColour(Blockly.Msg.TIME_HUE);
@@ -62,17 +73,6 @@ Blockly.Blocks['time_create_with'] = {
 
 Blockly.Blocks['time_getPart'] = {
   init() {
-    let UNITS = [
-      ['year', 'YEAR'],
-      ['month', 'MONTH'],
-      ['date', 'DATE'],
-      ['day', 'DAY'],
-      ['hour', 'HOUR'],
-      ['minute', 'MINUTE'],
-      ['second', 'SECOND'],
-      ['millisecond', 'MILLISECOND'],
-    ];
-
     this.setColour(Blockly.Msg.TIME_HUE);
     this.appendValueInput('TIME')
       .setCheck('Time')
@@ -93,16 +93,6 @@ Blockly.Blocks['time_getPart'] = {
 
 Blockly.Blocks['time_diff'] = {
   init() {
-    let UNITS = [
-      ['years', 'YEAR'],
-      ['months', 'MONTH'],
-      ['days', 'DAY'],
-      ['hours', 'HOUR'],
-      ['minutes', 'MINUTE'],
-      ['seconds', 'SECOND'],
-      ['milliseconds', 'MILLISECOND'],
-    ];
-
     this.setColour(Blockly.Msg.TIME_HUE);
     this.appendValueInput('TIME1')
       .setCheck('Time')
@@ -115,7 +105,7 @@ Blockly.Blocks['time_diff'] = {
     this.setInputsInline(true);
     this.setOutput(true, 'Number');
     this.setTooltip(() => {
-      let unit = this.getFieldValue('UNIT').toLowerCase();
+      const unit = this.getFieldValue('UNIT').toLowerCase();
       return `Calculates the number of ${unit}s between two times.`;
     });
     this.setHelpUrl('');
@@ -124,17 +114,7 @@ Blockly.Blocks['time_diff'] = {
 
 Blockly.Blocks['time_addSubtract'] = {
   init() {
-    let MODES = [['add', 'ADD'], ['subtract', 'SUB']];
-    let UNITS = [
-      ['years', 'YEAR'],
-      ['months', 'MONTH'],
-      ['days', 'DAY'],
-      ['hours', 'HOUR'],
-      ['minutes', 'MINUTE'],
-      ['seconds', 'SECOND'],
-      ['milliseconds', 'MILLISECOND'],
-    ];
-
+    const MODES = [['add', 'ADD'], ['subtract', 'SUB']];
     this.setColour(Blockly.Msg.TIME_HUE);
     this.timeInput = this.appendValueInput('TIME')
       .setCheck('Time')
@@ -153,9 +133,9 @@ Blockly.Blocks['time_addSubtract'] = {
     this.setPreviousStatement(true);
     this.setNextStatement(true);
     this.setTooltip(() => {
-      let mode = this.getFieldValue('MODE') == 'ADD' ? 'Add' : 'Subtract';
-      let from_to = this.getFieldValue('MODE') == 'ADD' ? 'to' : 'from';
-      let unit = this.getFieldValue('UNIT').toLowerCase();
+      const mode = this.getFieldValue('MODE') == 'ADD' ? 'Add' : 'Subtract';
+      const from_to = this.getFieldValue('MODE') == 'ADD' ? 'to' : 'from';
+      const unit = this.getFieldValue('UNIT').toLowerCase();
       return `${mode}s some number of ${unit}s ${from_to} the specified time.`;
     });
     this.setHelpUrl('');
@@ -177,17 +157,7 @@ Blockly.Blocks['time_addSubtract'] = {
 
 Blockly.Blocks['time_startEnd'] = {
   init() {
-    let MODES = [['beginning', 'START'], ['end', 'END']];
-    let UNITS = [
-      ['year', 'YEAR'],
-      ['month', 'MONTH'],
-      ['day', 'DAY'],
-      ['hour', 'HOUR'],
-      ['minute', 'MINUTE'],
-      ['second', 'SECOND'],
-      ['millisecond', 'MILLISECOND'],
-    ];
-
+    const MODES = [['beginning', 'START'], ['end', 'END']];
     this.setColour(Blockly.Msg.TIME_HUE);
     this.appendValueInput('TIME')
       .setCheck('Time')
@@ -201,8 +171,8 @@ Blockly.Blocks['time_startEnd'] = {
     this.setPreviousStatement(true);
     this.setNextStatement(true);
     this.setTooltip(() => {
-      let mode = this.getFieldValue('MODE') == 'START' ? 'beginning' : 'end';
-      let unit = this.getFieldValue('UNIT').toLowerCase();
+      const mode = this.getFieldValue('MODE') == 'START' ? 'beginning' : 'end';
+      const unit = this.getFieldValue('UNIT').toLowerCase();
       return `Rounds the specified time to the ${mode} of the enclosing ${unit}.`;
     });
     this.setHelpUrl('');
