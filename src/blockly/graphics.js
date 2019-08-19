@@ -1,6 +1,8 @@
+import Blockly from 'blockly';
+
 Blockly.Blocks['graphics_rect'] = {
   init() {
-    this.setColour(Blockly.Blocks.graphics.HUE);
+    this.setColour(Blockly.Msg.GRAPHICS_HUE);
     this.appendValueInput('X')
       .setCheck('Number')
       .setAlign(Blockly.ALIGN_RIGHT)
@@ -30,7 +32,7 @@ Blockly.Blocks['graphics_rect'] = {
 
 Blockly.Blocks['graphics_circle'] = {
   init() {
-    this.setColour(Blockly.Blocks.graphics.HUE);
+    this.setColour(Blockly.Msg.GRAPHICS_HUE);
     this.appendValueInput('X')
       .setCheck('Number')
       .setAlign(Blockly.ALIGN_RIGHT)
@@ -56,7 +58,7 @@ Blockly.Blocks['graphics_circle'] = {
 
 Blockly.Blocks['graphics_ellipse'] = {
   init() {
-    this.setColour(Blockly.Blocks.graphics.HUE);
+    this.setColour(Blockly.Msg.GRAPHICS_HUE);
     this.appendValueInput('X')
       .setCheck('Number')
       .setAlign(Blockly.ALIGN_RIGHT)
@@ -86,7 +88,7 @@ Blockly.Blocks['graphics_ellipse'] = {
 
 Blockly.Blocks['graphics_line'] = {
   init() {
-    this.setColour(Blockly.Blocks.graphics.HUE);
+    this.setColour(Blockly.Msg.GRAPHICS_HUE);
     this.appendValueInput('X1')
       .setCheck('Number')
       .setAlign(Blockly.ALIGN_RIGHT)
@@ -115,7 +117,7 @@ Blockly.Blocks['graphics_line'] = {
 
 Blockly.Blocks['graphics_text'] = {
   init() {
-    this.setColour(Blockly.Blocks.graphics.HUE);
+    this.setColour(Blockly.Msg.GRAPHICS_HUE);
     this.appendValueInput('TEXT')
       .setCheck('String')
       .setAlign(Blockly.ALIGN_RIGHT)
@@ -141,7 +143,7 @@ Blockly.Blocks['graphics_text'] = {
 
 Blockly.Blocks['graphics_stroke'] = {
   init() {
-    this.setColour(Blockly.Blocks.graphics.HUE);
+    this.setColour(Blockly.Msg.GRAPHICS_HUE);
     this.appendValueInput('COLOR')
       .setCheck('Colour')
       .setAlign(Blockly.ALIGN_RIGHT)
@@ -156,7 +158,7 @@ Blockly.Blocks['graphics_stroke'] = {
 
 Blockly.Blocks['graphics_fill'] = {
   init() {
-    this.setColour(Blockly.Blocks.graphics.HUE);
+    this.setColour(Blockly.Msg.GRAPHICS_HUE);
     this.appendValueInput('COLOR')
       .setCheck('Colour')
       .setAlign(Blockly.ALIGN_RIGHT)
@@ -171,7 +173,7 @@ Blockly.Blocks['graphics_fill'] = {
 
 Blockly.Blocks['graphics_opacity'] = {
   init() {
-    this.setColour(Blockly.Blocks.graphics.HUE);
+    this.setColour(Blockly.Msg.GRAPHICS_HUE);
     this.appendValueInput('AMOUNT')
       .setCheck('Number')
       .setAlign(Blockly.ALIGN_RIGHT)
@@ -190,7 +192,7 @@ Blockly.Blocks['graphics_opacity'] = {
 
 Blockly.Blocks['graphics_rotate'] = {
   init() {
-    this.setColour(Blockly.Blocks.graphics.HUE);
+    this.setColour(Blockly.Msg.GRAPHICS_HUE);
     this.appendValueInput('ANGLE')
       .setCheck('Number')
       .setAlign(Blockly.ALIGN_RIGHT)
@@ -205,7 +207,7 @@ Blockly.Blocks['graphics_rotate'] = {
 
 Blockly.Blocks['graphics_scale'] = {
   init() {
-    this.setColour(Blockly.Blocks.graphics.HUE);
+    this.setColour(Blockly.Msg.GRAPHICS_HUE);
     this.appendValueInput('MULTX')
       .setCheck('Number')
       .setAlign(Blockly.ALIGN_RIGHT)
@@ -237,7 +239,7 @@ Blockly.Blocks['graphics_font'] = {
       ['Verdana', 'VERDANA'],
     ];
 
-    this.setColour(Blockly.Blocks.graphics.HUE);
+    this.setColour(Blockly.Msg.GRAPHICS_HUE);
     this.appendValueInput('SIZE')
       .setCheck('Number')
       .setAlign(Blockly.ALIGN_RIGHT)
@@ -257,7 +259,7 @@ Blockly.Blocks['graphics_font'] = {
 
 Blockly.Blocks['graphics_repaint'] = {
   init() {
-    this.setColour(Blockly.Blocks.graphics.HUE);
+    this.setColour(Blockly.Msg.GRAPHICS_HUE);
     this.appendDummyInput().appendField('repaint the display');
     this.setPreviousStatement(true);
     this.setNextStatement(true);

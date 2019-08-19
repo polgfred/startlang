@@ -1,3 +1,5 @@
+import Blockly from 'blockly';
+
 Blockly.Blocks['lists_functions'] = {
   init() {
     let OPERATORS = [
@@ -7,7 +9,7 @@ Blockly.Blocks['lists_functions'] = {
       [Blockly.Msg.MATH_ONLIST_OPERATOR_AVERAGE, 'AVERAGE'],
     ];
     this.setHelpUrl(Blockly.Msg.MATH_ONLIST_HELPURL);
-    this.setColour(Blockly.Blocks.lists.HUE);
+    this.setColour(Blockly.Msg.LISTS_HUE);
     this.setOutput(true);
     this.appendValueInput('LIST')
       .setCheck('Array')
@@ -33,7 +35,7 @@ Blockly.Blocks['lists_transformers'] = {
       [Blockly.Msg.MATH_ONLIST_OPERATOR_SHUFFLE, 'SHUFFLE'],
     ];
     this.setHelpUrl(Blockly.Msg.MATH_ONLIST_HELPURL);
-    this.setColour(Blockly.Blocks.lists.HUE);
+    this.setColour(Blockly.Msg.LISTS_HUE);
     this.setPreviousStatement(true);
     this.setNextStatement(true);
     this.appendValueInput('LIST')

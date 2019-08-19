@@ -17,7 +17,7 @@
   "author": "Frederick Polgardy <fred@polgardy.com>",
   "license": "ISC",
   "dependencies": {
-    "blockly": "^1.0.0",
+    "blockly": "^2.20190722.1",
     "brace": "^0.11.1",
     "classnames": "^2.2.6",
     "core-js": "^3.1.4",

@@ -1,6 +1,8 @@
+import Blockly from 'blockly';
+
 Blockly.Blocks['time_sleep'] = {
   init() {
-    this.setColour(Blockly.Blocks.time.HUE);
+    this.setColour(Blockly.Msg.TIME_HUE);
     this.appendValueInput('SECONDS')
       .setCheck('Number')
       .appendField('wait for');
@@ -15,7 +17,7 @@ Blockly.Blocks['time_sleep'] = {
 
 Blockly.Blocks['time_create_empty'] = {
   init() {
-    this.setColour(Blockly.Blocks.time.HUE);
+    this.setColour(Blockly.Msg.TIME_HUE);
     this.appendDummyInput().appendField('current time');
     this.setInputsInline(true);
     this.setOutput(true, 'Time');
@@ -26,7 +28,7 @@ Blockly.Blocks['time_create_empty'] = {
 
 Blockly.Blocks['time_create_with'] = {
   init() {
-    this.setColour(Blockly.Blocks.time.HUE);
+    this.setColour(Blockly.Msg.TIME_HUE);
     this.appendValueInput('YEAR')
       .setCheck('Number')
       .setAlign(Blockly.ALIGN_RIGHT)
@@ -71,7 +73,7 @@ Blockly.Blocks['time_getPart'] = {
       ['millisecond', 'MILLISECOND'],
     ];
 
-    this.setColour(Blockly.Blocks.time.HUE);
+    this.setColour(Blockly.Msg.TIME_HUE);
     this.appendValueInput('TIME')
       .setCheck('Time')
       .appendField('extract')
@@ -101,7 +103,7 @@ Blockly.Blocks['time_diff'] = {
       ['milliseconds', 'MILLISECOND'],
     ];
 
-    this.setColour(Blockly.Blocks.time.HUE);
+    this.setColour(Blockly.Msg.TIME_HUE);
     this.appendValueInput('TIME1')
       .setCheck('Time')
       .appendField('number of')
@@ -133,7 +135,7 @@ Blockly.Blocks['time_addSubtract'] = {
       ['milliseconds', 'MILLISECOND'],
     ];
 
-    this.setColour(Blockly.Blocks.time.HUE);
+    this.setColour(Blockly.Msg.TIME_HUE);
     this.timeInput = this.appendValueInput('TIME')
       .setCheck('Time')
       .appendField('to time', 'FROM_TO');
@@ -186,7 +188,7 @@ Blockly.Blocks['time_startEnd'] = {
       ['millisecond', 'MILLISECOND'],
     ];
 
-    this.setColour(Blockly.Blocks.time.HUE);
+    this.setColour(Blockly.Msg.TIME_HUE);
     this.appendValueInput('TIME')
       .setCheck('Time')
       .appendField('round time');

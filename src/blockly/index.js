@@ -1,4 +1,4 @@
-// wrap up and extend the blockly stuff, and expose it like a proper ES6 module
+import Blockly from 'blockly';
 
 import './msg';
 import './control';
@@ -9,14 +9,8 @@ import './tables';
 import './graphics';
 
 // setup our color scheme
-Blockly.Blocks.control = {};
-Blockly.Blocks.time = {};
-Blockly.Blocks.colour = {};
-Blockly.Blocks.graphics = {};
-Blockly.Blocks.control.HUE = 290;
-Blockly.Blocks.time.HUE = 0;
-Blockly.Blocks.colour.HUE = 180;
-Blockly.Blocks.graphics.HUE = 180;
-
-// internally, requiring 'blockly' will configure stuff and return the global object
-export default Blockly;
+Blockly.Msg.CONTROL_HUE = 290;
+Blockly.Msg.TIME_HUE = 0;
+Blockly.Msg.COLOUR_HUE = 180;
+Blockly.Msg.GRAPHICS_HUE = 180;
+Blockly.Msg.TABLES_HUE = 20;

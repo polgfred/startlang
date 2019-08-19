@@ -1,12 +1,10 @@
-Blockly.Blocks.tables = {};
-
-Blockly.Blocks.tables.HUE = 20;
+import Blockly from 'blockly';
 
 Blockly.Blocks['tables_create_empty'] = {
   init() {
     this.appendDummyInput().appendField(Blockly.Msg.TABLES_CREATE_EMPTY_TITLE);
     this.setOutput(true, 'Map');
-    this.setColour(Blockly.Blocks.tables.HUE);
+    this.setColour(Blockly.Msg.TABLES_HUE);
     this.setTooltip(Blockly.Msg.TABLES_CREATE_EMPTY_TOOLTIP);
     this.setHelpUrl(Blockly.Msg.TABLES_CREATE_EMPTY_HELPURL);
   },
@@ -16,7 +14,7 @@ Blockly.Blocks['tables_create_with'] = {
   init() {
     this.savedKeys = [];
     this.setHelpUrl(Blockly.Msg.TABLES_CREATE_WITH_HELPURL);
-    this.setColour(Blockly.Blocks.tables.HUE);
+    this.setColour(Blockly.Msg.TABLES_HUE);
     this.itemCount_ = 3;
     this.updateShape_();
     this.setOutput(true, 'Map');
@@ -112,7 +110,7 @@ Blockly.Blocks['tables_create_with'] = {
 
 Blockly.Blocks['tables_create_with_container'] = {
   init() {
-    this.setColour(Blockly.Blocks.tables.HUE);
+    this.setColour(Blockly.Msg.TABLES_HUE);
     this.appendDummyInput().appendField(
       Blockly.Msg.TABLES_CREATE_WITH_CONTAINER_TITLE_ADD
     );
@@ -124,7 +122,7 @@ Blockly.Blocks['tables_create_with_container'] = {
 
 Blockly.Blocks['tables_create_with_item'] = {
   init() {
-    this.setColour(Blockly.Blocks.tables.HUE);
+    this.setColour(Blockly.Msg.TABLES_HUE);
     this.appendDummyInput().appendField(
       Blockly.Msg.TABLES_CREATE_WITH_ITEM_TITLE
     );
@@ -147,7 +145,7 @@ Blockly.Blocks['tables_size'] = {
         },
       ],
       output: 'Number',
-      colour: Blockly.Blocks.tables.HUE,
+      colour: Blockly.Msg.TABLES_HUE,
       tooltip: Blockly.Msg.TABLES_SIZE_TOOLTIP,
       helpUrl: Blockly.Msg.TABLES_SIZE_HELPURL,
     });
@@ -166,7 +164,7 @@ Blockly.Blocks['tables_isEmpty'] = {
         },
       ],
       output: 'Boolean',
-      colour: Blockly.Blocks.tables.HUE,
+      colour: Blockly.Msg.TABLES_HUE,
       tooltip: Blockly.Msg.TABLES_ISEMPTY_TOOLTIP,
       helpUrl: Blockly.Msg.TABLES_ISEMPTY_HELPURL,
     });
@@ -181,7 +179,7 @@ Blockly.Blocks['tables_getIndex'] = {
       [Blockly.Msg.TABLES_GET_INDEX_REMOVE, 'REMOVE'],
     ];
     this.setHelpUrl(Blockly.Msg.TABLES_GET_INDEX_HELPURL);
-    this.setColour(Blockly.Blocks.tables.HUE);
+    this.setColour(Blockly.Msg.TABLES_HUE);
     let modeMenu = new Blockly.FieldDropdown(MODE, value => {
       this.updateStatement_(value == 'REMOVE');
     });
@@ -232,7 +230,7 @@ Blockly.Blocks['tables_getIndex'] = {
 Blockly.Blocks['tables_setIndex'] = {
   init() {
     this.setHelpUrl(Blockly.Msg.TABLES_SET_INDEX_HELPURL);
-    this.setColour(Blockly.Blocks.tables.HUE);
+    this.setColour(Blockly.Msg.TABLES_HUE);
     this.appendValueInput('TABLE')
       .setCheck('Map')
       .appendField(Blockly.Msg.TABLES_SET_INDEX_INPUT_IN_TABLE);
@@ -260,7 +258,7 @@ Blockly.Blocks['tables_keys'] = {
         },
       ],
       output: 'Array',
-      colour: Blockly.Blocks.tables.HUE,
+      colour: Blockly.Msg.TABLES_HUE,
       tooltip: Blockly.Msg.TABLES_KEYS_TOOLTIP,
       helpUrl: Blockly.Msg.TABLES_KEYS_HELPURL,
     });

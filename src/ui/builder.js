@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 
 import { SBuilder } from '../lang/builder';
-import Blockly from '../blockly';
+import Blockly from 'blockly';
 
 import toolbox from './toolbox.xml';
 
@@ -17,7 +17,7 @@ export default function Builder({ setParser }) {
       readOnly: false,
       scrollbars: true,
       trashcan: true,
-      media: './dist/blockly/media/',
+      media: './blockly/media/',
       grid: {
         spacing: 25,
         length: 3,

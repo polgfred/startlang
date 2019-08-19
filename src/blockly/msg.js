@@ -1,3 +1,5 @@
+import Blockly from 'blockly';
+
 Blockly.Msg.LOGIC_NULL = 'nothing';
 Blockly.Msg.LOGIC_NULL_TOOLTIP = 'Returns nothing.';
 
