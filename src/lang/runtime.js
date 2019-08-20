@@ -1,5 +1,7 @@
 import moment from 'moment';
-import immutable from 'immutable';
+
+import { produce } from 'immer';
+import deepEqual from 'deep-equal';
 
 export const handlerKey = Symbol('START_HANDLER');
 export const globalsKey = Symbol('START_GLOBALS');
@@ -365,20 +367,22 @@ const stringHandler = {
     },
 
     replace(s, search, to) {
-      return { [assignKey]: s.replace(search, to) };
+      return { [assignKey]: [s.replace(search, to)] };
     },
 
     reverse(s) {
       return {
-        [assignKey]: s
-          .split('')
-          .reverse()
-          .join(''),
+        [assignKey]: [
+          s
+            .split('')
+            .reverse()
+            .join(''),
+        ],
       };
     },
 
     split(s, delim) {
-      return immutable.List(s.split(delim || ' '));
+      return s.split(delim || ' ');
     },
 
     upper(s) {
@@ -434,19 +438,19 @@ const timeHandler = {
     },
 
     add(t, n, unit) {
-      return { [assignKey]: moment(t).add(n, normalizeTimeUnit(unit)) };
+      return { [assignKey]: [moment(t).add(n, normalizeTimeUnit(unit))] };
     },
 
     sub(t, n, unit) {
-      return { [assignKey]: moment(t).subtract(n, normalizeTimeUnit(unit)) };
+      return { [assignKey]: [moment(t).subtract(n, normalizeTimeUnit(unit))] };
     },
 
     startof(t, unit) {
-      return { [assignKey]: moment(t).startOf(normalizeTimeUnit(unit)) };
+      return { [assignKey]: [moment(t).startOf(normalizeTimeUnit(unit))] };
     },
 
     endof(t, unit) {
-      return { [assignKey]: moment(t).endOf(normalizeTimeUnit(unit)) };
+      return { [assignKey]: [moment(t).endOf(normalizeTimeUnit(unit))] };
     },
 
     diff(t1, t2, unit) {
@@ -484,8 +488,8 @@ const containerHandler = {
   ...baseHandler,
 
   binaryops: {
-    '=': (left, right) => left.equals(right),
-    '!=': (left, right) => !left.equals(right),
+    '=': (left, right) => deepEqual(left, right),
+    '!=': (left, right) => !deepEqual(left, right),
   },
 };
 
@@ -495,7 +499,9 @@ const listHandler = {
   ...containerHandler,
 
   create(items) {
-    return immutable.List(items);
+    return produce([], dl => {
+      dl.push(...items);
+    });
   },
 
   repr(l) {
@@ -503,24 +509,28 @@ const listHandler = {
   },
 
   getindex(l, index) {
-    return l.get(adjustIndex(index, l.size));
+    index = adjustIndex(index, l.length);
+    return l[index];
   },
 
   setindex(l, index, value) {
-    return l.set(adjustIndex(index, l.size), value);
+    index = adjustIndex(index, l.length);
+    return produce(l, dl => {
+      dl[index] = value;
+    });
   },
 
   enumerate(l, index = 0) {
     return {
-      value: l.get(index),
-      more: index < l.size,
+      value: l[index],
+      more: index < l.length,
       next: () => listHandler.enumerate(l, index + 1),
     };
   },
 
   methods: {
     len(l) {
-      return l.size;
+      return l.length;
     },
 
     first(l, search) {
@@ -535,39 +545,51 @@ const listHandler = {
 
     copy(l, start, end) {
       // adjust for 1-based indexes and negative offsets
-      start = adjustIndex(start, l.size);
-      end = adjustIndex(end, l.size);
+      start = adjustIndex(start, l.length);
+      end = adjustIndex(end, l.length);
       // inclusive
       return l.slice(start, end + 1);
     },
 
     add(l, ...values) {
-      return { [assignKey]: l.push(...values) };
+      return {
+        [assignKey]: [
+          produce(l, dl => {
+            dl.push(...values);
+          }),
+        ],
+      };
     },
 
     insert(l, start, ...values) {
       // adjust for 1-based indexes and negative offsets
-      start = adjustIndex(start, l.size);
-      return { [assignKey]: l.splice(start, 0, ...values) };
+      start = adjustIndex(start, l.length);
+      return {
+        [assignKey]: [
+          produce(l, dl => {
+            dl.splice(start, 0, ...values);
+          }),
+        ],
+      };
     },
 
     remove(l, start, end) {
       // adjust for 1-based indexes and negative offsets
-      start = adjustIndex(start, l.size);
-      if (end === undefined) {
-        // remove and return a single element
-        return {
-          [resultKey]: l.get(start),
-          [assignKey]: l.splice(start, 1),
-        };
-      } else {
-        end = adjustIndex(end, l.size);
-        // inclusive
-        return {
-          [resultKey]: l.slice(start, end + 1),
-          [assignKey]: l.splice(start, end - start + 1),
-        };
-      }
+      start = adjustIndex(start, l.length);
+      // get the removed items and the new list
+      let removed;
+      const nl = produce(l, dl => {
+        removed =
+          end === undefined
+            ? // remove and return a single element
+              dl.splice(start, 1)[0]
+            : // remove a range
+              dl.splice(start, end - start + 1);
+      });
+      return {
+        [resultKey]: removed,
+        [assignKey]: [nl],
+      };
     },
 
     join(l, delim) {
@@ -581,38 +603,62 @@ const listHandler = {
     },
 
     min(l) {
-      return l.min(compareElements);
+      return l.reduce((least, item) =>
+        handle(item).binaryops['<'](item, least) ? item : least
+      );
     },
 
     max(l) {
-      return l.max(compareElements);
+      return l.reduce((least, item) =>
+        handle(item).binaryops['>'](item, least) ? item : least
+      );
     },
 
     avg(l) {
-      return listHandler.methods.sum(l) / l.size;
+      return listHandler.methods.sum(l) / l.length;
     },
 
     sort(l) {
-      return { [assignKey]: l.sort(compareElements) };
+      return {
+        [assignKey]: [
+          produce(l, dl => {
+            dl.sort(compareElements);
+          }),
+        ],
+      };
     },
 
     rsort(l) {
-      return { [assignKey]: l.sort(compareElementsReversed) };
+      return {
+        [assignKey]: [
+          produce(l, dl => {
+            dl.sort(compareElementsReversed);
+          }),
+        ],
+      };
     },
 
     reverse(l) {
-      return { [assignKey]: l.reverse() };
+      return {
+        [assignKey]: [
+          produce(l, dl => {
+            dl.reverse();
+          }),
+        ],
+      };
     },
 
     shuffle(l) {
       return {
-        [assignKey]: immutable.List().withMutations(m => {
-          for (let i = 0; i < l.size; ++i) {
-            let j = Math.floor(Math.random() * i);
-            m.set(i, m.get(j));
-            m.set(j, l.get(i));
-          }
-        }),
+        [assignKey]: [
+          produce(l, dl => {
+            for (let i = 0; i < l.length; ++i) {
+              let j = Math.floor(Math.random() * i);
+              dl[i] = l[j];
+              dl[j] = l[i];
+            }
+          }),
+        ],
       };
     },
   },
@@ -624,7 +670,7 @@ const listHandler = {
   },
 };
 
-immutable.List.prototype[handlerKey] = listHandler;
+Array.prototype[handlerKey] = listHandler;
 
 // Tables
 
@@ -632,63 +678,70 @@ const tableHandler = {
   ...containerHandler,
 
   create(pairs) {
-    return immutable.OrderedMap().withMutations(n => {
+    return produce({}, dt => {
       for (let i = 0; i < pairs.length; i += 2) {
-        n.set(pairs[i], pairs[i + 1]);
+        dt[pairs[i]] = pairs[i + 1];
       }
     });
   },
 
   repr(t) {
-    let pairs = t.map(
-      (val, key) => handle(key).repr(key) + ': ' + handle(val).repr(val)
-    );
+    let pairs = Object.keys(t).map(key => {
+      const val = t[key];
+      return handle(key).repr(key) + ': ' + handle(val).repr(val);
+    });
     return '[ ' + pairs.join(', ') + ' ]';
   },
 
   getindex(t, index) {
-    return t.get(index);
+    return t[index];
   },
 
   setindex(t, index, value) {
-    return t.set(index, value);
+    return produce(t, dt => {
+      dt[index] = value;
+    });
   },
 
   enumerate(t) {
-    return listHandler.enumerate(t.keySeq());
+    return listHandler.enumerate(Object.keys(t));
   },
 
   methods: {
     len(t) {
-      return t.size;
+      return Object.keys(t).length;
     },
 
     keys(t) {
-      return immutable.List(t.keySeq());
+      return Object.keys(t);
     },
 
     put(t, ...pairs) {
       return {
-        [assignKey]: t.withMutations(n => {
-          for (let i = 0; i < pairs.length; i += 2) {
-            n.set(pairs[i], pairs[i + 1]);
-          }
-        }),
+        [assignKey]: [
+          produce(t, dt => {
+            for (let i = 0; i < pairs.length; i += 2) {
+              dt[pairs[i]] = pairs[i + 1];
+            }
+          }),
+        ],
       };
     },
 
     remove(t, ...keys) {
       // remove and return one or more values
-      let o = immutable.List().asMutable();
-
+      const removed = [];
       return {
-        [assignKey]: t.withMutations(n => {
-          for (let i = 0; i < keys.length; ++i) {
-            o.push(t.get(keys[i]));
-            n.delete(keys[i]);
-          }
-        }),
-        [resultKey]: o.size === 1 ? o.first() : o.asImmutable(),
+        [assignKey]: [
+          produce(t, dt => {
+            for (let i = 0; i < keys.length; ++i) {
+              const key = keys[i];
+              removed.push(t[key]);
+              delete dt[key];
+            }
+          }),
+        ],
+        [resultKey]: removed.length === 1 ? removed[0] : removed,
       };
     },
   },
@@ -700,7 +753,7 @@ const tableHandler = {
   },
 };
 
-immutable.OrderedMap.prototype[handlerKey] = tableHandler;
+Object.prototype[handlerKey] = tableHandler;
 
 // find a protocol handler for this object
 function handle(obj) {

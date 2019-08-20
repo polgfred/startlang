@@ -281,10 +281,6 @@ export function makeInterpreter(app, ctx) {
       let repl = res[assignKey];
       let i, r, a;
       if (repl) {
-        // if this result contains replacement args, assign them
-        if (!Array.isArray(repl)) {
-          repl = [repl];
-        }
         // loop over replacement args
         for (i = 0; i < repl.length; ++i) {
           r = repl[i];
