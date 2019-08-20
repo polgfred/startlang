@@ -131,9 +131,8 @@ export default function App() {
     const interp = makeInterpreter(bindings, ctx);
     clearHistory();
 
-    return interp(parser()).catch(err => {
+    return interp.run(parser()).catch(err => {
       // debugg errors
-      console.log(err); // eslint-disable-line no-console
       console.log(err.stack); // eslint-disable-line no-console
     });
   }, [bindings, parser, refreshState, clearHistory]);
