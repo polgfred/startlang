@@ -10,10 +10,7 @@ import PEG from 'pegjs';
 import { SRuntime } from '../src/lang/runtime';
 import { makeInterpreter } from '../src/lang/interpreter';
 
-let interp,
-  start,
-  end,
-  options = {},
+let options = {},
   parserOptions = {},
   parser = PEG.generate(
     readFileSync(__dirname + '/../src/lang/parser.pegjs', 'utf-8')
@@ -58,10 +55,6 @@ if (process.argv.indexOf('--ns') != -1) {
   options.ns = true;
 }
 
-if (process.argv.indexOf('--time') != -1) {
-  options.time = true;
-}
-
 if (process.argv.indexOf('--meta') != -1) {
   options.ast = true;
   parserOptions.ast = parserOptions.meta = true;
@@ -77,32 +70,25 @@ Promise.resolve()
       process.exit();
     }
 
-    interp = makeInterpreter(app, new SRuntime(app), root);
-
-    if (options.time) {
-      start = new Date();
-      console.error('start', start);
+    const ctx = new SRuntime(app);
+    const interp = makeInterpreter(app, ctx);
+    return interp(root);
+  })
+  .then(({ result, snapshot }) => {
+    if (result) {
+      output(result);
     }
 
-    return interp.run();
+    if (options.ns) {
+      output(snapshot.ns);
+    }
   })
-  .catch(err => {
+  .catch(({ err, snapshot }) => {
     if (err.stack) {
       console.log(err.stack);
     }
 
-    if (interp.frame) {
-      output(interp.frame.node);
-    }
-  })
-  .then(() => {
-    if (options.time) {
-      end = new Date();
-      console.error('end', end);
-      console.error('time (ms)', end - start);
-    }
-
-    if (options.ns) {
-      output(interp.ns.toJS());
+    if (snapshot.frame) {
+      output(snapshot.frame.node);
     }
   });

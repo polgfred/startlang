@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 /* eslint-disable no-case-declarations */
 
 import { produce, original } from 'immer';
@@ -30,15 +29,19 @@ function makeFrame(node) {
   };
 }
 
-export function makeInterpreter(app, ctx, node) {
+export function makeInterpreter(app, ctx) {
+  // interpreter state
   let fn = {}; // function table
-  let st = []; // namespace stack
-  let ns = {}; // top namespace
   let fst = []; // frame stack
-  let frame = makeFrame(node); // top frame
-  let result; // last expression return value
+  let st = []; // namespace stack
+  let frame; // top frame
+  let ns; // top namespace
+  let result; // last evaluated expression
 
-  function run() {
+  function run(node) {
+    frame = makeFrame(node);
+    ns = {};
+
     // set up an entry point that loops until the stack is exhausted, or
     // until a node returns a promise
     function loop() {
@@ -72,13 +75,35 @@ export function makeInterpreter(app, ctx, node) {
         }
       }
       // take a final snapshot
-      app.snapshot();
+      // app.snapshot();
     }
 
     // return a promise for the eventual termination of the loop
-    return new Promise(resolve => {
-      resolve(loop());
-    });
+    return Promise.resolve()
+      .then(loop)
+      .catch(orig => {
+        const err = new Error(orig.message);
+        err.err = orig;
+        err.snapshot = snapshot();
+        throw err;
+      })
+      .then(result => ({
+        result,
+        snapshot: snapshot(),
+      }));
+  }
+
+  function snapshot() {
+    // take a snapshot of the interpreter internals
+    // TODO: need to have a way to pass these in as well
+    return {
+      fn,
+      fst,
+      st,
+      frame,
+      ns,
+      result,
+    };
   }
 
   // ** manage stack frames **
@@ -244,6 +269,8 @@ export function makeInterpreter(app, ctx, node) {
 
     set(name, next(get(name), 0));
   }
+
+  // ** handle the result of a function call **
 
   function handleResult(res, assn) {
     // handle the result of a runtime function
@@ -664,26 +691,6 @@ export function makeInterpreter(app, ctx, node) {
   // set an empty result value
   setResult();
 
-  return {
-    run,
-
-    get fn() {
-      return fn;
-    },
-    get ns() {
-      return ns;
-    },
-    get st() {
-      return st;
-    },
-    get frame() {
-      return frame;
-    },
-    get fst() {
-      return fst;
-    },
-    get result() {
-      return result;
-    },
-  };
+  // return the run() function
+  return run;
 }
