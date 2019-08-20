@@ -60,35 +60,44 @@ if (process.argv.indexOf('--meta') != -1) {
   parserOptions.ast = parserOptions.meta = true;
 }
 
-Promise.resolve()
-  .then(() => readFileSync(process.argv[2], 'utf-8'))
-  .catch(() => process.argv[2] + '\n')
-  .then(source => parser.parse(source, parserOptions))
-  .then(root => {
-    if (options.ast) {
-      output(root);
-      process.exit();
-    }
+(async function() {
+  let source;
+  let node;
 
-    const ctx = makeRuntime(app);
-    const interp = makeInterpreter(app, ctx);
-    return interp(root);
-  })
-  .then(({ result, snapshot }) => {
+  try {
+    source = readFileSync(process.argv[2], 'utf-8');
+  } catch (err) {
+    source = process.argv[2] + '\n';
+  }
+
+  try {
+    node = parser.parse(source, parserOptions);
+  } catch (err) {
+    console.log(err.stack);
+    process.exit();
+  }
+
+  if (options.ast) {
+    output(node);
+    process.exit();
+  }
+
+  const ctx = makeRuntime(app);
+  const interp = makeInterpreter(app, ctx);
+
+  try {
+    const result = await interp.run(node);
+
     if (result) {
       output(result);
     }
 
     if (options.ns) {
-      output(snapshot.ns);
+      output(interp.snapshot());
     }
-  })
-  .catch(({ err, snapshot }) => {
-    if (err.stack) {
-      console.log(err.stack);
-    }
-
-    if (snapshot.frame) {
-      output(snapshot.frame.node);
-    }
-  });
+  } catch (err) {
+    console.log(err.stack);
+    output(interp.snapshot());
+    process.exit();
+  }
+})();
