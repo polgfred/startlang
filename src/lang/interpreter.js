@@ -60,11 +60,11 @@ export function makeInterpreter(app, ctx) {
           const rctrl = await ctrl;
           if (rctrl) {
             // handle flow instruction
-            doFlow(rctrl);
+            flow(rctrl);
           }
         } else {
           // handle flow instruction
-          doFlow(ctrl);
+          flow(ctrl);
         }
       }
     }
@@ -79,26 +79,16 @@ export function makeInterpreter(app, ctx) {
     ns = {};
     fst = [];
     frame = makeFrame(node);
+
+    // set an empty result
     setResult();
 
-    // return a promise for the eventual termination of the loop
-    try {
-      const res = await loop();
-      return {
-        result: res,
-        snapshot: snapshot(),
-      };
-    } catch (orig) {
-      const err = new Error(orig.message);
-      err.err = orig;
-      err.snapshot = snapshot();
-      throw err;
-    }
+    // run the loop
+    return await loop();
   }
 
   function snapshot() {
     // take a snapshot of the interpreter internals
-    // TODO: need to have a way to pass these in as well
     return {
       fn,
       st,
@@ -109,9 +99,19 @@ export function makeInterpreter(app, ctx) {
     };
   }
 
+  function reset(snap) {
+    // reset the interpreter state to the passed-in snapshot
+    fn = snap.fn;
+    st = snap.st;
+    ns = snap.ns;
+    fst = snap.fst;
+    frame = snap.frame;
+    result = snap.result;
+  }
+
   // ** manage stack frames **
 
-  function doFlow(ctrl) {
+  function flow(ctrl) {
     // deal with any push or pop instruction returned from the node handler
     if (ctrl.type) {
       // it's a node, push it
@@ -692,5 +692,9 @@ export function makeInterpreter(app, ctx) {
   };
 
   // return the run() function
-  return run;
+  return {
+    run,
+    snapshot,
+    reset,
+  };
 }
