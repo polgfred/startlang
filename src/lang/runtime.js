@@ -39,111 +39,112 @@ export const resultKey = Symbol('START_RESULT');
 
 // Environment
 
-export class SRuntime {
-  constructor(app) {
-    // the react component that we'll call methods on
-    this.app = app;
-  }
+export function makeRuntime(app) {
+  const globals = {
+    // types/casts
 
-  handle(value) {
-    return handle(value);
-  }
-
-  enumerate(value) {
-    return handle(value).enumerate(value);
-  }
-
-  unaryop(op, right) {
-    return handle(right).unaryops[op](right);
-  }
-
-  binaryop(op, left, right) {
-    return handle(left).binaryops[op](left, right);
-  }
-
-  syscall(name, args) {
-    // try to find the function to call
-    let fn =
-      (args.length > 0 && handle(args[0]).methods[name]) ||
-      this.constructor.globals[name];
-    if (!fn) {
-      throw new Error(`object not found or not a function: ${name}`);
-    }
-
-    // make the call
-    return fn.call(this, ...args);
-  }
-}
-
-SRuntime.globals = {
-  // types/casts
-
-  num(value) {
-    let n = parseFloat(value);
-    if (n != n) {
-      throw new Error('cannot convert value to a number');
-    }
-    return n;
-  },
-
-  str(value) {
-    return handle(value).repr(value);
-  },
-
-  time(...args) {
-    return STime.create(args);
-  },
-
-  list(...items) {
-    return SList.create(items);
-  },
-
-  table(...pairs) {
-    return STable.create(pairs);
-  },
-
-  // some basic utilities
-
-  rand() {
-    return Math.random();
-  },
-
-  swap(a, b) {
-    return {
-      [assignKey]: [b, a],
-      [resultKey]: null,
-    };
-  },
-
-  print(...values) {
-    if (values.length > 0) {
-      for (let i = 0; i < values.length; ++i) {
-        let v = values[i];
-        this.app.output(handle(v).repr(v));
+    num(value) {
+      let n = parseFloat(value);
+      if (n != n) {
+        throw new Error('cannot convert value to a number');
       }
-    } else {
-      this.app.output();
-    }
-  },
+      return n;
+    },
 
-  input(message) {
-    return this.app.input(message);
-  },
+    str(value) {
+      return handle(value).repr(value);
+    },
 
-  sleep(seconds) {
-    return new Promise(resolve => {
-      setTimeout(resolve, seconds * 1000);
-    });
-  },
+    time(...args) {
+      return timeHandler.create(args);
+    },
 
-  snapshot() {
-    this.app.snapshot();
-  },
-};
+    list(...items) {
+      return listHandler.create(items);
+    },
+
+    table(...pairs) {
+      return tableHandler.create(pairs);
+    },
+
+    // some basic utilities
+
+    rand() {
+      return Math.random();
+    },
+
+    swap(a, b) {
+      return {
+        [assignKey]: [b, a],
+        [resultKey]: null,
+      };
+    },
+
+    print(...values) {
+      if (values.length > 0) {
+        for (let i = 0; i < values.length; ++i) {
+          let v = values[i];
+          app.output(handle(v).repr(v));
+        }
+      } else {
+        app.output();
+      }
+    },
+
+    input(message) {
+      return app.input(message);
+    },
+
+    sleep(seconds) {
+      return new Promise(resolve => {
+        setTimeout(resolve, seconds * 1000);
+      });
+    },
+
+    snapshot() {
+      app.snapshot();
+    },
+  };
+
+  return {
+    get globals() {
+      return globals;
+    },
+
+    handle(value) {
+      return handle(value);
+    },
+
+    enumerate(value) {
+      return handle(value).enumerate(value);
+    },
+
+    unaryop(op, right) {
+      return handle(right).unaryops[op](right);
+    },
+
+    binaryop(op, left, right) {
+      return handle(left).binaryops[op](left, right);
+    },
+
+    syscall(name, args) {
+      // try to find the function to call
+      let fn =
+        (args.length > 0 && handle(args[0]).methods[name]) ||
+        this.globals[name];
+      if (!fn) {
+        throw new Error(`object not found or not a function: ${name}`);
+      }
+
+      // make the call
+      return fn.call(this, ...args);
+    },
+  };
+}
 
 // Handler defaults
 
-export const SBase = {
+const baseHandler = {
   enumerate() {
     throw new Error('object does not support iteration');
   },
@@ -174,26 +175,26 @@ export const SBase = {
 
 // Handler definitions
 
-const SNone = {
-  __proto__: SBase,
+const noneHandler = {
+  ...baseHandler,
 
   repr() {
     return '*none*';
   },
 };
 
-const SBoolean = {
-  __proto__: SBase,
+const booleanHandler = {
+  ...baseHandler,
 
   repr(b) {
     return b ? '*true*' : '*false*';
   },
 };
 
-Boolean.prototype[handlerKey] = SBoolean;
+Boolean.prototype[handlerKey] = booleanHandler;
 
-const SNumber = {
-  __proto__: SBase,
+const numberHandler = {
+  ...baseHandler,
 
   repr(n) {
     if (isFinite(n)) {
@@ -302,7 +303,7 @@ const SNumber = {
   },
 
   binaryops: {
-    __proto__: SBase.binaryops,
+    ...baseHandler.binaryops,
 
     // math
     '+': checkMathOp((left, right) => left + right),
@@ -317,10 +318,10 @@ const SNumber = {
   },
 };
 
-Number.prototype[handlerKey] = SNumber;
+Number.prototype[handlerKey] = numberHandler;
 
-const SString = {
-  __proto__: SBase,
+const stringHandler = {
+  ...baseHandler,
 
   repr(s) {
     return s;
@@ -330,7 +331,7 @@ const SString = {
     return {
       value: s.charAt(index),
       more: index < s.length,
-      next: () => SString.enumerate(s, index + 1),
+      next: () => stringHandler.enumerate(s, index + 1),
     };
   },
 
@@ -393,13 +394,13 @@ const SString = {
   },
 
   binaryops: {
-    __proto__: SBase.binaryops,
+    ...baseHandler.binaryops,
 
     $: (left, right) => left + handle(right).repr(right),
   },
 };
 
-String.prototype[handlerKey] = SString;
+String.prototype[handlerKey] = stringHandler;
 
 function normalizeTimeUnit(unit) {
   let norm = moment.normalizeUnits(unit);
@@ -409,8 +410,8 @@ function normalizeTimeUnit(unit) {
   return norm;
 }
 
-const STime = {
-  __proto__: SBase,
+const timeHandler = {
+  ...baseHandler,
 
   create(args) {
     if (args.length == 0) {
@@ -457,7 +458,7 @@ const STime = {
   },
 
   binaryops: {
-    __proto__: SBase.binaryops,
+    ...baseHandler.binaryops,
 
     // comparison operators need to cast to number first
     '=': (left, right) => +left == +right,
@@ -465,7 +466,7 @@ const STime = {
   },
 };
 
-moment.fn[handlerKey] = STime;
+moment.fn[handlerKey] = timeHandler;
 
 // Containers
 
@@ -482,8 +483,8 @@ function compareElementsReversed(left, right) {
   return -compareElements(left, right);
 }
 
-const SContainer = {
-  __proto__: SBase,
+const containerHandler = {
+  ...baseHandler,
 
   binaryops: {
     '=': (left, right) => left.equals(right),
@@ -493,8 +494,8 @@ const SContainer = {
 
 // Lists
 
-const SList = {
-  __proto__: SContainer,
+const listHandler = {
+  ...containerHandler,
 
   create(items) {
     return immutable.List(items);
@@ -516,7 +517,7 @@ const SList = {
     return {
       value: l.get(index),
       more: index < l.size,
-      next: () => SList.enumerate(l, index + 1),
+      next: () => listHandler.enumerate(l, index + 1),
     };
   },
 
@@ -591,7 +592,7 @@ const SList = {
     },
 
     avg(l) {
-      return SList.methods.sum(l) / l.size;
+      return listHandler.methods.sum(l) / l.size;
     },
 
     sort(l) {
@@ -620,18 +621,18 @@ const SList = {
   },
 
   binaryops: {
-    __proto__: SContainer.binaryops,
+    ...containerHandler.binaryops,
 
     $: checkOp((left, right) => left.concat(right)),
   },
 };
 
-immutable.List.prototype[handlerKey] = SList;
+immutable.List.prototype[handlerKey] = listHandler;
 
 // Tables
 
-const STable = {
-  __proto__: SContainer,
+const tableHandler = {
+  ...containerHandler,
 
   create(pairs) {
     return immutable.OrderedMap().withMutations(n => {
@@ -657,7 +658,7 @@ const STable = {
   },
 
   enumerate(t) {
-    return SList.enumerate(t.keySeq());
+    return listHandler.enumerate(t.keySeq());
   },
 
   methods: {
@@ -696,19 +697,19 @@ const STable = {
   },
 
   binaryops: {
-    __proto__: SContainer.binaryops,
+    ...containerHandler.binaryops,
 
     $: checkOp((left, right) => left.merge(right)),
   },
 };
 
-immutable.OrderedMap.prototype[handlerKey] = STable;
+immutable.OrderedMap.prototype[handlerKey] = tableHandler;
 
 // find a protocol handler for this object
-export function handle(obj) {
+function handle(obj) {
   // have to check for null/undefined explicitly
   if (obj == null) {
-    return SNone;
+    return noneHandler;
   }
 
   // if protocol handler is a function call it with the object -- this allows

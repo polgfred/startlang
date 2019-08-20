@@ -7,7 +7,7 @@ import { inspect } from 'util';
 
 import PEG from 'pegjs';
 
-import { SRuntime } from '../src/lang/runtime';
+import { makeRuntime } from '../src/lang/runtime';
 import { makeInterpreter } from '../src/lang/interpreter';
 
 let options = {},
@@ -70,7 +70,7 @@ Promise.resolve()
       process.exit();
     }
 
-    const ctx = new SRuntime(app);
+    const ctx = makeRuntime(app);
     const interp = makeInterpreter(app, ctx);
     return interp(root);
   })

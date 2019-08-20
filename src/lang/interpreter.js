@@ -2,7 +2,7 @@
 
 import { produce, original } from 'immer';
 
-import { handle, assignKey, resultKey } from './runtime';
+import { assignKey, resultKey } from './runtime';
 
 const hop = Object.prototype.hasOwnProperty; // cache this for performance
 
@@ -241,7 +241,7 @@ export function makeInterpreter(app, ctx) {
     const max = indexes.length - 1;
     // recurse into nested containers
     const next = (b, i) => {
-      const h = handle(b);
+      const h = ctx.handle(b);
       const idx = indexes[i];
       return i == max
         ? h.getindex.call(ctx, b, idx)
@@ -255,7 +255,7 @@ export function makeInterpreter(app, ctx) {
     const max = indexes.length - 1;
     // recurse into nested containers
     const next = (b, i) => {
-      const h = handle(b);
+      const h = ctx.handle(b);
       const idx = indexes[i];
       return i == max
         ? h.setindex.call(ctx, b, idx, value)
