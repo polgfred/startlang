@@ -115,13 +115,13 @@ export function makeInterpreter(app, ctx) {
       push(ctrl);
     } else if (ctrl.pop) {
       // it's a pop instruction
-      if (ctrl.pop == 'out') {
+      if (ctrl.pop === 'out') {
         pop();
-      } else if (ctrl.pop == 'over') {
+      } else if (ctrl.pop === 'over') {
         popOver(ctrl.flow);
-      } else if (ctrl.pop == 'until') {
+      } else if (ctrl.pop === 'until') {
         popUntil(ctrl.flow);
-      } else if (ctrl.pop == 'exit') {
+      } else if (ctrl.pop === 'exit') {
         // clear the stack so the program exits
         frame = null;
         fst = [];
@@ -131,9 +131,9 @@ export function makeInterpreter(app, ctx) {
 
   function push(node) {
     // optimize literals and vars by setting the result register directly
-    if (node.type == 'literal') {
+    if (node.type === 'literal') {
       setResult(node.value);
-    } else if (node.type == 'var') {
+    } else if (node.type === 'var') {
       // return the rv/lv pair for this assignment
       setResult({
         rv: get(node.name),
@@ -172,7 +172,7 @@ export function makeInterpreter(app, ctx) {
       // pop the target frame
       pop();
       // break here if we're popping the target frame
-      if (node.flow == flow) {
+      if (node.flow === flow) {
         break;
       }
     }
@@ -182,7 +182,7 @@ export function makeInterpreter(app, ctx) {
     // pop frames off until hitting a loop or function call node
     while (frame) {
       // break here if we're popping the target frame
-      if (frame.node.flow == flow) {
+      if (frame.node.flow === flow) {
         break;
       }
       // pop the target frame
@@ -194,7 +194,7 @@ export function makeInterpreter(app, ctx) {
 
   function setResult(res) {
     // normalize the result to rvalue/lvalue form if necessary
-    if (res == null || !hop.call(res, 'rv')) {
+    if (!res || !hop.call(res, 'rv')) {
       res = { rv: res };
     }
     result = res;
@@ -204,7 +204,7 @@ export function makeInterpreter(app, ctx) {
 
   function get(name) {
     // look in the top frame
-    if (st.length == 0 || hop.call(ns, name)) {
+    if (st.length === 0 || hop.call(ns, name)) {
       return ns[name];
     }
     // look up the namespace stack
@@ -218,7 +218,7 @@ export function makeInterpreter(app, ctx) {
 
   function set(name, value, top = false) {
     // look in the top frame
-    if (top || st.length == 0 || hop.call(ns, name)) {
+    if (top || st.length === 0 || hop.call(ns, name)) {
       ns = produce(ns, dns => {
         dns[name] = value;
       });
@@ -229,7 +229,7 @@ export function makeInterpreter(app, ctx) {
       // loop until we hit the root ns
       for (let i = st.length - 1; i >= 0; --i) {
         const dns = dst[i];
-        if (i == 0 || hop.call(ns, name)) {
+        if (i === 0 || hop.call(ns, name)) {
           dns[name] = value;
           break;
         }
@@ -243,7 +243,7 @@ export function makeInterpreter(app, ctx) {
     const next = (b, i) => {
       const h = ctx.handle(b);
       const idx = indexes[i];
-      return i == max
+      return i === max
         ? h.getindex.call(ctx, b, idx)
         : next(h.getindex.call(ctx, b, idx), i + 1);
     };
@@ -257,7 +257,7 @@ export function makeInterpreter(app, ctx) {
     const next = (b, i) => {
       const h = ctx.handle(b);
       const idx = indexes[i];
-      return i == max
+      return i === max
         ? h.setindex.call(ctx, b, idx, value)
         : h.setindex.call(
             ctx,

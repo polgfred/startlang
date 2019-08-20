@@ -277,7 +277,8 @@ class TableInspector extends ExpandableInspector {
 immutable.OrderedMap.prototype[inspectorKey] = TableInspector;
 
 function inspectorFor(value) {
-  let inspector = value == null ? NoneInspector : value[inspectorKey];
+  let inspector =
+    value === null || value === undefined ? NoneInspector : value[inspectorKey];
 
   return React.createElement(inspector, { value });
 }

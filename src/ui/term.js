@@ -23,7 +23,7 @@ export default function Term({ buf, prompt, handleInput }) {
 
   const handleKeyUp = useCallback(
     ev => {
-      if (ev.keyCode == 13) {
+      if (ev.keyCode === 13) {
         handleAccept();
       }
     },
@@ -36,7 +36,7 @@ export default function Term({ buf, prompt, handleInput }) {
   });
 
   // make sure the list hasn't been modified from the front
-  if (buf._origin != 0) {
+  if (buf._origin !== 0) {
     throw new Error('terminal buffer has been modified from the front');
   }
 
@@ -88,7 +88,7 @@ export default function Term({ buf, prompt, handleInput }) {
 function TermOutput({ node: { array }, level }) {
   return (
     <div className="start-term-output">
-      {level == 0
+      {level === 0
         ? array.map((elem, index) => <p key={index}>{elem}</p>)
         : array.map((elem, index) => (
             <TermOutput key={index} node={elem} level={level - LIST_SHIFT} />

@@ -1,3 +1,5 @@
+const hop = Object.prototype.hasOwnProperty;
+
 const flowMarker = {
   repeat: 'loop',
   for: 'loop',
@@ -30,7 +32,7 @@ const inspectMarker = {
 
 function buildNode(type, block, attrs) {
   // if we're a block with one statement, just return the statement itself
-  if (type == 'block' && attrs.elems.length == 1) {
+  if (type === 'block' && attrs.elems.length === 1) {
     return attrs.elems[0];
   }
 
@@ -55,7 +57,7 @@ function buildNode(type, block, attrs) {
 
 function wrapLiteral(value, block) {
   // if it's already a node, pass it through
-  return value != null && value.type != null
+  return value && hop.call(value, 'type')
     ? value
     : buildNode('literal', block, { value });
 }
@@ -77,10 +79,10 @@ export class SBuilder {
     for (let i = 0; i < blocks.length; ++i) {
       const stmt = this.handleStatements(blocks[i]);
 
-      if (stmt.type == 'begin') {
+      if (stmt.type === 'begin') {
         // collect functions into their own list
         funcs.push(stmt);
-      } else if (stmt.type == 'block') {
+      } else if (stmt.type === 'block') {
         // collect all of this block's statments
         elems.push(...stmt.elems);
       } else {
@@ -126,7 +128,7 @@ export class SBuilder {
 
     // if there was only one, just return the first, otherwise
     // wrap it in a block node
-    return elems.length == 1 ? elems[0] : buildNode('block', block, { elems });
+    return elems.length === 1 ? elems[0] : buildNode('block', block, { elems });
   }
 
   makeTemporary(value, block, prefix) {
@@ -166,10 +168,10 @@ export class SBuilder {
         return at;
       case 'FROM_END':
         // 1-based positioning, need to adjust at by 1
-        if (at.type == 'literal') {
+        if (at.type === 'literal') {
           // we can subtract up front
           --at.value;
-          if (at.value == 0) {
+          if (at.value === 0) {
             // at is 0, so len is already what we need
             return len;
           } else {
@@ -223,7 +225,7 @@ export class SBuilder {
   controls_whileUntil(block) {
     let cond = this.handleValue(block, 'BOOL');
 
-    if (block.getFieldValue('MODE') == 'UNTIL') {
+    if (block.getFieldValue('MODE') === 'UNTIL') {
       // reverse the condition
       cond = buildNode('logicalOp', block, {
         op: 'not',
@@ -326,7 +328,7 @@ export class SBuilder {
   }
 
   logic_boolean(block) {
-    return wrapLiteral(block.getFieldValue('BOOL') == 'TRUE', block);
+    return wrapLiteral(block.getFieldValue('BOOL') === 'TRUE', block);
   }
 
   logic_null(block) {
@@ -353,7 +355,7 @@ export class SBuilder {
 
     const op = block.getFieldValue('OP');
 
-    if (op == 'POWER') {
+    if (op === 'POWER') {
       return buildNode('call', block, {
         name: 'exp',
         args: [this.handleValue(block, 'A'), this.handleValue(block, 'B')],
@@ -414,7 +416,7 @@ export class SBuilder {
     const prop = block.getFieldValue('PROPERTY');
     const num = this.handleValue(block, 'NUMBER_TO_CHECK');
 
-    // construct an 'x % y == z' test
+    // construct an 'x % y === z' test
     function buildModTest(denom, test) {
       return buildNode('binaryOp', block, {
         op: '=',
@@ -457,7 +459,7 @@ export class SBuilder {
     const delta = this.handleValue(block, 'DELTA');
     let sign = '+';
 
-    if (delta.type == 'literal' && delta.value < 0) {
+    if (delta.type === 'literal' && delta.value < 0) {
       // if delta is a literal negative number, be nice and build
       // a minus expression
       delta.value = -delta.value;
@@ -521,7 +523,7 @@ export class SBuilder {
   text_join(block) {
     let str = this.handleValue(block, 'ADD0');
 
-    if (!(str.type == 'literal' && typeof str.value == 'string')) {
+    if (!(str.type === 'literal' && typeof str.value === 'string')) {
       str = buildNode('binaryOp', block, {
         op: '$',
         left: wrapLiteral('', block),
@@ -582,7 +584,7 @@ export class SBuilder {
   text_charAt(block) {
     let val = this.handleValue(block, 'VALUE');
 
-    if (val.type != 'var') {
+    if (val.type !== 'var') {
       val = this.makeTemporary(val, block, 'string');
     }
 
@@ -595,7 +597,7 @@ export class SBuilder {
   text_getSubstring(block) {
     let val = this.handleValue(block, 'STRING');
 
-    if (val.type != 'literal' && val.type != 'var') {
+    if (val.type !== 'literal' && val.type !== 'var') {
       val = this.makeTemporary(val, block, 'string');
     }
 
@@ -641,7 +643,7 @@ export class SBuilder {
       args: [this.handleValue(block, 'TEXT')],
     });
 
-    if (block.getFieldValue('TYPE') == 'NUMBER') {
+    if (block.getFieldValue('TYPE') === 'NUMBER') {
       input = buildNode('call', block, {
         name: 'num',
         args: [input],
@@ -791,7 +793,7 @@ export class SBuilder {
     let op = block.getFieldValue('OP');
     const order = block.getFieldValue('ORDER');
 
-    if (op == 'SORT' && order == 'DESC') {
+    if (op === 'SORT' && order === 'DESC') {
       op = 'rsort';
     } else {
       op = op.toLowerCase();
@@ -816,7 +818,7 @@ export class SBuilder {
     const mode = block.getFieldValue('MODE');
     let val = this.handleValue(block, 'VALUE');
 
-    if (mode == 'REMOVE' && val.type != 'var') {
+    if (mode === 'REMOVE' && val.type !== 'var') {
       // removing from a temporary does nothing
       return;
     }
@@ -825,7 +827,7 @@ export class SBuilder {
 
     switch (mode) {
       case 'GET':
-        if (val.type != 'var') {
+        if (val.type !== 'var') {
           // get a temporary so we can index it
           val = this.makeTemporary(val, block, 'list');
         }
@@ -847,7 +849,7 @@ export class SBuilder {
     const mode = block.getFieldValue('MODE');
     const val = this.handleValue(block, 'LIST');
 
-    if (val.type != 'var') {
+    if (val.type !== 'var') {
       // changing a temporary has no effect
       return;
     }
@@ -874,7 +876,7 @@ export class SBuilder {
   lists_getSublist(block) {
     let val = this.handleValue(block, 'LIST');
 
-    if (val.type != 'var') {
+    if (val.type !== 'var') {
       val = this.makeTemporary(val, block, 'list');
     }
 
@@ -955,7 +957,7 @@ export class SBuilder {
     const mode = block.getFieldValue('MODE');
     let val = this.handleValue(block, 'VALUE');
 
-    if (mode == 'REMOVE' && val.type != 'var') {
+    if (mode === 'REMOVE' && val.type !== 'var') {
       // removing from a temporary has no effect
       return;
     }
@@ -964,7 +966,7 @@ export class SBuilder {
 
     switch (mode) {
       case 'GET':
-        if (val.type != 'var') {
+        if (val.type !== 'var') {
           // get a temporary so we can index it
           val = this.makeTemporary(val, block, 'table');
         }
@@ -985,7 +987,7 @@ export class SBuilder {
   tables_setIndex(block) {
     const val = this.handleValue(block, 'TABLE');
 
-    if (val.type != 'var') {
+    if (val.type !== 'var') {
       // changing a temporary has no effect
       return;
     }
@@ -1027,7 +1029,7 @@ export class SBuilder {
 
   colour_rgb(block) {
     const convert = val => {
-      if (val.type == 'literal') {
+      if (val.type === 'literal') {
         val.value /= 100;
         return val;
       } else {
@@ -1202,7 +1204,7 @@ export class SBuilder {
 
     if (!body) {
       body = buildNode('block', block, { elems: [ret] });
-    } else if (body.type != 'block') {
+    } else if (body.type !== 'block') {
       body = buildNode('block', block, { elems: [body, ret] });
     } else {
       body.elems.push(ret);

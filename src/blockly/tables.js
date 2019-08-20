@@ -84,7 +84,7 @@ Blockly.Blocks['tables_create_with'] = {
       }
     }
     // Rebuild block.
-    if (this.itemCount_ == 0) {
+    if (this.itemCount_ === 0) {
       this.appendDummyInput('EMPTY').appendField(
         Blockly.Msg.TABLES_CREATE_EMPTY_TITLE
       );
@@ -93,7 +93,7 @@ Blockly.Blocks['tables_create_with'] = {
         const input = this.appendValueInput(`VALUE${i}`).setAlign(
           Blockly.ALIGN_RIGHT
         );
-        if (i == 0) {
+        if (i === 0) {
           input.appendField(Blockly.Msg.TABLES_CREATE_WITH_INPUT_WITH);
         }
         input
@@ -181,7 +181,7 @@ Blockly.Blocks['tables_getIndex'] = {
     this.setHelpUrl(Blockly.Msg.TABLES_GET_INDEX_HELPURL);
     this.setColour(Blockly.Msg.TABLES_HUE);
     const modeMenu = new Blockly.FieldDropdown(MODE, value => {
-      this.updateStatement_(value == 'REMOVE');
+      this.updateStatement_(value === 'REMOVE');
     });
     this.appendValueInput('VALUE')
       .setCheck('Map')
@@ -207,12 +207,12 @@ Blockly.Blocks['tables_getIndex'] = {
     return container;
   },
   domToMutation(xmlElement) {
-    const isStatement = xmlElement.getAttribute('statement') == 'true';
+    const isStatement = xmlElement.getAttribute('statement') === 'true';
     this.updateStatement_(isStatement);
   },
   updateStatement_(newStatement) {
     const oldStatement = !this.outputConnection;
-    if (newStatement != oldStatement) {
+    if (newStatement !== oldStatement) {
       this.unplug(true, true);
       if (newStatement) {
         this.setOutput(false);

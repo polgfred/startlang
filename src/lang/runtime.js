@@ -76,7 +76,7 @@ export function makeRuntime(app) {
 
       num(value) {
         let n = parseFloat(value);
-        if (n != n) {
+        if (n !== n) {
           throw new Error('cannot convert value to a number');
         }
         return n;
@@ -235,7 +235,7 @@ const numberHandler = {
     },
 
     exp(base, n) {
-      if (n == null) {
+      if (n === undefined) {
         n = base;
         return Math.exp(n);
       } else {
@@ -248,10 +248,10 @@ const numberHandler = {
     },
 
     log(base, n) {
-      if (n == null) {
+      if (n === undefined) {
         n = base;
         return Math.log(n);
-      } else if (base == 10) {
+      } else if (base === 10) {
         return Math.log10(n);
       } else {
         return Math.log10(n) / Math.log10(base);
@@ -401,7 +401,7 @@ String.prototype[handlerKey] = stringHandler;
 
 function normalizeTimeUnit(unit) {
   let norm = moment.normalizeUnits(unit);
-  if (norm == null) {
+  if (!norm) {
     throw new Error('unrecognized time unit');
   }
   return norm;
@@ -411,7 +411,7 @@ const timeHandler = {
   ...baseHandler,
 
   create(args) {
-    if (args.length == 0) {
+    if (args.length === 0) {
       return moment();
     } else {
       args[1]--; // adjust the month to be 0-based
@@ -427,7 +427,7 @@ const timeHandler = {
     part(t, unit) {
       unit = normalizeTimeUnit(unit);
       let val = t.get(unit);
-      if (unit == 'month' || unit == 'day') {
+      if (unit === 'month' || unit === 'day') {
         val++;
       }
       return val;
@@ -458,7 +458,7 @@ const timeHandler = {
     ...baseHandler.binaryops,
 
     // comparison operators need to cast to number first
-    '=': (left, right) => +left == +right,
+    '=': (left, right) => +left === +right,
     '!=': (left, right) => +left !== +right,
   },
 };
@@ -554,7 +554,7 @@ const listHandler = {
     remove(l, start, end) {
       // adjust for 1-based indexes and negative offsets
       start = adjustIndex(start, l.size);
-      if (end == null) {
+      if (end === undefined) {
         // remove and return a single element
         return {
           [resultKey]: l.get(start),
@@ -688,7 +688,7 @@ const tableHandler = {
             n.delete(keys[i]);
           }
         }),
-        [resultKey]: o.size == 1 ? o.first() : o.asImmutable(),
+        [resultKey]: o.size === 1 ? o.first() : o.asImmutable(),
       };
     },
   },
@@ -705,12 +705,12 @@ immutable.OrderedMap.prototype[handlerKey] = tableHandler;
 // find a protocol handler for this object
 function handle(obj) {
   // have to check for null/undefined explicitly
-  if (obj == null) {
+  if (obj === null || obj === undefined) {
     return noneHandler;
   }
 
   // if protocol handler is a function call it with the object -- this allows
   // for duck type polymorphism on objects
   let handler = obj[handlerKey];
-  return typeof handler == 'function' ? handler(obj) : handler;
+  return typeof handler === 'function' ? handler(obj) : handler;
 }

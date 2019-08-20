@@ -133,8 +133,8 @@ Blockly.Blocks['time_addSubtract'] = {
     this.setPreviousStatement(true);
     this.setNextStatement(true);
     this.setTooltip(() => {
-      const mode = this.getFieldValue('MODE') == 'ADD' ? 'Add' : 'Subtract';
-      const from_to = this.getFieldValue('MODE') == 'ADD' ? 'to' : 'from';
+      const mode = this.getFieldValue('MODE') === 'ADD' ? 'Add' : 'Subtract';
+      const from_to = this.getFieldValue('MODE') === 'ADD' ? 'to' : 'from';
       const unit = this.getFieldValue('UNIT').toLowerCase();
       return `${mode}s some number of ${unit}s ${from_to} the specified time.`;
     });
@@ -142,14 +142,14 @@ Blockly.Blocks['time_addSubtract'] = {
   },
   setFieldValue(value, name) {
     this.constructor.superClass_.setFieldValue.call(this, value, name);
-    if (name == 'MODE') {
+    if (name === 'MODE') {
       this.updateMode_(value);
     }
   },
   updateMode_(mode) {
     this.timeInput.removeField('FROM_TO');
     this.timeInput.appendField(
-      `${mode == 'ADD' ? 'to' : 'from'} time`,
+      `${mode === 'ADD' ? 'to' : 'from'} time`,
       'FROM_TO'
     );
   },
@@ -171,7 +171,7 @@ Blockly.Blocks['time_startEnd'] = {
     this.setPreviousStatement(true);
     this.setNextStatement(true);
     this.setTooltip(() => {
-      const mode = this.getFieldValue('MODE') == 'START' ? 'beginning' : 'end';
+      const mode = this.getFieldValue('MODE') === 'START' ? 'beginning' : 'end';
       const unit = this.getFieldValue('UNIT').toLowerCase();
       return `Rounds the specified time to the ${mode} of the enclosing ${unit}.`;
     });

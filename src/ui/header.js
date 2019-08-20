@@ -36,7 +36,7 @@ function SettingsMenu({ option, mode, choices, updateMode }) {
         {choices.map(value => (
           <MenuItem
             key={`menu-item-${option}-${value}`}
-            selected={mode == value}
+            selected={mode === value}
             onClick={() => handleUpdateMode(value)}
           >
             {value.charAt(0).toUpperCase() + value.substr(1)}

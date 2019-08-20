@@ -46,7 +46,7 @@ export default function App() {
 
   const refreshState = useCallback(() => {
     clearDisplay();
-    if (viewMode == 'help') {
+    if (viewMode === 'help') {
       setViewMode('split');
     }
   }, [viewMode, clearDisplay]);
@@ -203,8 +203,8 @@ export default function App() {
                 height: 'calc(100vh - 100px)',
               }}
             >
-              {editMode == 'blocks' && <Builder setParser={setParser} />}
-              {editMode == 'source' && <Editor setParser={setParser} />}
+              {editMode === 'blocks' && <Builder setParser={setParser} />}
+              {editMode === 'source' && <Editor setParser={setParser} />}
             </Paper>
           </Grid>
         </Grid>

@@ -18,11 +18,11 @@ const LIST_SHIFT = 5;
 
 export default function Graphics({ data: { shapes } }) {
   // shouldComponentUpdate(nextProps) {
-  //   return this.props.data.shapes != nextProps.data.shapes;
+  //   return this.props.data.shapes !== nextProps.data.shapes;
   // }
 
   // make sure the list hasn't been modified from the front
-  if (shapes._origin != 0) {
+  if (shapes._origin !== 0) {
     throw new Error('shape list has been modified from the front');
   }
 
@@ -44,12 +44,12 @@ export default function Graphics({ data: { shapes } }) {
 
 function Group({ node: { array }, level }) {
   // shouldComponentUpdate(nextProps) {
-  //   return this.props.node != nextProps.node;
+  //   return this.props.node !== nextProps.node;
   // }
 
   return (
     <g>
-      {level == 0
+      {level === 0
         ? array.map((elem, index) =>
             createElement(registry[elem.type], {
               key: index,
@@ -64,7 +64,7 @@ function Group({ node: { array }, level }) {
 }
 
 // shouldComponentUpdate(nextProps) {
-//   return this.props.shape != nextProps.shape;
+//   return this.props.shape !== nextProps.shape;
 // }
 
 function getSVGAttrs({ sprops }) {
@@ -80,10 +80,10 @@ function getSVGAttrs({ sprops }) {
   if (sprops.opacity && sprops.opacity < 1) {
     attrs.style.opacity = sprops.opacity;
   }
-  if (sprops.rotate != 0) {
+  if (sprops.rotate !== 0) {
     trans += `rotate(${sprops.rotate}deg)`;
   }
-  if (sprops.scalex != 1 || sprops.scaley != 1) {
+  if (sprops.scalex !== 1 || sprops.scaley !== 1) {
     trans += `scale(${sprops.scalex},${sprops.scaley})`;
   }
   if (trans) {

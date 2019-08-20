@@ -42,7 +42,7 @@ Blockly.Blocks['lists_transformers'] = {
       .setCheck('Array')
       .appendField(
         new Blockly.FieldDropdown(OPERATORS, value => {
-          this.updateOrder_(value == 'SORT');
+          this.updateOrder_(value === 'SORT');
         }),
         'OP'
       );
@@ -75,12 +75,12 @@ Blockly.Blocks['lists_transformers'] = {
   },
   mutationToDom() {
     const container = document.createElement('mutation');
-    const isOrder = this.getField('ORDER') != null;
+    const isOrder = this.getField('ORDER') !== null;
     container.setAttribute('order', isOrder);
     return container;
   },
   domToMutation(xmlElement) {
-    const isOrder = xmlElement.getAttribute('order') != 'false';
+    const isOrder = xmlElement.getAttribute('order') !== 'false';
     this.updateOrder_(isOrder);
   },
 };

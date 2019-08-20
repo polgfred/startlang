@@ -34,7 +34,7 @@
   // build an object for this node
   function buildNode(type, attrs) {
     // if we're a block with one statement, just return the statement itself
-    if (type == 'block' && attrs.elems.length == 1) {
+    if (type === 'block' && attrs.elems.length === 1) {
       return attrs.elems[0];
     }
 
@@ -77,7 +77,7 @@
 
   // take a chain of equal-precedence exprs and construct a left-folding tree
   function buildBinaryExpr(type, left, rest) {
-    if (rest.length == 0) {
+    if (rest.length === 0) {
       return left;
     } else {
       const [op, right] = rest.shift();
@@ -88,7 +88,7 @@
 
   // take a chain of unary ops and construct a right-folding tree
   function buildUnaryExpr(type, ops, right) {
-    if (ops.length == 0) {
+    if (ops.length === 0) {
       return right;
     } else {
       const op = ops.pop();
@@ -99,7 +99,7 @@
 
   // take a chain of string segments and construct a concatenation expression
   function buildString(left, rest) {
-    if (rest.length == 0) {
+    if (rest.length === 0) {
       return left;
     } else {
       const right = rest.shift();
@@ -400,7 +400,7 @@ PrimaryExpr
 String 'a string'
   = '"' rest:StringSegment* '"' {
       // if the first segment isn't a string literal, prepend an empty string
-      const first = (rest.length > 0 && rest[0].type == 'literal' && typeof rest[0].value == 'string') ?
+      const first = (rest.length > 0 && rest[0].type === 'literal' && typeof rest[0].value === 'string') ?
                     rest.shift() :
                     buildNode('literal', { value: '' });
       return buildString(first, rest);

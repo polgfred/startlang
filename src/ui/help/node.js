@@ -19,7 +19,7 @@ export default class Node extends Component {
   render() {
     let { path, updatePath, title, level } = this.props;
 
-    if (level == path.length) {
+    if (level === path.length) {
       // render this node
       return <div className="start-help-node">
         { this.renderCrumbs() }
@@ -52,7 +52,7 @@ export default class Node extends Component {
 
     while (node) {
       let next = path.slice(0, pos),
-          link = node == this ?
+          link = node === this ?
                    node.props.title :
                    <a onClick={() => updatePath(next)}>
                      { node.props.title }
