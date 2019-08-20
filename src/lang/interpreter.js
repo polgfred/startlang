@@ -242,35 +242,33 @@ export function makeInterpreter(app, ctx) {
 
   function getIndex(name, indexes) {
     const max = indexes.length - 1;
+    return next(get(name), 0);
+
     // recurse into nested containers
-    const next = (b, i) => {
+    function next(b, i) {
       const h = ctx.handle(b);
       const idx = indexes[i];
       return i === max
         ? h.getindex.call(ctx, b, idx)
         : next(h.getindex.call(ctx, b, idx), i + 1);
-    };
-
-    return next(get(name), 0);
+    }
   }
 
   function setIndex(name, indexes, value) {
     const max = indexes.length - 1;
+    set(name, next(get(name), 0));
+
     // recurse into nested containers
-    const next = (b, i) => {
+    function next(b, i) {
       const h = ctx.handle(b);
       const idx = indexes[i];
-      return i === max
-        ? h.setindex.call(ctx, b, idx, value)
-        : h.setindex.call(
-            ctx,
-            b,
-            idx,
-            next(h.getindex.call(ctx, b, idx), i + 1)
-          );
-    };
-
-    set(name, next(get(name), 0));
+      if (i === max) {
+        return h.setindex.call(ctx, b, idx, value);
+      } else {
+        const nv = h.getindex.call(ctx, b, idx);
+        return h.setindex.call(ctx, b, idx, next(nv, i + 1));
+      }
+    }
   }
 
   // ** handle the result of a function call **
