@@ -2,6 +2,7 @@ import moment from 'moment';
 import immutable from 'immutable';
 
 export const handlerKey = Symbol('START_HANDLER');
+export const globalsKey = Symbol('START_GLOBALS');
 
 // ensures its operands are of the same type
 function checkOp(fn) {
@@ -40,77 +41,7 @@ export const resultKey = Symbol('START_RESULT');
 // Environment
 
 export function makeRuntime(app) {
-  const globals = {
-    // types/casts
-
-    num(value) {
-      let n = parseFloat(value);
-      if (n != n) {
-        throw new Error('cannot convert value to a number');
-      }
-      return n;
-    },
-
-    str(value) {
-      return handle(value).repr(value);
-    },
-
-    time(...args) {
-      return timeHandler.create(args);
-    },
-
-    list(...items) {
-      return listHandler.create(items);
-    },
-
-    table(...pairs) {
-      return tableHandler.create(pairs);
-    },
-
-    // some basic utilities
-
-    rand() {
-      return Math.random();
-    },
-
-    swap(a, b) {
-      return {
-        [assignKey]: [b, a],
-        [resultKey]: null,
-      };
-    },
-
-    print(...values) {
-      if (values.length > 0) {
-        for (let i = 0; i < values.length; ++i) {
-          let v = values[i];
-          app.output(handle(v).repr(v));
-        }
-      } else {
-        app.output();
-      }
-    },
-
-    input(message) {
-      return app.input(message);
-    },
-
-    sleep(seconds) {
-      return new Promise(resolve => {
-        setTimeout(resolve, seconds * 1000);
-      });
-    },
-
-    snapshot() {
-      app.snapshot();
-    },
-  };
-
   return {
-    get globals() {
-      return globals;
-    },
-
     handle(value) {
       return handle(value);
     },
@@ -131,13 +62,79 @@ export function makeRuntime(app) {
       // try to find the function to call
       let fn =
         (args.length > 0 && handle(args[0]).methods[name]) ||
-        this.globals[name];
+        this[globalsKey][name];
       if (!fn) {
         throw new Error(`object not found or not a function: ${name}`);
       }
 
       // make the call
       return fn.call(this, ...args);
+    },
+
+    [globalsKey]: {
+      // types/casts
+
+      num(value) {
+        let n = parseFloat(value);
+        if (n != n) {
+          throw new Error('cannot convert value to a number');
+        }
+        return n;
+      },
+
+      str(value) {
+        return handle(value).repr(value);
+      },
+
+      time(...args) {
+        return timeHandler.create(args);
+      },
+
+      list(...items) {
+        return listHandler.create(items);
+      },
+
+      table(...pairs) {
+        return tableHandler.create(pairs);
+      },
+
+      // some basic utilities
+
+      rand() {
+        return Math.random();
+      },
+
+      swap(a, b) {
+        return {
+          [assignKey]: [b, a],
+          [resultKey]: null,
+        };
+      },
+
+      print(...values) {
+        if (values.length > 0) {
+          for (let i = 0; i < values.length; ++i) {
+            let v = values[i];
+            app.output(handle(v).repr(v));
+          }
+        } else {
+          app.output();
+        }
+      },
+
+      input(message) {
+        return app.input(message);
+      },
+
+      sleep(seconds) {
+        return new Promise(resolve => {
+          setTimeout(resolve, seconds * 1000);
+        });
+      },
+
+      // snapshot() {
+      //   app.snapshot();
+      // },
     },
   };
 }

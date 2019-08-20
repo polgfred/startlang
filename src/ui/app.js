@@ -13,8 +13,8 @@ import Editor from './editor';
 import Builder from './builder';
 // import Inspector from './inspector';
 
-import { SInterpreter } from '../lang/interpreter';
-import { SGRuntime, SGraphics } from '../lang/graphics';
+import { makeInterpreter } from '../lang/interpreter';
+import { makeGraphicsRuntime, SGraphics } from '../lang/graphics';
 
 const theme = createMuiTheme({
   palette: {
@@ -127,12 +127,11 @@ export default function App() {
   const runProgram = useCallback(() => {
     refreshState();
     // TODO: how do we want to wait for the state to clear before running?
-    const interp = new SInterpreter(bindings);
-    interp.ctx = new SGRuntime(bindings);
-    interp.root(parser());
+    const ctx = makeGraphicsRuntime(bindings);
+    const interp = makeInterpreter(bindings, ctx);
     clearHistory();
 
-    return interp.run().catch(err => {
+    return interp(parser()).catch(err => {
       // debugg errors
       console.log(err); // eslint-disable-line no-console
       console.log(err.stack); // eslint-disable-line no-console

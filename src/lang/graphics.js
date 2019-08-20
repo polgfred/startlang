@@ -2,130 +2,138 @@ import { nextTick } from 'process';
 
 import immutable from 'immutable';
 
-import { SRuntime, handle } from './runtime';
+import { makeRuntime, globalsKey } from './runtime';
 
-export class SGRuntime extends SRuntime {
-  addShape(type, attrs) {
-    this.app.gfxUpdate(gfx => gfx.addShape(type, attrs));
-  }
+export function makeGraphicsRuntime(app) {
+  const { [globalsKey]: globals, ...rt } = makeRuntime(app);
 
-  updateSprops(mut) {
-    this.app.gfxUpdate(gfx => gfx.updateSprops(mut));
-  }
+  return {
+    ...rt,
 
-  updateTprops(mut) {
-    this.app.gfxUpdate(gfx => gfx.updateTprops(mut));
-  }
+    addShape(type, attrs) {
+      app.gfxUpdate(gfx => gfx.addShape(type, attrs));
+    },
 
-  termOutput(line) {
-    this.app.termUpdate(buf => buf.push(line));
-  }
+    updateSprops(mut) {
+      app.gfxUpdate(gfx => gfx.updateSprops(mut));
+    },
+
+    updateTprops(mut) {
+      app.gfxUpdate(gfx => gfx.updateTprops(mut));
+    },
+
+    termOutput(line) {
+      app.termUpdate(buf => buf.push(line));
+    },
+
+    [globalsKey]: {
+      ...globals,
+
+      repaint() {
+        // let the DOM catch up
+        return new Promise(resolve => {
+          nextTick(resolve);
+        });
+      },
+
+      clear() {
+        app.clearDisplay();
+      },
+
+      print(...values) {
+        if (values.length > 0) {
+          for (let i = 0; i < values.length; ++i) {
+            let v = values[i];
+            this.termOutput(rt.handle(v).repr(v));
+          }
+        } else {
+          this.termOutput('');
+        }
+      },
+
+      input(prompt) {
+        return new Promise(resolve => {
+          app.termInput(prompt, input => {
+            resolve(input);
+          });
+        });
+      },
+
+      // shape creation
+
+      rect(x, y, width, height) {
+        this.addShape(Rect, { x, y, width, height });
+      },
+
+      circle(cx, cy, r) {
+        this.addShape(Circle, { cx, cy, r });
+      },
+
+      ellipse(cx, cy, rx, ry) {
+        this.addShape(Ellipse, { cx, cy, rx, ry });
+      },
+
+      line(x1, y1, x2, y2) {
+        this.addShape(Line, { x1, y1, x2, y2 });
+      },
+
+      text(x, y, text) {
+        this.addShape(Text, { x, y, text });
+      },
+
+      polygon(...points) {
+        points = immutable.List.isList(points[0])
+          ? points[0]
+          : immutable.List(points);
+
+        this.addShape(Polygon, { points });
+      },
+
+      // set shape and text attributes
+
+      color(r, g, b) {
+        let hex = v => ('0' + Math.round(255 * v).toString(16)).substr(-2);
+        return `#${hex(r)}${hex(g)}${hex(b)}`;
+      },
+
+      fill(color) {
+        this.updateSprops(sprops => sprops.set('fill', color));
+      },
+
+      stroke(color) {
+        this.updateSprops(sprops => sprops.set('stroke', color));
+      },
+
+      opacity(value = 1) {
+        this.updateSprops(sprops => sprops.set('opacity', value));
+      },
+
+      anchor(value = 'center') {
+        this.updateSprops(sprops => sprops.set('anchor', value));
+      },
+
+      rotate(angle = 0) {
+        this.updateSprops(sprops => sprops.set('rotate', angle));
+      },
+
+      scale(scalex = 1, scaley = scalex) {
+        this.updateSprops(sprops =>
+          sprops.set('scalex', scalex).set('scaley', scaley)
+        );
+      },
+
+      align(value = 'start') {
+        this.updateTprops(tprops => tprops.set('align', value));
+      },
+
+      font(fface = 'Helvetica', fsize = 36) {
+        this.updateTprops(tprops =>
+          tprops.set('fface', fface).set('fsize', fsize)
+        );
+      },
+    },
+  };
 }
-
-SGRuntime.globals = {
-  __proto__: SRuntime.globals,
-
-  repaint() {
-    // let the DOM catch up
-    return new Promise(resolve => {
-      nextTick(resolve);
-    });
-  },
-
-  clear() {
-    this.app.clearDisplay();
-  },
-
-  print(...values) {
-    if (values.length > 0) {
-      for (let i = 0; i < values.length; ++i) {
-        let v = values[i];
-        this.termOutput(handle(v).repr(v));
-      }
-    } else {
-      this.termOutput('');
-    }
-  },
-
-  input(prompt) {
-    return new Promise(resolve => {
-      this.app.termInput(prompt, input => {
-        resolve(input);
-      });
-    });
-  },
-
-  // shape creation
-
-  rect(x, y, width, height) {
-    this.addShape(Rect, { x, y, width, height });
-  },
-
-  circle(cx, cy, r) {
-    this.addShape(Circle, { cx, cy, r });
-  },
-
-  ellipse(cx, cy, rx, ry) {
-    this.addShape(Ellipse, { cx, cy, rx, ry });
-  },
-
-  line(x1, y1, x2, y2) {
-    this.addShape(Line, { x1, y1, x2, y2 });
-  },
-
-  text(x, y, text) {
-    this.addShape(Text, { x, y, text });
-  },
-
-  polygon(...points) {
-    points = immutable.List.isList(points[0])
-      ? points[0]
-      : immutable.List(points);
-
-    this.addShape(Polygon, { points });
-  },
-
-  // set shape and text attributes
-
-  color(r, g, b) {
-    let hex = v => ('0' + Math.round(255 * v).toString(16)).substr(-2);
-    return `#${hex(r)}${hex(g)}${hex(b)}`;
-  },
-
-  fill(color) {
-    this.updateSprops(sprops => sprops.set('fill', color));
-  },
-
-  stroke(color) {
-    this.updateSprops(sprops => sprops.set('stroke', color));
-  },
-
-  opacity(value = 1) {
-    this.updateSprops(sprops => sprops.set('opacity', value));
-  },
-
-  anchor(value = 'center') {
-    this.updateSprops(sprops => sprops.set('anchor', value));
-  },
-
-  rotate(angle = 0) {
-    this.updateSprops(sprops => sprops.set('rotate', angle));
-  },
-
-  scale(scalex = 1, scaley = scalex) {
-    this.updateSprops(sprops =>
-      sprops.set('scalex', scalex).set('scaley', scaley)
-    );
-  },
-
-  align(value = 'start') {
-    this.updateTprops(tprops => tprops.set('align', value));
-  },
-
-  font(fface = 'Helvetica', fsize = 36) {
-    this.updateTprops(tprops => tprops.set('fface', fface).set('fsize', fsize));
-  },
-};
 
 // visual properties that will get applied to shapes
 const SShapeProps = immutable.Record({
