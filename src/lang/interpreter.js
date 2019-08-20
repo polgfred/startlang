@@ -31,66 +31,69 @@ function makeFrame(node) {
 
 export function makeInterpreter(app, ctx) {
   // interpreter state
-  let fn = {}; // function table
-  let fst = []; // frame stack
-  let st = []; // namespace stack
-  let frame; // top frame
+  let fn; // function table
+  let st; // namespace stack
   let ns; // top namespace
+  let fst; // frame stack
+  let frame; // top frame
   let result; // last evaluated expression
 
-  function run(node) {
-    frame = makeFrame(node);
-    ns = {};
-
-    // set up an entry point that loops until the stack is exhausted, or
-    // until a node returns a promise
-    function loop() {
-      while (frame) {
-        const { node, state } = frame;
-        const method = nodes[node.type];
-        let ctrl;
-        // check arity to see if the handler expects a mutable frame
-        if (method.length > 2) {
-          frame = produce(frame, df => {
-            ctrl = method(node, state, df, frame);
-          });
-        } else {
-          ctrl = method(node, state);
-        }
-        // deal with the result
-        if (ctrl) {
-          // check for a promise
-          if (ctrl.then) {
-            // handle flow and reenter the loop
-            return ctrl.then(ctrl => {
-              if (ctrl) {
-                doFlow(ctrl);
-              }
-              return loop();
-            });
-          } else {
+  // set up an entry point that loops until the stack is exhausted, or
+  // until a node returns a promise
+  async function loop() {
+    while (frame) {
+      const { node, state } = frame;
+      const method = nodes[node.type];
+      let ctrl;
+      // check arity to see if the handler expects a mutable frame
+      if (method.length > 2) {
+        frame = produce(frame, df => {
+          ctrl = method(node, state, df, frame);
+        });
+      } else {
+        ctrl = method(node, state);
+      }
+      // deal with the result
+      if (ctrl) {
+        // check for a promise
+        if (ctrl.then) {
+          const rctrl = await ctrl;
+          if (rctrl) {
             // handle flow instruction
-            doFlow(ctrl);
+            doFlow(rctrl);
           }
+        } else {
+          // handle flow instruction
+          doFlow(ctrl);
         }
       }
-      // take a final snapshot
-      // app.snapshot();
     }
+    // take a final snapshot
+    // app.snapshot();
+  }
+
+  async function run(node) {
+    // initialize the interpreter state
+    fn = {};
+    st = [];
+    ns = {};
+    fst = [];
+    frame = makeFrame(node);
+    setResult();
 
     // return a promise for the eventual termination of the loop
-    return Promise.resolve()
-      .then(loop)
-      .catch(orig => {
-        const err = new Error(orig.message);
-        err.err = orig;
-        err.snapshot = snapshot();
-        throw err;
-      })
-      .then(result => ({
-        result,
+    try {
+      const res = await loop();
+      return {
+        result: res,
         snapshot: snapshot(),
-      }));
+      };
+    } catch (orig) {
+      const err = new Error(orig.message);
+      err.err = orig;
+      err.snapshot = snapshot();
+      throw err;
+    }
   }
 
   function snapshot() {
@@ -98,10 +101,10 @@ export function makeInterpreter(app, ctx) {
     // TODO: need to have a way to pass these in as well
     return {
       fn,
-      fst,
       st,
-      frame,
       ns,
+      fst,
+      frame,
       result,
     };
   }
@@ -687,9 +690,6 @@ export function makeInterpreter(app, ctx) {
       }
     },
   };
-
-  // set an empty result value
-  setResult();
 
   // return the run() function
   return run;
