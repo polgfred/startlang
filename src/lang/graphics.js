@@ -5,116 +5,114 @@ import immutable from 'immutable';
 import { makeRuntime, globalsKey } from './runtime';
 
 export function makeGraphicsRuntime(app) {
-  const { [globalsKey]: globals, ...rt } = makeRuntime(app);
+  const rt = makeRuntime(app);
 
-  return {
-    ...rt,
+  rt[globalsKey] = {
+    ...rt[globalsKey],
 
-    [globalsKey]: {
-      ...globals,
+    repaint() {
+      // let the DOM catch up
+      return new Promise(resolve => {
+        nextTick(resolve);
+      });
+    },
 
-      repaint() {
-        // let the DOM catch up
-        return new Promise(resolve => {
-          nextTick(resolve);
-        });
-      },
+    clear() {
+      app.clearDisplay();
+    },
 
-      clear() {
-        app.clearDisplay();
-      },
-
-      print(...values) {
-        if (values.length > 0) {
-          for (let i = 0; i < values.length; ++i) {
-            let v = values[i];
-            termOutput(rt.handle(v).repr(v));
-          }
-        } else {
-          termOutput('');
+    print(...values) {
+      if (values.length > 0) {
+        for (let i = 0; i < values.length; ++i) {
+          let v = values[i];
+          termOutput(rt.handle(v).repr(v));
         }
-      },
+      } else {
+        termOutput('');
+      }
+    },
 
-      input(prompt) {
-        return new Promise(resolve => {
-          app.termInput(prompt, input => {
-            resolve(input);
-          });
+    input(prompt) {
+      return new Promise(resolve => {
+        app.termInput(prompt, input => {
+          resolve(input);
         });
-      },
+      });
+    },
 
-      // shape creation
+    // shape creation
 
-      rect(x, y, width, height) {
-        addShape(Rect, { x, y, width, height });
-      },
+    rect(x, y, width, height) {
+      addShape(Rect, { x, y, width, height });
+    },
 
-      circle(cx, cy, r) {
-        addShape(Circle, { cx, cy, r });
-      },
+    circle(cx, cy, r) {
+      addShape(Circle, { cx, cy, r });
+    },
 
-      ellipse(cx, cy, rx, ry) {
-        addShape(Ellipse, { cx, cy, rx, ry });
-      },
+    ellipse(cx, cy, rx, ry) {
+      addShape(Ellipse, { cx, cy, rx, ry });
+    },
 
-      line(x1, y1, x2, y2) {
-        addShape(Line, { x1, y1, x2, y2 });
-      },
+    line(x1, y1, x2, y2) {
+      addShape(Line, { x1, y1, x2, y2 });
+    },
 
-      text(x, y, text) {
-        addShape(Text, { x, y, text });
-      },
+    text(x, y, text) {
+      addShape(Text, { x, y, text });
+    },
 
-      polygon(...points) {
-        points = immutable.List.isList(points[0])
-          ? points[0]
-          : immutable.List(points);
+    polygon(...points) {
+      points = immutable.List.isList(points[0])
+        ? points[0]
+        : immutable.List(points);
 
-        addShape(Polygon, { points });
-      },
+      addShape(Polygon, { points });
+    },
 
-      // set shape and text attributes
+    // set shape and text attributes
 
-      color(r, g, b) {
-        let hex = v => ('0' + Math.round(255 * v).toString(16)).substr(-2);
-        return `#${hex(r)}${hex(g)}${hex(b)}`;
-      },
+    color(r, g, b) {
+      let hex = v => ('0' + Math.round(255 * v).toString(16)).substr(-2);
+      return `#${hex(r)}${hex(g)}${hex(b)}`;
+    },
 
-      fill(color) {
-        updateSprops(sprops => sprops.set('fill', color));
-      },
+    fill(color) {
+      updateSprops(sprops => sprops.set('fill', color));
+    },
 
-      stroke(color) {
-        updateSprops(sprops => sprops.set('stroke', color));
-      },
+    stroke(color) {
+      updateSprops(sprops => sprops.set('stroke', color));
+    },
 
-      opacity(value = 1) {
-        updateSprops(sprops => sprops.set('opacity', value));
-      },
+    opacity(value = 1) {
+      updateSprops(sprops => sprops.set('opacity', value));
+    },
 
-      anchor(value = 'center') {
-        updateSprops(sprops => sprops.set('anchor', value));
-      },
+    anchor(value = 'center') {
+      updateSprops(sprops => sprops.set('anchor', value));
+    },
 
-      rotate(angle = 0) {
-        updateSprops(sprops => sprops.set('rotate', angle));
-      },
+    rotate(angle = 0) {
+      updateSprops(sprops => sprops.set('rotate', angle));
+    },
 
-      scale(scalex = 1, scaley = scalex) {
-        updateSprops(sprops =>
-          sprops.set('scalex', scalex).set('scaley', scaley)
-        );
-      },
+    scale(scalex = 1, scaley = scalex) {
+      updateSprops(sprops =>
+        sprops.set('scalex', scalex).set('scaley', scaley)
+      );
+    },
 
-      align(value = 'start') {
-        updateTprops(tprops => tprops.set('align', value));
-      },
+    align(value = 'start') {
+      updateTprops(tprops => tprops.set('align', value));
+    },
 
-      font(fface = 'Helvetica', fsize = 36) {
-        updateTprops(tprops => tprops.set('fface', fface).set('fsize', fsize));
-      },
+    font(fface = 'Helvetica', fsize = 36) {
+      updateTprops(tprops => tprops.set('fface', fface).set('fsize', fsize));
     },
   };
+
+  return rt;
 
   function addShape(type, attrs) {
     app.gfxUpdate(gfx => gfx.addShape(type, attrs));
