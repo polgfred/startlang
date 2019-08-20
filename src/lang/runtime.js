@@ -4,7 +4,6 @@ import { produce } from 'immer';
 import deepEqual from 'deep-equal';
 
 export const handlerKey = Symbol('START_HANDLER');
-export const globalsKey = Symbol('START_GLOBALS');
 
 // ensures its operands are of the same type
 function checkOp(fn) {
@@ -64,7 +63,7 @@ export function makeRuntime(app) {
       // try to find the function to call
       let fn =
         (args.length > 0 && handle(args[0]).methods[name]) ||
-        this[globalsKey][name];
+        this.globals[name];
       if (!fn) {
         throw new Error(`object not found or not a function: ${name}`);
       }
@@ -73,7 +72,7 @@ export function makeRuntime(app) {
       return fn.call(this, ...args);
     },
 
-    [globalsKey]: {
+    globals: {
       // types/casts
 
       num(value) {

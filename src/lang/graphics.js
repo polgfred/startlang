@@ -2,13 +2,13 @@ import { nextTick } from 'process';
 
 import immutable from 'immutable';
 
-import { makeRuntime, globalsKey } from './runtime';
+import { makeRuntime } from './runtime';
 
 export function makeGraphicsRuntime(app) {
   const rt = makeRuntime(app);
 
-  rt[globalsKey] = {
-    ...rt[globalsKey],
+  rt.globals = {
+    ...rt.globals,
 
     repaint() {
       // let the DOM catch up
