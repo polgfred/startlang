@@ -10,22 +10,6 @@ export function makeGraphicsRuntime(app) {
   return {
     ...rt,
 
-    addShape(type, attrs) {
-      app.gfxUpdate(gfx => gfx.addShape(type, attrs));
-    },
-
-    updateSprops(mut) {
-      app.gfxUpdate(gfx => gfx.updateSprops(mut));
-    },
-
-    updateTprops(mut) {
-      app.gfxUpdate(gfx => gfx.updateTprops(mut));
-    },
-
-    termOutput(line) {
-      app.termUpdate(buf => buf.push(line));
-    },
-
     [globalsKey]: {
       ...globals,
 
@@ -44,10 +28,10 @@ export function makeGraphicsRuntime(app) {
         if (values.length > 0) {
           for (let i = 0; i < values.length; ++i) {
             let v = values[i];
-            this.termOutput(rt.handle(v).repr(v));
+            termOutput(rt.handle(v).repr(v));
           }
         } else {
-          this.termOutput('');
+          termOutput('');
         }
       },
 
@@ -62,23 +46,23 @@ export function makeGraphicsRuntime(app) {
       // shape creation
 
       rect(x, y, width, height) {
-        this.addShape(Rect, { x, y, width, height });
+        addShape(Rect, { x, y, width, height });
       },
 
       circle(cx, cy, r) {
-        this.addShape(Circle, { cx, cy, r });
+        addShape(Circle, { cx, cy, r });
       },
 
       ellipse(cx, cy, rx, ry) {
-        this.addShape(Ellipse, { cx, cy, rx, ry });
+        addShape(Ellipse, { cx, cy, rx, ry });
       },
 
       line(x1, y1, x2, y2) {
-        this.addShape(Line, { x1, y1, x2, y2 });
+        addShape(Line, { x1, y1, x2, y2 });
       },
 
       text(x, y, text) {
-        this.addShape(Text, { x, y, text });
+        addShape(Text, { x, y, text });
       },
 
       polygon(...points) {
@@ -86,7 +70,7 @@ export function makeGraphicsRuntime(app) {
           ? points[0]
           : immutable.List(points);
 
-        this.addShape(Polygon, { points });
+        addShape(Polygon, { points });
       },
 
       // set shape and text attributes
@@ -97,42 +81,56 @@ export function makeGraphicsRuntime(app) {
       },
 
       fill(color) {
-        this.updateSprops(sprops => sprops.set('fill', color));
+        updateSprops(sprops => sprops.set('fill', color));
       },
 
       stroke(color) {
-        this.updateSprops(sprops => sprops.set('stroke', color));
+        updateSprops(sprops => sprops.set('stroke', color));
       },
 
       opacity(value = 1) {
-        this.updateSprops(sprops => sprops.set('opacity', value));
+        updateSprops(sprops => sprops.set('opacity', value));
       },
 
       anchor(value = 'center') {
-        this.updateSprops(sprops => sprops.set('anchor', value));
+        updateSprops(sprops => sprops.set('anchor', value));
       },
 
       rotate(angle = 0) {
-        this.updateSprops(sprops => sprops.set('rotate', angle));
+        updateSprops(sprops => sprops.set('rotate', angle));
       },
 
       scale(scalex = 1, scaley = scalex) {
-        this.updateSprops(sprops =>
+        updateSprops(sprops =>
           sprops.set('scalex', scalex).set('scaley', scaley)
         );
       },
 
       align(value = 'start') {
-        this.updateTprops(tprops => tprops.set('align', value));
+        updateTprops(tprops => tprops.set('align', value));
       },
 
       font(fface = 'Helvetica', fsize = 36) {
-        this.updateTprops(tprops =>
-          tprops.set('fface', fface).set('fsize', fsize)
-        );
+        updateTprops(tprops => tprops.set('fface', fface).set('fsize', fsize));
       },
     },
   };
+
+  function addShape(type, attrs) {
+    app.gfxUpdate(gfx => gfx.addShape(type, attrs));
+  }
+
+  function updateSprops(mut) {
+    app.gfxUpdate(gfx => gfx.updateSprops(mut));
+  }
+
+  function updateTprops(mut) {
+    app.gfxUpdate(gfx => gfx.updateTprops(mut));
+  }
+
+  function termOutput(line) {
+    app.termUpdate(buf => buf.push(line));
+  }
 }
 
 // visual properties that will get applied to shapes
