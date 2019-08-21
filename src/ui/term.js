@@ -70,18 +70,12 @@ export default function Term({ buf, prompt, handleInput }) {
           overflow: 'scroll',
         }}
       >
-        <TermOutput buf={buf} />
+        <div className="start-term-output">
+          {buf.map((elem, index) => (
+            <p key={index}>{elem}</p>
+          ))}
+        </div>
       </div>
-    </div>
-  );
-}
-
-function TermOutput({ buf }) {
-  return (
-    <div className="start-term-output">
-      {buf.map((elem, index) => (
-        <p key={index}>{elem}</p>
-      ))}
     </div>
   );
 }

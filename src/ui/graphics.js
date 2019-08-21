@@ -1,6 +1,6 @@
 import React, { createElement } from 'react';
 
-export default function Graphics({ data: { shapes } }) {
+export default function Graphics({ shapes }) {
   return (
     <svg
       className="start-graphics"
@@ -10,22 +10,14 @@ export default function Graphics({ data: { shapes } }) {
       }}
     >
       <g className="start-orient">
-        <Group shapes={shapes} />
+        {shapes.map((elem, index) =>
+          createElement(registry[elem.type], {
+            key: index,
+            shape: elem,
+          })
+        )}
       </g>
     </svg>
-  );
-}
-
-function Group({ shapes }) {
-  return (
-    <g>
-      {shapes.map((elem, index) =>
-        createElement(registry[elem.type], {
-          key: index,
-          shape: elem,
-        })
-      )}
-    </g>
   );
 }
 

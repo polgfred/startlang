@@ -152,7 +152,7 @@ export default function App() {
                 padding: '10px',
               }}
             >
-              <Graphics data={gfx} />
+              <Graphics shapes={gfx.shapes} />
             </Paper>
             <Paper
               elevation={3}
