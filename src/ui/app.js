@@ -1,3 +1,5 @@
+import process from 'process';
+
 import React, { useCallback, useMemo, useState } from 'react';
 
 import Grid from '@material-ui/core/Grid';
@@ -111,17 +113,23 @@ export default function App() {
     [clearDisplay, snapshot]
   );
 
-  const runProgram = useCallback(() => {
+  const runProgram = useCallback(async () => {
     refreshState();
-    // TODO: how do we want to wait for the state to clear before running?
-    const ctx = makeGraphicsRuntime(bindings);
-    const interp = makeInterpreter(bindings, ctx);
     clearHistory();
 
-    return interp.run(parser()).catch(err => {
-      // debugg errors
-      console.log(err.stack); // eslint-disable-line no-console
-    });
+    const ctx = makeGraphicsRuntime(bindings);
+    const interp = makeInterpreter(bindings, ctx);
+
+    try {
+      await interp.run(parser());
+      console.log('done'); // eslint-disable-line no-console
+      console.log(interp.snapshot()); // eslint-disable-line no-console
+    } catch (err) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(err.stack); // eslint-disable-line no-console
+        console.log(interp.snapshot()); // eslint-disable-line no-console
+      }
+    }
   }, [bindings, parser, refreshState, clearHistory]);
 
   const inspect = false;
