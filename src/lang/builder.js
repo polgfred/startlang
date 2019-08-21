@@ -62,22 +62,18 @@ function wrapLiteral(value, block) {
     : buildNode('literal', block, { value });
 }
 
-export class SBuilder {
-  constructor() {
-    // keep track of nested statement blocks so we can inject setup
-    // code as necessary
-    this.blocks = [];
-    this.temps = {};
-  }
+export function makeBlocklyBuilder() {
+  const blocks = [];
+  const temps = {};
 
-  fromWorkspace(ws) {
+  function fromWorkspace(ws) {
     // build a program tree from the blockly workspace
     const blocks = ws.getTopBlocks(true),
       funcs = [],
       elems = [];
 
     for (let i = 0; i < blocks.length; ++i) {
-      const stmt = this.handleStatements(blocks[i]);
+      const stmt = handleStatements(blocks[i]);
 
       if (stmt.type === 'begin') {
         // collect functions into their own list
@@ -97,24 +93,24 @@ export class SBuilder {
     return buildNode('block', null, { elems });
   }
 
-  handleValue(block, name) {
+  function handleValue(block, name) {
     // just dispatch on block type
     const target = name ? block.getInputTargetBlock(name) : block;
-    return target && this[target.type](target);
+    return target && nodes[target.type](target);
   }
 
-  handleStatements(block, name) {
+  function handleStatements(block, name) {
     const elems = [];
 
     // push the current statement block onto the stack
-    this.blocks.push(elems);
+    blocks.push(elems);
 
     try {
       // just dispatch on block type
       let target = name ? block.getInputTargetBlock(name) : block;
 
       while (target) {
-        const stmt = this[target.type](target);
+        const stmt = nodes[target.type](target);
         // if we get nothing back, don't create a statement
         if (stmt) {
           elems.push(stmt);
@@ -123,7 +119,7 @@ export class SBuilder {
         target = target.nextConnection && target.nextConnection.targetBlock();
       }
     } finally {
-      this.blocks.pop();
+      blocks.pop();
     }
 
     // if there was only one, just return the first, otherwise
@@ -131,27 +127,27 @@ export class SBuilder {
     return elems.length === 1 ? elems[0] : buildNode('block', block, { elems });
   }
 
-  makeTemporary(value, block, prefix) {
+  function makeTemporary(value, block, prefix) {
     // get next available temp var with this prefix and make an assignment
-    const count = (this.temps[prefix] = (this.temps[prefix] || 0) + 1),
+    const count = (temps[prefix] = (temps[prefix] || 0) + 1),
       name = `temp_${prefix}_${count}`;
 
     const elem = buildNode('const', block, { name, value });
 
     // append it to the nearest statements block
-    this.blocks[this.blocks.length - 1].push(elem);
+    blocks[blocks.length - 1].push(elem);
 
     // return a var node for the temporary
     return buildNode('var', block, { name });
   }
 
-  getPosition(val, block, suffix) {
+  function getPosition(val, block, suffix) {
     // - assumes val is a var node -- caller should ensure that makeTemporary
     //   is called if it might be an arbitrary value expression
     // - assumes val can have len() called on it (a string or list)
     suffix = suffix || '';
     const where = block.getFieldValue(`WHERE${suffix}`);
-    const at = this.handleValue(block, `AT${suffix}`);
+    const at = handleValue(block, `AT${suffix}`);
 
     // we'll need this in a couple places
     const len = buildNode('call', block, {
@@ -208,1034 +204,1020 @@ export class SBuilder {
   }
 
   // control
+  const nodes = {
+    control_exit(block) {
+      return buildNode('exit', block);
+    },
 
-  control_exit(block) {
-    return buildNode('exit', block);
-  }
+    // loops
 
-  // loops
-
-  controls_repeat_ext(block) {
-    return buildNode('repeat', block, {
-      times: this.handleValue(block, 'TIMES'),
-      body: this.handleStatements(block, 'DO'),
-    });
-  }
-
-  controls_whileUntil(block) {
-    let cond = this.handleValue(block, 'BOOL');
-
-    if (block.getFieldValue('MODE') === 'UNTIL') {
-      // reverse the condition
-      cond = buildNode('logicalOp', block, {
-        op: 'not',
-        right: cond,
+    controls_repeat_ext(block) {
+      return buildNode('repeat', block, {
+        times: handleValue(block, 'TIMES'),
+        body: handleStatements(block, 'DO'),
       });
-    }
-
-    return buildNode('while', block, {
-      cond: cond,
-      body: this.handleStatements(block, 'DO'),
-    });
-  }
-
-  controls_for(block) {
-    return buildNode('for', block, {
-      name: block.getFieldValue('VAR'),
-      from: this.handleValue(block, 'FROM'),
-      to: this.handleValue(block, 'TO'),
-      by: this.handleValue(block, 'BY'),
-      body: this.handleStatements(block, 'DO'),
-    });
-  }
-
-  controls_forEach(block) {
-    return buildNode('forIn', block, {
-      name: block.getFieldValue('VAR'),
-      range: this.handleValue(block, 'LIST'),
-      body: this.handleStatements(block, 'DO'),
-    });
-  }
-
-  controls_flow_statements(block) {
-    const FLOWS = {
-      BREAK: 'break',
-      CONTINUE: 'next',
-    };
-
-    return buildNode(FLOWS[block.getFieldValue('FLOW')], block);
-  }
-
-  // logic
-
-  controls_if(block) {
-    // the top-level if block
-    const top = buildNode('if', block, {
-      cond: this.handleValue(block, 'IF0'),
-      tbody: this.handleStatements(block, 'DO0'),
-    });
-
-    let current = top;
-
-    for (let i = 1; i <= block.elseifCount_; ++i) {
-      // create a nested if block inside the else block
-      current.fbody = buildNode('if', block, {
-        cond: this.handleValue(block, `IF${i}`),
-        tbody: this.handleStatements(block, `DO${i}`),
-      });
-
-      current = current.fbody;
-    }
-
-    if (block.elseCount_) {
-      // create the final else block
-      current.fbody = this.handleStatements(block, 'ELSE');
-    }
-
-    return top;
-  }
-
-  logic_compare(block) {
-    const OPERATORS = {
-      EQ: '=',
-      NEQ: '!=',
-      LT: '<',
-      LTE: '<=',
-      GT: '>',
-      GTE: '>=',
-    };
-
-    return buildNode('binaryOp', block, {
-      op: OPERATORS[block.getFieldValue('OP')],
-      left: this.handleValue(block, 'A'),
-      right: this.handleValue(block, 'B'),
-    });
-  }
-
-  logic_operation(block) {
-    return buildNode('logicalOp', block, {
-      op: block.getFieldValue('OP').toLowerCase(),
-      left: this.handleValue(block, 'A'),
-      right: this.handleValue(block, 'B'),
-    });
-  }
-
-  logic_negate(block) {
-    return buildNode('logicalOp', block, {
-      op: 'not',
-      right: this.handleValue(block, 'BOOL'),
-    });
-  }
-
-  logic_boolean(block) {
-    return wrapLiteral(block.getFieldValue('BOOL') === 'TRUE', block);
-  }
-
-  logic_null(block) {
-    return wrapLiteral(null, block);
-  }
-
-  // math
-
-  math_number(block) {
-    return wrapLiteral(parseFloat(block.getFieldValue('NUM')), block);
-  }
-
-  math_angle(block) {
-    return wrapLiteral(parseFloat(block.getFieldValue('ANGLE')), block);
-  }
-
-  math_arithmetic(block) {
-    const OPERATORS = {
-      ADD: '+',
-      MINUS: '-',
-      MULTIPLY: '*',
-      DIVIDE: '/',
-    };
-
-    const op = block.getFieldValue('OP');
-
-    if (op === 'POWER') {
-      return buildNode('call', block, {
-        name: 'exp',
-        args: [this.handleValue(block, 'A'), this.handleValue(block, 'B')],
-      });
-    } else {
-      return buildNode('binaryOp', block, {
-        op: OPERATORS[op],
-        left: this.handleValue(block, 'A'),
-        right: this.handleValue(block, 'B'),
-      });
-    }
-  }
-
-  math_single(block) {
-    const FUNCS = {
-      ROOT: 'sqrt',
-      LN: 'log',
-      ROUNDUP: 'ceil',
-      ROUNDDOWN: 'floor',
-    };
-
-    const func = block.getFieldValue('OP');
-    const num = this.handleValue(block, 'NUM');
-
-    switch (func) {
-      case 'NEG':
-        return buildNode('unaryOp', block, {
-          op: '-',
-          right: num,
-        });
-      case 'LOG10':
-        return buildNode('call', block, {
-          name: 'log',
-          args: [wrapLiteral(10, block), num],
-        });
-      case 'POW10':
-        return buildNode('call', block, {
-          name: 'exp',
-          args: [wrapLiteral(10, block), num],
-        });
-      default:
-        return buildNode('call', block, {
-          name: FUNCS[func] || func.toLowerCase(),
-          args: [num],
-        });
-    }
-  }
-
-  math_round(block) {
-    return this.math_single(block);
-  }
-
-  math_trig(block) {
-    return this.math_single(block);
-  }
-
-  math_number_property(block) {
-    const prop = block.getFieldValue('PROPERTY');
-    const num = this.handleValue(block, 'NUMBER_TO_CHECK');
-
-    // construct an 'x % y === z' test
-    function buildModTest(denom, test) {
-      return buildNode('binaryOp', block, {
-        op: '=',
-        left: buildNode('binaryOp', block, {
-          op: '%',
-          left: num,
-          right: wrapLiteral(denom, block),
-        }),
-        right: wrapLiteral(test, block),
-      });
-    }
-
-    // construct an 'x >/< 0' test
-    function buildLGTest(op) {
-      return buildNode('binaryOp', block, {
-        op: op,
-        left: num,
-        right: wrapLiteral(0, block),
-      });
-    }
-
-    switch (prop) {
-      case 'EVEN':
-        return buildModTest(2, 0);
-      case 'ODD':
-        return buildModTest(2, 1);
-      case 'WHOLE':
-        return buildModTest(1, 0);
-      case 'DIVISIBLE_BY':
-        return buildModTest(this.handleValue(block, 'DIVISOR'), 0);
-      case 'POSITIVE':
-        return buildLGTest('>');
-      case 'NEGATIVE':
-        return buildLGTest('<');
-    }
-  }
-
-  math_change(block) {
-    const name = block.getFieldValue('VAR');
-    const delta = this.handleValue(block, 'DELTA');
-    let sign = '+';
-
-    if (delta.type === 'literal' && delta.value < 0) {
-      // if delta is a literal negative number, be nice and build
-      // a minus expression
-      delta.value = -delta.value;
-      sign = '-';
-    }
-
-    return buildNode('const', block, {
-      name: name,
-      value: buildNode('binaryOp', block, {
-        op: sign,
-        left: buildNode('var', block, {
-          name: name,
-        }),
-        right: delta,
-      }),
-    });
-  }
-
-  math_modulo(block) {
-    return buildNode('binaryOp', block, {
-      op: '%',
-      left: this.handleValue(block, 'DIVIDEND'),
-      right: this.handleValue(block, 'DIVISOR'),
-    });
-  }
-
-  math_constrain(block) {
-    const valueOrDefault = (name, default_) =>
-      this.handleValue(block, name) || wrapLiteral(default_);
-
-    return buildNode('call', block, {
-      name: 'clamp',
-      args: [
-        this.handleValue(block, 'VALUE'),
-        valueOrDefault('LOW', 0),
-        valueOrDefault('HIGH', Infinity),
-      ],
-    });
-  }
-
-  math_random_int(block) {
-    return buildNode('call', block, {
-      name: 'rand',
-      args: [this.handleValue(block, 'FROM'), this.handleValue(block, 'TO')],
-    });
-  }
-
-  math_random_float(block) {
-    return buildNode('call', block, {
-      name: 'rand',
-      args: [],
-    });
-  }
-
-  // text
-
-  text(block) {
-    return wrapLiteral(block.getFieldValue('TEXT'), block);
-  }
-
-  text_join(block) {
-    let str = this.handleValue(block, 'ADD0');
-
-    if (!(str.type === 'literal' && typeof str.value === 'string')) {
-      str = buildNode('binaryOp', block, {
-        op: '$',
-        left: wrapLiteral('', block),
-        right: str,
-      });
-    }
-
-    for (let i = 1; i < block.itemCount_; ++i) {
-      str = buildNode('binaryOp', block, {
-        op: '$',
-        left: str,
-        right: this.handleValue(block, `ADD${i}`),
-      });
-    }
-
-    return str;
-  }
-
-  text_append(block) {
-    const name = block.getFieldValue('VAR');
-
-    return buildNode('const', block, {
-      name: name,
-      value: buildNode('binaryOp', block, {
-        op: '$',
-        left: buildNode('var', block, {
-          name: name,
-        }),
-        right: this.handleValue(block, 'TEXT'),
-      }),
-    });
-  }
-
-  text_length(block) {
-    return buildNode('call', block, {
-      name: 'len',
-      args: [this.handleValue(block, 'VALUE')],
-    });
-  }
-
-  text_isEmpty(block) {
-    return buildNode('binaryOp', block, {
-      op: '=',
-      left: this.text_length(block),
-      right: wrapLiteral(0, block),
-    });
-  }
-
-  text_indexOf(block) {
-    const mode = block.getFieldValue('END').toLowerCase();
-
-    return buildNode('call', block, {
-      name: mode,
-      args: [this.handleValue(block, 'VALUE'), this.handleValue(block, 'FIND')],
-    });
-  }
-
-  text_charAt(block) {
-    let val = this.handleValue(block, 'VALUE');
-
-    if (val.type !== 'var') {
-      val = this.makeTemporary(val, block, 'string');
-    }
-
-    return buildNode('index', block, {
-      name: val.name,
-      indexes: [this.getPosition(val, block)],
-    });
-  }
-
-  text_getSubstring(block) {
-    let val = this.handleValue(block, 'STRING');
-
-    if (val.type !== 'literal' && val.type !== 'var') {
-      val = this.makeTemporary(val, block, 'string');
-    }
-
-    return buildNode('call', block, {
-      name: 'copy',
-      args: [
-        val,
-        this.getPosition(val, block, '1'),
-        this.getPosition(val, block, '2'),
-      ],
-    });
-  }
-
-  text_changeCase(block) {
-    const CASES = {
-      UPPERCASE: 'upper',
-      LOWERCASE: 'lower',
-      TITLECASE: 'title',
-    };
-
-    return buildNode('call', block, {
-      name: CASES[block.getFieldValue('CASE')],
-      args: [this.handleValue(block, 'TEXT')],
-    });
-  }
-
-  text_trim(block) {
-    const TRIMS = {
-      LEFT: 'ltrim',
-      RIGHT: 'rtrim',
-      BOTH: 'trim',
-    };
-
-    return buildNode('call', block, {
-      name: TRIMS[block.getFieldValue('MODE')],
-      args: [this.handleValue(block, 'TEXT')],
-    });
-  }
-
-  text_prompt_ext(block) {
-    let input = buildNode('call', block, {
-      name: 'input',
-      args: [this.handleValue(block, 'TEXT')],
-    });
-
-    if (block.getFieldValue('TYPE') === 'NUMBER') {
-      input = buildNode('call', block, {
-        name: 'num',
-        args: [input],
-      });
-    }
-
-    return input;
-  }
-
-  text_print(block) {
-    const text = this.handleValue(block, 'TEXT');
-
-    return buildNode('call', block, {
-      name: 'print',
-      args: text ? [text] : [],
-    });
-  }
-
-  // time
-
-  time_sleep(block) {
-    return buildNode('call', block, {
-      name: 'sleep',
-      args: [this.handleValue(block, 'SECONDS')],
-    });
-  }
-
-  time_create_empty(block) {
-    return buildNode('call', block, {
-      name: 'time',
-      args: [],
-    });
-  }
-
-  time_create_with(block) {
-    return buildNode('call', block, {
-      name: 'time',
-      args: [
-        this.handleValue(block, 'YEAR'),
-        this.handleValue(block, 'MONTH'),
-        this.handleValue(block, 'DAY'),
-        this.handleValue(block, 'HOUR'),
-        this.handleValue(block, 'MINUTE'),
-        this.handleValue(block, 'SECOND'),
-      ],
-    });
-  }
-
-  time_getPart(block) {
-    return buildNode('call', block, {
-      name: 'part',
-      args: [
-        this.handleValue(block, 'TIME'),
-        wrapLiteral(block.getFieldValue('UNIT').toLowerCase(), block),
-      ],
-    });
-  }
-
-  time_addSubtract(block) {
-    const mode = block.getFieldValue('MODE').toLowerCase();
-
-    return buildNode('call', block, {
-      name: mode,
-      args: [
-        this.handleValue(block, 'TIME'),
-        this.handleValue(block, 'VALUE'),
-        wrapLiteral(block.getFieldValue('UNIT').toLowerCase(), block),
-      ],
-    });
-  }
-
-  time_startEnd(block) {
-    const mode = block.getFieldValue('MODE').toLowerCase();
-
-    return buildNode('call', block, {
-      name: `${mode}of`,
-      args: [
-        this.handleValue(block, 'TIME'),
-        wrapLiteral(block.getFieldValue('UNIT').toLowerCase(), block),
-      ],
-    });
-  }
-
-  time_diff(block) {
-    return buildNode('call', block, {
-      name: 'diff',
-      args: [
-        this.handleValue(block, 'TIME1'),
-        this.handleValue(block, 'TIME2'),
-        wrapLiteral(block.getFieldValue('UNIT').toLowerCase(), block),
-      ],
-    });
-  }
-
-  // lists
-
-  lists_create_empty(block) {
-    return buildNode('call', block, {
-      name: 'list',
-      args: [],
-    });
-  }
-
-  lists_create_with(block) {
-    const args = [];
-
-    for (let i = 0; i < block.itemCount_; ++i) {
-      args[i] = this.handleValue(block, `ADD${i}`) || wrapLiteral(null, block);
-    }
-
-    return buildNode('call', block, {
-      name: 'list',
-      args: args,
-    });
-  }
-
-  lists_length(block) {
-    return buildNode('call', block, {
-      name: 'len',
-      args: [this.handleValue(block, 'VALUE')],
-    });
-  }
-
-  lists_isEmpty(block) {
-    return buildNode('binaryOp', block, {
-      op: '=',
-      left: this.lists_length(block),
-      right: wrapLiteral(0, block),
-    });
-  }
-
-  lists_functions(block) {
-    const OPERATORS = {
-      SUM: 'sum',
-      MIN: 'min',
-      MAX: 'max',
-      AVERAGE: 'avg',
-    };
-
-    return buildNode('call', block, {
-      name: OPERATORS[block.getFieldValue('OP')],
-      args: [this.handleValue(block, 'LIST')],
-    });
-  }
-
-  lists_transformers(block) {
-    let op = block.getFieldValue('OP');
-    const order = block.getFieldValue('ORDER');
-
-    if (op === 'SORT' && order === 'DESC') {
-      op = 'rsort';
-    } else {
-      op = op.toLowerCase();
-    }
-
-    return buildNode('call', block, {
-      name: op,
-      args: [this.handleValue(block, 'LIST')],
-    });
-  }
-
-  lists_indexOf(block) {
-    const mode = block.getFieldValue('END').toLowerCase();
-
-    return buildNode('call', block, {
-      name: mode,
-      args: [this.handleValue(block, 'VALUE'), this.handleValue(block, 'FIND')],
-    });
-  }
-
-  lists_getIndex(block) {
-    const mode = block.getFieldValue('MODE');
-    let val = this.handleValue(block, 'VALUE');
-
-    if (mode === 'REMOVE' && val.type !== 'var') {
-      // removing from a temporary does nothing
-      return;
-    }
-
-    const pos = this.getPosition(val, block);
-
-    switch (mode) {
-      case 'GET':
-        if (val.type !== 'var') {
-          // get a temporary so we can index it
-          val = this.makeTemporary(val, block, 'list');
-        }
-        return buildNode('index', block, {
-          name: val.name,
-          indexes: [pos],
-        });
-
-      case 'GET_REMOVE':
-      case 'REMOVE':
-        return buildNode('call', block, {
-          name: 'remove',
-          args: [val, pos],
-        });
-    }
-  }
-
-  lists_setIndex(block) {
-    const mode = block.getFieldValue('MODE');
-    const val = this.handleValue(block, 'LIST');
-
-    if (val.type !== 'var') {
-      // changing a temporary has no effect
-      return;
-    }
-
-    const pos = this.getPosition(val, block);
-    const to = this.handleValue(block, 'TO');
-
-    switch (mode) {
-      case 'SET':
-        return buildNode('letIndex', block, {
-          name: val.name,
-          indexes: [pos],
-          value: to,
-        });
-
-      case 'INSERT':
-        return buildNode('call', block, {
-          name: 'insert',
-          args: [val, pos, to],
-        });
-    }
-  }
-
-  lists_getSublist(block) {
-    let val = this.handleValue(block, 'LIST');
-
-    if (val.type !== 'var') {
-      val = this.makeTemporary(val, block, 'list');
-    }
-
-    return buildNode('call', block, {
-      name: 'copy',
-      args: [
-        val,
-        this.getPosition(val, block, '1'),
-        this.getPosition(val, block, '2'),
-      ],
-    });
-  }
-
-  lists_split(block) {
-    const mode = block.getFieldValue('MODE');
-
-    switch (mode) {
-      case 'SPLIT':
-        return buildNode('call', block, {
-          name: 'split',
-          args: [
-            this.handleValue(block, 'INPUT'),
-            this.handleValue(block, 'DELIM'),
-          ],
-        });
-      case 'JOIN':
-        return buildNode('call', block, {
-          name: 'join',
-          args: [
-            this.handleValue(block, 'INPUT'),
-            this.handleValue(block, 'DELIM'),
-          ],
-        });
-    }
-  }
-
-  // tables
-
-  tables_create_empty(block) {
-    return buildNode('call', block, {
-      name: 'table',
-      args: [],
-    });
-  }
-
-  tables_create_with(block) {
-    const args = [];
-
-    for (let i = 0; i < block.itemCount_; ++i) {
-      args.push(wrapLiteral(block.getFieldValue(`KEY${i}`), block));
-      args.push(
-        this.handleValue(block, `VALUE${i}`) || wrapLiteral(null, block)
-      );
-    }
-
-    return buildNode('call', block, {
-      name: 'table',
-      args: args,
-    });
-  }
-
-  tables_size(block) {
-    return buildNode('call', block, {
-      name: 'len',
-      args: [this.handleValue(block, 'VALUE')],
-    });
-  }
-
-  tables_isEmpty(block) {
-    return buildNode('binaryOp', block, {
-      op: '=',
-      left: this.tables_size(block),
-      right: wrapLiteral(0, block),
-    });
-  }
-
-  tables_getIndex(block) {
-    const mode = block.getFieldValue('MODE');
-    let val = this.handleValue(block, 'VALUE');
-
-    if (mode === 'REMOVE' && val.type !== 'var') {
-      // removing from a temporary has no effect
-      return;
-    }
-
-    const at = this.handleValue(block, 'AT');
-
-    switch (mode) {
-      case 'GET':
-        if (val.type !== 'var') {
-          // get a temporary so we can index it
-          val = this.makeTemporary(val, block, 'table');
-        }
-        return buildNode('index', block, {
-          name: val.name,
-          indexes: [at],
-        });
-
-      case 'GET_REMOVE':
-      case 'REMOVE':
-        return buildNode('call', block, {
-          name: 'remove',
-          args: [val, at],
-        });
-    }
-  }
-
-  tables_setIndex(block) {
-    const val = this.handleValue(block, 'TABLE');
-
-    if (val.type !== 'var') {
-      // changing a temporary has no effect
-      return;
-    }
-
-    const at = this.handleValue(block, 'AT');
-    const to = this.handleValue(block, 'TO');
-
-    return buildNode('letIndex', block, {
-      name: val.name,
-      indexes: [at],
-      value: to,
-    });
-  }
-
-  tables_keys(block) {
-    return buildNode('call', block, {
-      name: 'keys',
-      args: [this.handleValue(block, 'VALUE')],
-    });
-  }
-
-  // graphics
-
-  colour_picker(block) {
-    return wrapLiteral(block.getFieldValue('COLOUR'));
-  }
-
-  colour_random(block) {
-    const rand = buildNode('call', block, {
-      name: 'rand',
-      args: [],
-    });
-
-    return buildNode('call', block, {
-      name: 'color',
-      args: [rand, rand, rand],
-    });
-  }
-
-  colour_rgb(block) {
-    const convert = val => {
-      if (val.type === 'literal') {
-        val.value /= 100;
-        return val;
-      } else {
-        return buildNode('binaryOp', block, {
-          op: '/',
-          left: val,
-          right: wrapLiteral(100, block),
+    },
+
+    controls_whileUntil(block) {
+      let cond = handleValue(block, 'BOOL');
+
+      if (block.getFieldValue('MODE') === 'UNTIL') {
+        // reverse the condition
+        cond = buildNode('logicalOp', block, {
+          op: 'not',
+          right: cond,
         });
       }
-    };
 
-    return buildNode('call', block, {
-      name: 'color',
-      args: [
-        convert(this.handleValue(block, 'RED')),
-        convert(this.handleValue(block, 'GREEN')),
-        convert(this.handleValue(block, 'BLUE')),
-      ],
-    });
-  }
+      return buildNode('while', block, {
+        cond: cond,
+        body: handleStatements(block, 'DO'),
+      });
+    },
 
-  graphics_rect(block) {
-    return buildNode('call', block, {
-      name: 'rect',
-      args: [
-        this.handleValue(block, 'X'),
-        this.handleValue(block, 'Y'),
-        this.handleValue(block, 'WIDTH'),
-        this.handleValue(block, 'HEIGHT'),
-      ],
-    });
-  }
+    controls_for(block) {
+      return buildNode('for', block, {
+        name: block.getFieldValue('VAR'),
+        from: handleValue(block, 'FROM'),
+        to: handleValue(block, 'TO'),
+        by: handleValue(block, 'BY'),
+        body: handleStatements(block, 'DO'),
+      });
+    },
 
-  graphics_circle(block) {
-    return buildNode('call', block, {
-      name: 'circle',
-      args: [
-        this.handleValue(block, 'X'),
-        this.handleValue(block, 'Y'),
-        this.handleValue(block, 'RADIUS'),
-      ],
-    });
-  }
+    controls_forEach(block) {
+      return buildNode('forIn', block, {
+        name: block.getFieldValue('VAR'),
+        range: handleValue(block, 'LIST'),
+        body: handleStatements(block, 'DO'),
+      });
+    },
 
-  graphics_ellipse(block) {
-    return buildNode('call', block, {
-      name: 'ellipse',
-      args: [
-        this.handleValue(block, 'X'),
-        this.handleValue(block, 'Y'),
-        this.handleValue(block, 'XRADIUS'),
-        this.handleValue(block, 'YRADIUS'),
-      ],
-    });
-  }
+    controls_flow_statements(block) {
+      const FLOWS = {
+        BREAK: 'break',
+        CONTINUE: 'next',
+      };
 
-  graphics_line(block) {
-    return buildNode('call', block, {
-      name: 'line',
-      args: [
-        this.handleValue(block, 'X1'),
-        this.handleValue(block, 'Y1'),
-        this.handleValue(block, 'X2'),
-        this.handleValue(block, 'Y2'),
-      ],
-    });
-  }
+      return buildNode(FLOWS[block.getFieldValue('FLOW')], block);
+    },
 
-  graphics_text(block) {
-    return buildNode('call', block, {
-      name: 'text',
-      args: [
-        this.handleValue(block, 'X'),
-        this.handleValue(block, 'Y'),
-        this.handleValue(block, 'TEXT'),
-      ],
-    });
-  }
+    // logic
 
-  graphics_stroke(block) {
-    return buildNode('call', block, {
-      name: 'stroke',
-      args: [this.handleValue(block, 'COLOR')],
-    });
-  }
+    controls_if(block) {
+      // the top-level if block
+      const top = buildNode('if', block, {
+        cond: handleValue(block, 'IF0'),
+        tbody: handleStatements(block, 'DO0'),
+      });
 
-  graphics_fill(block) {
-    return buildNode('call', block, {
-      name: 'fill',
-      args: [this.handleValue(block, 'COLOR')],
-    });
-  }
+      let current = top;
 
-  graphics_opacity(block) {
-    return buildNode('call', block, {
-      name: 'opacity',
-      args: [this.handleValue(block, 'AMOUNT')],
-    });
-  }
+      for (let i = 1; i <= block.elseifCount_; ++i) {
+        // create a nested if block inside the else block
+        current.fbody = buildNode('if', block, {
+          cond: handleValue(block, `IF${i}`),
+          tbody: handleStatements(block, `DO${i}`),
+        });
 
-  graphics_rotate(block) {
-    return buildNode('call', block, {
-      name: 'rotate',
-      args: [this.handleValue(block, 'ANGLE')],
-    });
-  }
+        current = current.fbody;
+      }
 
-  graphics_scale(block) {
-    return buildNode('call', block, {
-      name: 'scale',
-      args: [
-        this.handleValue(block, 'MULTX'),
-        this.handleValue(block, 'MULTY'),
-      ],
-    });
-  }
+      if (block.elseCount_) {
+        // create the final else block
+        current.fbody = handleStatements(block, 'ELSE');
+      }
 
-  graphics_font(block) {
-    const fonts = {
-      ARIAL: 'Arial',
-      COURIER_NEW: 'Courier New',
-      HELVETICA: 'Helvetica',
-      TIMES_NEW_ROMAN: 'Times New Roman',
-      VERDANA: 'Verdana',
-    };
+      return top;
+    },
 
-    return buildNode('call', block, {
-      name: 'font',
-      args: [
-        wrapLiteral(fonts[block.getFieldValue('FAMILY')]),
-        this.handleValue(block, 'SIZE'),
-      ],
-    });
-  }
+    logic_compare(block) {
+      const OPERATORS = {
+        EQ: '=',
+        NEQ: '!=',
+        LT: '<',
+        LTE: '<=',
+        GT: '>',
+        GTE: '>=',
+      };
 
-  graphics_repaint(block) {
-    return buildNode('call', block, {
-      name: 'repaint',
-      args: [],
-    });
-  }
+      return buildNode('binaryOp', block, {
+        op: OPERATORS[block.getFieldValue('OP')],
+        left: handleValue(block, 'A'),
+        right: handleValue(block, 'B'),
+      });
+    },
 
-  // variables
+    logic_operation(block) {
+      return buildNode('logicalOp', block, {
+        op: block.getFieldValue('OP').toLowerCase(),
+        left: handleValue(block, 'A'),
+        right: handleValue(block, 'B'),
+      });
+    },
 
-  variables_get(block) {
-    return buildNode('var', block, {
-      name: block.getFieldValue('VAR'),
-    });
-  }
+    logic_negate(block) {
+      return buildNode('logicalOp', block, {
+        op: 'not',
+        right: handleValue(block, 'BOOL'),
+      });
+    },
 
-  variables_set(block) {
-    return buildNode('const', block, {
-      name: block.getFieldValue('VAR'),
-      value: this.handleValue(block, 'VALUE'),
-    });
-  }
+    logic_boolean(block) {
+      return wrapLiteral(block.getFieldValue('BOOL') === 'TRUE', block);
+    },
 
-  // functions
+    logic_null(block) {
+      return wrapLiteral(null, block);
+    },
 
-  procedures_defnoreturn(block) {
-    const [name, params] = block.getProcedureDef();
-    const body = this.handleStatements(block, 'STACK');
+    // math
 
-    return buildNode('begin', block, { name, params, body });
-  }
+    math_number(block) {
+      return wrapLiteral(parseFloat(block.getFieldValue('NUM')), block);
+    },
 
-  procedures_defreturn(block) {
-    const [name, params] = block.getProcedureDef();
-    const result = this.handleValue(block, 'RETURN');
-    let body = block.hasStatements_ && this.handleStatements(block, 'STACK');
-    const ret = buildNode('return', block, { result });
+    math_angle(block) {
+      return wrapLiteral(parseFloat(block.getFieldValue('ANGLE')), block);
+    },
 
-    if (!body) {
-      body = buildNode('block', block, { elems: [ret] });
-    } else if (body.type !== 'block') {
-      body = buildNode('block', block, { elems: [body, ret] });
-    } else {
-      body.elems.push(ret);
-    }
+    math_arithmetic(block) {
+      const OPERATORS = {
+        ADD: '+',
+        MINUS: '-',
+        MULTIPLY: '*',
+        DIVIDE: '/',
+      };
 
-    return buildNode('begin', block, { name, params, body });
-  }
+      const op = block.getFieldValue('OP');
 
-  procedures_callnoreturn(block) {
-    const args = [];
+      if (op === 'POWER') {
+        return buildNode('call', block, {
+          name: 'exp',
+          args: [handleValue(block, 'A'), handleValue(block, 'B')],
+        });
+      } else {
+        return buildNode('binaryOp', block, {
+          op: OPERATORS[op],
+          left: handleValue(block, 'A'),
+          right: handleValue(block, 'B'),
+        });
+      }
+    },
 
-    for (let i = 0; i < block.arguments_.length; ++i) {
-      args.push(this.handleValue(block, `ARG${i}`));
-    }
+    math_single(block) {
+      const FUNCS = {
+        ROOT: 'sqrt',
+        LN: 'log',
+        ROUNDUP: 'ceil',
+        ROUNDDOWN: 'floor',
+      };
 
-    return buildNode('call', block, {
-      name: block.getFieldValue('NAME'),
-      args,
-    });
-  }
+      const func = block.getFieldValue('OP');
+      const num = handleValue(block, 'NUM');
 
-  procedures_callreturn(block) {
-    return this.procedures_callnoreturn(block);
-  }
+      switch (func) {
+        case 'NEG':
+          return buildNode('unaryOp', block, {
+            op: '-',
+            right: num,
+          });
+        case 'LOG10':
+          return buildNode('call', block, {
+            name: 'log',
+            args: [wrapLiteral(10, block), num],
+          });
+        case 'POW10':
+          return buildNode('call', block, {
+            name: 'exp',
+            args: [wrapLiteral(10, block), num],
+          });
+        default:
+          return buildNode('call', block, {
+            name: FUNCS[func] || func.toLowerCase(),
+            args: [num],
+          });
+      }
+    },
 
-  procedures_ifreturn(block) {
-    return buildNode('if', block, {
-      cond: this.handleValue(block, 'CONDITION'),
-      tbody: buildNode('return', block, {
-        result: block.hasReturnValue_ ? this.handleValue(block, 'VALUE') : null,
-      }),
-    });
-  }
+    math_round(block) {
+      return nodes.math_single(block);
+    },
+
+    math_trig(block) {
+      return nodes.math_single(block);
+    },
+
+    math_number_property(block) {
+      const prop = block.getFieldValue('PROPERTY');
+      const num = handleValue(block, 'NUMBER_TO_CHECK');
+
+      // construct an 'x % y === z' test
+      function buildModTest(denom, test) {
+        return buildNode('binaryOp', block, {
+          op: '=',
+          left: buildNode('binaryOp', block, {
+            op: '%',
+            left: num,
+            right: wrapLiteral(denom, block),
+          }),
+          right: wrapLiteral(test, block),
+        });
+      }
+
+      // construct an 'x >/< 0' test
+      function buildLGTest(op) {
+        return buildNode('binaryOp', block, {
+          op: op,
+          left: num,
+          right: wrapLiteral(0, block),
+        });
+      }
+
+      switch (prop) {
+        case 'EVEN':
+          return buildModTest(2, 0);
+        case 'ODD':
+          return buildModTest(2, 1);
+        case 'WHOLE':
+          return buildModTest(1, 0);
+        case 'DIVISIBLE_BY':
+          return buildModTest(handleValue(block, 'DIVISOR'), 0);
+        case 'POSITIVE':
+          return buildLGTest('>');
+        case 'NEGATIVE':
+          return buildLGTest('<');
+      }
+    },
+
+    math_change(block) {
+      const name = block.getFieldValue('VAR');
+      const delta = handleValue(block, 'DELTA');
+      let sign = '+';
+
+      if (delta.type === 'literal' && delta.value < 0) {
+        // if delta is a literal negative number, be nice and build
+        // a minus expression
+        delta.value = -delta.value;
+        sign = '-';
+      }
+
+      return buildNode('const', block, {
+        name: name,
+        value: buildNode('binaryOp', block, {
+          op: sign,
+          left: buildNode('var', block, {
+            name: name,
+          }),
+          right: delta,
+        }),
+      });
+    },
+
+    math_modulo(block) {
+      return buildNode('binaryOp', block, {
+        op: '%',
+        left: handleValue(block, 'DIVIDEND'),
+        right: handleValue(block, 'DIVISOR'),
+      });
+    },
+
+    math_constrain(block) {
+      const valueOrDefault = (name, default_) =>
+        handleValue(block, name) || wrapLiteral(default_);
+
+      return buildNode('call', block, {
+        name: 'clamp',
+        args: [
+          handleValue(block, 'VALUE'),
+          valueOrDefault('LOW', 0),
+          valueOrDefault('HIGH', Infinity),
+        ],
+      });
+    },
+
+    math_random_int(block) {
+      return buildNode('call', block, {
+        name: 'rand',
+        args: [handleValue(block, 'FROM'), handleValue(block, 'TO')],
+      });
+    },
+
+    math_random_float(block) {
+      return buildNode('call', block, {
+        name: 'rand',
+        args: [],
+      });
+    },
+
+    // text
+
+    text(block) {
+      return wrapLiteral(block.getFieldValue('TEXT'), block);
+    },
+
+    text_join(block) {
+      let str = handleValue(block, 'ADD0');
+
+      if (!(str.type === 'literal' && typeof str.value === 'string')) {
+        str = buildNode('binaryOp', block, {
+          op: '$',
+          left: wrapLiteral('', block),
+          right: str,
+        });
+      }
+
+      for (let i = 1; i < block.itemCount_; ++i) {
+        str = buildNode('binaryOp', block, {
+          op: '$',
+          left: str,
+          right: handleValue(block, `ADD${i}`),
+        });
+      }
+
+      return str;
+    },
+
+    text_append(block) {
+      const name = block.getFieldValue('VAR');
+
+      return buildNode('const', block, {
+        name: name,
+        value: buildNode('binaryOp', block, {
+          op: '$',
+          left: buildNode('var', block, {
+            name: name,
+          }),
+          right: handleValue(block, 'TEXT'),
+        }),
+      });
+    },
+
+    text_length(block) {
+      return buildNode('call', block, {
+        name: 'len',
+        args: [handleValue(block, 'VALUE')],
+      });
+    },
+
+    text_isEmpty(block) {
+      return buildNode('binaryOp', block, {
+        op: '=',
+        left: nodes.text_length(block),
+        right: wrapLiteral(0, block),
+      });
+    },
+
+    text_indexOf(block) {
+      const mode = block.getFieldValue('END').toLowerCase();
+
+      return buildNode('call', block, {
+        name: mode,
+        args: [handleValue(block, 'VALUE'), handleValue(block, 'FIND')],
+      });
+    },
+
+    text_charAt(block) {
+      let val = handleValue(block, 'VALUE');
+
+      if (val.type !== 'var') {
+        val = makeTemporary(val, block, 'string');
+      }
+
+      return buildNode('index', block, {
+        name: val.name,
+        indexes: [getPosition(val, block)],
+      });
+    },
+
+    text_getSubstring(block) {
+      let val = handleValue(block, 'STRING');
+
+      if (val.type !== 'literal' && val.type !== 'var') {
+        val = makeTemporary(val, block, 'string');
+      }
+
+      return buildNode('call', block, {
+        name: 'copy',
+        args: [val, getPosition(val, block, '1'), getPosition(val, block, '2')],
+      });
+    },
+
+    text_changeCase(block) {
+      const CASES = {
+        UPPERCASE: 'upper',
+        LOWERCASE: 'lower',
+        TITLECASE: 'title',
+      };
+
+      return buildNode('call', block, {
+        name: CASES[block.getFieldValue('CASE')],
+        args: [handleValue(block, 'TEXT')],
+      });
+    },
+
+    text_trim(block) {
+      const TRIMS = {
+        LEFT: 'ltrim',
+        RIGHT: 'rtrim',
+        BOTH: 'trim',
+      };
+
+      return buildNode('call', block, {
+        name: TRIMS[block.getFieldValue('MODE')],
+        args: [handleValue(block, 'TEXT')],
+      });
+    },
+
+    text_prompt_ext(block) {
+      let input = buildNode('call', block, {
+        name: 'input',
+        args: [handleValue(block, 'TEXT')],
+      });
+
+      if (block.getFieldValue('TYPE') === 'NUMBER') {
+        input = buildNode('call', block, {
+          name: 'num',
+          args: [input],
+        });
+      }
+
+      return input;
+    },
+
+    text_print(block) {
+      const text = handleValue(block, 'TEXT');
+
+      return buildNode('call', block, {
+        name: 'print',
+        args: text ? [text] : [],
+      });
+    },
+
+    // time
+
+    time_sleep(block) {
+      return buildNode('call', block, {
+        name: 'sleep',
+        args: [handleValue(block, 'SECONDS')],
+      });
+    },
+
+    time_create_empty(block) {
+      return buildNode('call', block, {
+        name: 'time',
+        args: [],
+      });
+    },
+
+    time_create_with(block) {
+      return buildNode('call', block, {
+        name: 'time',
+        args: [
+          handleValue(block, 'YEAR'),
+          handleValue(block, 'MONTH'),
+          handleValue(block, 'DAY'),
+          handleValue(block, 'HOUR'),
+          handleValue(block, 'MINUTE'),
+          handleValue(block, 'SECOND'),
+        ],
+      });
+    },
+
+    time_getPart(block) {
+      return buildNode('call', block, {
+        name: 'part',
+        args: [
+          handleValue(block, 'TIME'),
+          wrapLiteral(block.getFieldValue('UNIT').toLowerCase(), block),
+        ],
+      });
+    },
+
+    time_addSubtract(block) {
+      const mode = block.getFieldValue('MODE').toLowerCase();
+
+      return buildNode('call', block, {
+        name: mode,
+        args: [
+          handleValue(block, 'TIME'),
+          handleValue(block, 'VALUE'),
+          wrapLiteral(block.getFieldValue('UNIT').toLowerCase(), block),
+        ],
+      });
+    },
+
+    time_startEnd(block) {
+      const mode = block.getFieldValue('MODE').toLowerCase();
+
+      return buildNode('call', block, {
+        name: `${mode}of`,
+        args: [
+          handleValue(block, 'TIME'),
+          wrapLiteral(block.getFieldValue('UNIT').toLowerCase(), block),
+        ],
+      });
+    },
+
+    time_diff(block) {
+      return buildNode('call', block, {
+        name: 'diff',
+        args: [
+          handleValue(block, 'TIME1'),
+          handleValue(block, 'TIME2'),
+          wrapLiteral(block.getFieldValue('UNIT').toLowerCase(), block),
+        ],
+      });
+    },
+
+    // lists
+
+    lists_create_empty(block) {
+      return buildNode('call', block, {
+        name: 'list',
+        args: [],
+      });
+    },
+
+    lists_create_with(block) {
+      const args = [];
+
+      for (let i = 0; i < block.itemCount_; ++i) {
+        args[i] = handleValue(block, `ADD${i}`) || wrapLiteral(null, block);
+      }
+
+      return buildNode('call', block, {
+        name: 'list',
+        args: args,
+      });
+    },
+
+    lists_length(block) {
+      return buildNode('call', block, {
+        name: 'len',
+        args: [handleValue(block, 'VALUE')],
+      });
+    },
+
+    lists_isEmpty(block) {
+      return buildNode('binaryOp', block, {
+        op: '=',
+        left: nodes.lists_length(block),
+        right: wrapLiteral(0, block),
+      });
+    },
+
+    lists_functions(block) {
+      const OPERATORS = {
+        SUM: 'sum',
+        MIN: 'min',
+        MAX: 'max',
+        AVERAGE: 'avg',
+      };
+
+      return buildNode('call', block, {
+        name: OPERATORS[block.getFieldValue('OP')],
+        args: [handleValue(block, 'LIST')],
+      });
+    },
+
+    lists_transformers(block) {
+      let op = block.getFieldValue('OP');
+      const order = block.getFieldValue('ORDER');
+
+      if (op === 'SORT' && order === 'DESC') {
+        op = 'rsort';
+      } else {
+        op = op.toLowerCase();
+      }
+
+      return buildNode('call', block, {
+        name: op,
+        args: [handleValue(block, 'LIST')],
+      });
+    },
+
+    lists_indexOf(block) {
+      const mode = block.getFieldValue('END').toLowerCase();
+
+      return buildNode('call', block, {
+        name: mode,
+        args: [handleValue(block, 'VALUE'), handleValue(block, 'FIND')],
+      });
+    },
+
+    lists_getIndex(block) {
+      const mode = block.getFieldValue('MODE');
+      let val = handleValue(block, 'VALUE');
+
+      if (mode === 'REMOVE' && val.type !== 'var') {
+        // removing from a temporary does nothing
+        return;
+      }
+
+      const pos = getPosition(val, block);
+
+      switch (mode) {
+        case 'GET':
+          if (val.type !== 'var') {
+            // get a temporary so we can index it
+            val = makeTemporary(val, block, 'list');
+          }
+          return buildNode('index', block, {
+            name: val.name,
+            indexes: [pos],
+          });
+
+        case 'GET_REMOVE':
+        case 'REMOVE':
+          return buildNode('call', block, {
+            name: 'remove',
+            args: [val, pos],
+          });
+      }
+    },
+
+    lists_setIndex(block) {
+      const mode = block.getFieldValue('MODE');
+      const val = handleValue(block, 'LIST');
+
+      if (val.type !== 'var') {
+        // changing a temporary has no effect
+        return;
+      }
+
+      const pos = getPosition(val, block);
+      const to = handleValue(block, 'TO');
+
+      switch (mode) {
+        case 'SET':
+          return buildNode('letIndex', block, {
+            name: val.name,
+            indexes: [pos],
+            value: to,
+          });
+
+        case 'INSERT':
+          return buildNode('call', block, {
+            name: 'insert',
+            args: [val, pos, to],
+          });
+      }
+    },
+
+    lists_getSublist(block) {
+      let val = handleValue(block, 'LIST');
+
+      if (val.type !== 'var') {
+        val = makeTemporary(val, block, 'list');
+      }
+
+      return buildNode('call', block, {
+        name: 'copy',
+        args: [val, getPosition(val, block, '1'), getPosition(val, block, '2')],
+      });
+    },
+
+    lists_split(block) {
+      const mode = block.getFieldValue('MODE');
+
+      switch (mode) {
+        case 'SPLIT':
+          return buildNode('call', block, {
+            name: 'split',
+            args: [handleValue(block, 'INPUT'), handleValue(block, 'DELIM')],
+          });
+        case 'JOIN':
+          return buildNode('call', block, {
+            name: 'join',
+            args: [handleValue(block, 'INPUT'), handleValue(block, 'DELIM')],
+          });
+      }
+    },
+
+    // tables
+
+    tables_create_empty(block) {
+      return buildNode('call', block, {
+        name: 'table',
+        args: [],
+      });
+    },
+
+    tables_create_with(block) {
+      const args = [];
+
+      for (let i = 0; i < block.itemCount_; ++i) {
+        args.push(wrapLiteral(block.getFieldValue(`KEY${i}`), block));
+        args.push(handleValue(block, `VALUE${i}`) || wrapLiteral(null, block));
+      }
+
+      return buildNode('call', block, {
+        name: 'table',
+        args: args,
+      });
+    },
+
+    tables_size(block) {
+      return buildNode('call', block, {
+        name: 'len',
+        args: [handleValue(block, 'VALUE')],
+      });
+    },
+
+    tables_isEmpty(block) {
+      return buildNode('binaryOp', block, {
+        op: '=',
+        left: nodes.tables_size(block),
+        right: wrapLiteral(0, block),
+      });
+    },
+
+    tables_getIndex(block) {
+      const mode = block.getFieldValue('MODE');
+      let val = handleValue(block, 'VALUE');
+
+      if (mode === 'REMOVE' && val.type !== 'var') {
+        // removing from a temporary has no effect
+        return;
+      }
+
+      const at = handleValue(block, 'AT');
+
+      switch (mode) {
+        case 'GET':
+          if (val.type !== 'var') {
+            // get a temporary so we can index it
+            val = makeTemporary(val, block, 'table');
+          }
+          return buildNode('index', block, {
+            name: val.name,
+            indexes: [at],
+          });
+
+        case 'GET_REMOVE':
+        case 'REMOVE':
+          return buildNode('call', block, {
+            name: 'remove',
+            args: [val, at],
+          });
+      }
+    },
+
+    tables_setIndex(block) {
+      const val = handleValue(block, 'TABLE');
+
+      if (val.type !== 'var') {
+        // changing a temporary has no effect
+        return;
+      }
+
+      const at = handleValue(block, 'AT');
+      const to = handleValue(block, 'TO');
+
+      return buildNode('letIndex', block, {
+        name: val.name,
+        indexes: [at],
+        value: to,
+      });
+    },
+
+    tables_keys(block) {
+      return buildNode('call', block, {
+        name: 'keys',
+        args: [handleValue(block, 'VALUE')],
+      });
+    },
+
+    // graphics
+
+    colour_picker(block) {
+      return wrapLiteral(block.getFieldValue('COLOUR'));
+    },
+
+    colour_random(block) {
+      const rand = buildNode('call', block, {
+        name: 'rand',
+        args: [],
+      });
+
+      return buildNode('call', block, {
+        name: 'color',
+        args: [rand, rand, rand],
+      });
+    },
+
+    colour_rgb(block) {
+      const convert = val => {
+        if (val.type === 'literal') {
+          val.value /= 100;
+          return val;
+        } else {
+          return buildNode('binaryOp', block, {
+            op: '/',
+            left: val,
+            right: wrapLiteral(100, block),
+          });
+        }
+      };
+
+      return buildNode('call', block, {
+        name: 'color',
+        args: [
+          convert(handleValue(block, 'RED')),
+          convert(handleValue(block, 'GREEN')),
+          convert(handleValue(block, 'BLUE')),
+        ],
+      });
+    },
+
+    graphics_rect(block) {
+      return buildNode('call', block, {
+        name: 'rect',
+        args: [
+          handleValue(block, 'X'),
+          handleValue(block, 'Y'),
+          handleValue(block, 'WIDTH'),
+          handleValue(block, 'HEIGHT'),
+        ],
+      });
+    },
+
+    graphics_circle(block) {
+      return buildNode('call', block, {
+        name: 'circle',
+        args: [
+          handleValue(block, 'X'),
+          handleValue(block, 'Y'),
+          handleValue(block, 'RADIUS'),
+        ],
+      });
+    },
+
+    graphics_ellipse(block) {
+      return buildNode('call', block, {
+        name: 'ellipse',
+        args: [
+          handleValue(block, 'X'),
+          handleValue(block, 'Y'),
+          handleValue(block, 'XRADIUS'),
+          handleValue(block, 'YRADIUS'),
+        ],
+      });
+    },
+
+    graphics_line(block) {
+      return buildNode('call', block, {
+        name: 'line',
+        args: [
+          handleValue(block, 'X1'),
+          handleValue(block, 'Y1'),
+          handleValue(block, 'X2'),
+          handleValue(block, 'Y2'),
+        ],
+      });
+    },
+
+    graphics_text(block) {
+      return buildNode('call', block, {
+        name: 'text',
+        args: [
+          handleValue(block, 'X'),
+          handleValue(block, 'Y'),
+          handleValue(block, 'TEXT'),
+        ],
+      });
+    },
+
+    graphics_stroke(block) {
+      return buildNode('call', block, {
+        name: 'stroke',
+        args: [handleValue(block, 'COLOR')],
+      });
+    },
+
+    graphics_fill(block) {
+      return buildNode('call', block, {
+        name: 'fill',
+        args: [handleValue(block, 'COLOR')],
+      });
+    },
+
+    graphics_opacity(block) {
+      return buildNode('call', block, {
+        name: 'opacity',
+        args: [handleValue(block, 'AMOUNT')],
+      });
+    },
+
+    graphics_rotate(block) {
+      return buildNode('call', block, {
+        name: 'rotate',
+        args: [handleValue(block, 'ANGLE')],
+      });
+    },
+
+    graphics_scale(block) {
+      return buildNode('call', block, {
+        name: 'scale',
+        args: [handleValue(block, 'MULTX'), handleValue(block, 'MULTY')],
+      });
+    },
+
+    graphics_font(block) {
+      const fonts = {
+        ARIAL: 'Arial',
+        COURIER_NEW: 'Courier New',
+        HELVETICA: 'Helvetica',
+        TIMES_NEW_ROMAN: 'Times New Roman',
+        VERDANA: 'Verdana',
+      };
+
+      return buildNode('call', block, {
+        name: 'font',
+        args: [
+          wrapLiteral(fonts[block.getFieldValue('FAMILY')]),
+          handleValue(block, 'SIZE'),
+        ],
+      });
+    },
+
+    graphics_repaint(block) {
+      return buildNode('call', block, {
+        name: 'repaint',
+        args: [],
+      });
+    },
+
+    // variables
+
+    variables_get(block) {
+      return buildNode('var', block, {
+        name: block.getFieldValue('VAR'),
+      });
+    },
+
+    variables_set(block) {
+      return buildNode('const', block, {
+        name: block.getFieldValue('VAR'),
+        value: handleValue(block, 'VALUE'),
+      });
+    },
+
+    // functions
+
+    procedures_defnoreturn(block) {
+      const [name, params] = block.getProcedureDef();
+      const body = handleStatements(block, 'STACK');
+
+      return buildNode('begin', block, { name, params, body });
+    },
+
+    procedures_defreturn(block) {
+      const [name, params] = block.getProcedureDef();
+      const result = handleValue(block, 'RETURN');
+      let body = block.hasStatements_ && handleStatements(block, 'STACK');
+      const ret = buildNode('return', block, { result });
+
+      if (!body) {
+        body = buildNode('block', block, { elems: [ret] });
+      } else if (body.type !== 'block') {
+        body = buildNode('block', block, { elems: [body, ret] });
+      } else {
+        body.elems.push(ret);
+      }
+
+      return buildNode('begin', block, { name, params, body });
+    },
+
+    procedures_callnoreturn(block) {
+      const args = [];
+
+      for (let i = 0; i < block.arguments_.length; ++i) {
+        args.push(handleValue(block, `ARG${i}`));
+      }
+
+      return buildNode('call', block, {
+        name: block.getFieldValue('NAME'),
+        args,
+      });
+    },
+
+    procedures_callreturn(block) {
+      return nodes.procedures_callnoreturn(block);
+    },
+
+    procedures_ifreturn(block) {
+      return buildNode('if', block, {
+        cond: handleValue(block, 'CONDITION'),
+        tbody: buildNode('return', block, {
+          result: block.hasReturnValue_ ? handleValue(block, 'VALUE') : null,
+        }),
+      });
+    },
+  };
+
+  return {
+    fromWorkspace,
+  };
 }

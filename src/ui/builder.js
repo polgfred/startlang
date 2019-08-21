@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 
-import { SBuilder } from '../lang/builder';
+import { makeBlocklyBuilder } from '../lang/builder';
 import Blockly from 'blockly';
 
 import toolbox from './toolbox.xml';
@@ -36,7 +36,7 @@ export default function Builder({ setParser }) {
 
     setParser(() => {
       return () => {
-        return new SBuilder().fromWorkspace(Blockly.getMainWorkspace());
+        return makeBlocklyBuilder().fromWorkspace(Blockly.getMainWorkspace());
       };
     });
 
