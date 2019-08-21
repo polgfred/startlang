@@ -1,5 +1,4 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import immutable from 'immutable';
 
 import Grid from '@material-ui/core/Grid';
 import Paper from '@material-ui/core/Paper';
@@ -14,7 +13,7 @@ import Builder from './builder';
 // import Inspector from './inspector';
 
 import { makeInterpreter } from '../lang/interpreter';
-import { makeGraphicsRuntime, SGraphics } from '../lang/graphics';
+import { makeGraphicsRuntime, graphicsProps } from '../lang/graphics';
 
 const theme = createMuiTheme({
   palette: {
@@ -30,8 +29,8 @@ const theme = createMuiTheme({
 export default function App() {
   const [viewMode, setViewMode] = useState('help');
   const [editMode, setEditMode] = useState('source');
-  const [gfx, setGfx] = useState(new SGraphics());
-  const [buf, setBuf] = useState(immutable.List());
+  const [gfx, setGfx] = useState(graphicsProps);
+  const [buf, setBuf] = useState([]);
   const [parser, setParser] = useState(() => {});
   const [{ prompt, onInputComplete }, setInputState] = useState({});
   // const [{ hist, snap }, setHistory] = useState({
@@ -40,8 +39,8 @@ export default function App() {
   // });
 
   const clearDisplay = useCallback(() => {
-    setGfx(gfx => gfx.clear());
-    setBuf(buf => buf.clear());
+    setGfx(graphicsProps);
+    setBuf([]);
   }, []);
 
   const refreshState = useCallback(() => {
@@ -53,18 +52,6 @@ export default function App() {
 
   const clearHistory = useCallback(() => {
     // setHistory({ hist: [], snap: 0 });
-  }, []);
-
-  const gfxUpdate = useCallback(mut => {
-    setGfx(gfx => mut(gfx));
-  }, []);
-
-  const termUpdate = useCallback(mut => {
-    setBuf(buf => mut(buf));
-  }, []);
-
-  const termInput = useCallback((prompt, onInputComplete) => {
-    setInputState({ prompt, onInputComplete });
   }, []);
 
   const handleInput = useCallback(
@@ -116,12 +103,12 @@ export default function App() {
   const bindings = useMemo(
     () => ({
       clearDisplay,
-      gfxUpdate,
-      termUpdate,
-      termInput,
+      setGfx,
+      setBuf,
+      setInputState,
       snapshot,
     }),
-    [clearDisplay, gfxUpdate, termUpdate, termInput, snapshot]
+    [clearDisplay, snapshot]
   );
 
   const runProgram = useCallback(() => {

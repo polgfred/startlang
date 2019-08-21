@@ -3,9 +3,6 @@ import React, { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
 
-// See graphics.js
-const LIST_SHIFT = 5;
-
 export default function Term({ buf, prompt, handleInput }) {
   const [input, setInput] = useState('');
 
@@ -34,11 +31,6 @@ export default function Term({ buf, prompt, handleInput }) {
   useLayoutEffect(() => {
     scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   });
-
-  // make sure the list hasn't been modified from the front
-  if (buf._origin !== 0) {
-    throw new Error('terminal buffer has been modified from the front');
-  }
 
   return (
     <div className="start-term">
@@ -78,21 +70,18 @@ export default function Term({ buf, prompt, handleInput }) {
           overflow: 'scroll',
         }}
       >
-        {buf._root && <TermOutput node={buf._root} level={buf._level} />}
-        {buf._tail && <TermOutput node={buf._tail} level={0} />}
+        <TermOutput buf={buf} />
       </div>
     </div>
   );
 }
 
-function TermOutput({ node: { array }, level }) {
+function TermOutput({ buf }) {
   return (
     <div className="start-term-output">
-      {level === 0
-        ? array.map((elem, index) => <p key={index}>{elem}</p>)
-        : array.map((elem, index) => (
-            <TermOutput key={index} node={elem} level={level - LIST_SHIFT} />
-          ))}
+      {buf.map((elem, index) => (
+        <p key={index}>{elem}</p>
+      ))}
     </div>
   );
 }

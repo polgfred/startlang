@@ -1,6 +1,5 @@
 import { nextTick } from 'process';
-
-import immutable from 'immutable';
+import { produce } from 'immer';
 
 import { makeRuntime } from './runtime';
 
@@ -34,8 +33,11 @@ export function makeGraphicsRuntime(app) {
 
     input(prompt) {
       return new Promise(resolve => {
-        app.termInput(prompt, input => {
-          resolve(input);
+        app.setInputState({
+          prompt,
+          onInputComplete: input => {
+            resolve(input);
+          },
         });
       });
     },
@@ -43,31 +45,30 @@ export function makeGraphicsRuntime(app) {
     // shape creation
 
     rect(x, y, width, height) {
-      addShape(Rect, { x, y, width, height });
+      addShape(rect({ x, y, width, height }));
     },
 
     circle(cx, cy, r) {
-      addShape(Circle, { cx, cy, r });
+      addShape(circle({ cx, cy, r }));
     },
 
     ellipse(cx, cy, rx, ry) {
-      addShape(Ellipse, { cx, cy, rx, ry });
+      addShape(ellipse({ cx, cy, rx, ry }));
     },
 
     line(x1, y1, x2, y2) {
-      addShape(Line, { x1, y1, x2, y2 });
+      addShape(line({ x1, y1, x2, y2 }));
     },
 
-    text(x, y, text) {
-      addShape(Text, { x, y, text });
+    text(x, y, value) {
+      addShape(text({ x, y, value }));
     },
 
     polygon(...points) {
-      points = immutable.List.isList(points[0])
-        ? points[0]
-        : immutable.List(points);
-
-      addShape(Polygon, { points });
+      if (Array.isArray(points[0])) {
+        points = points[0];
+      }
+      addShape(polygon({ points }));
     },
 
     // set shape and text attributes
@@ -78,61 +79,95 @@ export function makeGraphicsRuntime(app) {
     },
 
     fill(color) {
-      updateSprops(sprops => sprops.set('fill', color));
+      updateSprops(sprops => {
+        sprops.fill = color;
+      });
     },
 
     stroke(color) {
-      updateSprops(sprops => sprops.set('stroke', color));
+      updateSprops(sprops => {
+        sprops.stroke = color;
+      });
     },
 
     opacity(value = 1) {
-      updateSprops(sprops => sprops.set('opacity', value));
+      updateSprops(sprops => {
+        sprops.opacity = value;
+      });
     },
 
     anchor(value = 'center') {
-      updateSprops(sprops => sprops.set('anchor', value));
+      updateSprops(sprops => {
+        sprops.anchor = value;
+      });
     },
 
     rotate(angle = 0) {
-      updateSprops(sprops => sprops.set('rotate', angle));
+      updateSprops(sprops => {
+        sprops.rotate = angle;
+      });
     },
 
     scale(scalex = 1, scaley = scalex) {
-      updateSprops(sprops =>
-        sprops.set('scalex', scalex).set('scaley', scaley)
-      );
+      updateSprops(sprops => {
+        sprops.scalex = scalex;
+        sprops.scaley = scaley;
+      });
     },
 
     align(value = 'start') {
-      updateTprops(tprops => tprops.set('align', value));
+      updateTprops(tprops => {
+        tprops.align = value;
+      });
     },
 
     font(fface = 'Helvetica', fsize = 36) {
-      updateTprops(tprops => tprops.set('fface', fface).set('fsize', fsize));
+      updateTprops(tprops => {
+        tprops.fface = fface;
+        tprops.fsize = fsize;
+      });
     },
   };
 
   return rt;
 
-  function addShape(type, attrs) {
-    app.gfxUpdate(gfx => gfx.addShape(type, attrs));
+  function addShape(shape) {
+    app.setGfx(gfx =>
+      produce(gfx, dgfx => {
+        shape.sprops = gfx.sprops;
+        shape.tprops = gfx.tprops;
+        dgfx.shapes.push(shape);
+      })
+    );
   }
 
   function updateSprops(mut) {
-    app.gfxUpdate(gfx => gfx.updateSprops(mut));
+    app.setGfx(gfx =>
+      produce(gfx, dgfx => {
+        mut(dgfx.sprops);
+      })
+    );
   }
 
   function updateTprops(mut) {
-    app.gfxUpdate(gfx => gfx.updateTprops(mut));
+    app.setGfx(gfx =>
+      produce(gfx, dgfx => {
+        mut(dgfx.tprops);
+      })
+    );
   }
 
   function termOutput(line) {
-    app.termUpdate(buf => buf.push(line));
+    app.setBuf(buf =>
+      produce(buf, dbuf => {
+        dbuf.push(line);
+      })
+    );
   }
 }
 
 // visual properties that will get applied to shapes
-const SShapeProps = immutable.Record({
+const shapeProps = {
   stroke: null,
   fill: null,
   opacity: null,
@@ -140,90 +175,78 @@ const SShapeProps = immutable.Record({
   rotate: 0,
   scalex: 1,
   scaley: 1,
-});
+};
 
 // visual properties that will get applied to text
-const STextProps = immutable.Record({
+const textProps = {
   fface: 'Helvetica',
   fsize: 36,
   align: 'start',
-});
+};
 
-export class SGraphics extends immutable.Record({
-  shapes: immutable.List(),
-  sprops: SShapeProps(),
-  tprops: STextProps(),
-}) {
-  clear() {
-    return this.set('shapes', immutable.List());
-  }
+export const graphicsProps = {
+  shapes: [],
+  sprops: shapeProps,
+  tprops: textProps,
+};
 
-  addShape(rec, attrs) {
-    // set the current graphics props on the shape
-    attrs.sprops = this.sprops;
-    attrs.tprops = this.tprops;
-    return this.update('shapes', shapes => shapes.push(rec(attrs)));
-  }
-
-  removeShapes(num) {
-    return this.update('shapes', shapes => shapes.skipLast(num));
-  }
-
-  updateSprops(mut) {
-    return this.update('sprops', sprops => mut(sprops));
-  }
-
-  updateTprops(mut) {
-    return this.update('tprops', tprops => mut(tprops));
-  }
+function rect(attrs) {
+  return {
+    type: 'rect',
+    x: 0,
+    y: 0,
+    width: 0,
+    height: 0,
+    ...attrs,
+  };
 }
 
-const Rect = immutable.Record({
-  type: 'rect',
-  x: 0,
-  y: 0,
-  width: 0,
-  height: 0,
-  sprops: SShapeProps(),
-});
+function circle(attrs) {
+  return {
+    type: 'circle',
+    cx: 0,
+    cy: 0,
+    r: 0,
+    ...attrs,
+  };
+}
 
-const Circle = immutable.Record({
-  type: 'circle',
-  cx: 0,
-  cy: 0,
-  r: 0,
-  sprops: SShapeProps(),
-});
+function ellipse(attrs) {
+  return {
+    type: 'ellipse',
+    cx: 0,
+    cy: 0,
+    rx: 0,
+    ry: 0,
+    ...attrs,
+  };
+}
 
-const Ellipse = immutable.Record({
-  type: 'ellipse',
-  cx: 0,
-  cy: 0,
-  rx: 0,
-  ry: 0,
-  sprops: SShapeProps(),
-});
+function line(attrs) {
+  return {
+    type: 'line',
+    x1: 0,
+    y1: 0,
+    x2: 0,
+    y2: 0,
+    ...attrs,
+  };
+}
 
-const Line = immutable.Record({
-  type: 'line',
-  x1: 0,
-  y1: 0,
-  x2: 0,
-  y2: 0,
-  sprops: SShapeProps(),
-});
+function polygon(attrs) {
+  return {
+    type: 'polygon',
+    points: [],
+    ...attrs,
+  };
+}
 
-const Polygon = immutable.Record({
-  type: 'polygon',
-  points: immutable.List(),
-  sprops: SShapeProps(),
-});
-
-const Text = immutable.Record({
-  type: 'text',
-  x: 0,
-  y: 0,
-  text: '',
-  sprops: SShapeProps(),
-  tprops: STextProps(),
-});
+function text(attrs) {
+  return {
+    type: 'text',
+    x: 0,
+    y: 0,
+    value: '',
+    ...attrs,
+  };
+}
