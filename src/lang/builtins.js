@@ -3,7 +3,7 @@ import moment from 'moment';
 import { produce } from 'immer';
 import deepEqual from 'deep-equal';
 
-export const handlerKey = Symbol('START_HANDLER');
+import { handle, assignKey, resultKey } from './interpreter';
 
 // ensures its operands are of the same type
 function checkOp(fn) {
@@ -18,10 +18,10 @@ function checkOp(fn) {
 
 // the above, plus ensures that its return value is not NaN
 function checkMathOp(fn) {
-  let checked = checkOp(fn);
+  const checked = checkOp(fn);
 
   return (left, right) => {
-    let result = checked(left, right);
+    const result = checked(left, right);
     // check for numeric (not NaN) result
     if (result !== result) {
       throw new Error('result is not a number');
@@ -34,115 +34,58 @@ function adjustIndex(index, size) {
   return index > 0 ? index - 1 : Math.max(0, size + index);
 }
 
-// for runtime API functions to indicate that their result may be assigned
-// back to lvalued arguments
-export const assignKey = Symbol('START_ASSIGN');
-export const resultKey = Symbol('START_RESULT');
+// built-ins
 
-// Environment
+export const builtinGlobals = {
+  // types/casts
 
-export function makeRuntime(app) {
-  return {
-    handle(value) {
-      return handle(value);
-    },
+  num(value) {
+    const n = parseFloat(value);
+    if (n !== n) {
+      throw new Error('cannot convert value to a number');
+    }
+    return n;
+  },
 
-    enumerate(value) {
-      return handle(value).enumerate(value);
-    },
+  str(value) {
+    return handle(value).repr(value);
+  },
 
-    unaryop(op, right) {
-      return handle(right).unaryops[op](right);
-    },
+  time(...args) {
+    return timeHandler.create(args);
+  },
 
-    binaryop(op, left, right) {
-      return handle(left).binaryops[op](left, right);
-    },
+  list(...items) {
+    return listHandler.create(items);
+  },
 
-    syscall(name, args) {
-      // try to find the function to call
-      let fn =
-        (args.length > 0 && handle(args[0]).methods[name]) ||
-        this.globals[name];
-      if (!fn) {
-        throw new Error(`object not found or not a function: ${name}`);
-      }
+  table(...pairs) {
+    return tableHandler.create(pairs);
+  },
 
-      // make the call
-      return fn.call(this, ...args);
-    },
+  // some basic utilities
 
-    globals: {
-      // types/casts
+  rand() {
+    return Math.random();
+  },
 
-      num(value) {
-        let n = parseFloat(value);
-        if (n !== n) {
-          throw new Error('cannot convert value to a number');
-        }
-        return n;
-      },
+  swap(a, b) {
+    return {
+      [assignKey]: [b, a],
+      [resultKey]: null,
+    };
+  },
 
-      str(value) {
-        return handle(value).repr(value);
-      },
-
-      time(...args) {
-        return timeHandler.create(args);
-      },
-
-      list(...items) {
-        return listHandler.create(items);
-      },
-
-      table(...pairs) {
-        return tableHandler.create(pairs);
-      },
-
-      // some basic utilities
-
-      rand() {
-        return Math.random();
-      },
-
-      swap(a, b) {
-        return {
-          [assignKey]: [b, a],
-          [resultKey]: null,
-        };
-      },
-
-      print(...values) {
-        if (values.length > 0) {
-          for (let i = 0; i < values.length; ++i) {
-            let v = values[i];
-            app.output(handle(v).repr(v));
-          }
-        } else {
-          app.output();
-        }
-      },
-
-      input(message) {
-        return app.input(message);
-      },
-
-      sleep(seconds) {
-        return new Promise(resolve => {
-          setTimeout(resolve, seconds * 1000);
-        });
-      },
-
-      // snapshot() {
-      //   app.snapshot();
-      // },
-    },
-  };
-}
+  sleep(seconds) {
+    return new Promise(resolve => {
+      setTimeout(resolve, seconds * 1000);
+    });
+  },
+};
 
 // Handler defaults
 
-const baseHandler = {
+export const baseHandler = {
   enumerate() {
     throw new Error('object does not support iteration');
   },
@@ -173,7 +116,7 @@ const baseHandler = {
 
 // Handler definitions
 
-const noneHandler = {
+export const noneHandler = {
   ...baseHandler,
 
   repr() {
@@ -181,7 +124,7 @@ const noneHandler = {
   },
 };
 
-const booleanHandler = {
+export const booleanHandler = {
   ...baseHandler,
 
   repr(b) {
@@ -189,9 +132,7 @@ const booleanHandler = {
   },
 };
 
-Boolean.prototype[handlerKey] = booleanHandler;
-
-const numberHandler = {
+export const numberHandler = {
   ...baseHandler,
 
   repr(n) {
@@ -316,9 +257,7 @@ const numberHandler = {
   },
 };
 
-Number.prototype[handlerKey] = numberHandler;
-
-const stringHandler = {
+export const stringHandler = {
   ...baseHandler,
 
   repr(s) {
@@ -348,12 +287,12 @@ const stringHandler = {
     },
 
     first(s, search) {
-      let pos = s.indexOf(search);
+      const pos = s.indexOf(search);
       return pos + 1;
     },
 
     last(s, search) {
-      let pos = s.lastIndexOf(search);
+      const pos = s.lastIndexOf(search);
       return pos + 1;
     },
 
@@ -400,17 +339,15 @@ const stringHandler = {
   },
 };
 
-String.prototype[handlerKey] = stringHandler;
-
 function normalizeTimeUnit(unit) {
-  let norm = moment.normalizeUnits(unit);
+  const norm = moment.normalizeUnits(unit);
   if (!norm) {
     throw new Error('unrecognized time unit');
   }
   return norm;
 }
 
-const timeHandler = {
+export const timeHandler = {
   ...baseHandler,
 
   create(args) {
@@ -466,12 +403,10 @@ const timeHandler = {
   },
 };
 
-moment.fn[handlerKey] = timeHandler;
-
 // Containers
 
 function compareElements(left, right) {
-  let h = handle(left);
+  const h = handle(left);
   return h.binaryops['<'](left, right)
     ? -1
     : h.binaryops['>'](left, right)
@@ -483,7 +418,7 @@ function compareElementsReversed(left, right) {
   return -compareElements(left, right);
 }
 
-const containerHandler = {
+export const containerHandler = {
   ...baseHandler,
 
   binaryops: {
@@ -494,7 +429,7 @@ const containerHandler = {
 
 // Lists
 
-const listHandler = {
+export const listHandler = {
   ...containerHandler,
 
   create(items) {
@@ -533,12 +468,12 @@ const listHandler = {
     },
 
     first(l, search) {
-      let pos = l.indexOf(search);
+      const pos = l.indexOf(search);
       return pos + 1;
     },
 
     last(l, search) {
-      let pos = l.lastIndexOf(search);
+      const pos = l.lastIndexOf(search);
       return pos + 1;
     },
 
@@ -652,7 +587,7 @@ const listHandler = {
         [assignKey]: [
           produce(l, dl => {
             for (let i = 0; i < l.length; ++i) {
-              let j = Math.floor(Math.random() * i);
+              const j = Math.floor(Math.random() * i);
               dl[i] = l[j];
               dl[j] = l[i];
             }
@@ -669,11 +604,9 @@ const listHandler = {
   },
 };
 
-Array.prototype[handlerKey] = listHandler;
-
 // Tables
 
-const tableHandler = {
+export const tableHandler = {
   ...containerHandler,
 
   create(pairs) {
@@ -685,7 +618,7 @@ const tableHandler = {
   },
 
   repr(t) {
-    let pairs = Object.keys(t).map(key => {
+    const pairs = Object.keys(t).map(key => {
       const val = t[key];
       return handle(key).repr(key) + ': ' + handle(val).repr(val);
     });
@@ -751,18 +684,3 @@ const tableHandler = {
     $: checkOp((left, right) => left.merge(right)),
   },
 };
-
-Object.prototype[handlerKey] = tableHandler;
-
-// find a protocol handler for this object
-function handle(obj) {
-  // have to check for null/undefined explicitly
-  if (obj === null || obj === undefined) {
-    return noneHandler;
-  }
-
-  // if protocol handler is a function call it with the object -- this allows
-  // for duck type polymorphism on objects
-  let handler = obj[handlerKey];
-  return typeof handler === 'function' ? handler(obj) : handler;
-}

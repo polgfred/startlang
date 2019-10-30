@@ -7,43 +7,46 @@ import { inspect } from 'util';
 
 import PEG from 'pegjs';
 
-import { makeRuntime } from '../src/lang/runtime';
-import { makeInterpreter } from '../src/lang/interpreter';
+import {
+  handle,
+  registerGlobals,
+  makeInterpreter,
+} from '../src/lang/interpreter';
+
+registerGlobals({
+  print(...values) {
+    if (values.length > 0) {
+      for (let i = 0; i < values.length; ++i) {
+        const v = values[i];
+        console.log(handle(v).repr(v));
+      }
+    } else {
+      console.log();
+    }
+  },
+
+  input(message) {
+    return new Promise(resolve => {
+      const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout,
+      });
+
+      rl.question(message, answer => {
+        rl.close();
+        resolve(answer);
+      });
+    });
+  },
+});
 
 let options = {},
   parserOptions = {},
   parser = PEG.generate(
     readFileSync(__dirname + '/../src/lang/parser.pegjs', 'utf-8')
   ),
-  output = obj => console.log(inspect(obj, { colors: true, depth: null })),
-  app = {
-    snapshot() {
-      // output({
-      //   fn: interp.fn,
-      //   ns: interp.ns,
-      //   st: interp.st,
-      //   frame: interp.frame,
-      //   fst: interp.fst,
-      // });
-    },
-
-    output(value) {
-      console.log(value);
-    },
-
-    input(message) {
-      return new Promise(resolve => {
-        let rl = readline.createInterface({
-          input: process.stdin,
-          output: process.stdout,
-        });
-
-        rl.question(message, answer => {
-          rl.close();
-          resolve(answer);
-        });
-      });
-    },
+  output = obj => {
+    console.log(inspect(obj, { colors: true, depth: null }));
   };
 
 if (process.argv.indexOf('--ast') != -1) {
@@ -82,8 +85,7 @@ if (process.argv.indexOf('--meta') != -1) {
     process.exit();
   }
 
-  const ctx = makeRuntime(app);
-  const interp = makeInterpreter(app, ctx);
+  const interp = makeInterpreter();
 
   try {
     const result = await interp.run(node);

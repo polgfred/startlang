@@ -1,12 +1,92 @@
 /* eslint-disable no-case-declarations */
 
+import moment from 'moment';
+
 import { produce, original } from 'immer';
 
-import { assignKey, resultKey } from './runtime';
+import {
+  builtinGlobals,
+  noneHandler,
+  booleanHandler,
+  numberHandler,
+  stringHandler,
+  timeHandler,
+  listHandler,
+  tableHandler,
+} from './builtins';
+
+// for built-in object prototypes to store a handler reference
+export const handlerKey = Symbol('START_HANDLER');
+
+// for runtime API functions to specify how they are assigned-to or returned
+export const assignKey = Symbol('START_ASSIGN');
+export const resultKey = Symbol('START_RESULT');
 
 const hop = Object.prototype.hasOwnProperty; // cache this for performance
 
 const popOut = { pop: 'out' };
+
+// ** globals **
+
+const globals = {};
+
+export function registerGlobals(fns) {
+  for (const name in fns) {
+    globals[name] = fns[name];
+  }
+}
+
+registerGlobals(builtinGlobals);
+
+// ** types **
+
+export function registerHandler(proto, handler) {
+  // register a new type handler globally
+  proto[handlerKey] = handler;
+}
+
+registerHandler(Boolean.prototype, booleanHandler);
+registerHandler(Number.prototype, numberHandler);
+registerHandler(String.prototype, stringHandler);
+registerHandler(Array.prototype, listHandler);
+registerHandler(Object.prototype, tableHandler);
+registerHandler(moment.fn, timeHandler);
+
+export function handle(value) {
+  // have to check for null/undefined explicitly
+  if (value === null || value === undefined) {
+    return noneHandler;
+  }
+
+  // return the registered handler
+  return value[handlerKey];
+}
+
+function enumerate(value) {
+  return handle(value).enumerate(value);
+}
+
+function unaryop(op, right) {
+  return handle(right).unaryops[op](right);
+}
+
+function binaryop(op, left, right) {
+  return handle(left).binaryops[op](left, right);
+}
+
+function syscall(name, args) {
+  // try to find the function to call
+  const fn =
+    (args.length > 0 && handle(args[0]).methods[name]) || globals[name];
+  if (!fn) {
+    throw new Error(`object not found or not a function: ${name}`);
+  }
+
+  // make the call
+  return fn(...args);
+}
+
+// ** interpreter internals **
 
 function makeFrame(node) {
   return {
@@ -29,7 +109,7 @@ function makeFrame(node) {
   };
 }
 
-export function makeInterpreter(app, ctx) {
+export function makeInterpreter() {
   // interpreter state
   let fn; // function table
   let st; // namespace stack
@@ -68,8 +148,6 @@ export function makeInterpreter(app, ctx) {
         }
       }
     }
-    // take a final snapshot
-    // app.snapshot();
   }
 
   async function run(node) {
@@ -86,6 +164,8 @@ export function makeInterpreter(app, ctx) {
     // run the loop
     return await loop();
   }
+
+  // ** snapshot internal state **
 
   function snapshot() {
     // take a snapshot of the interpreter internals
@@ -246,11 +326,9 @@ export function makeInterpreter(app, ctx) {
 
     // recurse into nested containers
     function next(b, i) {
-      const h = ctx.handle(b);
+      const h = handle(b);
       const idx = indexes[i];
-      return i === max
-        ? h.getindex.call(ctx, b, idx)
-        : next(h.getindex.call(ctx, b, idx), i + 1);
+      return i === max ? h.getindex(b, idx) : next(h.getindex(b, idx), i + 1);
     }
   }
 
@@ -260,13 +338,13 @@ export function makeInterpreter(app, ctx) {
 
     // recurse into nested containers
     function next(b, i) {
-      const h = ctx.handle(b);
+      const h = handle(b);
       const idx = indexes[i];
       if (i === max) {
-        return h.setindex.call(ctx, b, idx, value);
+        return h.setindex(b, idx, value);
       } else {
-        const nv = h.getindex.call(ctx, b, idx);
-        return h.setindex.call(ctx, b, idx, next(nv, i + 1));
+        const nv = h.getindex(b, idx);
+        return h.setindex(b, idx, next(nv, i + 1));
       }
     }
   }
@@ -390,7 +468,7 @@ export function makeInterpreter(app, ctx) {
           return node.range;
         case 1:
           frame.state = 2;
-          frame.iter = ctx.enumerate(result.rv);
+          frame.iter = enumerate(result.rv);
           break;
         case 2:
           const { iter } = orig;
@@ -486,7 +564,7 @@ export function makeInterpreter(app, ctx) {
           return popOut;
         case 4:
           // handle a runtime API function
-          const res = ctx.syscall(node.name, orig.args);
+          const res = syscall(node.name, orig.args);
           if (res && res.then) {
             // if we got a promise, handle the result when fulfilled
             return res.then(res => {
@@ -668,7 +746,7 @@ export function makeInterpreter(app, ctx) {
           frame.left = result.rv;
           return node.right;
         case 2:
-          setResult(ctx.binaryop(node.op, orig.left, result.rv));
+          setResult(binaryop(node.op, orig.left, result.rv));
           return popOut;
       }
     },
@@ -679,7 +757,7 @@ export function makeInterpreter(app, ctx) {
           frame.state = 1;
           return node.right;
         case 1:
-          setResult(ctx.unaryop(node.op, result.rv));
+          setResult(unaryop(node.op, result.rv));
           return popOut;
       }
     },
