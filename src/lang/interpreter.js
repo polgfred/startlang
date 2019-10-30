@@ -239,7 +239,7 @@ export function makeInterpreter() {
   function popOver(flow) {
     // pop frames off including a loop or function call node
     while (frame) {
-      let { node } = frame;
+      const { node } = frame;
       // pop the target frame
       pop();
       // break here if we're popping the target frame
