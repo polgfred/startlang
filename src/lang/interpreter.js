@@ -342,15 +342,15 @@ export function makeInterpreter() {
   function handleResult(res, assn) {
     // handle the result of a runtime function
     if (res) {
-      let repl = res[assignKey];
-      let i, r, a;
+      const repl = res[assignKey];
       if (repl) {
         // loop over replacement args
-        for (i = 0; i < repl.length; ++i) {
-          r = repl[i];
+        for (let i = 0; i < repl.length; ++i) {
+          const r = repl[i];
           if (r !== undefined) {
             // we have a replacement for this slot
-            if ((a = assn[i])) {
+            const a = assn[i];
+            if (a !== undefined) {
               // this slot can be assigned to
               if (a.indexes) {
                 setIndex(a.name, a.indexes, r);
