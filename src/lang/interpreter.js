@@ -62,18 +62,6 @@ export function handle(value) {
   return value[handlerKey];
 }
 
-function enumerate(value) {
-  return handle(value).enumerate(value);
-}
-
-function unaryop(op, right) {
-  return handle(right).unaryops[op](right);
-}
-
-function binaryop(op, left, right) {
-  return handle(left).binaryops[op](left, right);
-}
-
 function syscall(name, args) {
   // try to find the function to call
   const fn =
@@ -468,7 +456,7 @@ export function makeInterpreter() {
           return node.range;
         case 1:
           frame.state = 2;
-          frame.iter = enumerate(result.rv);
+          frame.iter = handle(result.rv).enumerate(result.rv);
           break;
         case 2:
           const { iter } = orig;
@@ -746,7 +734,8 @@ export function makeInterpreter() {
           frame.left = result.rv;
           return node.right;
         case 2:
-          setResult(binaryop(node.op, orig.left, result.rv));
+          const binaryop = handle(orig.left).binaryops[node.op];
+          setResult(binaryop(orig.left, result.rv));
           return popOut;
       }
     },
@@ -757,7 +746,8 @@ export function makeInterpreter() {
           frame.state = 1;
           return node.right;
         case 1:
-          setResult(unaryop(node.op, result.rv));
+          const unaryop = handle(result.rv).unaryops[node.op];
+          setResult(unaryop(result.rv));
           return popOut;
       }
     },
