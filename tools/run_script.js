@@ -40,7 +40,7 @@ registerGlobals({
   },
 });
 
-let options = {},
+const options = {},
   parserOptions = {},
   parser = PEG.generate(
     readFileSync(__dirname + '/../src/lang/parser.pegjs', 'utf-8')
@@ -63,16 +63,15 @@ if (process.argv.indexOf('--meta') != -1) {
   parserOptions.ast = parserOptions.meta = true;
 }
 
-(async function() {
+async function main() {
   let source;
-  let node;
-
   try {
     source = readFileSync(process.argv[2], 'utf-8');
   } catch (err) {
     source = process.argv[2] + '\n';
   }
 
+  let node;
   try {
     node = parser.parse(source, parserOptions);
   } catch (err) {
@@ -102,4 +101,6 @@ if (process.argv.indexOf('--meta') != -1) {
     output(interp.snapshot());
     process.exit();
   }
-})();
+}
+
+main();
