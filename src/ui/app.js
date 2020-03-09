@@ -2,7 +2,6 @@ import process from 'process';
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import Grid from '@material-ui/core/Grid';
 import Paper from '@material-ui/core/Paper';
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';
 
@@ -136,17 +135,31 @@ export default function App() {
   }, [parser, refreshState, clearHistory]);
 
   const inspect = false;
-  const columns = inspect ? 4 : 6;
 
   return (
     <MuiThemeProvider theme={theme}>
       <div
         style={{
           backgroundColor: theme.palette.background.default,
+          display: 'flex',
+          flexDirection: 'row',
+          width: '100vw',
+          height: '100vh',
         }}
       >
-        <Grid container spacing={1}>
-          <Grid item xs={12}>
+        <div
+          style={{
+            height: '100vh',
+            display: 'flex',
+            flexDirection: 'column',
+            flex: 1,
+          }}
+        >
+          <div
+            style={{
+              flex: 0,
+            }}
+          >
             <Header
               viewMode={viewMode}
               editMode={editMode}
@@ -154,67 +167,98 @@ export default function App() {
               updateEditMode={setEditMode}
               runProgram={runProgram}
             />
-          </Grid>
-          <Grid item xs={columns}>
-            {viewMode !== 'text' && (
-              <Paper
-                elevation={3}
-                style={{
-                  height:
-                    viewMode === 'graphics'
-                      ? 'calc(100vh - 120px)'
-                      : 'calc(65vh - 74px)',
-                  padding: '10px',
-                }}
-              >
-                <Graphics shapes={gfx.shapes} />
-              </Paper>
-            )}
-            {viewMode !== 'graphics' && (
-              <Paper
-                elevation={3}
-                style={{
-                  height:
-                    viewMode === 'text'
-                      ? 'calc(100vh - 120px)'
-                      : 'calc(35vh - 74px)',
-                  marginTop: viewMode === 'text' ? '0px' : '8px',
-                  padding: '10px',
-                }}
-              >
-                <Term buf={buf} prompt={prompt} handleInput={handleInput} />
-              </Paper>
-            )}
-          </Grid>
-          {inspect && (
-            <Grid item xs={columns}>
-              <Paper
-                elevation={3}
-                style={{
-                  height: 'calc(100vh - 120px)',
-                  padding: '10px',
-                }}
-              >
-                {/* <Inspector
+          </div>
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'row',
+              flex: '1 1 auto',
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                flex: '1 1 50%',
+              }}
+            >
+              {viewMode !== 'text' && (
+                <div
+                  style={{
+                    flex: '1 1 75%',
+                  }}
+                >
+                  <Paper
+                    elevation={3}
+                    style={{
+                      height: 'calc(100% - 30px)',
+                      margin: '5px',
+                      padding: '10px',
+                    }}
+                  >
+                    <Graphics shapes={gfx.shapes} />
+                  </Paper>
+                </div>
+              )}
+              {viewMode !== 'graphics' && (
+                <div
+                  style={{
+                    flex: '1 1 25%',
+                  }}
+                >
+                  <Paper
+                    elevation={3}
+                    style={{
+                      height: 'calc(100% - 30px)',
+                      margin: '5px',
+                      padding: '10px',
+                    }}
+                  >
+                    <Term buf={buf} prompt={prompt} handleInput={handleInput} />
+                  </Paper>
+                </div>
+              )}
+              {inspect && (
+                <div
+                  style={{
+                    flex: '1 1 auto',
+                  }}
+                >
+                  <Paper
+                    elevation={3}
+                    style={{
+                      height: 'calc(100% - 30px)',
+                      margin: '5px',
+                      padding: '10px',
+                    }}
+                  >
+                    {/* <Inspector
                   hist={hist}
                   snap={snap}
                   updateSlider={() => {} updateSlider}
                 /> */}
-              </Paper>
-            </Grid>
-          )}
-          <Grid item xs={columns}>
-            <Paper
-              elevation={3}
+                  </Paper>
+                </div>
+              )}
+            </div>
+            <div
               style={{
-                height: 'calc(100vh - 100px)',
+                flex: '1 1 50%',
               }}
             >
-              {editMode === 'blocks' && <Builder setParser={setParser} />}
-              {editMode === 'source' && <Editor setParser={setParser} />}
-            </Paper>
-          </Grid>
-        </Grid>
+              <Paper
+                elevation={3}
+                style={{
+                  height: 'calc(100% - 10px)',
+                  margin: '5px',
+                }}
+              >
+                {editMode === 'blocks' && <Builder setParser={setParser} />}
+                {editMode === 'source' && <Editor setParser={setParser} />}
+              </Paper>
+            </div>
+          </div>
+        </div>
       </div>
     </MuiThemeProvider>
   );

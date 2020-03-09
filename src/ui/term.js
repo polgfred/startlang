@@ -33,7 +33,12 @@ export default function Term({ buf, prompt, handleInput }) {
   });
 
   return (
-    <div className="start-term">
+    <div
+      className="start-term"
+      style={{
+        height: '100%',
+      }}
+    >
       <div
         className="start-term-command"
         style={{
@@ -66,7 +71,7 @@ export default function Term({ buf, prompt, handleInput }) {
         style={{
           fontFamily: 'Roboto',
           fontSize: '14px',
-          height: `calc(35vh - ${prompt ? 152 : 80}px)`,
+          // height: `calc(35vh - ${prompt ? 152 : 80}px)`,
           overflow: 'scroll',
         }}
       >
