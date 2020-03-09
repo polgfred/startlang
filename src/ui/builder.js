@@ -9,6 +9,10 @@ export default function Builder({ setParser }) {
   const ref = useRef();
 
   useEffect(() => {
+    if (!ref.current) {
+      return;
+    }
+
     const blockly = Blockly.inject(ref.current, {
       toolbox,
       collapse: true,

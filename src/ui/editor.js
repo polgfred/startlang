@@ -11,6 +11,10 @@ export default function Editor({ setParser }) {
   const ref = useRef();
 
   useEffect(() => {
+    if (!ref.current) {
+      return;
+    }
+
     const editor = brace.edit(ref.current);
     const session = editor.getSession();
 
