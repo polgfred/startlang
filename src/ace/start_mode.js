@@ -31,7 +31,7 @@ class StartHighlightRules extends TextHighlightRules {
         },
         {
           token: 'constant.numeric',
-          regex: /\b(?:\d+(\.\d+)?([eE][\-+]?\d+)?)\b/,
+          regex: /\b(?:\d+(\.\d+)?([eE][-+]?\d+)?)\b/,
         },
         {
           token: 'comment',

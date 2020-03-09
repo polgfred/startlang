@@ -52,7 +52,7 @@ export default function Term({ buf, prompt, handleInput }) {
         <Button
           color="primary"
           size="small"
-          variant="raised"
+          variant="contained"
           onClick={handleAccept}
           style={{
             marginLeft: '12px',

@@ -34,7 +34,7 @@ export default function Builder({ setParser }) {
       },
     });
 
-    setParser(() => {
+    setParser((/* parser */) => {
       return () => {
         return makeBlocklyBuilder().fromWorkspace(Blockly.getMainWorkspace());
       };

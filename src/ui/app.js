@@ -145,7 +145,7 @@ export default function App() {
           backgroundColor: theme.palette.background.default,
         }}
       >
-        <Grid container spacing={16}>
+        <Grid container spacing={1}>
           <Grid item xs={12}>
             <Header
               viewMode={viewMode}
@@ -159,7 +159,7 @@ export default function App() {
             <Paper
               elevation={3}
               style={{
-                height: 'calc(65vh - 80px)',
+                height: 'calc(65vh - 74px)',
                 padding: '10px',
               }}
             >
@@ -168,8 +168,8 @@ export default function App() {
             <Paper
               elevation={3}
               style={{
-                height: 'calc(35vh - 80px)',
-                marginTop: '20px',
+                height: 'calc(35vh - 74px)',
+                marginTop: '8px',
                 padding: '10px',
               }}
             >

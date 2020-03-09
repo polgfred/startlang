@@ -12,16 +12,17 @@ export default function Editor({ setParser }) {
 
   useEffect(() => {
     const editor = brace.edit(ref.current);
+    const session = editor.getSession();
 
     editor.$blockScrolling = Infinity;
     editor.setTheme('ace/theme/github');
     editor.setShowFoldWidgets(false);
     editor.setShowPrintMargin(false);
-    editor.getSession().setTabSize(2);
-    editor.getSession().setUseSoftTabs(true);
-    editor.getSession().setMode(new StartMode());
+    session.setTabSize(2);
+    session.setUseSoftTabs(true);
+    session.setMode(new StartMode());
 
-    setParser(() => {
+    setParser((/* parser */) => {
       return () => {
         return parse(editor.getValue() + '\n');
       };

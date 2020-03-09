@@ -58,7 +58,7 @@ export default function Header({
     <AppBar position="static">
       <Toolbar color="light">
         <Typography
-          variant="title"
+          variant="body1"
           style={{
             marginRight: '24px',
           }}
@@ -77,7 +77,15 @@ export default function Header({
           updateMode={updateEditMode}
           choices={['blocks', 'source']}
         />
-        <Button onClick={runProgram}>Run</Button>
+        <Button
+          variant="contained"
+          onClick={runProgram}
+          style={{
+            marginLeft: 6,
+          }}
+        >
+          Run
+        </Button>
       </Toolbar>
     </AppBar>
   );
