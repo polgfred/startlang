@@ -156,25 +156,35 @@ export default function App() {
             />
           </Grid>
           <Grid item xs={columns}>
-            <Paper
-              elevation={3}
-              style={{
-                height: 'calc(65vh - 74px)',
-                padding: '10px',
-              }}
-            >
-              <Graphics shapes={gfx.shapes} />
-            </Paper>
-            <Paper
-              elevation={3}
-              style={{
-                height: 'calc(35vh - 74px)',
-                marginTop: '8px',
-                padding: '10px',
-              }}
-            >
-              <Term buf={buf} prompt={prompt} handleInput={handleInput} />
-            </Paper>
+            {viewMode !== 'text' && (
+              <Paper
+                elevation={3}
+                style={{
+                  height:
+                    viewMode === 'graphics'
+                      ? 'calc(100vh - 120px)'
+                      : 'calc(65vh - 74px)',
+                  padding: '10px',
+                }}
+              >
+                <Graphics shapes={gfx.shapes} />
+              </Paper>
+            )}
+            {viewMode !== 'graphics' && (
+              <Paper
+                elevation={3}
+                style={{
+                  height:
+                    viewMode === 'text'
+                      ? 'calc(100vh - 120px)'
+                      : 'calc(35vh - 74px)',
+                  marginTop: viewMode === 'text' ? '0px' : '8px',
+                  padding: '10px',
+                }}
+              >
+                <Term buf={buf} prompt={prompt} handleInput={handleInput} />
+              </Paper>
+            )}
           </Grid>
           {inspect && (
             <Grid item xs={columns}>
