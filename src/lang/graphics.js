@@ -1,14 +1,10 @@
 import { nextTick } from 'process';
 import { produce } from 'immer';
 
-import { makeRuntime } from './runtime';
+import { handle } from './interpreter';
 
-export function makeGraphicsRuntime(app) {
-  const rt = makeRuntime(app);
-
-  rt.globals = {
-    ...rt.globals,
-
+export const graphicsGlobals = app => {
+  return {
     repaint() {
       // let the DOM catch up
       return new Promise(resolve => {
@@ -23,8 +19,8 @@ export function makeGraphicsRuntime(app) {
     print(...values) {
       if (values.length > 0) {
         for (let i = 0; i < values.length; ++i) {
-          let v = values[i];
-          termOutput(rt.handle(v).repr(v));
+          const v = values[i];
+          termOutput(handle(v).repr(v));
         }
       } else {
         termOutput('');
@@ -74,7 +70,7 @@ export function makeGraphicsRuntime(app) {
     // set shape and text attributes
 
     color(r, g, b) {
-      let hex = v => ('0' + Math.round(255 * v).toString(16)).substr(-2);
+      const hex = v => ('0' + Math.round(255 * v).toString(16)).substr(-2);
       return `#${hex(r)}${hex(g)}${hex(b)}`;
     },
 
@@ -129,8 +125,6 @@ export function makeGraphicsRuntime(app) {
     },
   };
 
-  return rt;
-
   function addShape(shape) {
     app.setGfx(gfx =>
       produce(gfx, dgfx => {
@@ -164,7 +158,7 @@ export function makeGraphicsRuntime(app) {
       })
     );
   }
-}
+};
 
 // visual properties that will get applied to shapes
 const shapeProps = {

@@ -1,6 +1,6 @@
 import process from 'process';
 
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import Grid from '@material-ui/core/Grid';
 import Paper from '@material-ui/core/Paper';
@@ -14,8 +14,8 @@ import Editor from './editor';
 import Builder from './builder';
 // import Inspector from './inspector';
 
-import { makeInterpreter } from '../lang/interpreter';
-import { makeGraphicsRuntime, graphicsProps } from '../lang/graphics';
+import { makeInterpreter, registerGlobals } from '../lang/interpreter';
+import { graphicsGlobals, graphicsProps } from '../lang/graphics';
 
 const theme = createMuiTheme({
   palette: {
@@ -113,12 +113,15 @@ export default function App() {
     [clearDisplay, snapshot]
   );
 
+  useEffect(() => {
+    registerGlobals(graphicsGlobals(bindings));
+  }, [bindings]);
+
   const runProgram = useCallback(async () => {
     refreshState();
     clearHistory();
 
-    const ctx = makeGraphicsRuntime(bindings);
-    const interp = makeInterpreter(bindings, ctx);
+    const interp = makeInterpreter();
 
     try {
       await interp.run(parser());
@@ -130,7 +133,7 @@ export default function App() {
         console.log(interp.snapshot()); // eslint-disable-line no-console
       }
     }
-  }, [bindings, parser, refreshState, clearHistory]);
+  }, [parser, refreshState, clearHistory]);
 
   const inspect = false;
   const columns = inspect ? 4 : 6;
