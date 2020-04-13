@@ -1,8 +1,7 @@
 /* eslint-disable no-case-declarations */
 
-import moment from 'moment';
-
 import { produce, original } from 'immer';
+import moment from 'moment';
 
 import {
   builtinGlobals,

@@ -1,11 +1,11 @@
+import brace from 'brace';
 import React, { useEffect, useRef } from 'react';
 
-import brace from 'brace';
 import 'brace/mode/text';
 import 'brace/theme/github';
 
-import { parse } from '../lang/parser.pegjs';
 import StartMode from '../ace/start_mode';
+import { parse } from '../lang/parser.pegjs';
 
 export default function Editor({ setParser }) {
   const ref = useRef();

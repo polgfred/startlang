@@ -1,20 +1,19 @@
 import process from 'process';
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-
 import Paper from '@material-ui/core/Paper';
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import Header from './header';
+import { graphicsGlobals, graphicsProps } from '../lang/graphics';
+import { makeInterpreter, registerGlobals } from '../lang/interpreter';
+
+import Builder from './builder';
+import Editor from './editor';
 import Graphics from './graphics';
+import Header from './header';
 import Term from './term';
 // import Help from './help';
-import Editor from './editor';
-import Builder from './builder';
 // import Inspector from './inspector';
-
-import { makeInterpreter, registerGlobals } from '../lang/interpreter';
-import { graphicsGlobals, graphicsProps } from '../lang/graphics';
 
 const theme = createMuiTheme({
   palette: {

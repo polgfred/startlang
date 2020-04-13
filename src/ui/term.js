@@ -1,7 +1,6 @@
-import React, { useCallback, useLayoutEffect, useRef, useState } from 'react';
-
 import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
+import React, { useCallback, useLayoutEffect, useRef, useState } from 'react';
 
 export default function Term({ buf, prompt, handleInput }) {
   const [input, setInput] = useState('');

@@ -1,4 +1,5 @@
 import { nextTick } from 'process';
+
 import { produce } from 'immer';
 
 import { handle } from './interpreter';

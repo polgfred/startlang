@@ -1,7 +1,6 @@
-import moment from 'moment';
-
-import { produce } from 'immer';
 import deepEqual from 'deep-equal';
+import { produce } from 'immer';
+import moment from 'moment';
 
 import { handle, assignKey, resultKey } from './interpreter';
 

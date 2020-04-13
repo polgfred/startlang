@@ -31,6 +31,13 @@ module.exports = {
   },
   rules: {
     'no-console': ['warn', { allow: ['warn', 'error'] }],
+    'import/order': [
+      'error',
+      {
+        'newlines-between': 'always',
+        alphabetize: { order: 'asc', caseInsensitive: true },
+      },
+    ],
     'react/jsx-uses-react': 'error',
     'react/jsx-uses-vars': 'error',
     'react/jsx-no-undef': 'error',
