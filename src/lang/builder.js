@@ -68,9 +68,9 @@ export function makeBlocklyBuilder() {
 
   function fromWorkspace(ws) {
     // build a program tree from the blockly workspace
-    const blocks = ws.getTopBlocks(true),
-      funcs = [],
-      elems = [];
+    const blocks = ws.getTopBlocks(true);
+    const funcs = [];
+    const elems = [];
 
     for (let i = 0; i < blocks.length; ++i) {
       const stmt = handleStatements(blocks[i]);
@@ -129,8 +129,8 @@ export function makeBlocklyBuilder() {
 
   function makeTemporary(value, block, prefix) {
     // get next available temp var with this prefix and make an assignment
-    const count = (temps[prefix] = (temps[prefix] || 0) + 1),
-      name = `temp_${prefix}_${count}`;
+    const count = (temps[prefix] = (temps[prefix] || 0) + 1);
+    const name = `temp_${prefix}_${count}`;
 
     const elem = buildNode('const', block, { name, value });
 
