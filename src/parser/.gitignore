@@ -1,0 +1,6 @@
+# generated files
+*.interp
+*.tokens
+StartlangLexer.js
+StartlangParser.js
+StartlangParserVisitor.js
