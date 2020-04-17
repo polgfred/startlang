@@ -9,16 +9,17 @@ module.exports = {
     path: __dirname,
     filename: '[name]-bundle.js',
   },
+  node: {
+    module: 'empty',
+    net: 'empty',
+    fs: 'empty',
+  },
   module: {
     rules: [
       {
         test: /\.js$/,
         use: ['babel-loader'],
         exclude: [path.resolve(__dirname, 'node_modules')],
-      },
-      {
-        test: /\.pegjs$/,
-        use: ['babel-loader', 'pegjs-loader'],
       },
       {
         test: /\.css$/,
