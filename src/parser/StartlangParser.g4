@@ -76,7 +76,8 @@ value
   | value op=(BITAND|BITOR|BITXOR) value #binaryOpValue
   | value op=CONCAT value #binaryOpValue
   | value op=(EQ|NE|LE|LT|GE|GT) value #binaryOpValue
-  | op=NOT value #unaryOpValue
+  | op=NOT value #logicalOpValue
+  | value op=(AND|OR) value #logicalOpValue
   | string #stringValue
   | literal #literalValue
   ;

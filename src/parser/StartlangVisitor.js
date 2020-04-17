@@ -244,6 +244,21 @@ export class StartlangVisitor extends StartlangParserVisitor {
     });
   }
 
+  visitLogicalOpValue(ctx) {
+    if (ctx.value(1)) {
+      return this.buildNode('logicalOp', {
+        op: ctx.op.text,
+        left: ctx.value(0).accept(this),
+        right: ctx.value(1).accept(this),
+      });
+    } else {
+      return this.buildNode('logicalOp', {
+        op: ctx.op.text,
+        right: ctx.value(0).accept(this),
+      });
+    }
+  }
+
   visitStringValue(ctx) {
     return ctx.string().accept(this);
   }
