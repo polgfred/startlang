@@ -132,7 +132,7 @@ export class StartlangVisitor extends StartlangParserVisitor {
 
   visitWhileLoop(ctx) {
     return this.buildNode('while', {
-      cond: ctx.value().getText(),
+      cond: ctx.value().accept(this),
       body: ctx.loopBody().accept(this),
     });
   }
