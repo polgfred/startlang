@@ -72,6 +72,8 @@ EOL : '\n'+ ;
 
 WS : [ \t]+ -> skip ;
 
+COMMENT : ';' ~[\n]* -> skip ;
+
 mode STRING;
 
 CHAR : '""' | '``' | ~["`] ;
