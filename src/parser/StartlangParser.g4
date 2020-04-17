@@ -17,10 +17,7 @@ statement
   | assignment
   | localAssignment
   | functionCall
-  | EXIT
-  | BREAK
-  | NEXT
-  | RETURN
+  | flowStatement
   ;
 
 ifStatement : IF value THEN statement ( ELSE statement )? ;
@@ -63,6 +60,8 @@ functionCall
   | SYMBOL LPAREN EOL? values? RPAREN
   | SYMBOL
   ;
+
+flowStatement : EXIT | BREAK | NEXT | RETURN value? ;
 
 values : value ( COMMA EOL? value )* ;
 

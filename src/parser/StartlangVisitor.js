@@ -187,6 +187,20 @@ export class StartlangVisitor extends StartlangParserVisitor {
     });
   }
 
+  visitFlowStatement(ctx) {
+    if (ctx.EXIT()) {
+      return this.buildNode('exit', {});
+    } else if (ctx.BREAK()) {
+      return this.buildNode('break', {});
+    } else if (ctx.NEXT()) {
+      return this.buildNode('next', {});
+    } else if (ctx.RETURN()) {
+      return this.buildNode('return', {
+        result: ctx.value() ? ctx.value().accept(this) : null,
+      });
+    }
+  }
+
   visitValues(ctx) {
     return ctx.value().map(val => val.accept(this));
   }
