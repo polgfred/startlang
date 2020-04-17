@@ -6,6 +6,8 @@
   "scripts": {
     "build": "webpack",
     "start": "node --require @babel/register ./src/server",
+    "gen_lexer": "java -jar ./tools/antlr4.jar -Dlanguage=JavaScript ./src/parser/StartlangLexer.g4",
+    "gen_parser": "java -jar ./tools/antlr4.jar -Dlanguage=JavaScript -no-listener -visitor ./src/parser/StartlangParser.g4",
     "run_script": "node --require @babel/register ./tools/run_script",
     "format": "prettier --write ./src/**/*.js",
     "lint": "eslint --config .eslintrc.js ./src"

@@ -1,17 +1,15 @@
 /* eslint-disable no-console */
 
-import readline from 'readline';
-
 import { readFileSync } from 'fs';
+import readline from 'readline';
 import { inspect } from 'util';
-
-import PEG from 'pegjs';
 
 import {
   handle,
   registerGlobals,
   makeInterpreter,
 } from '../src/lang/interpreter';
+import { parse } from '../src/parser';
 
 registerGlobals({
   print(...values) {
@@ -42,9 +40,6 @@ registerGlobals({
 
 const options = {},
   parserOptions = {},
-  parser = PEG.generate(
-    readFileSync(__dirname + '/../src/lang/parser.pegjs', 'utf-8')
-  ),
   output = obj => {
     console.log(inspect(obj, { colors: true, depth: null }));
   };
@@ -73,7 +68,7 @@ async function main() {
 
   let node;
   try {
-    node = parser.parse(source, parserOptions);
+    node = parse(source, parserOptions);
   } catch (err) {
     console.log(err.stack);
     process.exit();
