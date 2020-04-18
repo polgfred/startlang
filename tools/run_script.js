@@ -9,7 +9,7 @@ import {
   registerGlobals,
   makeInterpreter,
 } from '../src/lang/interpreter';
-import { parse } from '../src/parser';
+import { parse } from '../src/lang/parser';
 
 registerGlobals({
   print(...values) {
