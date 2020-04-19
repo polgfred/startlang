@@ -2,7 +2,7 @@ import deepEqual from 'deep-equal';
 import { produce } from 'immer';
 import moment from 'moment';
 
-import { handle, assignKey, resultKey } from './interpreter';
+import { handle, handlerKey, assignKey, resultKey } from './interpreter';
 
 // ensures its operands are of the same type
 function checkOp(fn) {
@@ -50,18 +50,6 @@ export const builtinGlobals = {
     return handle(value).repr(value);
   },
 
-  time(...args) {
-    return timeHandler.create(args);
-  },
-
-  list(...items) {
-    return listHandler.create(items);
-  },
-
-  table(...pairs) {
-    return tableHandler.create(pairs);
-  },
-
   // some basic utilities
 
   rand() {
@@ -96,6 +84,8 @@ export const baseHandler = {
   setindex() {
     throw new Error('object does not support []');
   },
+
+  globals: {},
 
   methods: {},
 
@@ -349,17 +339,24 @@ function normalizeTimeUnit(unit) {
 export const timeHandler = {
   ...baseHandler,
 
-  create(args) {
-    if (args.length === 0) {
-      return moment();
-    } else {
-      args[1]--; // adjust the month to be 0-based
-      return moment(args);
-    }
+  tag(t) {
+    t[handlerKey] = timeHandler;
+    return t;
   },
 
   repr(t) {
     return t.format('l LTS');
+  },
+
+  globals: {
+    time(...args) {
+      if (args.length === 0) {
+        return timeHandler.tag(moment());
+      } else {
+        args[1]--; // adjust the month to be 0-based
+        return timeHandler.tag(moment(args));
+      }
+    },
   },
 
   methods: {
@@ -373,19 +370,35 @@ export const timeHandler = {
     },
 
     add(t, n, unit) {
-      return { [assignKey]: [moment(t).add(n, normalizeTimeUnit(unit))] };
+      return {
+        [assignKey]: [
+          timeHandler.tag(moment(t).add(n, normalizeTimeUnit(unit))),
+        ],
+      };
     },
 
     sub(t, n, unit) {
-      return { [assignKey]: [moment(t).subtract(n, normalizeTimeUnit(unit))] };
+      return {
+        [assignKey]: [
+          timeHandler.tag(moment(t).subtract(n, normalizeTimeUnit(unit))),
+        ],
+      };
     },
 
     startof(t, unit) {
-      return { [assignKey]: [moment(t).startOf(normalizeTimeUnit(unit))] };
+      return {
+        [assignKey]: [
+          timeHandler.tag(moment(t).startOf(normalizeTimeUnit(unit))),
+        ],
+      };
     },
 
     endof(t, unit) {
-      return { [assignKey]: [moment(t).endOf(normalizeTimeUnit(unit))] };
+      return {
+        [assignKey]: [
+          timeHandler.tag(moment(t).endOf(normalizeTimeUnit(unit))),
+        ],
+      };
     },
 
     diff(t1, t2, unit) {
@@ -431,12 +444,6 @@ export const containerHandler = {
 export const listHandler = {
   ...containerHandler,
 
-  create(items) {
-    return produce([], dl => {
-      dl.push(...items);
-    });
-  },
-
   repr(l) {
     return '[ ' + l.map(el => handle(el).repr(el)).join(', ') + ' ]';
   },
@@ -459,6 +466,14 @@ export const listHandler = {
       more: index < l.length,
       next: () => listHandler.enumerate(l, index + 1),
     };
+  },
+
+  globals: {
+    list(...items) {
+      return produce([], dl => {
+        dl.push(...items);
+      });
+    },
   },
 
   methods: {
@@ -608,14 +623,6 @@ export const listHandler = {
 export const tableHandler = {
   ...containerHandler,
 
-  create(pairs) {
-    return produce({}, dt => {
-      for (let i = 0; i < pairs.length; i += 2) {
-        dt[pairs[i]] = pairs[i + 1];
-      }
-    });
-  },
-
   repr(t) {
     const pairs = Object.keys(t).map(key => {
       const val = t[key];
@@ -636,6 +643,16 @@ export const tableHandler = {
 
   enumerate(t) {
     return listHandler.enumerate(Object.keys(t));
+  },
+
+  globals: {
+    table(...pairs) {
+      return produce({}, dt => {
+        for (let i = 0; i < pairs.length; i += 2) {
+          dt[pairs[i]] = pairs[i + 1];
+        }
+      });
+    },
   },
 
   methods: {
@@ -680,6 +697,9 @@ export const tableHandler = {
   binaryops: {
     ...containerHandler.binaryops,
 
-    $: checkOp((left, right) => left.merge(right)),
+    $: checkOp((left, right) => ({
+      ...left,
+      ...right,
+    })),
   },
 };

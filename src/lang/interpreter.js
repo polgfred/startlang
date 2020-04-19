@@ -1,7 +1,6 @@
 /* eslint-disable no-case-declarations */
 
 import { produce, original } from 'immer';
-import moment from 'moment';
 
 import {
   builtinGlobals,
@@ -25,28 +24,27 @@ const hop = Object.prototype.hasOwnProperty; // cache this for performance
 
 const popOut = { pop: 'out' };
 
-// ** types **
-
-export function registerHandler(proto, handler) {
-  // register a new type handler globally
-  proto[handlerKey] = handler;
-}
-
-registerHandler(Boolean.prototype, booleanHandler);
-registerHandler(Number.prototype, numberHandler);
-registerHandler(String.prototype, stringHandler);
-registerHandler(Array.prototype, listHandler);
-registerHandler(Object.prototype, tableHandler);
-registerHandler(moment.fn, timeHandler);
-
 export function handle(value) {
-  // have to check for null/undefined explicitly
   if (value === null || value === undefined) {
     return noneHandler;
+  } else {
+    switch (typeof value) {
+      case 'boolean':
+        return booleanHandler;
+      case 'number':
+        return numberHandler;
+      case 'string':
+        return stringHandler;
+      case 'object':
+        if (Array.isArray(value)) {
+          return listHandler;
+        } else {
+          return value[handlerKey] || tableHandler;
+        }
+      default:
+        throw new Error(`could not determine type for ${value}`);
+    }
   }
-
-  // return the registered handler
-  return value[handlerKey];
 }
 
 // ** interpreter internals **
@@ -82,7 +80,18 @@ export function makeInterpreter() {
     }
   }
 
+  function registerHandler(handler) {
+    registerGlobals(handler.globals);
+  }
+
   registerGlobals(builtinGlobals);
+  registerHandler(noneHandler);
+  registerHandler(booleanHandler);
+  registerHandler(numberHandler);
+  registerHandler(stringHandler);
+  registerHandler(timeHandler);
+  registerHandler(listHandler);
+  registerHandler(tableHandler);
 
   function syscall(name, args) {
     // try to find the function to call
@@ -754,6 +763,7 @@ export function makeInterpreter() {
   // return the run() function
   return {
     registerGlobals,
+    registerHandler,
     run,
     snapshot,
     reset,
