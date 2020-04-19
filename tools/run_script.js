@@ -1,44 +1,12 @@
 /* eslint-disable no-console */
 
-import readline from 'readline';
-
 import { readFileSync } from 'fs';
+import readline from 'readline';
 import { inspect } from 'util';
 
 import PEG from 'pegjs';
 
-import {
-  handle,
-  registerGlobals,
-  makeInterpreter,
-} from '../src/lang/interpreter';
-
-registerGlobals({
-  print(...values) {
-    if (values.length > 0) {
-      for (let i = 0; i < values.length; ++i) {
-        const v = values[i];
-        console.log(handle(v).repr(v));
-      }
-    } else {
-      console.log();
-    }
-  },
-
-  input(message) {
-    return new Promise(resolve => {
-      const rl = readline.createInterface({
-        input: process.stdin,
-        output: process.stdout,
-      });
-
-      rl.question(message, answer => {
-        rl.close();
-        resolve(answer);
-      });
-    });
-  },
-});
+import { handle, makeInterpreter } from '../src/lang/interpreter';
 
 const options = {},
   parserOptions = {},
@@ -85,6 +53,33 @@ async function main() {
   }
 
   const interp = makeInterpreter();
+
+  interp.registerGlobals({
+    print(...values) {
+      if (values.length > 0) {
+        for (let i = 0; i < values.length; ++i) {
+          const v = values[i];
+          console.log(handle(v).repr(v));
+        }
+      } else {
+        console.log();
+      }
+    },
+
+    input(message) {
+      return new Promise(resolve => {
+        const rl = readline.createInterface({
+          input: process.stdin,
+          output: process.stdout,
+        });
+
+        rl.question(message, answer => {
+          rl.close();
+          resolve(answer);
+        });
+      });
+    },
+  });
 
   try {
     const result = await interp.run(node);

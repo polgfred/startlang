@@ -25,18 +25,6 @@ const hop = Object.prototype.hasOwnProperty; // cache this for performance
 
 const popOut = { pop: 'out' };
 
-// ** globals **
-
-const globals = {};
-
-export function registerGlobals(fns) {
-  for (const name in fns) {
-    globals[name] = fns[name];
-  }
-}
-
-registerGlobals(builtinGlobals);
-
 // ** types **
 
 export function registerHandler(proto, handler) {
@@ -59,18 +47,6 @@ export function handle(value) {
 
   // return the registered handler
   return value[handlerKey];
-}
-
-function syscall(name, args) {
-  // try to find the function to call
-  const fn =
-    (args.length > 0 && handle(args[0]).methods[name]) || globals[name];
-  if (!fn) {
-    throw new Error(`object not found or not a function: ${name}`);
-  }
-
-  // make the call
-  return fn(...args);
 }
 
 // ** interpreter internals **
@@ -97,6 +73,29 @@ function makeFrame(node) {
 }
 
 export function makeInterpreter() {
+  // interpreter globals
+  const globals = {};
+
+  function registerGlobals(fns) {
+    for (const name in fns) {
+      globals[name] = fns[name];
+    }
+  }
+
+  registerGlobals(builtinGlobals);
+
+  function syscall(name, args) {
+    // try to find the function to call
+    const fn =
+      (args.length > 0 && handle(args[0]).methods[name]) || globals[name];
+    if (!fn) {
+      throw new Error(`object not found or not a function: ${name}`);
+    }
+
+    // make the call
+    return fn(...args);
+  }
+
   // interpreter state
   let fn; // function table
   let st; // namespace stack
@@ -754,6 +753,7 @@ export function makeInterpreter() {
 
   // return the run() function
   return {
+    registerGlobals,
     run,
     snapshot,
     reset,
