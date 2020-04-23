@@ -328,93 +328,6 @@ export const stringHandler = {
   },
 };
 
-function normalizeTimeUnit(unit) {
-  const norm = moment.normalizeUnits(unit);
-  if (!norm) {
-    throw new Error('unrecognized time unit');
-  }
-  return norm;
-}
-
-export const timeHandler = {
-  ...baseHandler,
-
-  tag(t) {
-    t[handlerKey] = timeHandler;
-    return t;
-  },
-
-  repr(t) {
-    return t.format('l LTS');
-  },
-
-  globals: {
-    time(...args) {
-      if (args.length === 0) {
-        return timeHandler.tag(moment());
-      } else {
-        args[1]--; // adjust the month to be 0-based
-        return timeHandler.tag(moment(args));
-      }
-    },
-  },
-
-  methods: {
-    part(t, unit) {
-      unit = normalizeTimeUnit(unit);
-      let val = t.get(unit);
-      if (unit === 'month' || unit === 'day') {
-        val++;
-      }
-      return val;
-    },
-
-    add(t, n, unit) {
-      return {
-        [assignKey]: [
-          timeHandler.tag(moment(t).add(n, normalizeTimeUnit(unit))),
-        ],
-      };
-    },
-
-    sub(t, n, unit) {
-      return {
-        [assignKey]: [
-          timeHandler.tag(moment(t).subtract(n, normalizeTimeUnit(unit))),
-        ],
-      };
-    },
-
-    startof(t, unit) {
-      return {
-        [assignKey]: [
-          timeHandler.tag(moment(t).startOf(normalizeTimeUnit(unit))),
-        ],
-      };
-    },
-
-    endof(t, unit) {
-      return {
-        [assignKey]: [
-          timeHandler.tag(moment(t).endOf(normalizeTimeUnit(unit))),
-        ],
-      };
-    },
-
-    diff(t1, t2, unit) {
-      return t2.diff(t1, normalizeTimeUnit(unit));
-    },
-  },
-
-  binaryops: {
-    ...baseHandler.binaryops,
-
-    // comparison operators need to cast to number first
-    '=': (left, right) => +left === +right,
-    '!=': (left, right) => +left !== +right,
-  },
-};
-
 // Containers
 
 function compareElements(left, right) {
@@ -703,3 +616,84 @@ export const tableHandler = {
     })),
   },
 };
+
+export const timeHandler = (() => {
+  function tag(t) {
+    t[handlerKey] = timeHandler;
+    return t;
+  }
+
+  function normalizeTimeUnit(unit) {
+    const norm = moment.normalizeUnits(unit);
+    if (!norm) {
+      throw new Error('unrecognized time unit');
+    }
+    return norm;
+  }
+
+  return {
+    ...baseHandler,
+
+    repr(t) {
+      return t.format('l LTS');
+    },
+
+    globals: {
+      time(...args) {
+        if (args.length === 0) {
+          return tag(moment());
+        } else {
+          args[1]--; // adjust the month to be 0-based
+          return tag(moment(args));
+        }
+      },
+    },
+
+    methods: {
+      part(t, unit) {
+        unit = normalizeTimeUnit(unit);
+        let val = t.get(unit);
+        if (unit === 'month' || unit === 'day') {
+          val++;
+        }
+        return val;
+      },
+
+      add(t, n, unit) {
+        return {
+          [assignKey]: [tag(t.clone().add(n, normalizeTimeUnit(unit)))],
+        };
+      },
+
+      sub(t, n, unit) {
+        return {
+          [assignKey]: [tag(t.clone().subtract(n, normalizeTimeUnit(unit)))],
+        };
+      },
+
+      startof(t, unit) {
+        return {
+          [assignKey]: [tag(t.clone().startOf(normalizeTimeUnit(unit)))],
+        };
+      },
+
+      endof(t, unit) {
+        return {
+          [assignKey]: [tag(t.clone().endOf(normalizeTimeUnit(unit)))],
+        };
+      },
+
+      diff(t1, t2, unit) {
+        return t2.diff(t1, normalizeTimeUnit(unit));
+      },
+    },
+
+    binaryops: {
+      ...baseHandler.binaryops,
+
+      // comparison operators need to cast to number first
+      '=': (left, right) => +left === +right,
+      '!=': (left, right) => +left !== +right,
+    },
+  };
+})();
