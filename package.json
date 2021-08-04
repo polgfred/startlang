@@ -4,8 +4,9 @@
   "description": "Beginning Programming Environment",
   "directories": {},
   "scripts": {
-    "build": "webpack",
-    "start": "node --require @babel/register ./src/server",
+    "build": "NODE_ENV=production webpack",
+    "start": "NODE_ENV=production node --require @babel/register ./src/server",
+    "start:dev": "NODE_ENV=development node --require @babel/register ./src/server",
     "run_script": "node --require @babel/register ./tools/run_script",
     "format": "prettier --write ./src/**/*.js",
     "lint": "eslint --config .eslintrc.js ./src"
