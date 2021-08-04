@@ -17,8 +17,8 @@ module.exports = {
         exclude: [path.resolve(__dirname, 'node_modules')],
       },
       {
-        test: /\.pegjs$/,
-        use: ['babel-loader', 'pegjs-loader'],
+        test: /\.peggy$/,
+        use: ['babel-loader', path.resolve(__dirname, 'src/peggy-loader.js')],
       },
       {
         test: /\.css$/,

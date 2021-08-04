@@ -4,14 +4,14 @@ import { readFileSync } from 'fs';
 import readline from 'readline';
 import { inspect } from 'util';
 
-import PEG from 'pegjs';
+import { generate } from 'peggy';
 
 import { handle, makeInterpreter } from '../src/lang/interpreter';
 
 const options = {},
   parserOptions = {},
-  parser = PEG.generate(
-    readFileSync(__dirname + '/../src/lang/parser.pegjs', 'utf-8')
+  parser = generate(
+    readFileSync(__dirname + '/../src/lang/parser.peggy', 'utf-8')
   ),
   output = obj => {
     console.log(inspect(obj, { colors: true, depth: null }));
