@@ -31,7 +31,7 @@ function getStyles(sprops, tprops) {
   if (sprops.fill) {
     attrs.style.fill = sprops.fill;
   }
-  if (sprops.opacity && sprops.opacity < 1) {
+  if (sprops.opacity >= 0 && sprops.opacity < 1) {
     attrs.style.opacity = sprops.opacity;
   }
   if (sprops.rotate !== 0) {
