@@ -2,10 +2,10 @@ import process from 'process';
 
 import Paper from '@material-ui/core/Paper';
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import { graphicsGlobals, graphicsProps } from '../lang/graphics';
-import { makeInterpreter, registerGlobals } from '../lang/interpreter';
+import { makeInterpreter } from '../lang/interpreter';
 
 import Builder from './builder';
 import Editor from './editor';
@@ -111,15 +111,12 @@ export default function App() {
     [clearDisplay, snapshot]
   );
 
-  useEffect(() => {
-    registerGlobals(graphicsGlobals(bindings));
-  }, [bindings]);
-
   const runProgram = useCallback(async () => {
     refreshState();
     clearHistory();
 
     const interp = makeInterpreter();
+    interp.registerGlobals(graphicsGlobals(bindings));
 
     try {
       await interp.run(parser());
@@ -131,7 +128,7 @@ export default function App() {
         console.log(interp.snapshot()); // eslint-disable-line no-console
       }
     }
-  }, [parser, refreshState, clearHistory]);
+  }, [parser, bindings, refreshState, clearHistory]);
 
   const inspect = false;
 
