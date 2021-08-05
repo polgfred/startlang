@@ -36,7 +36,9 @@ export function handle(value) {
       case 'string':
         return stringHandler;
       case 'object':
-        if (Array.isArray(value)) {
+        if (value.constructor === Date) {
+          return timeHandler;
+        } else if (Array.isArray(value)) {
           return listHandler;
         } else {
           return value[handlerKey] || tableHandler;

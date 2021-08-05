@@ -1,8 +1,9 @@
+/* eslint-disable no-fallthrough */
+
 import deepEqual from 'deep-equal';
 import { produce } from 'immer';
-import moment from 'moment';
 
-import { handle, handlerKey, assignKey, resultKey } from './interpreter';
+import { handle, assignKey, resultKey } from './interpreter';
 
 // ensures its operands are of the same type
 function checkOp(fn) {
@@ -617,83 +618,244 @@ export const tableHandler = {
   },
 };
 
-export const timeHandler = (() => {
-  function tag(t) {
-    t[handlerKey] = timeHandler;
-    return t;
-  }
+export const timeHandler = {
+  ...baseHandler,
 
-  function normalizeTimeUnit(unit) {
-    const norm = moment.normalizeUnits(unit);
-    if (!norm) {
-      throw new Error('unrecognized time unit');
-    }
-    return norm;
-  }
+  repr(t) {
+    return t.toString();
+  },
 
-  return {
-    ...baseHandler,
-
-    repr(t) {
-      return t.format('l LTS');
-    },
-
-    globals: {
-      time(...args) {
-        if (args.length === 0) {
-          return tag(moment());
-        } else {
-          args[1]--; // adjust the month to be 0-based
-          return tag(moment(args));
+  globals: {
+    time(...args) {
+      if (args.length === 0) {
+        // current time
+        return new Date();
+      } else if (args.length === 1) {
+        // time with milliseconds
+        if (typeof args[0] !== 'number') {
+          throw new Error('argument is not a number');
         }
-      },
-    },
-
-    methods: {
-      part(t, unit) {
-        unit = normalizeTimeUnit(unit);
-        let val = t.get(unit);
-        if (unit === 'month' || unit === 'day') {
-          val++;
+        return new Date(args[0]);
+      } else if (args.length <= 7) {
+        // time with y,m[,d,h,m,s,ms]
+        for (let i = 0; i < args.length; ++i) {
+          if (typeof args[i] !== 'number') {
+            throw new Error('argument is not a number');
+          }
         }
-        return val;
-      },
+        // adjust the month to be 0-based
+        args[1]--;
+        return new Date(...args);
+      }
+    },
+  },
 
-      add(t, n, unit) {
-        return {
-          [assignKey]: [tag(t.clone().add(n, normalizeTimeUnit(unit)))],
-        };
-      },
-
-      sub(t, n, unit) {
-        return {
-          [assignKey]: [tag(t.clone().subtract(n, normalizeTimeUnit(unit)))],
-        };
-      },
-
-      startof(t, unit) {
-        return {
-          [assignKey]: [tag(t.clone().startOf(normalizeTimeUnit(unit)))],
-        };
-      },
-
-      endof(t, unit) {
-        return {
-          [assignKey]: [tag(t.clone().endOf(normalizeTimeUnit(unit)))],
-        };
-      },
-
-      diff(t1, t2, unit) {
-        return t2.diff(t1, normalizeTimeUnit(unit));
-      },
+  methods: {
+    part(t, unit) {
+      switch (unit.toLowerCase()) {
+        case 'year':
+        case 'years':
+          return t.getFullYear();
+        case 'month':
+        case 'months':
+          return t.getMonth() + 1;
+        case 'day':
+        case 'days':
+          return t.getDate() + 1;
+        case 'weekday':
+        case 'weekdays':
+          return t.getDay() + 1;
+        case 'hour':
+        case 'hours':
+          return t.getHours();
+        case 'minute':
+        case 'minutes':
+          return t.getMinutes();
+        case 'second':
+        case 'seconds':
+          return t.getSeconds();
+        case 'millisecond':
+        case 'milliseconds':
+          return t.getMilliseconds();
+        default:
+          throw new Error(`invalid time unit: ${unit}`);
+      }
     },
 
-    binaryops: {
-      ...baseHandler.binaryops,
-
-      // comparison operators need to cast to number first
-      '=': (left, right) => +left === +right,
-      '!=': (left, right) => +left !== +right,
+    after(t, n, unit) {
+      const t2 = new Date(t);
+      switch (unit.toLowerCase()) {
+        case 'year':
+        case 'years':
+          t2.setFullYear(t.getFullYear() + n);
+          return t2;
+        case 'month':
+        case 'months':
+          t2.setMonth(t.getMonth() + n);
+          return t2;
+        case 'day':
+        case 'days':
+          t2.setDate(t.getDate() + n);
+          return t2;
+        case 'hour':
+        case 'hours':
+          t2.setHours(t.getHours() + n);
+          return t2;
+        case 'minute':
+        case 'minutes':
+          t2.setMinute(t.getMinutes() + n);
+          return t2;
+        case 'second':
+        case 'seconds':
+          t2.setSeconds(t.getSeconds() + n);
+          return t2;
+        case 'millisecond':
+        case 'milliseconds':
+          t2.setMilliseconds(t.getMilliseconds() + n);
+          return t2;
+        default:
+          throw new Error(`invalid time unit: ${unit}`);
+      }
     },
-  };
-})();
+
+    before(t, n, unit) {
+      const t2 = new Date(t);
+      switch (unit.toLowerCase()) {
+        case 'year':
+        case 'years':
+          t2.setFullYear(t.getFullYear() - n);
+          return t2;
+        case 'month':
+        case 'months':
+          t2.setMonth(t.getMonth() - n);
+          return t2;
+        case 'day':
+        case 'days':
+          t2.setDate(t.getDate() - n);
+          return t2;
+        case 'hour':
+        case 'hours':
+          t2.setHours(t.getHours() - n);
+          return t2;
+        case 'minute':
+        case 'minutes':
+          t2.setMinute(t.getMinutes() - n);
+          return t2;
+        case 'second':
+        case 'seconds':
+          t2.setSeconds(t.getSeconds() - n);
+          return t2;
+        case 'millisecond':
+        case 'milliseconds':
+          t2.setMilliseconds(t.getMilliseconds() - n);
+          return t2;
+        default:
+          throw new Error(`invalid time unit: ${unit}`);
+      }
+    },
+
+    startof(t, unit) {
+      const t2 = new Date(t);
+      switch (unit.toLowerCase()) {
+        case 'year':
+        case 'years':
+          t2.setMonth(0);
+        case 'month':
+        case 'months':
+          t2.setDate(1);
+        case 'day':
+        case 'days':
+          t2.setHours(0);
+        case 'hour':
+        case 'hours':
+          t2.setMinutes(0);
+        case 'minute':
+        case 'minutes':
+          t2.setSeconds(0);
+        case 'second':
+        case 'seconds':
+          t2.setMilliseconds(0);
+        case 'millisecond':
+        case 'milliseconds':
+          // nothing to do but it's a valid unit
+          return t2;
+        default:
+          throw new Error(`invalid time unit: ${unit}`);
+      }
+    },
+
+    endof(t, unit) {
+      const t2 = new Date(t);
+      switch (unit.toLowerCase()) {
+        case 'year':
+        case 'years':
+          t2.setMonth(11);
+        case 'month':
+        case 'months':
+          // last day of the month
+          t2.setDate(
+            new Date(t2.getFullYear(), t2.getMonth() + 1, 0).getDate()
+          );
+        case 'day':
+        case 'days':
+          t2.setHours(23);
+        case 'hour':
+        case 'hours':
+          t2.setMinutes(59);
+        case 'minute':
+        case 'minutes':
+          t2.setSeconds(59);
+        case 'second':
+        case 'seconds':
+          t2.setMilliseconds(999);
+        case 'millisecond':
+        case 'milliseconds':
+          // nothing to do but it's a valid unit
+          return t2;
+        default:
+          throw new Error(`invalid time unit: ${unit}`);
+      }
+    },
+
+    diff(t1, t2, unit) {
+      const ms = t2 - t1;
+      switch (unit.toLowerCase()) {
+        case 'year':
+        case 'years':
+          return t2.getFullYear() - t1.getFullYear();
+        case 'month':
+        case 'months':
+          return (
+            12 * (t2.getFullYear() - t1.getFullYear()) +
+            t2.getMonth() -
+            t1.getMonth()
+          );
+        case 'day':
+        case 'days':
+          return Math.floor(ms / 1000 / 60 / 60 / 24);
+        case 'hour':
+        case 'hours':
+          return Math.floor(ms / 1000 / 60 / 60);
+        case 'minute':
+        case 'minutes':
+          return Math.floor(ms / 1000 / 60);
+        case 'second':
+        case 'seconds':
+          return Math.floor(ms / 1000);
+        case 'millisecond':
+        case 'milliseconds':
+          return Math.floor(ms);
+        default:
+          throw new Error(`invalid time unit: ${unit}`);
+      }
+    },
+  },
+
+  binaryops: {
+    ...baseHandler.binaryops,
+
+    // comparison operators need to cast to number first
+    '=': (left, right) => +left === +right,
+    '!=': (left, right) => +left !== +right,
+  },
+};
