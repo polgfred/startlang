@@ -124,7 +124,7 @@ export function makeInterpreter() {
       let ctrl;
       // check arity to see if the handler expects a mutable frame
       if (method.length > 2) {
-        frame = produce(frame, df => {
+        frame = produce(frame, (df) => {
           ctrl = method(node, state, df, frame);
         });
       } else {
@@ -235,12 +235,12 @@ export function makeInterpreter() {
   function pop() {
     if (frame.ns) {
       // pop off the corresponding namespace
-      st = produce(st, dst => {
+      st = produce(st, (dst) => {
         ns = original(dst.pop());
       });
     }
     // pop this frame off the stack
-    fst = produce(fst, dfst => {
+    fst = produce(fst, (dfst) => {
       frame = original(dfst.pop());
     });
   }
@@ -299,13 +299,13 @@ export function makeInterpreter() {
   function set(name, value, top = false) {
     // look in the top frame
     if (top || st.length === 0 || hop.call(ns, name)) {
-      ns = produce(ns, dns => {
+      ns = produce(ns, (dns) => {
         dns[name] = value;
       });
       return;
     }
     // look up the namespace stack
-    st = produce(st, dst => {
+    st = produce(st, (dst) => {
       // loop until we hit the root ns
       for (let i = st.length - 1; i >= 0; --i) {
         const dns = dst[i];
@@ -517,7 +517,7 @@ export function makeInterpreter() {
 
     begin(node) {
       // save the begin node in the function table
-      fn = produce(fn, dfn => {
+      fn = produce(fn, (dfn) => {
         dfn[node.name] = node;
       });
       return popOut;
@@ -564,7 +564,7 @@ export function makeInterpreter() {
           const res = syscall(node.name, orig.args);
           if (res && res.then) {
             // if we got a promise, handle the result when fulfilled
-            return res.then(res => {
+            return res.then((res) => {
               handleResult(res, orig.assn);
               return popOut;
             });

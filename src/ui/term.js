@@ -11,14 +11,14 @@ export default function Term({ buf, prompt, handleInput }) {
   }, [input, handleInput]);
 
   const handleChange = useCallback(
-    ev => {
+    (ev) => {
       setInput(ev.target.value);
     },
     [setInput]
   );
 
   const handleKeyUp = useCallback(
-    ev => {
+    (ev) => {
       if (ev.keyCode === 13) {
         handleAccept();
       }

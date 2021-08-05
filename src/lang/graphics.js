@@ -4,11 +4,11 @@ import { produce } from 'immer';
 
 import { handle } from './interpreter';
 
-export const graphicsGlobals = app => {
+export const graphicsGlobals = (app) => {
   return {
     repaint() {
       // let the DOM catch up
-      return new Promise(resolve => {
+      return new Promise((resolve) => {
         nextTick(resolve);
       });
     },
@@ -29,10 +29,10 @@ export const graphicsGlobals = app => {
     },
 
     input(prompt) {
-      return new Promise(resolve => {
+      return new Promise((resolve) => {
         app.setInputState({
           prompt,
-          onInputComplete: input => {
+          onInputComplete: (input) => {
             resolve(input);
           },
         });
@@ -71,55 +71,55 @@ export const graphicsGlobals = app => {
     // set shape and text attributes
 
     color(r, g, b) {
-      const hex = v => ('0' + Math.round(255 * v).toString(16)).substr(-2);
+      const hex = (v) => ('0' + Math.round(255 * v).toString(16)).substr(-2);
       return `#${hex(r)}${hex(g)}${hex(b)}`;
     },
 
     fill(color) {
-      updateSprops(sprops => {
+      updateSprops((sprops) => {
         sprops.fill = color;
       });
     },
 
     stroke(color) {
-      updateSprops(sprops => {
+      updateSprops((sprops) => {
         sprops.stroke = color;
       });
     },
 
     opacity(value = 1) {
-      updateSprops(sprops => {
+      updateSprops((sprops) => {
         sprops.opacity = value;
       });
     },
 
     anchor(value = 'center') {
-      updateSprops(sprops => {
+      updateSprops((sprops) => {
         sprops.anchor = value;
       });
     },
 
     rotate(angle = 0) {
-      updateSprops(sprops => {
+      updateSprops((sprops) => {
         sprops.rotate = angle;
       });
     },
 
     scale(scalex = 1, scaley = scalex) {
-      updateSprops(sprops => {
+      updateSprops((sprops) => {
         sprops.scalex = scalex;
         sprops.scaley = scaley;
       });
     },
 
     align(value = 'start') {
-      updateTprops(tprops => {
+      updateTprops((tprops) => {
         tprops.align = value;
       });
     },
 
     font(fface = 'Helvetica', fsize = 36) {
-      updateTprops(tprops => {
+      updateTprops((tprops) => {
         tprops.fface = fface;
         tprops.fsize = fsize;
       });
@@ -127,8 +127,8 @@ export const graphicsGlobals = app => {
   };
 
   function addShape(shape) {
-    app.setGfx(gfx =>
-      produce(gfx, dgfx => {
+    app.setGfx((gfx) =>
+      produce(gfx, (dgfx) => {
         shape.sprops = gfx.sprops;
         shape.tprops = gfx.tprops;
         dgfx.shapes.push(shape);
@@ -137,24 +137,24 @@ export const graphicsGlobals = app => {
   }
 
   function updateSprops(mut) {
-    app.setGfx(gfx =>
-      produce(gfx, dgfx => {
+    app.setGfx((gfx) =>
+      produce(gfx, (dgfx) => {
         mut(dgfx.sprops);
       })
     );
   }
 
   function updateTprops(mut) {
-    app.setGfx(gfx =>
-      produce(gfx, dgfx => {
+    app.setGfx((gfx) =>
+      produce(gfx, (dgfx) => {
         mut(dgfx.tprops);
       })
     );
   }
 
   function termOutput(line) {
-    app.setBuf(buf =>
-      produce(buf, dbuf => {
+    app.setBuf((buf) =>
+      produce(buf, (dbuf) => {
         dbuf.push(line);
       })
     );

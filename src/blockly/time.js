@@ -14,9 +14,7 @@ const UNITS = [
 Blockly.Blocks['time_sleep'] = {
   init() {
     this.setColour(Blockly.Msg.TIME_HUE);
-    this.appendValueInput('SECONDS')
-      .setCheck('Number')
-      .appendField('wait for');
+    this.appendValueInput('SECONDS').setCheck('Number').appendField('wait for');
     this.appendDummyInput().appendField('seconds');
     this.setInputsInline(true);
     this.setPreviousStatement(true);
@@ -99,9 +97,7 @@ Blockly.Blocks['time_diff'] = {
       .appendField('number of')
       .appendField(new Blockly.FieldDropdown(UNITS), 'UNIT')
       .appendField('between');
-    this.appendValueInput('TIME2')
-      .setCheck('Time')
-      .appendField('and');
+    this.appendValueInput('TIME2').setCheck('Time').appendField('and');
     this.setInputsInline(true);
     this.setOutput(true, 'Number');
     this.setTooltip(() => {
@@ -114,7 +110,10 @@ Blockly.Blocks['time_diff'] = {
 
 Blockly.Blocks['time_addSubtract'] = {
   init() {
-    const MODES = [['add', 'ADD'], ['subtract', 'SUB']];
+    const MODES = [
+      ['add', 'ADD'],
+      ['subtract', 'SUB'],
+    ];
     this.setColour(Blockly.Msg.TIME_HUE);
     this.timeInput = this.appendValueInput('TIME')
       .setCheck('Time')
@@ -157,11 +156,12 @@ Blockly.Blocks['time_addSubtract'] = {
 
 Blockly.Blocks['time_startEnd'] = {
   init() {
-    const MODES = [['beginning', 'START'], ['end', 'END']];
+    const MODES = [
+      ['beginning', 'START'],
+      ['end', 'END'],
+    ];
     this.setColour(Blockly.Msg.TIME_HUE);
-    this.appendValueInput('TIME')
-      .setCheck('Time')
-      .appendField('round time');
+    this.appendValueInput('TIME').setCheck('Time').appendField('round time');
     this.appendDummyInput()
       .appendField('to')
       .appendField(new Blockly.FieldDropdown(MODES), 'MODE')

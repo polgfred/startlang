@@ -10,7 +10,7 @@ function SettingsMenu({ option, mode, choices, updateMode }) {
   const [anchor, setAnchor] = useState();
 
   const openMenu = useCallback(
-    ev => {
+    (ev) => {
       setAnchor(ev.currentTarget);
     },
     [setAnchor]
@@ -21,7 +21,7 @@ function SettingsMenu({ option, mode, choices, updateMode }) {
   }, [setAnchor]);
 
   const handleUpdateMode = useCallback(
-    value => {
+    (value) => {
       updateMode(value);
       closeMenu();
     },
@@ -32,7 +32,7 @@ function SettingsMenu({ option, mode, choices, updateMode }) {
     <>
       <Button onClick={openMenu}>{option}</Button>
       <Menu open={!!anchor} anchorEl={anchor} onClose={closeMenu}>
-        {choices.map(value => (
+        {choices.map((value) => (
           <MenuItem
             key={`menu-item-${option}-${value}`}
             selected={mode === value}

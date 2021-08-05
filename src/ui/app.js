@@ -55,7 +55,7 @@ export default function App() {
   }, []);
 
   const handleInput = useCallback(
-    input => {
+    (input) => {
       if (onInputComplete) {
         onInputComplete(input);
         setInputState({});

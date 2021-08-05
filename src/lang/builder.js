@@ -1008,7 +1008,7 @@ export function makeBlocklyBuilder() {
     },
 
     colour_rgb(block) {
-      const convert = val => {
+      const convert = (val) => {
         if (val.type === 'literal') {
           val.value /= 100;
           return val;

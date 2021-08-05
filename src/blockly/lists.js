@@ -41,7 +41,7 @@ Blockly.Blocks['lists_transformers'] = {
     this.appendValueInput('LIST')
       .setCheck('Array')
       .appendField(
-        new Blockly.FieldDropdown(OPERATORS, value => {
+        new Blockly.FieldDropdown(OPERATORS, (value) => {
           this.updateOrder_(value === 'SORT');
         }),
         'OP'
@@ -61,7 +61,10 @@ Blockly.Blocks['lists_transformers'] = {
     });
   },
   updateOrder_(isOrder) {
-    const ORDERS = [['smallest first', 'ASC'], ['largest first', 'DESC']];
+    const ORDERS = [
+      ['smallest first', 'ASC'],
+      ['largest first', 'DESC'],
+    ];
     if (isOrder) {
       this.removeInput('TAIL');
       this.appendDummyInput('TAIL').appendField(

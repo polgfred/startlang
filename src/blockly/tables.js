@@ -180,7 +180,7 @@ Blockly.Blocks['tables_getIndex'] = {
     ];
     this.setHelpUrl(Blockly.Msg.TABLES_GET_INDEX_HELPURL);
     this.setColour(Blockly.Msg.TABLES_HUE);
-    const modeMenu = new Blockly.FieldDropdown(MODE, value => {
+    const modeMenu = new Blockly.FieldDropdown(MODE, (value) => {
       this.updateStatement_(value === 'REMOVE');
     });
     this.appendValueInput('VALUE')

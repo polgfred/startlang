@@ -65,7 +65,7 @@ export const builtinGlobals = {
   },
 
   sleep(seconds) {
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       setTimeout(resolve, seconds * 1000);
     });
   },
@@ -225,10 +225,10 @@ export const numberHandler = {
 
   unaryops: {
     // math
-    '+': right => +right,
-    '-': right => -right,
+    '+': (right) => +right,
+    '-': (right) => -right,
     // bitwise
-    '~': right => ~right,
+    '~': (right) => ~right,
   },
 
   binaryops: {
@@ -300,12 +300,7 @@ export const stringHandler = {
 
     reverse(s) {
       return {
-        [assignKey]: [
-          s
-            .split('')
-            .reverse()
-            .join(''),
-        ],
+        [assignKey]: [s.split('').reverse().join('')],
       };
     },
 
@@ -359,7 +354,7 @@ export const listHandler = {
   ...containerHandler,
 
   repr(l) {
-    return '[ ' + l.map(el => handle(el).repr(el)).join(', ') + ' ]';
+    return '[ ' + l.map((el) => handle(el).repr(el)).join(', ') + ' ]';
   },
 
   getindex(l, index) {
@@ -369,7 +364,7 @@ export const listHandler = {
 
   setindex(l, index, value) {
     index = adjustIndex(index, l.length);
-    return produce(l, dl => {
+    return produce(l, (dl) => {
       dl[index] = value;
     });
   },
@@ -384,7 +379,7 @@ export const listHandler = {
 
   globals: {
     list(...items) {
-      return produce([], dl => {
+      return produce([], (dl) => {
         dl.push(...items);
       });
     },
@@ -416,7 +411,7 @@ export const listHandler = {
     add(l, ...values) {
       return {
         [assignKey]: [
-          produce(l, dl => {
+          produce(l, (dl) => {
             dl.push(...values);
           }),
         ],
@@ -428,7 +423,7 @@ export const listHandler = {
       start = adjustIndex(start, l.length);
       return {
         [assignKey]: [
-          produce(l, dl => {
+          produce(l, (dl) => {
             dl.splice(start, 0, ...values);
           }),
         ],
@@ -440,7 +435,7 @@ export const listHandler = {
       start = adjustIndex(start, l.length);
       // get the removed items and the new list
       let removed;
-      const nl = produce(l, dl => {
+      const nl = produce(l, (dl) => {
         removed =
           end === undefined
             ? // remove and return a single element
@@ -483,7 +478,7 @@ export const listHandler = {
     sort(l) {
       return {
         [assignKey]: [
-          produce(l, dl => {
+          produce(l, (dl) => {
             dl.sort(compareElements);
           }),
         ],
@@ -493,7 +488,7 @@ export const listHandler = {
     rsort(l) {
       return {
         [assignKey]: [
-          produce(l, dl => {
+          produce(l, (dl) => {
             dl.sort(compareElementsReversed);
           }),
         ],
@@ -503,7 +498,7 @@ export const listHandler = {
     reverse(l) {
       return {
         [assignKey]: [
-          produce(l, dl => {
+          produce(l, (dl) => {
             dl.reverse();
           }),
         ],
@@ -513,7 +508,7 @@ export const listHandler = {
     shuffle(l) {
       return {
         [assignKey]: [
-          produce(l, dl => {
+          produce(l, (dl) => {
             for (let i = 0; i < l.length; ++i) {
               const j = Math.floor(Math.random() * i);
               dl[i] = l[j];
@@ -538,7 +533,7 @@ export const tableHandler = {
   ...containerHandler,
 
   repr(t) {
-    const pairs = Object.keys(t).map(key => {
+    const pairs = Object.keys(t).map((key) => {
       const val = t[key];
       return handle(key).repr(key) + ': ' + handle(val).repr(val);
     });
@@ -550,7 +545,7 @@ export const tableHandler = {
   },
 
   setindex(t, index, value) {
-    return produce(t, dt => {
+    return produce(t, (dt) => {
       dt[index] = value;
     });
   },
@@ -561,7 +556,7 @@ export const tableHandler = {
 
   globals: {
     table(...pairs) {
-      return produce({}, dt => {
+      return produce({}, (dt) => {
         for (let i = 0; i < pairs.length; i += 2) {
           dt[pairs[i]] = pairs[i + 1];
         }
@@ -581,7 +576,7 @@ export const tableHandler = {
     put(t, ...pairs) {
       return {
         [assignKey]: [
-          produce(t, dt => {
+          produce(t, (dt) => {
             for (let i = 0; i < pairs.length; i += 2) {
               dt[pairs[i]] = pairs[i + 1];
             }
@@ -595,7 +590,7 @@ export const tableHandler = {
       const removed = [];
       return {
         [assignKey]: [
-          produce(t, dt => {
+          produce(t, (dt) => {
             for (let i = 0; i < keys.length; ++i) {
               const key = keys[i];
               removed.push(t[key]);

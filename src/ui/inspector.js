@@ -158,7 +158,7 @@ class ExpandableInspector extends Component {
   }
 
   handleShowMore() {
-    this.setState(state => ({ visible: state.visible + 5 }));
+    this.setState((state) => ({ visible: state.visible + 5 }));
   }
 
   footer() {
