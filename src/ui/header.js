@@ -68,7 +68,7 @@ export default function Header({
           option="view"
           mode={viewMode}
           updateMode={updateViewMode}
-          choices={['graphics', 'text', 'split', 'help']}
+          choices={['graphics', 'text', 'split']}
         />
         <SettingsMenu
           option="edit"

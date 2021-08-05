@@ -52,8 +52,7 @@ body {
   }
 
   & .start-graphics,
-  & .start-term,
-  & .start-help {
+  & .start-term {
     background-color: #f8f8f8;
     color: #000;
     display: none;
@@ -94,11 +93,6 @@ body {
     }
   }
 
-  & .start-help {
-    overflow: scroll;
-    padding: 20px;
-  }
-
   /* Window visibility/proportions for different display modes */
 
   &.start-view-mode-graphics {
@@ -125,13 +119,6 @@ body {
       display: block;
       height: calc(35vh - 33px);
       margin-top: 6px;
-    }
-  }
-
-  &.start-view-mode-help {
-    & .start-help {
-      display: block;
-      height: calc(100vh - 60px);
     }
   }
 

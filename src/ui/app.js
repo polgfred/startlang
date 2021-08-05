@@ -12,7 +12,6 @@ import Editor from './editor';
 import Graphics from './graphics';
 import Header from './header';
 import Term from './term';
-// import Help from './help';
 // import Inspector from './inspector';
 
 const theme = createMuiTheme({
@@ -27,7 +26,7 @@ const theme = createMuiTheme({
 });
 
 export default function App() {
-  const [viewMode, setViewMode] = useState('help');
+  const [viewMode, setViewMode] = useState('split');
   const [editMode, setEditMode] = useState('source');
   const [gfx, setGfx] = useState(graphicsProps);
   const [buf, setBuf] = useState([]);
@@ -45,10 +44,7 @@ export default function App() {
 
   const refreshState = useCallback(() => {
     clearDisplay();
-    if (viewMode === 'help') {
-      setViewMode('split');
-    }
-  }, [viewMode, clearDisplay]);
+  }, [clearDisplay]);
 
   const clearHistory = useCallback(() => {
     // setHistory({ hist: [], snap: 0 });
