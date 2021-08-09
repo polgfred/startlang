@@ -3,7 +3,6 @@ const env = process.env['NODE_ENV'];
 
 module.exports = {
   mode: env,
-  entry: './src/main.js',
   devtool: 'cheap-module-source-map',
   output: {
     path: __dirname,

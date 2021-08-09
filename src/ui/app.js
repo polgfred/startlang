@@ -1,7 +1,5 @@
-import process from 'process';
-
 import Paper from '@material-ui/core/Paper';
-import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';
+import { MuiThemeProvider, createTheme } from '@material-ui/core/styles';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { graphicsGlobals, graphicsProps } from '../lang/graphics';
@@ -14,7 +12,7 @@ import Header from './header';
 import Term from './term';
 // import Inspector from './inspector';
 
-const theme = createMuiTheme({
+const theme = createTheme({
   palette: {
     primary: {
       main: '#6b9da0',
@@ -119,10 +117,8 @@ export default function App() {
       console.log('done'); // eslint-disable-line no-console
       console.log(interp.snapshot()); // eslint-disable-line no-console
     } catch (err) {
-      if (process.env.NODE_ENV !== 'production') {
-        console.log(err.stack); // eslint-disable-line no-console
-        console.log(interp.snapshot()); // eslint-disable-line no-console
-      }
+      console.log(err.stack); // eslint-disable-line no-console
+      console.log(interp.snapshot()); // eslint-disable-line no-console
     }
   }, [parser, bindings, refreshState, clearHistory]);
 

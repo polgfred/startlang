@@ -1,5 +1,3 @@
-import { nextTick } from 'process';
-
 import { produce } from 'immer';
 
 import { handle } from './interpreter';
@@ -9,7 +7,7 @@ export const graphicsGlobals = (app) => {
     repaint() {
       // let the DOM catch up
       return new Promise((resolve) => {
-        nextTick(resolve);
+        queueMicrotask(resolve);
       });
     },
 
