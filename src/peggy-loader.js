@@ -1,10 +1,10 @@
-import { getOptions } from 'loader-utils';
-import { generate } from 'peggy';
+const { getOptions } = require('loader-utils');
+const { generate } = require('peggy');
 
-export default function peggyLoader(grammarContent) {
+module.exports = function peggyLoader(grammarContent) {
   return generate(grammarContent, {
     output: 'source',
     format: 'commonjs',
     ...getOptions(this),
   });
-}
+};

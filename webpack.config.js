@@ -1,11 +1,14 @@
 const path = require('path');
+
+const TerserPlugin = require('terser-webpack-plugin');
+
 const env = process.env['NODE_ENV'];
 
 module.exports = {
   mode: env,
-  devtool: 'cheap-module-source-map',
+  devtool: 'source-map',
   output: {
-    path: __dirname,
+    path: __dirname + '/static',
     filename: '[name]-bundle.js',
   },
   module: {
@@ -45,4 +48,11 @@ module.exports = {
       },
     ],
   },
+  optimization:
+    env === 'development'
+      ? {}
+      : {
+          minimize: true,
+          minimizer: [new TerserPlugin({ extractComments: false })],
+        },
 };

@@ -11,7 +11,7 @@ import webpack_config from '../webpack.config';
 // set up the express server
 const app = express();
 app.use('/blockly', express.static('node_modules/blockly'));
-app.use(express.static('.'));
+app.use(express.static('./static'));
 
 // wire up webpack hot module replacement
 const compiler = webpack(webpack_config);
