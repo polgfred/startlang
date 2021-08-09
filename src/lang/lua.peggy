@@ -1,60 +1,55 @@
 chunk
-  = block //EOF
+  = block __
 
 block
-  = statement* retstat?
+  = (__ statement)* (__ retstat)?
 
 statement
   = ';'
-  / varList '=' expList
+  / varList __ '=' __ expList
   / functionCall
   / label
   / 'break'
-  / 'goto' NAME
-  / 'do' block 'end'
-  / 'while' exp 'do' block 'end'
-  / 'repeat' block 'until' exp
-  / 'if' exp 'then' block ('elseif' exp 'then' block)* ('else' block)? 'end'
-  / 'for' NAME '=' exp ',' exp (',' exp)? 'do' block 'end'
-  / 'for' nameList 'in' expList 'do' block 'end'
-  / 'function' funcName funcBody
-  / 'local' 'function' NAME funcBody
-  / 'local' attNameList ('=' expList)?
+  / 'goto' __ NAME
+  / 'do' __ block __ 'end'
+  / 'while' __ exp __ 'do' block __ 'end'
+  / 'repeat' __ block 'until' __ exp
+  / 'if' __ exp __ 'then' __ block (__ 'elseif' __ exp __ 'then' __ block)* (__ 'else' __ block)? __'end'
+  / 'for' __ NAME __ '=' __ exp __ ',' __ exp (__ ',' __ exp)? __ 'do' __ block __ 'end'
+  / 'for' __ nameList __ 'in' __ expList __ 'do' __ block __ 'end'
+  / 'function' __ funcName __ funcBody
+  / 'local' __ 'function' __ NAME __ funcBody
+  / 'local' __ attNameList (__ '=' __ expList)?
 
 attNameList
-  = NAME attrib (',' NAME attrib)*
+  = NAME __ attrib (__ ',' __ NAME __ attrib)*
 
 attrib
-  = ('<' NAME '>')?
+  = (__ '<' __ NAME __ '>')?
 
 retstat
-  = 'return' expList? ';'?
+  = 'return' (__ expList)? (__ ';')?
 
 label
-  = '::' NAME '::'
+  = '::' __ NAME __ '::'
 
 funcName
-  = NAME ('.' NAME)* (':' NAME)?
+  = NAME (__ '.' __ NAME)* (__ ':' __ NAME)?
 
 varList
-  = var_ (',' var_)*
+  = var_ (__ ',' __ var_)*
 
 nameList
-  = NAME (',' NAME)*
+  = NAME (__ ',' __ NAME)*
 
 expList
-  = exp (',' exp)*
+  = exp (__ ',' __ exp)*
 
 exp
-  = 'nil'
-	/ 'false'
-	/ 'true'
-  / number
-  / string
-  / '...'
+  = '...'
   / functionDef
   / tableConstructor
-	/ powerExp
+  / powerExp
   // / prefixExp
   // / <assoc=right> exp operatorPower exp
   // / operatorUnary exp
@@ -67,76 +62,90 @@ exp
   // / exp operatorBitwise exp
 
 powerExp
-	= unaryExp operatorPower unaryExp
+  = unaryExp __ operatorPower __ unaryExp
+  / unaryExp
 
 unaryExp
-	= operatorUnary mulDivExp
+  = operatorUnary __ mulDivExp
+  / mulDivExp
 
 mulDivExp
-	= addSubExp operatorMulDivMod addSubExp
+  = addSubExp __ operatorMulDivMod __ addSubExp
+  / addSubExp
 
 addSubExp
-	= strcatExp operatorAddSub strcatExp
+  = strcatExp __ operatorAddSub __ strcatExp
+  / strcatExp
 
 strcatExp
-	= comparisonExp operatorStrcat comparisonExp
+  = comparisonExp __ operatorStrcat __ comparisonExp
+  / comparisonExp
 
 comparisonExp
-	= andExp operatorComparison andExp
+  = andExp __ operatorComparison __ andExp
+  / andExp
 
 andExp
-	= orExp operatorAnd orExp
+  = orExp __ operatorAnd __ orExp
+  / orExp
 
 orExp
-	= bitwiseExp operatorOr bitwiseExp
+  = bitwiseExp __ operatorOr __ bitwiseExp
+  / bitwiseExp
 
 bitwiseExp
-	= prefixExp operatorBitwise prefixExp
+  = prefixExp __ operatorBitwise __ prefixExp
+  / prefixExp
 
 prefixExp
-  = varOrExp nameAndArgs*
+  = baseExp (__ nameAndArgs)*
 
 functionCall
-  = varOrExp nameAndArgs+
+  = baseExp (__ nameAndArgs)+
 
-varOrExp
-  = var_
-	/ '(' exp ')'
+baseExp
+  = 'nil'
+  / 'false'
+  / 'true'
+  / number
+  / string
+  / var_
+  / '(' __ exp __ ')'
 
 var_
-  = (NAME / '(' exp ')' varSuffix) varSuffix*
+  = (NAME / '(' __ exp __ ')' __ varSuffix) (__ varSuffix)*
 
 varSuffix
-  = nameAndArgs* ('[' exp ']' / '.' NAME)
+  = (__ nameAndArgs)* (__ '[' __ exp __ ']' / __ '.' __ NAME)
 
 nameAndArgs
-  = (':' NAME)? args
+  = (':' __ NAME)? __ args
 
 args
-  = '(' expList? ')'
-	/ tableConstructor
-	/ string
+  = '(' (__ expList)? __ ')'
+  / tableConstructor
+  / string
 
 functionDef
   = 'function' funcBody
 
 funcBody
-  = '(' parList? ')' block 'end'
+  = '(' (__ parList)? __ ')' __ block __ 'end'
 
 parList
-  = nameList (',' '...')?
-	/ '...'
+  = nameList (__ ',' __ '...')?
+  / '...'
 
 tableConstructor
-  = '{' fieldList? '}'
+  = '{' (__ fieldList)? __ '}'
 
 fieldList
-  = field (fieldSep field)* fieldSep?
+  = field (__ fieldSep __ field)* (__ fieldSep)?
 
 field
-  = '[' exp ']' '=' exp
-	/ NAME '=' exp
-	/ exp
+  = '[' __ exp __ ']' __ '=' __ exp
+  / NAME __ '=' __ exp
+  / exp
 
 fieldSep
   = ',' / ';'
@@ -175,27 +184,26 @@ string
   = NORMALSTRING / CHARSTRING / LONGSTRING
 
 NAME
-  = [a-zA-Z_][a-zA-Z_0-9]*
+  = $([a-z_]i [a-z_0-9]i*)
 
 NORMALSTRING
-  = '"' ( EscapeSequence / [^\\"] )* '"'
+  = '"' ( EscapeSequence / [^\"] )* '"'
 
 CHARSTRING
-  = '\'' ( EscapeSequence / [~\\'] )* '\''
+  = "'" ( EscapeSequence / [^\'] )* "'"
 
 LONGSTRING
   = '[' NESTED_STR ']'
 
 NESTED_STR
   = '=' NESTED_STR '='
-  // / '[' .*? ']'
   / '[' [^\]]* ']'
 
 INT
-  = Digit+
+  = $(Digit+)
 
 HEX
-  = '0' [xX] HexDigit+
+  = '0' [x]i HexDigit+
 
 FLOAT
   = Digit+ '.' Digit* ExponentPart?
@@ -203,15 +211,15 @@ FLOAT
   / Digit+ ExponentPart
 
 HEX_FLOAT
-  = '0' [xX] HexDigit+ '.' HexDigit* HexExponentPart?
-  / '0' [xX] '.' HexDigit+ HexExponentPart?
-  / '0' [xX] HexDigit+ HexExponentPart
+  = '0' [x]i HexDigit+ '.' HexDigit* HexExponentPart?
+  / '0' [x]i '.' HexDigit+ HexExponentPart?
+  / '0' [x]i HexDigit+ HexExponentPart
 
 ExponentPart
-  = [eE] [+-]? Digit+
+  = [e]i [+-]? Digit+
 
 HexExponentPart
-  = [pP] [+-]? Digit+
+  = [p]i [+-]? Digit+
 
 EscapeSequence
   = '\\' [abfnrtvz"'\\]
@@ -235,18 +243,18 @@ Digit
   = [0-9]
 
 HexDigit
-  = [0-9a-fA-F]
+  = [0-9a-f]i
 
 COMMENT
-  = '--[' NESTED_STR ']' //-> channel(HIDDEN)
+  = '--[' NESTED_STR ']' { return null } //-> channel(HIDDEN)
 
 LINE_COMMENT
   = '--'
-		(                           // --
-			'[' '='*                  // --[==
-		/ '[' '='* [^=\[\n] [^\n]*  // --[==AA
-		/ [^\[\n] [^\n]*             // --AAA
-		) '\n' // -> channel(HIDDEN)
+    (                           // --
+      '[' '='*                  // --[==
+    / '[' '='* [^=\[\n] [^\n]*  // --[==AA
+    / [^\[\n] [^\n]*            // --AAA
+    ) '\n' { return null } // -> channel(HIDDEN)
 
 __
-  = [ \t\u000C\n]+ //-> skip
+  = $([ \t\n\u000C]*) { return null } //-> skip
