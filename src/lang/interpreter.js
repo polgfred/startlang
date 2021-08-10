@@ -123,10 +123,10 @@ export function makeInterpreter() {
       const { node, state } = fra;
       const method = nodes[node.type];
       let ctrl;
-      // check arity to see if the handler expects a mutable frame
-      if (method.length > 2) {
-        fra = produce(fra, (df) => {
-          ctrl = method(node, state, df, fra);
+      // check arity to see if the handler expects a draft frame
+      if (method.length === 3) {
+        fra = produce(fra, (dfra) => {
+          ctrl = method(node, state, dfra);
         });
       } else {
         ctrl = method(node, state);
@@ -225,28 +225,36 @@ export function makeInterpreter() {
       });
     } else {
       // push a new frame onto the stack for this node
-      fst = fst.concat(fra);
+      fst = produce(fst, (dfst) => {
+        dfst.push(fra);
+      });
       fra = makeFrame(node);
     }
   }
 
   function pushns() {
     // push on a new namespace
-    lst = lst.concat(lns);
+    lst = produce(lst, (dlst) => {
+      dlst.push(lns);
+    });
     lns = {};
   }
 
   function pop() {
     if (fra.ns) {
       // pop off the corresponding namespace
-      lst = produce(lst, (dst) => {
-        lns = original(dst.pop());
+      lst = produce(lst, (dlst) => {
+        lns = original(dlst.pop());
       });
     }
     // pop this frame off the stack
-    fst = produce(fst, (dfst) => {
-      fra = fst.length === 0 ? undefined : original(dfst.pop());
-    });
+    if (fst.length === 0) {
+      fra = null;
+    } else {
+      fst = produce(fst, (dfst) => {
+        fra = original(dfst.pop());
+      });
+    }
   }
 
   function popOver(flow) {
@@ -373,38 +381,38 @@ export function makeInterpreter() {
 
   // ** implementations of AST nodes **
 
-  // NOTE: if method takes a 3rd `frame` parameter, the body will be
+  // NOTE: if method takes a 3rd frame parameter, the body will be
   // called from within an immer producer
 
   const nodes = {
-    block(node, state, frame, orig) {
-      const { count } = orig;
+    block(node, state, dfra) {
+      const { count } = fra;
       if (count < node.elems.length) {
-        frame.count++;
+        dfra.count++;
         return node.elems[count];
       } else {
         return popOut;
       }
     },
 
-    repeat(node, state, frame, orig) {
+    repeat(node, state, dfra) {
       switch (state) {
         case 0:
           if (node.times) {
-            frame.state = 1;
+            dfra.state = 1;
             return node.times;
           } else {
-            frame.state = 3;
+            dfra.state = 3;
             break;
           }
         case 1:
-          frame.state = 2;
-          frame.times = res.rv;
+          dfra.state = 2;
+          dfra.times = res.rv;
           break;
         case 2:
-          const { count, times } = orig;
+          const { count, times } = fra;
           if (count < times) {
-            frame.count++;
+            dfra.count++;
             return node.body;
           } else {
             return popOut;
@@ -415,35 +423,35 @@ export function makeInterpreter() {
       }
     },
 
-    for(node, state, frame, orig) {
+    for(node, state, dfra) {
       switch (state) {
         case 0:
-          frame.state = 1;
+          dfra.state = 1;
           return node.from;
         case 1:
-          frame.state = 2;
-          frame.from = res.rv;
-          frame.count = res.rv;
+          dfra.state = 2;
+          dfra.from = res.rv;
+          dfra.count = res.rv;
           return node.to;
         case 2:
           if (node.by) {
-            frame.state = 3;
-            frame.to = res.rv;
+            dfra.state = 3;
+            dfra.to = res.rv;
             return node.by;
           } else {
-            frame.state = 4;
-            frame.to = res.rv;
+            dfra.state = 4;
+            dfra.to = res.rv;
             break;
           }
         case 3:
-          frame.state = 4;
-          frame.by = res.rv;
+          dfra.state = 4;
+          dfra.by = res.rv;
           break;
         case 4:
-          const { count, to, by } = orig;
+          const { count, to, by } = fra;
           if ((by > 0 && count <= to) || (by < 0 && count >= to)) {
             set(node.name, count);
-            frame.count += by;
+            dfra.count += by;
             return node.body;
           } else {
             return popOut;
@@ -451,21 +459,21 @@ export function makeInterpreter() {
       }
     },
 
-    forIn(node, state, frame, orig) {
+    forIn(node, state, dfra) {
       switch (state) {
         case 0:
-          frame.state = 1;
+          dfra.state = 1;
           return node.range;
         case 1:
-          frame.state = 2;
-          frame.iter = handle(res.rv).enumerate(res.rv);
+          dfra.state = 2;
+          dfra.iter = handle(res.rv).enumerate(res.rv);
           break;
         case 2:
-          const { iter } = orig;
+          const { iter } = fra;
           if (iter.more) {
             set(node.name, iter.value);
             // TODO: iteration should allow async
-            frame.iter = iter.next();
+            dfra.iter = iter.next();
             return node.body;
           } else {
             return popOut;
@@ -473,14 +481,14 @@ export function makeInterpreter() {
       }
     },
 
-    while(node, state, frame) {
+    while(node, state, dfra) {
       switch (state) {
         case 0:
-          frame.state = 1;
+          dfra.state = 1;
           return node.cond;
         case 1:
           if (res.rv) {
-            frame.state = 0;
+            dfra.state = 0;
             return node.body;
           } else {
             return popOut;
@@ -488,17 +496,17 @@ export function makeInterpreter() {
       }
     },
 
-    if(node, state, frame) {
+    if(node, state, dfra) {
       switch (state) {
         case 0:
-          frame.state = 1;
+          dfra.state = 1;
           return node.cond;
         case 1:
           if (res.rv) {
-            frame.state = 2;
+            dfra.state = 2;
             return node.tbody;
           } else if (node.fbody) {
-            frame.state = 2;
+            dfra.state = 2;
             return node.fbody;
           } else {
             return popOut;
@@ -516,25 +524,25 @@ export function makeInterpreter() {
       return popOut;
     },
 
-    call(node, state, frame, orig) {
+    call(node, state, dfra) {
       switch (state) {
         case 0:
-          const { count } = orig;
+          const { count } = fra;
           if (node.args && count < node.args.length) {
-            frame.state = 1;
+            dfra.state = 1;
             return node.args[count];
           } else if (hop.call(gfn, node.name)) {
-            frame.state = 2;
+            dfra.state = 2;
             break;
           } else {
-            frame.state = 4;
+            dfra.state = 4;
             break;
           }
         case 1:
-          frame.state = 0;
-          frame.args.push(res.rv);
-          frame.assn.push(res.lv);
-          frame.count++;
+          dfra.state = 0;
+          dfra.args.push(res.rv);
+          dfra.assn.push(res.lv);
+          dfra.count++;
           break;
         case 2:
           // handle a user-defined function
@@ -544,25 +552,25 @@ export function makeInterpreter() {
           // set the arguments in the local ns
           if (ufn.params) {
             for (let i = 0; i < ufn.params.length; ++i) {
-              set(ufn.params[i], orig.args[i], true);
+              set(ufn.params[i], fra.args[i], true);
             }
           }
-          frame.state = 3;
-          frame.ns = true;
+          dfra.state = 3;
+          dfra.ns = true;
           return ufn.body;
         case 3:
           return popOut;
         case 4:
           // handle a runtime API function
-          const ret = syscall(node.name, orig.args);
+          const ret = syscall(node.name, fra.args);
           if (ret && ret.then) {
             // if we got a promise, handle the result when fulfilled
             return ret.then((rret) => {
-              handleResult(rret, orig.assn);
+              handleResult(rret, fra.assn);
               return popOut;
             });
           } else {
-            handleResult(ret, orig.assn);
+            handleResult(ret, fra.assn);
             return popOut;
           }
       }
@@ -580,11 +588,11 @@ export function makeInterpreter() {
       return { pop: 'until', flow: 'loop' };
     },
 
-    return(node, state, frame) {
+    return(node, state, dfra) {
       switch (state) {
         case 0:
           if (node.result) {
-            frame.state = 1;
+            dfra.state = 1;
             return node.result;
           } else {
             setResult();
@@ -610,10 +618,10 @@ export function makeInterpreter() {
       return popOut;
     },
 
-    let(node, state, frame) {
+    let(node, state, dfra) {
       switch (state) {
         case 0:
-          frame.state = 1;
+          dfra.state = 1;
           return node.value;
         case 1:
           set(node.name, res.rv, node.local);
@@ -621,24 +629,24 @@ export function makeInterpreter() {
       }
     },
 
-    index(node, state, frame, orig) {
+    index(node, state, dfra) {
       switch (state) {
         case 0:
-          const { count } = orig;
+          const { count } = fra;
           if (count < node.indexes.length) {
-            frame.state = 1;
+            dfra.state = 1;
             return node.indexes[count];
           } else {
-            frame.state = 2;
+            dfra.state = 2;
             break;
           }
         case 1:
-          frame.state = 0;
-          frame.indexes.push(res.rv);
-          frame.count++;
+          dfra.state = 0;
+          dfra.indexes.push(res.rv);
+          dfra.count++;
           break;
         case 2:
-          const indexes = orig.indexes;
+          const indexes = fra.indexes;
           // return the rv/lv pair for this slot
           setResult({
             rv: getIndex(node.name, indexes),
@@ -648,44 +656,44 @@ export function makeInterpreter() {
       }
     },
 
-    letIndex(node, state, frame, orig) {
+    letIndex(node, state, dfra) {
       switch (state) {
         case 0:
-          const { count } = orig;
+          const { count } = fra;
           if (count < node.indexes.length) {
-            frame.state = 1;
+            dfra.state = 1;
             return node.indexes[count];
           } else {
-            frame.state = 2;
+            dfra.state = 2;
             break;
           }
         case 1:
-          frame.state = 0;
-          frame.indexes.push(res.rv);
-          frame.count++;
+          dfra.state = 0;
+          dfra.indexes.push(res.rv);
+          dfra.count++;
           break;
         case 2:
-          frame.state = 3;
+          dfra.state = 3;
           return node.value;
         case 3:
-          setIndex(node.name, orig.indexes, res.rv);
+          setIndex(node.name, fra.indexes, res.rv);
           return popOut;
       }
     },
 
-    logicalOp(node, state, frame) {
+    logicalOp(node, state, dfra) {
       switch (node.op) {
         case 'and':
           switch (state) {
             case 0:
-              frame.state = 1;
+              dfra.state = 1;
               return node.left;
             case 1:
               if (!res.rv) {
                 setResult(false);
                 return popOut;
               } else {
-                frame.state = 2;
+                dfra.state = 2;
                 return node.right;
               }
             case 2:
@@ -697,14 +705,14 @@ export function makeInterpreter() {
         case 'or':
           switch (state) {
             case 0:
-              frame.state = 1;
+              dfra.state = 1;
               return node.left;
             case 1:
               if (res.rv) {
                 setResult(true);
                 return popOut;
               } else {
-                frame.state = 2;
+                dfra.state = 2;
                 return node.right;
               }
             case 2:
@@ -716,7 +724,7 @@ export function makeInterpreter() {
         case 'not':
           switch (state) {
             case 0:
-              frame.state = 1;
+              dfra.state = 1;
               return node.right;
             case 1:
               setResult(!res.rv);
@@ -726,26 +734,26 @@ export function makeInterpreter() {
       }
     },
 
-    binaryOp(node, state, frame, orig) {
+    binaryOp(node, state, dfra) {
       switch (state) {
         case 0:
-          frame.state = 1;
+          dfra.state = 1;
           return node.left;
         case 1:
-          frame.state = 2;
-          frame.left = res.rv;
+          dfra.state = 2;
+          dfra.left = res.rv;
           return node.right;
         case 2:
-          const binaryop = handle(orig.left).binaryops[node.op];
-          setResult(binaryop(orig.left, res.rv));
+          const binaryop = handle(fra.left).binaryops[node.op];
+          setResult(binaryop(fra.left, res.rv));
           return popOut;
       }
     },
 
-    unaryOp(node, state, frame) {
+    unaryOp(node, state, dfra) {
       switch (state) {
         case 0:
-          frame.state = 1;
+          dfra.state = 1;
           return node.right;
         case 1:
           const unaryop = handle(res.rv).unaryops[node.op];
