@@ -50,16 +50,6 @@ exp
   / functionDef
   / tableConstructor
   / powerExp
-  // / prefixExp
-  // / <assoc=right> exp operatorPower exp
-  // / operatorUnary exp
-  // / exp operatorMulDivMod exp
-  // / exp operatorAddSub exp
-  // / <assoc=right> exp operatorStrcat exp
-  // / exp operatorComparison exp
-  // / exp operatorAnd exp
-  // / exp operatorOr exp
-  // / exp operatorBitwise exp
 
 powerExp
   = unaryExp __ operatorPower __ unaryExp
@@ -94,14 +84,11 @@ orExp
   / bitwiseExp
 
 bitwiseExp
-  = prefixExp __ operatorBitwise __ prefixExp
-  / prefixExp
-
-prefixExp
-  = baseExp (__ nameAndArgs)*
+  = functionCall __ operatorBitwise __ functionCall
+  / functionCall
 
 functionCall
-  = baseExp (__ nameAndArgs)+
+  = baseExp (__ nameAndArgs)*
 
 baseExp
   = 'nil'
@@ -246,15 +233,15 @@ HexDigit
   = [0-9a-f]i
 
 COMMENT
-  = '--[' NESTED_STR ']' { return null } //-> channel(HIDDEN)
+  = '--[' NESTED_STR ']' { return null }
 
 LINE_COMMENT
   = '--'
-    (                           // --
-      '[' '='*                  // --[==
-    / '[' '='* [^=\[\n] [^\n]*  // --[==AA
-    / [^\[\n] [^\n]*            // --AAA
-    ) '\n' { return null } // -> channel(HIDDEN)
+    (
+      '[' '='*
+    / '[' '='* [^=\[\n] [^\n]*
+    / [^\[\n] [^\n]*
+    ) '\n' { return null }
 
 __
-  = $([ \t\n\u000C]*) { return null } //-> skip
+  = $([ \t\n\u000C]*) { return null }
