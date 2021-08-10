@@ -1,6 +1,4 @@
-// Language Nodes
-
-{
+{{
   const flowMarker = {
     repeat: 'loop',
     for: 'loop',
@@ -116,22 +114,20 @@
       return buildNode('letIndex', { name, indexes, value });
     }
   }
-}
+}}
 
 // Grammar
 
 start
   = EOL?
-    block:Block {
-      return block;
-    }
+    block:Block
+    { return block }
 
 // Top-level
 
 Block
-  = elems:( __ elem:BlockElement EOL { return elem; } )* {
-      return buildNode('block', { elems });
-    }
+  = elems:(__ @BlockElement EOL)*
+    { return buildNode('block', { elems }) }
 
 BlockElement
   = Control
@@ -146,64 +142,50 @@ Control
 
 If
   // one-line if/then[/else]
-  = 'if' WB __ cond:Value __ 'then' WB __ tbody:Statement fbody:( __ 'else' WB __ s:Statement { return s; } )? {
-      return buildIfTree([[cond, tbody]], fbody);
-    }
+  = 'if' WB __ cond:Value __ 'then' WB __ tbody:Statement
+      fbody:(__ 'else' WB __ @Statement)?
+    { return buildIfTree([[cond, tbody]], fbody) }
   // multi-line if/then[/else if/...][/else]
   / 'if' WB __ cond:Value __ 'then' WB __ EOL tbody:Block
-      tests:( __ 'else' WB __ 'if' WB __ v:Value __ 'then' WB __ EOL b:Block { return [v, b]; } )*
-      fbody:( __ 'else' WB __ EOL b:Block { return b; } )?
-      __ 'end' {
-      return buildIfTree([[cond, tbody]].concat(tests), fbody);
-    }
+      tests:(__ 'else' WB __ 'if' WB __ @Value __ 'then' WB __ EOL @Block)*
+      fbody:(__ 'else' WB __ EOL @Block)?
+      __ 'end'
+    { return buildIfTree([[cond, tbody], ...tests], fbody) }
 
 Repeat
   // repeat 10
-  = 'repeat' WB __ times:Value __ 'do' WB __ body:EndBody {
-      return buildNode('repeat', { times, body });
-    }
+  = 'repeat' WB __ times:Value __ 'do' WB __ body:EndBody
+    { return buildNode('repeat', { times, body }) }
   // repeat (forever)
-  / 'repeat' WB __ 'do' WB __ body:EndBody {
-      return buildNode('repeat', { body });
-    }
+  / 'repeat' WB __ 'do' WB __ body:EndBody
+    { return buildNode('repeat', { body }) }
 
 For
   // for i from a to b by c
-  = 'for' WB __ name:Symbol __ 'from' WB __ from:Value __ 'to' WB __ to:Value __ 'by' WB __ by:Value __ 'do' WB __ body:EndBody {
-      return buildNode('for', { name, from, to, by, body });
-    }
-  // for i from a to b
-  / 'for' WB __ name:Symbol __ 'from' WB __ from:Value __ 'to' WB __ to:Value __ 'do' WB __ body:EndBody {
-      return buildNode('for', { name, from, to, body });
-    }
+  = 'for' WB __ name:Symbol __ 'from' WB __ from:Value __ 'to' WB __ to:Value
+      by:(__ 'by' WB __ @Value)? __ 'do' WB __ body:EndBody
+    { return buildNode('for', { name, from, to, by, body }) }
   // for i in x
-  / 'for' WB __ name:Symbol __ 'in' WB __ range:Value __ 'do' WB __ body:EndBody {
-      return buildNode('forIn', { name, range, body });
-    }
+  / 'for' WB __ name:Symbol __ 'in' WB __ range:Value __ 'do' WB __ body:EndBody
+    { return buildNode('forIn', { name, range, body }) }
 
 While
-  = 'while' WB __ cond:Value __ 'do' WB __ body:EndBody {
-      return buildNode('while', { cond, body });
-    }
+  = 'while' WB __ cond:Value __ 'do' WB __ body:EndBody
+    { return buildNode('while', { cond, body }) }
 
 Begin
-  = 'begin' WB __ name:Symbol __ 'do' WB __ body:EndBody {
-      return buildNode('begin', { name, params: null, body });
-    }
-  / 'begin' WB __ name:Symbol __ '(' EOL? __ params:Params? __ ')' __ 'do' WB __ body:EndBody {
-      return buildNode('begin', { name, params, body });
-    }
+  = 'begin' WB __ name:Symbol
+      params:(__ '(' EOL? __ @Params? __ ')')? __ 'do' WB __ body:EndBody
+    { return buildNode('begin', { name, params, body }) }
 
 EndBody
   = Statement
-  / EOL b:Block __ 'end' {
-      return b;
-    }
+  / EOL b:Block __ 'end'
+    { return b }
 
 Params
-  = first:Symbol rest:( __ ',' __ EOL? __ name:Symbol { return name; } )* {
-      return [first].concat(rest);
-    }
+  = first:Symbol rest:(__ ',' __ EOL? __ @Symbol)*
+    { return [first, ...rest] }
 
 Statement
   = Flow
@@ -212,57 +194,51 @@ Statement
   / Call
 
 Flow
-  = 'exit' WB {
-      return buildNode('exit');
-    }
-  / 'break' WB {
-      return buildNode('break');
-    }
-  / 'next' WB {
-      return buildNode('next');
-    }
-  / 'return' WB __ result:Value? {
-      return buildNode('return', { result });
-    }
+  = 'exit' WB
+    { return buildNode('exit') }
+  / 'break' WB
+    { return buildNode('break') }
+  / 'next' WB
+    { return buildNode('next') }
+  / 'return' WB result:(__ @Value)?
+    { return buildNode('return', { result }) }
 
 Let
-  = ( 'let' WB __ )? name:Symbol __ indexes:Indexes? __ '=' __ value:Value {
-      if (!indexes) {
-        return buildNode('let', { name, value });
-      } else {
-        return buildIndex(name, indexes, value);
-      }
+  = ('let' WB)? __ name:Symbol __ indexes:Indexes? __ '=' __ value:Value
+    {
+      return (
+        indexes
+          ? buildIndex(name, indexes, value)
+          : buildNode('let', { name, value })
+        )
     }
 
 Local
-  = 'local' WB __ name:Symbol value:( __ '=' __ v:Value { return v; } )? {
-    value = value || buildNode('literal', { value: undefined });
-    return buildNode('let', { name, value, top: true });
-  }
+  = 'local' WB __ name:Symbol value:(__ '=' __ @Value)?
+    {
+      value = value || buildNode('literal', { value: undefined });
+      return buildNode('let', { name, value, top: true });
+    }
 
 Call
   // if we match non-parenthesized args optionally right away, it will
   // never get past the first rule, so...
-  //  1- try to match non-parenthesized arguments first *if present*
+  //  1- try to match one or more non-parenthesized arguments first
   //      - this fixes the case of "print (1+2)/3"
   //  2- try to match zero or more parenthesized arguments
   //  3- match a bare call with no parens or args
-  = name:Symbol __ args:Values {
-      return buildNode('call', { name, args });
-    }
-  / name:Symbol __ '(' __ EOL? __ args:Values? __ ')' {
-      return buildNode('call', { name, args });
-    }
-  / name:Symbol {
-      return buildNode('call', { name, args: null });
-    }
+  = name:Symbol __ args:Values
+    { return buildNode('call', { name, args }) }
+  / name:Symbol __ '(' __ EOL? __ args:Values? __ ')'
+    { return buildNode('call', { name, args }) }
+  / name:Symbol
+    { return buildNode('call', { name, args: null }) }
 
 // Values
 
 Values
-  = first:Value rest:( __ ',' __ EOL? __ val:Value { return val; } )* {
-      return [first].concat(rest);
-    }
+  = first:Value rest:(__ ',' __ EOL? __ @Value)*
+    { return [first, ...rest] }
 
 Value 'a value'
   = ConjExpr
@@ -270,27 +246,27 @@ Value 'a value'
 // Conditions
 
 ConjExpr
-  = first:NotExpr rest:( __ op:ConjOp __ e:NotExpr { return [op, e]; } )* {
-      return buildBinaryExpr('logicalOp', first, rest);
-    }
+  = first:NotExpr rest:(__ @ConjOp __ @NotExpr)*
+    { return buildBinaryExpr('logicalOp', first, rest) }
 
 ConjOp
-  = 'and' WB { return 'and'; }
-  / 'or'  WB { return 'or';  }
+  = 'and' WB
+    { return 'and' }
+  / 'or' WB
+    { return 'or' }
 
 NotExpr
-  = op:NotOp __ right:RelExpr {
-      return buildNode('logicalOp', { op, right });
-    }
+  = op:NotOp __ right:RelExpr
+    { return buildNode('logicalOp', { op, right }) }
   / RelExpr
 
 NotOp
-  = 'not' WB { return 'not'; }
+  = 'not' WB
+    { return 'not' }
 
 RelExpr
-  = left:ConcatExpr __ op:RelOp __ right:ConcatExpr {
-      return buildNode('binaryOp', { op, left, right });
-    }
+  = left:ConcatExpr __ op:RelOp __ right:ConcatExpr
+    { return buildNode('binaryOp', { op, left, right }) }
   / ConcatExpr
 
 RelOp
@@ -304,9 +280,8 @@ RelOp
 // Concatenation
 
 ConcatExpr
-  = first:BitExpr rest:( __ op:ConcatOp __ e:BitExpr { return [op, e]; } )* {
-      return buildBinaryExpr('binaryOp', first, rest);
-    }
+  = first:BitExpr rest:(__ @ConcatOp __ @BitExpr)*
+    { return buildBinaryExpr('binaryOp', first, rest) }
 
 ConcatOp
   = '$'
@@ -314,9 +289,8 @@ ConcatOp
 // Math
 
 BitExpr
-  = first:AddExpr rest:( __ op:BitOp __ e:AddExpr { return [op, e]; } )* {
-      return buildBinaryExpr('binaryOp', first, rest);
-    }
+  = first:AddExpr rest:(__ @BitOp __ @AddExpr)*
+    { return buildBinaryExpr('binaryOp', first, rest) }
 
 BitOp
   = '&'
@@ -324,18 +298,16 @@ BitOp
   / '^'
 
 AddExpr
-  = first:MultExpr rest:( __ op:AddOp __ e:MultExpr { return [op, e]; } )* {
-      return buildBinaryExpr('binaryOp', first, rest);
-    }
+  = first:MultExpr rest:(__ @AddOp __ @MultExpr)*
+    { return buildBinaryExpr('binaryOp', first, rest) }
 
 AddOp
   = '+'
   / '-'
 
 MultExpr
-  = first:UnaryExpr rest:( __ op:MultOp __ e:UnaryExpr { return [op, e]; } )* {
-      return buildBinaryExpr('binaryOp', first, rest);
-    }
+  = first:UnaryExpr rest:(__ @MultOp __ @UnaryExpr)*
+    { return buildBinaryExpr('binaryOp', first, rest) }
 
 MultOp
   = '*'
@@ -343,9 +315,8 @@ MultOp
   / '%'
 
 UnaryExpr
-  = ops:( op:UnaryOp __ { return op; } )* right:CallExpr {
-      return buildUnaryExpr('unaryOp', ops, right);
-    }
+  = ops:(__ @UnaryOp)* __ right:CallExpr
+    { return buildUnaryExpr('unaryOp', ops, right) }
 
 UnaryOp
   = '+'
@@ -355,69 +326,68 @@ UnaryOp
 // Invocation
 
 CallExpr
-  = name:Symbol __ '(' __ EOL? __ args:Values? __ ')' {
-      return buildNode('call', { name, args });
-    }
+  = name:Symbol __ '(' __ EOL? __ args:Values? __ ')'
+    { return buildNode('call', { name, args }) }
   / IndexExpr
 
 // Indexes
 
 IndexExpr
-  = name:Symbol __ indexes:Indexes? {
-      if (!indexes) {
-        return buildNode('var', { name });
-      } else {
-        return buildIndex(name, indexes);
-      }
+  = name:Symbol __ indexes:Indexes?
+    {
+      return (
+        indexes
+          ? buildIndex(name, indexes)
+          : buildNode('var', { name })
+      )
     }
   / PrimaryExpr
 
 Indexes
-  = first:IndexSegment rest:( __ seg:IndexSegment { return seg; } )* {
-      // flatten segments into a single chain of indexes
-      return first.concat(...rest);
-    }
+  = first:IndexSegment rest:(__ @IndexSegment)*
+    // flatten segments into a single chain of indexes
+    { return [first, ...rest].flat() }
 
 IndexSegment
-  = '[' __ first:Value rest:( __ ',' __ val:Value { return val; } )* __ ']' {
-      // allow successive indexes separated by commas, e.g. lst[0,1,2]
-      return [first].concat(rest);
-    }
-  / '.' __ name:Symbol {
-      // segment consisting of one literal node
-      return [buildNode('literal', { value: name })];
-    }
+  = '[' __ first:Value rest:(__ ',' __ @Value)* __ ']'
+    // allow successive indexes separated by commas, e.g. lst[0,1,2]
+    { return [first, ...rest] }
+  / '.' __ name:Symbol
+    // segment consisting of one literal node
+    { return [buildNode('literal', { value: name })] }
 
 PrimaryExpr
   = String
   / Literal
-  / '(' __ val:Value __ ')' {
-      return val;
-    }
+  / '(' __ val:Value __ ')'
+    { return val }
 
 // Strings
 
 String 'a string'
-  = '"' rest:StringSegment* '"' {
+  = '"' rest:StringSegment* '"'
+    {
       // if the first segment isn't a string literal, prepend an empty string
-      const first = (rest.length > 0 && rest[0].type === 'literal' && typeof rest[0].value === 'string') ?
-                    rest.shift() :
-                    buildNode('literal', { value: '' });
+      const first = (rest.length > 0
+                      && rest[0].type === 'literal'
+                      && typeof rest[0].value === 'string')
+                        ? rest.shift()
+                        : buildNode('literal', { value: '' })
       return buildString(first, rest);
     }
 
 StringSegment
-  = "`" __ val:Value __ "`" {
-      // interpolation of value expressions
-      return val;
-    }
-  / chars:Char+ {
-      return buildNode('literal', { value: chars.join('') });
-    }
+  = "`" __ val:Value __ "`"
+    // interpolation of value expressions
+    { return val }
+  / chars:Char+
+    { return buildNode('literal', { value: chars.join('') }) }
 
 Char
-  = '""' { return '"'; }
-  / '``' { return '`'; }
+  = '""'
+    { return '"' }
+  / '``'
+    { return '`' }
   / [^"`]
 
 // Data
@@ -428,28 +398,23 @@ Literal
   / Number
 
 None
-  = 'none' WB {
-      return buildNode('literal', { value: null });
-    }
+  = 'none' WB
+    { return buildNode('literal', { value: null }) }
 
 Boolean
-  = 'true'  WB {
-      return buildNode('literal', { value: true });
-    }
-  / 'false' WB {
-      return buildNode('literal', { value: false });
-    }
+  = 'true'  WB
+    { return buildNode('literal', { value: true }) }
+  / 'false' WB
+    { return buildNode('literal', { value: false }) }
 
 Number 'a number'
-  = 'infinity' WB {
-      return buildNode('literal', { value: Infinity });
-    }
-  / num:NumberFormat {
-      return buildNode('literal', { value: parseFloat(num) });
-    }
+  = 'infinity' WB
+    { return buildNode('literal', { value: Infinity }) }
+  / num:NumberFormat
+    { return buildNode('literal', { value: parseFloat(num) }) }
 
 NumberFormat
-  = $( Digits ( '.' Digits )? ( [eE] [-+]? Digits )? )
+  = $(Digits ('.' Digits)? ([eE] [-+]? Digits)?)
 
 Digits
   = $[0-9]+
@@ -457,7 +422,7 @@ Digits
 // Symbols
 
 Symbol 'a name'
-  = $( !Reserved [a-z_]i [a-z0-9_]i* )
+  = $(!Reserved [a-z_]i [a-z0-9_]i*)
 
 Reserved
   = 'none'     WB
@@ -492,7 +457,7 @@ WB
   = ![a-z_]i
 
 __ 'whitespace'
-  = [ \t]* ( ';' [^\n]* )?
+  = [ \t]* (';' [^\n]*)?
 
 EOL 'end of line'
-  = ( __ '\n' )+
+  = (__ '\n')+
