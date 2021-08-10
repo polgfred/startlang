@@ -236,12 +236,12 @@ export function makeInterpreter() {
     if (frame.ns) {
       // pop off the corresponding namespace
       st = produce(st, (dst) => {
-        ns = original(dst.pop());
+        ns = st.length === 0 ? undefined : original(dst.pop());
       });
     }
     // pop this frame off the stack
     fst = produce(fst, (dfst) => {
-      frame = original(dfst.pop());
+      frame = fst.length === 0 ? undefined : original(dfst.pop());
     });
   }
 
