@@ -108,24 +108,25 @@ export function makeInterpreter() {
   }
 
   // interpreter state
-  let fn; // function table
-  let st; // namespace stack
-  let ns; // top namespace
+  let gfn; // function table
+  let gns; // global namespace
+  let lns; // top namespace
+  let lst; // namespace stack
+  let fra; // top frame
   let fst; // frame stack
-  let frame; // top frame
-  let result; // last evaluated expression
+  let res; // last evaluated expression
 
   // set up an entry point that loops until the stack is exhausted, or
   // until a node returns a promise
   async function loop() {
-    while (frame) {
-      const { node, state } = frame;
+    while (fra) {
+      const { node, state } = fra;
       const method = nodes[node.type];
       let ctrl;
       // check arity to see if the handler expects a mutable frame
       if (method.length > 2) {
-        frame = produce(frame, (df) => {
-          ctrl = method(node, state, df, frame);
+        fra = produce(fra, (df) => {
+          ctrl = method(node, state, df, fra);
         });
       } else {
         ctrl = method(node, state);
@@ -149,11 +150,12 @@ export function makeInterpreter() {
 
   async function run(node) {
     // initialize the interpreter state
-    fn = {};
-    st = [];
-    ns = {};
+    gfn = {};
+    gns = {};
+    lns = {};
+    lst = [];
+    fra = makeFrame(node);
     fst = [];
-    frame = makeFrame(node);
 
     // set an empty result
     setResult();
@@ -167,23 +169,25 @@ export function makeInterpreter() {
   function snapshot() {
     // take a snapshot of the interpreter internals
     return {
-      fn,
-      st,
-      ns,
+      gfn,
+      gns,
+      lns,
+      lst,
+      fra,
       fst,
-      frame,
-      result,
+      res,
     };
   }
 
   function reset(snap) {
     // reset the interpreter state to the passed-in snapshot
-    fn = snap.fn;
-    st = snap.st;
-    ns = snap.ns;
+    gfn = snap.gfn;
+    gns = snap.gns;
+    lns = snap.lns;
+    lst = snap.lst;
+    fra = snap.fra;
     fst = snap.fst;
-    frame = snap.frame;
-    result = snap.result;
+    res = snap.res;
   }
 
   // ** manage stack frames **
@@ -203,7 +207,7 @@ export function makeInterpreter() {
         popUntil(ctrl.flow);
       } else if (ctrl.pop === 'exit') {
         // clear the stack so the program exits
-        frame = null;
+        fra = null;
         fst = [];
       }
     }
@@ -221,34 +225,34 @@ export function makeInterpreter() {
       });
     } else {
       // push a new frame onto the stack for this node
-      fst = fst.concat(frame);
-      frame = makeFrame(node);
+      fst = fst.concat(fra);
+      fra = makeFrame(node);
     }
   }
 
   function pushns() {
     // push on a new namespace
-    st = st.concat(ns);
-    ns = {};
+    lst = lst.concat(lns);
+    lns = {};
   }
 
   function pop() {
-    if (frame.ns) {
+    if (fra.ns) {
       // pop off the corresponding namespace
-      st = produce(st, (dst) => {
-        ns = st.length === 0 ? undefined : original(dst.pop());
+      lst = produce(lst, (dst) => {
+        lns = original(dst.pop());
       });
     }
     // pop this frame off the stack
     fst = produce(fst, (dfst) => {
-      frame = fst.length === 0 ? undefined : original(dfst.pop());
+      fra = fst.length === 0 ? undefined : original(dfst.pop());
     });
   }
 
   function popOver(flow) {
     // pop frames off including a loop or function call node
-    while (frame) {
-      const { node } = frame;
+    while (fra) {
+      const { node } = fra;
       // pop the target frame
       pop();
       // break here if we're popping the target frame
@@ -260,9 +264,9 @@ export function makeInterpreter() {
 
   function popUntil(flow) {
     // pop frames off until hitting a loop or function call node
-    while (frame) {
+    while (fra) {
       // break here if we're popping the target frame
-      if (frame.node.flow === flow) {
+      if (fra.node.flow === flow) {
         break;
       }
       // pop the target frame
@@ -272,49 +276,39 @@ export function makeInterpreter() {
 
   // ** return values **
 
-  function setResult(res) {
-    // normalize the result to rvalue/lvalue form if necessary
-    if (!res || !hop.call(res, 'rv')) {
-      res = { rv: res };
+  function setResult(result) {
+    if (!result || !hop.call(result, 'rv')) {
+      // normalize the result to rvalue/lvalue form
+      res = { rv: result };
+    } else {
+      res = result;
     }
-    result = res;
   }
 
   // ** namespace access **
 
   function get(name) {
-    // look in the top frame
-    if (st.length === 0 || hop.call(ns, name)) {
-      return ns[name];
-    }
-    // look up the namespace stack
-    for (let i = st.length - 1; i >= 0; --i) {
-      const ns = st[i];
-      if (hop.call(ns, name)) {
-        return ns[name];
-      }
+    if (hop.call(lns, name)) {
+      // look in the top frame
+      return lns[name];
+    } else {
+      // look in the global namespace
+      return gns[name];
     }
   }
 
-  function set(name, value, top = false) {
-    // look in the top frame
-    if (top || st.length === 0 || hop.call(ns, name)) {
-      ns = produce(ns, (dns) => {
+  function set(name, value, local = false) {
+    if (local || hop.call(lns, name)) {
+      // look in the top frame
+      lns = produce(lns, (dns) => {
         dns[name] = value;
       });
-      return;
+    } else {
+      // look in the global namespace
+      gns = produce(gns, (dgns) => {
+        dgns[name] = value;
+      });
     }
-    // look up the namespace stack
-    st = produce(st, (dst) => {
-      // loop until we hit the root ns
-      for (let i = st.length - 1; i >= 0; --i) {
-        const dns = dst[i];
-        if (i === 0 || hop.call(ns, name)) {
-          dns[name] = value;
-          break;
-        }
-      }
-    });
   }
 
   function getIndex(name, indexes) {
@@ -348,10 +342,10 @@ export function makeInterpreter() {
 
   // ** handle the result of a function call **
 
-  function handleResult(res, assn) {
+  function handleResult(ret, assn) {
     // handle the result of a runtime function
-    if (res) {
-      const repl = res[assignKey];
+    if (ret) {
+      const repl = ret[assignKey];
       if (repl) {
         // loop over replacement args
         for (let i = 0; i < repl.length; ++i) {
@@ -370,11 +364,11 @@ export function makeInterpreter() {
           }
         }
         // grab an explicit result, or the first replacement
-        res = res[resultKey] || repl[0];
+        ret = ret[resultKey] || repl[0];
       }
     }
     // put it in the result register
-    setResult(res);
+    setResult(ret);
   }
 
   // ** implementations of AST nodes **
@@ -405,7 +399,7 @@ export function makeInterpreter() {
           }
         case 1:
           frame.state = 2;
-          frame.times = result.rv;
+          frame.times = res.rv;
           break;
         case 2:
           const { count, times } = orig;
@@ -427,24 +421,23 @@ export function makeInterpreter() {
           frame.state = 1;
           return node.from;
         case 1:
-          const res = result.rv;
           frame.state = 2;
-          frame.from = res;
-          frame.count = res;
+          frame.from = res.rv;
+          frame.count = res.rv;
           return node.to;
         case 2:
           if (node.by) {
             frame.state = 3;
-            frame.to = result.rv;
+            frame.to = res.rv;
             return node.by;
           } else {
             frame.state = 4;
-            frame.to = result.rv;
+            frame.to = res.rv;
             break;
           }
         case 3:
           frame.state = 4;
-          frame.by = result.rv;
+          frame.by = res.rv;
           break;
         case 4:
           const { count, to, by } = orig;
@@ -465,7 +458,7 @@ export function makeInterpreter() {
           return node.range;
         case 1:
           frame.state = 2;
-          frame.iter = handle(result.rv).enumerate(result.rv);
+          frame.iter = handle(res.rv).enumerate(res.rv);
           break;
         case 2:
           const { iter } = orig;
@@ -486,7 +479,7 @@ export function makeInterpreter() {
           frame.state = 1;
           return node.cond;
         case 1:
-          if (result.rv) {
+          if (res.rv) {
             frame.state = 0;
             return node.body;
           } else {
@@ -501,7 +494,7 @@ export function makeInterpreter() {
           frame.state = 1;
           return node.cond;
         case 1:
-          if (result.rv) {
+          if (res.rv) {
             frame.state = 2;
             return node.tbody;
           } else if (node.fbody) {
@@ -517,7 +510,7 @@ export function makeInterpreter() {
 
     begin(node) {
       // save the begin node in the function table
-      fn = produce(fn, (dfn) => {
+      gfn = produce(gfn, (dfn) => {
         dfn[node.name] = node;
       });
       return popOut;
@@ -530,7 +523,7 @@ export function makeInterpreter() {
           if (node.args && count < node.args.length) {
             frame.state = 1;
             return node.args[count];
-          } else if (hop.call(fn, node.name)) {
+          } else if (hop.call(gfn, node.name)) {
             frame.state = 2;
             break;
           } else {
@@ -539,13 +532,13 @@ export function makeInterpreter() {
           }
         case 1:
           frame.state = 0;
-          frame.args.push(result.rv);
-          frame.assn.push(result.lv);
+          frame.args.push(res.rv);
+          frame.assn.push(res.lv);
           frame.count++;
           break;
         case 2:
           // handle a user-defined function
-          const ufn = fn[node.name];
+          const ufn = gfn[node.name];
           // push on a new namespace
           pushns();
           // set the arguments in the local ns
@@ -561,15 +554,15 @@ export function makeInterpreter() {
           return popOut;
         case 4:
           // handle a runtime API function
-          const res = syscall(node.name, orig.args);
-          if (res && res.then) {
+          const ret = syscall(node.name, orig.args);
+          if (ret && ret.then) {
             // if we got a promise, handle the result when fulfilled
-            return res.then((res) => {
-              handleResult(res, orig.assn);
+            return ret.then((rret) => {
+              handleResult(rret, orig.assn);
               return popOut;
             });
           } else {
-            handleResult(res, orig.assn);
+            handleResult(ret, orig.assn);
             return popOut;
           }
       }
@@ -598,7 +591,7 @@ export function makeInterpreter() {
             return { pop: 'over', flow: 'call' };
           }
         case 1:
-          setResult(result.rv);
+          setResult(res.rv);
           return { pop: 'over', flow: 'call' };
       }
     },
@@ -623,7 +616,7 @@ export function makeInterpreter() {
           frame.state = 1;
           return node.value;
         case 1:
-          set(node.name, result.rv, node.top);
+          set(node.name, res.rv, node.local);
           return popOut;
       }
     },
@@ -641,7 +634,7 @@ export function makeInterpreter() {
           }
         case 1:
           frame.state = 0;
-          frame.indexes.push(result.rv);
+          frame.indexes.push(res.rv);
           frame.count++;
           break;
         case 2:
@@ -668,14 +661,14 @@ export function makeInterpreter() {
           }
         case 1:
           frame.state = 0;
-          frame.indexes.push(result.rv);
+          frame.indexes.push(res.rv);
           frame.count++;
           break;
         case 2:
           frame.state = 3;
           return node.value;
         case 3:
-          setIndex(node.name, orig.indexes, result.rv);
+          setIndex(node.name, orig.indexes, res.rv);
           return popOut;
       }
     },
@@ -688,7 +681,7 @@ export function makeInterpreter() {
               frame.state = 1;
               return node.left;
             case 1:
-              if (!result.rv) {
+              if (!res.rv) {
                 setResult(false);
                 return popOut;
               } else {
@@ -696,7 +689,7 @@ export function makeInterpreter() {
                 return node.right;
               }
             case 2:
-              setResult(!!result.rv);
+              setResult(!!res.rv);
               return popOut;
           }
           break;
@@ -707,7 +700,7 @@ export function makeInterpreter() {
               frame.state = 1;
               return node.left;
             case 1:
-              if (result.rv) {
+              if (res.rv) {
                 setResult(true);
                 return popOut;
               } else {
@@ -715,7 +708,7 @@ export function makeInterpreter() {
                 return node.right;
               }
             case 2:
-              setResult(!!result.rv);
+              setResult(!!res.rv);
               return popOut;
           }
           break;
@@ -726,7 +719,7 @@ export function makeInterpreter() {
               frame.state = 1;
               return node.right;
             case 1:
-              setResult(!result.rv);
+              setResult(!res.rv);
               return popOut;
           }
           break;
@@ -740,11 +733,11 @@ export function makeInterpreter() {
           return node.left;
         case 1:
           frame.state = 2;
-          frame.left = result.rv;
+          frame.left = res.rv;
           return node.right;
         case 2:
           const binaryop = handle(orig.left).binaryops[node.op];
-          setResult(binaryop(orig.left, result.rv));
+          setResult(binaryop(orig.left, res.rv));
           return popOut;
       }
     },
@@ -755,8 +748,8 @@ export function makeInterpreter() {
           frame.state = 1;
           return node.right;
         case 1:
-          const unaryop = handle(result.rv).unaryops[node.op];
-          setResult(unaryop(result.rv));
+          const unaryop = handle(res.rv).unaryops[node.op];
+          setResult(unaryop(res.rv));
           return popOut;
       }
     },

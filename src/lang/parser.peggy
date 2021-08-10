@@ -190,7 +190,6 @@ Params
 Statement
   = Flow
   / Let
-  / Local
   / Call
 
 Flow
@@ -204,20 +203,15 @@ Flow
     { return buildNode('return', { result }) }
 
 Let
-  = ('let' WB)? __ name:Symbol __ indexes:Indexes? __ '=' __ value:Value
+  = 'local' WB __ name:Symbol __ '=' __ value:Value
+    { return buildNode('let', { name, value, local: true }) }
+  / ('let' WB)? __ name:Symbol __ indexes:Indexes? __ '=' __ value:Value
     {
       return (
         indexes
           ? buildIndex(name, indexes, value)
           : buildNode('let', { name, value })
         )
-    }
-
-Local
-  = 'local' WB __ name:Symbol value:(__ '=' __ @Value)?
-    {
-      value = value || buildNode('literal', { value: undefined });
-      return buildNode('let', { name, value, top: true });
     }
 
 Call
