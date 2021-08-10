@@ -646,7 +646,7 @@ export function makeInterpreter() {
           dfra.count++;
           break;
         case 2:
-          const indexes = fra.indexes;
+          const { indexes } = fra;
           // return the rhs/lhs pair for this slot
           setResult({
             rhs: getIndex(node.name, indexes),
@@ -763,7 +763,7 @@ export function makeInterpreter() {
     },
   };
 
-  // return the run() function
+  // return the interpreter api
   return {
     registerGlobals,
     registerHandler,
