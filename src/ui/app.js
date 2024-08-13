@@ -1,5 +1,5 @@
-import { Paper } from '@material-ui/core';
-import { MuiThemeProvider, createTheme } from '@material-ui/core/styles/index.js';
+import { Paper } from '@mui/material';
+import { ThemeProvider, createTheme } from '@mui/material/styles/index.js';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { graphicsGlobals, graphicsProps } from '../lang/graphics.js';
@@ -125,7 +125,7 @@ export default function App() {
   const inspect = false;
 
   return (
-    <MuiThemeProvider theme={theme}>
+    <ThemeProvider theme={theme}>
       <div
         style={{
           backgroundColor: theme.palette.background.default,
@@ -248,6 +248,6 @@ export default function App() {
           </div>
         </div>
       </div>
-    </MuiThemeProvider>
+    </ThemeProvider>
   );
 }

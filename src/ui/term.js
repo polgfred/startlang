@@ -1,4 +1,4 @@
-import { Button, TextField } from '@material-ui/core';
+import { Button, TextField } from '@mui/material';
 import React, { useCallback, useLayoutEffect, useRef, useState } from 'react';
 
 export default function Term({ buf, prompt, handleInput }) {

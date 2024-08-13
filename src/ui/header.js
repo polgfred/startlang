@@ -5,7 +5,7 @@ import {
   MenuItem,
   Toolbar,
   Typography,
-} from '@material-ui/core';
+} from '@mui/material';
 import React, { useCallback, useState } from 'react';
 
 function SettingsMenu({ option, mode, choices, updateMode }) {
@@ -32,7 +32,7 @@ function SettingsMenu({ option, mode, choices, updateMode }) {
 
   return (
     <>
-      <Button onClick={openMenu}>{option}</Button>
+      <Button variant="secondary" onClick={openMenu}>{option}</Button>
       <Menu open={!!anchor} anchorEl={anchor} onClose={closeMenu}>
         {choices.map((value) => (
           <MenuItem

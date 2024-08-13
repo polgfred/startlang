@@ -6,7 +6,6 @@ module.exports = {
       preserve: false,
       features: {
         'nesting-rules': true,
-        'color-mod-function': true,
       },
     },
     'postcss-mixins': {},
