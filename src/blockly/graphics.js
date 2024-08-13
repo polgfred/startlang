@@ -1,24 +1,24 @@
-import Blockly from 'blockly';
+import * as Blockly from 'blockly';
 
 Blockly.Blocks['graphics_rect'] = {
   init() {
     this.setColour(Blockly.Msg.GRAPHICS_HUE);
     this.appendValueInput('X')
       .setCheck('Number')
-      .setAlign(Blockly.ALIGN_RIGHT)
+      .setAlign(Blockly.inputs.Align.RIGHT)
       .appendField('draw box at')
       .appendField('x');
     this.appendValueInput('Y')
       .setCheck('Number')
-      .setAlign(Blockly.ALIGN_RIGHT)
+      .setAlign(Blockly.inputs.Align.RIGHT)
       .appendField('y');
     this.appendValueInput('WIDTH')
       .setCheck('Number')
-      .setAlign(Blockly.ALIGN_RIGHT)
+      .setAlign(Blockly.inputs.Align.RIGHT)
       .appendField('width');
     this.appendValueInput('HEIGHT')
       .setCheck('Number')
-      .setAlign(Blockly.ALIGN_RIGHT)
+      .setAlign(Blockly.inputs.Align.RIGHT)
       .appendField('height');
     this.setInputsInline(true);
     this.setPreviousStatement(true);
@@ -35,16 +35,16 @@ Blockly.Blocks['graphics_circle'] = {
     this.setColour(Blockly.Msg.GRAPHICS_HUE);
     this.appendValueInput('X')
       .setCheck('Number')
-      .setAlign(Blockly.ALIGN_RIGHT)
+      .setAlign(Blockly.inputs.Align.RIGHT)
       .appendField('draw circle at')
       .appendField('x');
     this.appendValueInput('Y')
       .setCheck('Number')
-      .setAlign(Blockly.ALIGN_RIGHT)
+      .setAlign(Blockly.inputs.Align.RIGHT)
       .appendField('y');
     this.appendValueInput('RADIUS')
       .setCheck('Number')
-      .setAlign(Blockly.ALIGN_RIGHT)
+      .setAlign(Blockly.inputs.Align.RIGHT)
       .appendField('radius');
     this.setInputsInline(true);
     this.setPreviousStatement(true);
@@ -61,20 +61,20 @@ Blockly.Blocks['graphics_ellipse'] = {
     this.setColour(Blockly.Msg.GRAPHICS_HUE);
     this.appendValueInput('X')
       .setCheck('Number')
-      .setAlign(Blockly.ALIGN_RIGHT)
+      .setAlign(Blockly.inputs.Align.RIGHT)
       .appendField('draw ellipse at')
       .appendField('x');
     this.appendValueInput('Y')
       .setCheck('Number')
-      .setAlign(Blockly.ALIGN_RIGHT)
+      .setAlign(Blockly.inputs.Align.RIGHT)
       .appendField('y');
     this.appendValueInput('XRADIUS')
       .setCheck('Number')
-      .setAlign(Blockly.ALIGN_RIGHT)
+      .setAlign(Blockly.inputs.Align.RIGHT)
       .appendField('xradius');
     this.appendValueInput('YRADIUS')
       .setCheck('Number')
-      .setAlign(Blockly.ALIGN_RIGHT)
+      .setAlign(Blockly.inputs.Align.RIGHT)
       .appendField('yradius');
     this.setInputsInline(true);
     this.setPreviousStatement(true);
@@ -91,21 +91,21 @@ Blockly.Blocks['graphics_line'] = {
     this.setColour(Blockly.Msg.GRAPHICS_HUE);
     this.appendValueInput('X1')
       .setCheck('Number')
-      .setAlign(Blockly.ALIGN_RIGHT)
+      .setAlign(Blockly.inputs.Align.RIGHT)
       .appendField('draw line from')
       .appendField('x1');
     this.appendValueInput('Y1')
       .setCheck('Number')
-      .setAlign(Blockly.ALIGN_RIGHT)
+      .setAlign(Blockly.inputs.Align.RIGHT)
       .appendField('y1');
     this.appendValueInput('X2')
       .setCheck('Number')
-      .setAlign(Blockly.ALIGN_RIGHT)
+      .setAlign(Blockly.inputs.Align.RIGHT)
       .appendField('to')
       .appendField('x2');
     this.appendValueInput('Y2')
       .setCheck('Number')
-      .setAlign(Blockly.ALIGN_RIGHT)
+      .setAlign(Blockly.inputs.Align.RIGHT)
       .appendField('y2');
     this.setInputsInline(true);
     this.setPreviousStatement(true);
@@ -120,16 +120,16 @@ Blockly.Blocks['graphics_text'] = {
     this.setColour(Blockly.Msg.GRAPHICS_HUE);
     this.appendValueInput('TEXT')
       .setCheck('String')
-      .setAlign(Blockly.ALIGN_RIGHT)
+      .setAlign(Blockly.inputs.Align.RIGHT)
       .appendField('draw text');
     this.appendValueInput('X')
       .setCheck('Number')
-      .setAlign(Blockly.ALIGN_RIGHT)
+      .setAlign(Blockly.inputs.Align.RIGHT)
       .appendField('at')
       .appendField('x');
     this.appendValueInput('Y')
       .setCheck('Number')
-      .setAlign(Blockly.ALIGN_RIGHT)
+      .setAlign(Blockly.inputs.Align.RIGHT)
       .appendField('y');
     this.setInputsInline(true);
     this.setPreviousStatement(true);
@@ -146,7 +146,7 @@ Blockly.Blocks['graphics_stroke'] = {
     this.setColour(Blockly.Msg.GRAPHICS_HUE);
     this.appendValueInput('COLOR')
       .setCheck('Colour')
-      .setAlign(Blockly.ALIGN_RIGHT)
+      .setAlign(Blockly.inputs.Align.RIGHT)
       .appendField('set outline color to');
     this.setInputsInline(true);
     this.setPreviousStatement(true);
@@ -161,7 +161,7 @@ Blockly.Blocks['graphics_fill'] = {
     this.setColour(Blockly.Msg.GRAPHICS_HUE);
     this.appendValueInput('COLOR')
       .setCheck('Colour')
-      .setAlign(Blockly.ALIGN_RIGHT)
+      .setAlign(Blockly.inputs.Align.RIGHT)
       .appendField('set fill color to');
     this.setInputsInline(true);
     this.setPreviousStatement(true);
@@ -176,7 +176,7 @@ Blockly.Blocks['graphics_opacity'] = {
     this.setColour(Blockly.Msg.GRAPHICS_HUE);
     this.appendValueInput('AMOUNT')
       .setCheck('Number')
-      .setAlign(Blockly.ALIGN_RIGHT)
+      .setAlign(Blockly.inputs.Align.RIGHT)
       .appendField('set opacity to');
     this.setInputsInline(true);
     this.setPreviousStatement(true);
@@ -195,7 +195,7 @@ Blockly.Blocks['graphics_rotate'] = {
     this.setColour(Blockly.Msg.GRAPHICS_HUE);
     this.appendValueInput('ANGLE')
       .setCheck('Number')
-      .setAlign(Blockly.ALIGN_RIGHT)
+      .setAlign(Blockly.inputs.Align.RIGHT)
       .appendField('set angle to');
     this.setInputsInline(true);
     this.setPreviousStatement(true);
@@ -210,12 +210,12 @@ Blockly.Blocks['graphics_scale'] = {
     this.setColour(Blockly.Msg.GRAPHICS_HUE);
     this.appendValueInput('MULTX')
       .setCheck('Number')
-      .setAlign(Blockly.ALIGN_RIGHT)
+      .setAlign(Blockly.inputs.Align.RIGHT)
       .appendField('set scale factor to')
       .appendField('x');
     this.appendValueInput('MULTY')
       .setCheck('Number')
-      .setAlign(Blockly.ALIGN_RIGHT)
+      .setAlign(Blockly.inputs.Align.RIGHT)
       .appendField('y');
     this.setInputsInline(true);
     this.setPreviousStatement(true);
@@ -242,7 +242,7 @@ Blockly.Blocks['graphics_font'] = {
     this.setColour(Blockly.Msg.GRAPHICS_HUE);
     this.appendValueInput('SIZE')
       .setCheck('Number')
-      .setAlign(Blockly.ALIGN_RIGHT)
+      .setAlign(Blockly.inputs.Align.RIGHT)
       .appendField('set display font to')
       .appendField(new Blockly.FieldDropdown(FONTS), 'FAMILY')
       .appendField('with')

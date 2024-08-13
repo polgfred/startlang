@@ -1,4 +1,4 @@
-import Blockly from 'blockly';
+import * as Blockly from 'blockly';
 
 Blockly.Blocks['control_exit'] = {
   init() {

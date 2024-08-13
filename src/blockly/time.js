@@ -1,4 +1,4 @@
-import Blockly from 'blockly';
+import * as Blockly from 'blockly';
 
 const UNITS = [
   ['year', 'YEAR'],
@@ -40,28 +40,28 @@ Blockly.Blocks['time_create_with'] = {
     this.setColour(Blockly.Msg.TIME_HUE);
     this.appendValueInput('YEAR')
       .setCheck('Number')
-      .setAlign(Blockly.ALIGN_RIGHT)
+      .setAlign(Blockly.inputs.Align.RIGHT)
       .appendField('time with')
       .appendField('years');
     this.appendValueInput('MONTH')
       .setCheck('Number')
-      .setAlign(Blockly.ALIGN_RIGHT)
+      .setAlign(Blockly.inputs.Align.RIGHT)
       .appendField('months');
     this.appendValueInput('DAY')
       .setCheck('Number')
-      .setAlign(Blockly.ALIGN_RIGHT)
+      .setAlign(Blockly.inputs.Align.RIGHT)
       .appendField('days');
     this.appendValueInput('HOUR')
       .setCheck('Number')
-      .setAlign(Blockly.ALIGN_RIGHT)
+      .setAlign(Blockly.inputs.Align.RIGHT)
       .appendField('hours');
     this.appendValueInput('MINUTE')
       .setCheck('Number')
-      .setAlign(Blockly.ALIGN_RIGHT)
+      .setAlign(Blockly.inputs.Align.RIGHT)
       .appendField('minutes');
     this.appendValueInput('SECOND')
       .setCheck('Number')
-      .setAlign(Blockly.ALIGN_RIGHT)
+      .setAlign(Blockly.inputs.Align.RIGHT)
       .appendField('seconds');
     this.setOutput(true, 'Time');
     this.setTooltip('Create a time with the specified units.');

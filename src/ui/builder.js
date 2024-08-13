@@ -1,4 +1,4 @@
-import Blockly from 'blockly';
+import * as Blockly from 'blockly';
 import React, { useEffect, useRef } from 'react';
 
 import { makeBlocklyBuilder } from '../lang/builder.js';

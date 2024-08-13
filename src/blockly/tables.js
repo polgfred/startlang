@@ -1,4 +1,4 @@
-import Blockly from 'blockly';
+import * as Blockly from 'blockly';
 
 Blockly.Blocks['tables_create_empty'] = {
   init() {
@@ -18,16 +18,16 @@ Blockly.Blocks['tables_create_with'] = {
     this.itemCount_ = 3;
     this.updateShape_();
     this.setOutput(true, 'Map');
-    this.setMutator(new Blockly.Mutator(['tables_create_with_item']));
+    this.setMutator(new Blockly.icons.MutatorIcon([], this));
     this.setTooltip(Blockly.Msg.TABLES_CREATE_WITH_TOOLTIP);
   },
-  mutationToDom() {
-    const container = document.createElement('mutation');
-    container.setAttribute('items', this.itemCount_);
-    return container;
+  saveExtraState() {
+    return {
+      itemCount: this.itemCount_,
+    };
   },
-  domToMutation(xmlElement) {
-    this.itemCount_ = parseInt(xmlElement.getAttribute('items'), 10);
+  loadExtraState(state) {
+    this.itemCount_ = state.itemCount;
     this.updateShape_();
   },
   decompose(workspace) {
@@ -91,7 +91,7 @@ Blockly.Blocks['tables_create_with'] = {
     } else {
       for (let i = 0; i < this.itemCount_; i++) {
         const input = this.appendValueInput(`VALUE${i}`).setAlign(
-          Blockly.ALIGN_RIGHT
+          Blockly.inputs.Align.RIGHT
         );
         if (i === 0) {
           input.appendField(Blockly.Msg.TABLES_CREATE_WITH_INPUT_WITH);
