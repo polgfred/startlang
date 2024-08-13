@@ -1,0 +1,24 @@
+{
+	"name": "Startlang",
+	"service": "workspace",
+	"workspaceFolder": "/workspaces/startlang",
+	"dockerComposeFile": "docker-compose.yml",
+	"remoteUser": "vscode",
+	"features": {
+		"./features/node": {}
+	},
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"GitHub.copilot",
+				"GitHub.copilot-chat",
+				"Orta.vscode-jest",
+				"YoavBls.pretty-ts-errors",
+				"dbaeumer.vscode-eslint",
+				"esbenp.prettier-vscode",
+				"ms-vscode.vscode-typescript-next",
+				"PeggyJS.peggy-language"
+			]
+		}
+	}
+}

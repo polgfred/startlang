@@ -1,0 +1,9 @@
+services:
+  workspace:
+    image: mcr.microsoft.com/devcontainers/cpp:1-ubuntu-22.04
+    command: /workspaces/startlang/.devcontainer/entrypoint.sh
+    volumes:
+      - vscode-server:/home/vscode/.vscode-server
+
+volumes:
+  vscode-server:
