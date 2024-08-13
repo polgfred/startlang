@@ -1,6 +1,6 @@
 import { produce } from 'immer';
 
-import { handle } from './interpreter';
+import { handle } from './interpreter.js';
 
 export const graphicsGlobals = (app) => {
   return {

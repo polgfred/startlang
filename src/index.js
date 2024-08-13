@@ -2,9 +2,9 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 
 // add our custom color and blocks to the builtin blockly stuff
-import './blockly';
+import './blockly/index.js';
 
-import App from './ui/app';
+import App from './ui/app.js';
 
 import './index.css';
 

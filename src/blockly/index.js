@@ -1,12 +1,12 @@
 import Blockly from 'blockly';
 
-import './msg';
-import './control';
-import './math';
-import './time';
-import './lists';
-import './tables';
-import './graphics';
+import './msg.js';
+import './control.js';
+import './math.js';
+import './time.js';
+import './lists.js';
+import './tables.js';
+import './graphics.js';
 
 // setup our color scheme
 Blockly.Msg.CONTROL_HUE = 290;

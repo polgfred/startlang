@@ -1,17 +1,17 @@
 /* eslint-disable no-console */
 
-import { readFileSync } from 'fs';
+import { readFile } from 'fs/promises';
 import readline from 'readline';
 import { inspect } from 'util';
 
-import { generate } from 'peggy';
+import peggy from 'peggy';
 
-import { handle, makeInterpreter } from '../src/lang/interpreter';
+import { handle, makeInterpreter } from '../src/lang/interpreter.js';
 
 const options = {},
   parserOptions = {},
-  parser = generate(
-    readFileSync(__dirname + '/../src/lang/parser.peggy', 'utf-8')
+  parser = peggy.generate(
+    await readFile(`${import.meta.dirname}/../src/lang/parser.peggy`, 'utf-8')
   ),
   output = obj => {
     console.log(inspect(obj, { colors: true, depth: null }));
@@ -34,7 +34,7 @@ if (process.argv.indexOf('--meta') != -1) {
 async function main() {
   let source;
   try {
-    source = readFileSync(process.argv[2], 'utf-8');
+    source = await readFile(process.argv[2], 'utf-8');
   } catch (err) {
     source = process.argv[2] + '\n';
   }

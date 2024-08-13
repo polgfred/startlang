@@ -1,16 +1,16 @@
-import Paper from '@material-ui/core/Paper';
-import { MuiThemeProvider, createTheme } from '@material-ui/core/styles';
+import { Paper } from '@material-ui/core';
+import { MuiThemeProvider, createTheme } from '@material-ui/core/styles/index.js';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { graphicsGlobals, graphicsProps } from '../lang/graphics';
-import { makeInterpreter } from '../lang/interpreter';
+import { graphicsGlobals, graphicsProps } from '../lang/graphics.js';
+import { makeInterpreter } from '../lang/interpreter.js';
 
-import Builder from './builder';
-import Editor from './editor';
-import Graphics from './graphics';
-import Header from './header';
-import Term from './term';
-// import Inspector from './inspector';
+import Builder from './builder.js';
+import Editor from './editor.js';
+import Graphics from './graphics.js';
+import Header from './header.js';
+import Term from './term.js';
+// import Inspector from './inspector.js';
 
 const theme = createTheme({
   palette: {

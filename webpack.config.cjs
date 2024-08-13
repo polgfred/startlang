@@ -20,7 +20,7 @@ module.exports = {
       },
       {
         test: /\.peggy$/,
-        use: ['babel-loader', path.resolve(__dirname, 'src/peggy-loader.js')],
+        use: ['babel-loader', path.resolve(__dirname, 'src/peggy-loader.cjs')],
       },
       {
         test: /\.css$/,

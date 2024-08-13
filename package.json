@@ -2,6 +2,7 @@
   "name": "startlang",
   "version": "0.0.2",
   "description": "Beginning Programming Environment",
+  "type": "module",
   "directories": {},
   "scripts": {
     "build": "NODE_ENV=production webpack",
@@ -13,7 +14,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@gitlab.com:sustainablecode/startlang.git"
+    "url": "https://github.com/polgfred/startlang.git"
   },
   "author": "Frederick Polgardy <fred@polgardy.com>",
   "license": "ISC",

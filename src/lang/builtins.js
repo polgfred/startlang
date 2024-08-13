@@ -3,7 +3,7 @@
 import deepEqual from 'deep-equal';
 import { produce } from 'immer';
 
-import { handle, assignKey, resultKey } from './interpreter';
+import { assignKey, handle, resultKey } from './interpreter.js';
 
 // ensures its operands are of the same type
 function checkOp(fn) {

@@ -1,10 +1,10 @@
 import brace from 'brace';
 import React, { useEffect, useRef } from 'react';
 
-import 'brace/mode/text';
-import 'brace/theme/github';
+import 'brace/mode/text.js';
+import 'brace/theme/github.js';
 
-import StartMode from '../ace/start_mode';
+import StartMode from '../ace/start_mode.js';
 import { parse } from '../lang/parser.peggy';
 
 export default function Editor({ setParser }) {

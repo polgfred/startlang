@@ -28,7 +28,9 @@
     binaryOp: 'expr',
     unaryOp: 'expr'
   };
+}}
 
+{
   // build an object for this node
   function buildNode(type, attrs) {
     // if we're a block with one statement, just return the statement itself
@@ -114,7 +116,7 @@
       return buildNode('letIndex', { name, indexes, value });
     }
   }
-}}
+}
 
 // Grammar
 

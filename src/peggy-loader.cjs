@@ -4,7 +4,7 @@ const { generate } = require('peggy');
 module.exports = function peggyLoader(grammarContent) {
   return generate(grammarContent, {
     output: 'source',
-    format: 'commonjs',
+    format: 'es',
     ...getOptions(this),
   });
 };

@@ -11,7 +11,7 @@ import {
   timeHandler,
   listHandler,
   tableHandler,
-} from './builtins';
+} from './builtins.js';
 
 // for built-in object prototypes to store a handler reference
 export const handlerKey = Symbol('START_HANDLER');
