@@ -1,6 +1,11 @@
 export default {
   presets: [
-    '@babel/preset-react',
+    [
+      '@babel/preset-react',
+      {
+        runtime: 'automatic',
+      },
+    ],
     [
       '@babel/preset-env',
       {
@@ -13,4 +18,4 @@ export default {
     ],
   ],
   plugins: ['@babel/plugin-transform-runtime'],
-}
+};

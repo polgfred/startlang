@@ -1,4 +1,3 @@
-import React from 'react';
 import ReactDOM from 'react-dom';
 
 // add our custom color and blocks to the builtin blockly stuff

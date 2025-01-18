@@ -6,7 +6,7 @@ import {
   Toolbar,
   Typography,
 } from '@mui/material';
-import React, { useCallback, useState } from 'react';
+import { useCallback, useState } from 'react';
 
 function SettingsMenu({ option, mode, choices, updateMode }) {
   const [anchor, setAnchor] = useState();

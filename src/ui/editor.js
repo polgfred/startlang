@@ -1,5 +1,5 @@
 import brace from 'brace';
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 
 import 'brace/mode/text.js';
 import 'brace/theme/github.js';

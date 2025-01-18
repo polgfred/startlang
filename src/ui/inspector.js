@@ -9,7 +9,7 @@ import {
 } from '@material-ui/core';
 import immutable from 'immutable';
 import moment from 'moment';
-import React, { Component } from 'react';
+import { createElement, Component } from 'react';
 
 export default class Inspector extends Component {
   render() {
@@ -280,5 +280,5 @@ function inspectorFor(value) {
   let inspector =
     value === null || value === undefined ? NoneInspector : value[inspectorKey];
 
-  return React.createElement(inspector, { value });
+  return createElement(inspector, { value });
 }

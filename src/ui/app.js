@@ -1,6 +1,6 @@
 import { Paper } from '@mui/material';
 import { ThemeProvider, createTheme } from '@mui/material/styles/index.js';
-import React, { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import { graphicsGlobals, graphicsProps } from '../lang/graphics.js';
 import { makeInterpreter } from '../lang/interpreter.js';
