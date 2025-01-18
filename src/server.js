@@ -6,7 +6,7 @@ import express from 'express';
 import webpack from 'webpack';
 import WebpackDevMiddleware from 'webpack-dev-middleware';
 
-import webpack_config from '../webpack.config.cjs';
+import webpack_config from '../webpack.config.js';
 
 // set up the express server
 const app = express();

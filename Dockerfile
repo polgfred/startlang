@@ -2,7 +2,7 @@ FROM node:22
 WORKDIR /startlang
 COPY package.json package-lock.json ./
 RUN npm install
-COPY .babelrc.cjs postcss.config.cjs webpack.config.cjs ./
+COPY .babelrc.js peggy-loader.js postcss.config.js webpack.config.js ./
 COPY ./src ./src
 COPY ./static ./static
 RUN npm run build

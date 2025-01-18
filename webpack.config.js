@@ -1,14 +1,14 @@
-const path = require('path');
+import path from 'path';
 
-const TerserPlugin = require('terser-webpack-plugin');
+import TerserPlugin from 'terser-webpack-plugin';
 
 const env = process.env['NODE_ENV'];
 
-module.exports = {
+export default {
   mode: env,
   devtool: 'source-map',
   output: {
-    path: __dirname + '/static',
+    path: path.resolve('static'),
     filename: '[name]-bundle.js',
   },
   module: {
@@ -16,11 +16,11 @@ module.exports = {
       {
         test: /\.js$/,
         use: ['babel-loader'],
-        exclude: [path.resolve(__dirname, 'node_modules')],
+        exclude: [path.resolve('node_modules')],
       },
       {
         test: /\.peggy$/,
-        use: ['babel-loader', path.resolve(__dirname, 'src/peggy-loader.cjs')],
+        use: ['babel-loader', path.resolve('peggy-loader.js')],
       },
       {
         test: /\.css$/,

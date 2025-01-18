@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   presets: [
     '@babel/preset-react',
     [
@@ -13,4 +13,4 @@ module.exports = {
     ],
   ],
   plugins: ['@babel/plugin-transform-runtime'],
-};
+}
