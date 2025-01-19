@@ -1,8 +1,10 @@
 /* eslint-disable no-console */
 
-import { readFile } from 'fs/promises';
-import readline from 'readline';
-import { inspect } from 'util';
+import console from 'node:console';
+import { readFile } from 'node:fs/promises';
+import process from 'node:process';
+import readline from 'node:readline';
+import { inspect } from 'node:util';
 
 import peggy from 'peggy';
 
@@ -13,7 +15,7 @@ const options = {},
   parser = peggy.generate(
     await readFile(`${import.meta.dirname}/../src/lang/parser.peggy`, 'utf-8')
   ),
-  output = obj => {
+  output = (obj) => {
     console.log(inspect(obj, { colors: true, depth: null }));
   };
 
@@ -67,13 +69,13 @@ async function main() {
     },
 
     input(message) {
-      return new Promise(resolve => {
+      return new Promise((resolve) => {
         const rl = readline.createInterface({
           input: process.stdin,
           output: process.stdout,
         });
 
-        rl.question(message, answer => {
+        rl.question(message, (answer) => {
           rl.close();
           resolve(answer);
         });

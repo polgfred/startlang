@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 
-import http from 'http';
+import http from 'node:http';
 
 import express from 'express';
 import webpack from 'webpack';
