@@ -1,5 +1,6 @@
-import { EsbuildPlugin } from 'esbuild-loader';
 import path from 'path';
+
+import { EsbuildPlugin } from 'esbuild-loader';
 
 const env = process.env['NODE_ENV'];
 
