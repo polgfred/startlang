@@ -148,7 +148,7 @@ export function makeInterpreter() {
     }
   }
 
-  async function run(node) {
+  function run(node) {
     // initialize the interpreter state
     gfn = {};
     gns = {};
@@ -161,7 +161,7 @@ export function makeInterpreter() {
     setResult();
 
     // run the loop
-    return await loop();
+    return loop();
   }
 
   // ** snapshot internal state **
