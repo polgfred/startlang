@@ -5,12 +5,12 @@ import { useCallback, useMemo, useState } from 'react';
 import { graphicsGlobals, graphicsProps } from '../lang/graphics.js';
 import { makeInterpreter } from '../lang/interpreter.js';
 
-import Builder from './builder.js';
-import Editor from './editor.js';
-import Graphics from './graphics.js';
-import Header from './header.js';
-import Term from './term.js';
-// import Inspector from './inspector.js';
+import Builder from './builder.jsx';
+import Editor from './editor.jsx';
+import Graphics from './graphics.jsx';
+import Header from './header.jsx';
+import Term from './term.jsx';
+// import Inspector from './inspector.jsx';
 
 const theme = createTheme({
   palette: {

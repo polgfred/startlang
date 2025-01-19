@@ -1,12 +1,14 @@
+import { EsbuildPlugin } from 'esbuild-loader';
 import path from 'path';
-
-import TerserPlugin from 'terser-webpack-plugin';
 
 const env = process.env['NODE_ENV'];
 
 export default {
   mode: env,
   devtool: 'source-map',
+  entry: {
+    main: './src/index.jsx',
+  },
   output: {
     path: path.resolve('static'),
     filename: '[name]-bundle.js',
@@ -14,13 +16,18 @@ export default {
   module: {
     rules: [
       {
-        test: /\.js$/,
-        use: ['babel-loader'],
-        exclude: [path.resolve('node_modules')],
+        test: /\.jsx?$/,
+        exclude: /node_modules/,
+        loader: 'esbuild-loader',
+        options: {
+          loader: 'jsx',
+          jsx: 'automatic',
+          target: 'esnext',
+        },
       },
       {
         test: /\.peggy$/,
-        use: ['babel-loader', path.resolve('peggy-loader.js')],
+        use: [path.resolve('peggy-loader.js')],
       },
       {
         test: /\.css$/,
@@ -32,19 +39,15 @@ export default {
       },
       {
         test: /\.(html|xml)$/,
-        use: ['html-loader'],
+        loader: 'html-loader',
       },
       {
         test: /\.(woff(2)?|ttf|eot|svg)(\?v=\d+\.\d+\.\d+)?$/,
-        use: [
-          {
-            loader: 'file-loader',
-            options: {
-              name: '[name].[ext]',
-              outputPath: 'fonts/',
-            },
-          },
-        ],
+        loader: 'file-loader',
+        options: {
+          name: '[name].[ext]',
+          outputPath: 'fonts/',
+        },
       },
     ],
   },
@@ -53,6 +56,6 @@ export default {
       ? {}
       : {
           minimize: true,
-          minimizer: [new TerserPlugin({ extractComments: false })],
+          minimizer: [new EsbuildPlugin({ target: 'esnext' })],
         },
 };

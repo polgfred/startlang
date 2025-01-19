@@ -1,5 +1,5 @@
-import * as Blockly from 'blockly';
 import { FieldAngle, registerFieldAngle } from '@blockly/field-angle';
+import * as Blockly from 'blockly';
 
 registerFieldAngle();
 // Blockly.FieldAngle.CLOCKWISE = true;
