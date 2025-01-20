@@ -7,7 +7,7 @@ import globals from 'globals';
 export default [
   js.configs.recommended,
   {
-    files: ['src/**/*.js', 'src/**/*.jsx'],
+    files: ['app/**/*.js', 'app/**/*.jsx', 'src/**/*.js'],
 
     plugins: {
       import: importPlugin,
@@ -21,7 +21,7 @@ export default [
         ...globals.node,
       },
 
-      ecmaVersion: 2020,
+      ecmaVersion: 'latest',
       sourceType: 'module',
 
       parserOptions: {
@@ -44,15 +44,11 @@ export default [
     },
 
     rules: {
-      'no-console': [
-        'warn',
-        {
-          allow: ['warn', 'error'],
-        },
-      ],
+      'no-console': 'warn',
 
+      'import/no-unresolved': 'error',
       'import/order': [
-        'error',
+        'warn',
         {
           'newlines-between': 'always',
 
