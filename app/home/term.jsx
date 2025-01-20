@@ -34,15 +34,13 @@ export default function Term({ buf, prompt, handleInput }) {
 
   return (
     <div
-      className="start-term"
       sx={{
         height: '100%',
       }}
     >
       <div
-        className="start-term-command"
-        sx={{
-          display: 'none',
+        style={{
+          display: prompt ? 'block' : 'none',
         }}
       >
         <TextField
@@ -71,11 +69,13 @@ export default function Term({ buf, prompt, handleInput }) {
         sx={{
           fontFamily: 'Roboto',
           fontSize: '14px',
-          // height: `calc(35vh - ${prompt ? 152 : 80}px)`,
           overflow: 'scroll',
         }}
+        style={{
+          height: `calc(35vh - ${prompt ? 152 : 80}px)`,
+        }}
       >
-        <div className="start-term-output">
+        <div>
           {buf.map((elem, index) => (
             <p key={index}>{elem}</p>
           ))}
