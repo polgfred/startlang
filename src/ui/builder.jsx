@@ -53,7 +53,7 @@ export default function Builder({ setParser }) {
     <div
       ref={ref}
       className="start-builder"
-      style={{
+      sx={{
         height: '100%',
       }}
     />

@@ -60,7 +60,7 @@ export default function Header({
       <Toolbar color="light">
         <Typography
           variant="body1"
-          style={{
+          sx={{
             marginRight: '24px',
           }}
         >
@@ -81,7 +81,7 @@ export default function Header({
         <Button
           variant="contained"
           onClick={runProgram}
-          style={{
+          sx={{
             marginLeft: 6,
           }}
         >

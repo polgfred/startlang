@@ -127,7 +127,7 @@ export default function App() {
   return (
     <ThemeProvider theme={theme}>
       <div
-        style={{
+        sx={{
           backgroundColor: theme.palette.background.default,
           display: 'flex',
           flexDirection: 'row',
@@ -136,7 +136,7 @@ export default function App() {
         }}
       >
         <div
-          style={{
+          sx={{
             height: '100vh',
             display: 'flex',
             flexDirection: 'column',
@@ -144,7 +144,7 @@ export default function App() {
           }}
         >
           <div
-            style={{
+            sx={{
               flex: 0,
             }}
           >
@@ -157,14 +157,14 @@ export default function App() {
             />
           </div>
           <div
-            style={{
+            sx={{
               display: 'flex',
               flexDirection: 'row',
               flex: '1 1 auto',
             }}
           >
             <div
-              style={{
+              sx={{
                 display: 'flex',
                 flexDirection: 'column',
                 flex: '1 1 50%',
@@ -172,13 +172,13 @@ export default function App() {
             >
               {viewMode !== 'text' && (
                 <div
-                  style={{
+                  sx={{
                     flex: '1 1 75%',
                   }}
                 >
                   <Paper
                     elevation={3}
-                    style={{
+                    sx={{
                       height: 'calc(100% - 30px)',
                       margin: '5px',
                       padding: '10px',
@@ -190,13 +190,13 @@ export default function App() {
               )}
               {viewMode !== 'graphics' && (
                 <div
-                  style={{
+                  sx={{
                     flex: '1 1 25%',
                   }}
                 >
                   <Paper
                     elevation={3}
-                    style={{
+                    sx={{
                       height: 'calc(100% - 30px)',
                       margin: '5px',
                       padding: '10px',
@@ -208,13 +208,13 @@ export default function App() {
               )}
               {inspect && (
                 <div
-                  style={{
+                  sx={{
                     flex: '1 1 auto',
                   }}
                 >
                   <Paper
                     elevation={3}
-                    style={{
+                    sx={{
                       height: 'calc(100% - 30px)',
                       margin: '5px',
                       padding: '10px',
@@ -230,13 +230,13 @@ export default function App() {
               )}
             </div>
             <div
-              style={{
+              sx={{
                 flex: '1 1 50%',
               }}
             >
               <Paper
                 elevation={3}
-                style={{
+                sx={{
                   height: 'calc(100% - 10px)',
                   margin: '5px',
                 }}

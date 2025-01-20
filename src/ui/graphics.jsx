@@ -4,7 +4,7 @@ export default function Graphics({ shapes }) {
   return (
     <svg
       className="start-graphics"
-      style={{
+      sx={{
         height: '100%',
         width: '100%',
       }}

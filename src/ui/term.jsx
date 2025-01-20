@@ -33,13 +33,13 @@ export default function Term({ buf, prompt, handleInput }) {
   return (
     <div
       className="start-term"
-      style={{
+      sx={{
         height: '100%',
       }}
     >
       <div
         className="start-term-command"
-        style={{
+        sx={{
           display: prompt ? 'block' : 'none',
         }}
       >
@@ -57,7 +57,7 @@ export default function Term({ buf, prompt, handleInput }) {
           size="small"
           variant="contained"
           onClick={handleAccept}
-          style={{
+          sx={{
             marginLeft: '12px',
           }}
         >
@@ -66,7 +66,7 @@ export default function Term({ buf, prompt, handleInput }) {
       </div>
       <div
         ref={scrollRef}
-        style={{
+        sx={{
           fontFamily: 'Roboto',
           fontSize: '14px',
           // height: `calc(35vh - ${prompt ? 152 : 80}px)`,

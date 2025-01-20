@@ -20,7 +20,7 @@ export default class Inspector extends Component {
     return (
       <div
         className="start-inspector"
-        style={{
+        sx={{
           fontFamily: 'Roboto',
           fontSize: 14,
           height: 'calc(100vh - 120px)',
@@ -28,7 +28,7 @@ export default class Inspector extends Component {
       >
         <div
           className="start-slider"
-          style={{
+          sx={{
             marginBottom: '20px',
           }}
         >
@@ -38,7 +38,7 @@ export default class Inspector extends Component {
             max={hist.length - 1}
             value={snap}
             onChange={updateSlider}
-            style={{
+            sx={{
               margin: '0 10px',
               width: 'calc(100% - 20px)',
             }}
@@ -46,13 +46,13 @@ export default class Inspector extends Component {
         </div>
         <div
           className="start-vars"
-          style={{
+          sx={{
             height: 'calc(100vh - 160px)',
             overflow: 'scroll',
           }}
         >
           <Table
-            style={{
+            sx={{
               width: '100%',
             }}
           >
@@ -60,7 +60,7 @@ export default class Inspector extends Component {
               <TableRow>
                 <TableCell
                   className="start-vars-name"
-                  style={{
+                  sx={{
                     fontWeight: 'bold',
                     width: '25%',
                   }}
@@ -69,7 +69,7 @@ export default class Inspector extends Component {
                 </TableCell>
                 <TableCell
                   className="start-vars-value"
-                  style={{
+                  sx={{
                     width: '75%',
                   }}
                 >
@@ -186,7 +186,7 @@ class ListInspector extends ExpandableInspector {
     return (
       <Table
         className="start-vars-type-list"
-        style={{
+        sx={{
           marginBottom: '10px',
           width: '100%',
         }}
@@ -195,7 +195,7 @@ class ListInspector extends ExpandableInspector {
           <TableRow>
             <TableCell
               className="start-vars-list-item"
-              style={{
+              sx={{
                 width: '75%',
               }}
             >
@@ -228,7 +228,7 @@ class TableInspector extends ExpandableInspector {
     return (
       <Table
         className="start-vars-type-table"
-        style={{
+        sx={{
           marginBottom: '10px',
           width: '100%',
         }}
@@ -237,7 +237,7 @@ class TableInspector extends ExpandableInspector {
           <TableRow>
             <TableCell
               className="start-vars-table-key"
-              style={{
+              sx={{
                 width: '25%',
               }}
             >
@@ -245,7 +245,7 @@ class TableInspector extends ExpandableInspector {
             </TableCell>
             <TableCell
               className="start-vars-table-value"
-              style={{
+              sx={{
                 width: '75%',
               }}
             >

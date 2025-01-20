@@ -41,7 +41,7 @@ export default function Editor({ setParser }) {
     <div
       ref={ref}
       className="start-editor"
-      style={{
+      sx={{
         fontFamily: 'Roboto Mono',
         fontSize: 14,
         height: '100%',
