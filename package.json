@@ -5,9 +5,8 @@
   "type": "module",
   "directories": {},
   "scripts": {
-    "build": "NODE_ENV=production webpack",
-    "start": "NODE_ENV=production esr ./src/server.js",
-    "start:dev": "NODE_ENV=development next dev",
+    "build": "NODE_ENV=production next build",
+    "start": "NODE_ENV=development next dev",
     "run_script": "node ./tools/run_script.js",
     "format": "prettier --write ./src/**/*.js",
     "lint": "eslint ./src"
@@ -32,7 +31,6 @@
     "blockly": "^11.2.1",
     "brace": "^0.11.1",
     "classnames": "^2.5.1",
-    "css-loader": "^7.1.2",
     "deep-equal": "^2.2.3",
     "esbuild-loader": "^4.2.2",
     "esbuild-runner": "^2.2.2",
@@ -41,17 +39,11 @@
     "eslint-plugin-import": "^2.31.0",
     "eslint-plugin-react": "^7.37.4",
     "eslint-plugin-react-hooks": "^5.1.0",
-    "file-loader": "^6.2.0",
     "globals": "^15.14.0",
-    "html-loader": "^5.1.0",
     "immer": "^10.1.1",
     "peggy": "^4.2.0",
     "prettier": "^3.4.2",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "style-loader": "^4.0.0",
-    "webpack": "^5.97.1",
-    "webpack-cli": "^6.0.1",
-    "webpack-dev-middleware": "^7.4.2"
+    "react-dom": "^19.0.0"
   }
 }
