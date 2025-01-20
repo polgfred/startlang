@@ -3,9 +3,6 @@
 import brace from 'brace';
 import { useEffect, useRef } from 'react';
 
-// import 'brace/mode/text.js';
-// import 'brace/theme/github.js';
-
 import StartMode from '../../src/ace/start_mode.js';
 import { parse } from '../../src/lang/parser.peggy';
 
@@ -21,7 +18,6 @@ export default function Editor({ setParser }) {
     const session = editor.getSession();
 
     editor.$blockScrolling = Infinity;
-    // editor.setTheme('ace/theme/github');
     editor.setShowFoldWidgets(false);
     editor.setShowPrintMargin(false);
     session.setTabSize(2);
@@ -44,8 +40,9 @@ export default function Editor({ setParser }) {
       ref={ref}
       className="start-editor"
       sx={{
-        fontFamily: 'Roboto Mono',
-        fontSize: 14,
+        position: 'relative',
+        fontFamily: 'Roboto Mono !important',
+        fontSize: '14px !important',
         height: '100%',
       }}
     />
