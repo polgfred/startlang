@@ -1,3 +1,5 @@
+'use client';
+
 import { Button, TextField } from '@mui/material';
 import { useCallback, useLayoutEffect, useRef, useState } from 'react';
 
@@ -40,7 +42,7 @@ export default function Term({ buf, prompt, handleInput }) {
       <div
         className="start-term-command"
         sx={{
-          display: prompt ? 'block' : 'none',
+          display: 'none',
         }}
       >
         <TextField

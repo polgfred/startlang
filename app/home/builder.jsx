@@ -1,9 +1,11 @@
+'use client';
+
 import * as Blockly from 'blockly';
 import { useEffect, useRef } from 'react';
 
-import { makeBlocklyBuilder } from '../lang/builder.js';
+import { makeBlocklyBuilder } from '../../src/lang/builder.js';
 
-import toolbox from './toolbox.xml';
+// import toolbox from './toolbox.xml';
 
 export default function Builder({ setParser }) {
   const ref = useRef();
@@ -14,7 +16,8 @@ export default function Builder({ setParser }) {
     }
 
     const blockly = Blockly.inject(ref.current, {
-      toolbox,
+      // toolbox,
+      toolbox: '<xml></xml>',
       collapse: true,
       comments: true,
       disable: true,

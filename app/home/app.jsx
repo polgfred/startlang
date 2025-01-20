@@ -1,9 +1,10 @@
-import { Paper } from '@mui/material';
-import { ThemeProvider, createTheme } from '@mui/material/styles/index.js';
+'use client';
+
+import { Paper, ThemeProvider, createTheme } from '@mui/material';
 import { useCallback, useMemo, useState } from 'react';
 
-import { graphicsGlobals, graphicsProps } from '../lang/graphics.js';
-import { makeInterpreter } from '../lang/interpreter.js';
+import { graphicsGlobals, graphicsProps } from '../../src/lang/graphics.js';
+import { makeInterpreter } from '../../src/lang/interpreter.js';
 
 import Builder from './builder.jsx';
 import Editor from './editor.jsx';
@@ -127,13 +128,13 @@ export default function App() {
   return (
     <ThemeProvider theme={theme}>
       <div
-        sx={{
+        sx={(theme) => ({
           backgroundColor: theme.palette.background.default,
           display: 'flex',
           flexDirection: 'row',
           width: '100vw',
           height: '100vh',
-        }}
+        })}
       >
         <div
           sx={{

@@ -7,7 +7,7 @@
   "scripts": {
     "build": "NODE_ENV=production webpack",
     "start": "NODE_ENV=production esr ./src/server.js",
-    "start:dev": "NODE_ENV=development esr ./src/server.js",
+    "start:dev": "NODE_ENV=development next dev",
     "run_script": "node ./tools/run_script.js",
     "format": "prettier --write ./src/**/*.js",
     "lint": "eslint ./src"
@@ -19,13 +19,15 @@
   "author": "Frederick Polgardy <fred@polgardy.com>",
   "license": "ISC",
   "dependencies": {
-    "express": "^4.17.1"
+    "express": "^4.17.1",
+    "next": "^15.1.5"
   },
   "devDependencies": {
     "@blockly/field-angle": "^5.0.12",
     "@eslint/js": "^9.18.0",
     "@mui/material": "^6.4.0",
     "@mui/material-pigment-css": "^6.4.0",
+    "@pigment-css/nextjs-plugin": "^0.0.30",
     "@pigment-css/react": "^0.0.29",
     "blockly": "^11.2.1",
     "brace": "^0.11.1",

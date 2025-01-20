@@ -1,11 +1,13 @@
+'use client';
+
 import brace from 'brace';
 import { useEffect, useRef } from 'react';
 
-import 'brace/mode/text.js';
-import 'brace/theme/github.js';
+// import 'brace/mode/text.js';
+// import 'brace/theme/github.js';
 
-import StartMode from '../ace/start_mode.js';
-import { parse } from '../lang/parser.peggy';
+import StartMode from '../../src/ace/start_mode.js';
+import { parse } from '../../src/lang/parser.peggy';
 
 export default function Editor({ setParser }) {
   const ref = useRef();
@@ -19,7 +21,7 @@ export default function Editor({ setParser }) {
     const session = editor.getSession();
 
     editor.$blockScrolling = Infinity;
-    editor.setTheme('ace/theme/github');
+    // editor.setTheme('ace/theme/github');
     editor.setShowFoldWidgets(false);
     editor.setShowPrintMargin(false);
     session.setTabSize(2);

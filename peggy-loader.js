@@ -7,4 +7,4 @@ export default function peggyLoader(grammarContent) {
     format: 'es',
     ...getOptions(this),
   });
-};
+}
