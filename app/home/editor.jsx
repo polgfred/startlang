@@ -1,9 +1,7 @@
 'use client';
 
-import brace from 'brace';
 import { useEffect, useRef } from 'react';
 
-import StartMode from '../../src/ace/start_mode.js';
 import { parse } from '../../src/lang/parser.peggy';
 
 export default function Editor({ setParser }) {
@@ -14,37 +12,38 @@ export default function Editor({ setParser }) {
       return;
     }
 
-    const editor = brace.edit(ref.current);
-    const session = editor.getSession();
-
-    editor.$blockScrolling = Infinity;
-    editor.setShowFoldWidgets(false);
-    editor.setShowPrintMargin(false);
-    session.setTabSize(2);
-    session.setUseSoftTabs(true);
-    session.setMode(new StartMode());
+    ref.current.focus();
 
     setParser((/* parser */) => {
       return () => {
-        return parse(editor.getValue() + '\n');
+        return parse(ref.current.value + '\n');
       };
     });
-
-    return () => {
-      editor.destroy();
-    };
   }, [setParser]);
 
   return (
     <div
-      ref={ref}
-      className="start-editor"
       sx={{
         position: 'relative',
         fontFamily: 'Roboto Mono !important',
         fontSize: '14px !important',
         height: '100%',
       }}
-    />
+    >
+      <textarea
+        ref={ref}
+        sx={{
+          height: 'calc(100% - 20px)',
+          width: 'calc(100% - 20px)',
+          fontFamily: 'Roboto Mono',
+          fontSize: 14,
+          border: 'none',
+          outline: 'none',
+          resize: 'none',
+          padding: '10px',
+          overflow: 'auto',
+        }}
+      />
+    </div>
   );
 }
