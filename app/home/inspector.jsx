@@ -8,279 +8,226 @@ import {
   TableFooter,
   TableHead,
   TableRow,
-} from '@material-ui/core';
-import immutable from 'immutable';
-import moment from 'moment';
-import { createElement, Component } from 'react';
+} from '@mui/material';
+import { useState } from 'react';
 
-export default class Inspector extends Component {
-  render() {
-    let { hist, snap, updateSlider } = this.props;
+export default function Inspector({ hist, snap, updateSlider }) {
+  const current = hist[snap] || hist[hist.length - 1];
 
-    let current = hist[snap] || hist[hist.length - 1];
-
-    return (
+  return (
+    <div
+      sx={{
+        fontFamily: 'Roboto',
+        fontSize: 14,
+        height: 'calc(100vh - 120px)',
+      }}
+    >
       <div
-        className="start-inspector"
         sx={{
-          fontFamily: 'Roboto',
-          fontSize: 14,
-          height: 'calc(100vh - 120px)',
+          marginBottom: '20px',
         }}
       >
-        <div
-          className="start-slider"
+        <input
+          type="range"
+          min={0}
+          max={hist.length - 1}
+          value={snap}
+          onChange={updateSlider}
           sx={{
-            marginBottom: '20px',
+            margin: '0 10px',
+            width: 'calc(100% - 20px)',
           }}
-        >
-          <input
-            type="range"
-            min={0}
-            max={hist.length - 1}
-            value={snap}
-            onChange={updateSlider}
-            sx={{
-              margin: '0 10px',
-              width: 'calc(100% - 20px)',
-            }}
-          />
-        </div>
-        <div
-          className="start-vars"
-          sx={{
-            height: 'calc(100vh - 160px)',
-            overflow: 'scroll',
-          }}
-        >
-          <Table
-            sx={{
-              width: '100%',
-            }}
-          >
-            <TableHead>
-              <TableRow>
-                <TableCell
-                  className="start-vars-name"
-                  sx={{
-                    fontWeight: 'bold',
-                    width: '25%',
-                  }}
-                >
-                  Variable
-                </TableCell>
-                <TableCell
-                  className="start-vars-value"
-                  sx={{
-                    width: '75%',
-                  }}
-                >
-                  Value
-                </TableCell>
-              </TableRow>
-            </TableHead>
-            {current && (
-              <TableBody>
-                {current.ns
-                  .map((value, key) => (
-                    <TableRow key={key}>
-                      <TableCell className="start-vars-name">{key}</TableCell>
-                      <TableCell className="start-vars-value">
-                        {inspectorFor(value)}
-                      </TableCell>
-                    </TableRow>
-                  ))
-                  .toList()}
-              </TableBody>
-            )}
-          </Table>
-        </div>
+        />
       </div>
-    );
-  }
-}
-
-let inspectorKey = Symbol('START_INSPECTOR');
-
-class NoneInspector extends Component {
-  render() {
-    return <span className="start-vars-type-none">*none*</span>;
-  }
-}
-
-class BooleanInspector extends Component {
-  render() {
-    return (
-      <span className="start-vars-type-boolean">
-        {this.props.value ? '*true*' : '*false*'}
-      </span>
-    );
-  }
-}
-
-Boolean.prototype[inspectorKey] = BooleanInspector;
-
-class NumberInspector extends Component {
-  render() {
-    let { value } = this.props;
-
-    return (
-      <span className="start-vars-type-number">
-        {isFinite(value) ? value : value > 0 ? '*infinity*' : '-*infinity'}
-      </span>
-    );
-  }
-}
-
-Number.prototype[inspectorKey] = NumberInspector;
-
-class StringInspector extends Component {
-  render() {
-    return <span className="start-vars-type-string">{this.props.value}</span>;
-  }
-}
-
-String.prototype[inspectorKey] = StringInspector;
-
-class TimeInspector extends Component {
-  render() {
-    return (
-      <span className="start-vars-type-time">
-        {this.props.value.format('l LTS')}
-      </span>
-    );
-  }
-}
-
-moment.fn[inspectorKey] = TimeInspector;
-
-class ExpandableInspector extends Component {
-  constructor() {
-    super();
-
-    this.state = { visible: 5 };
-  }
-
-  handleShowMore() {
-    this.setState((state) => ({ visible: state.visible + 5 }));
-  }
-
-  footer() {
-    return (
-      <TableFooter>
-        <TableRow key="trunc">
-          <TableCell colSpan="2" className="start-vars-expando-more">
-            <Button color="secondary" onClick={this.handleShowMore}>
-              More
-            </Button>
-          </TableCell>
-        </TableRow>
-      </TableFooter>
-    );
-  }
-}
-
-class ListInspector extends ExpandableInspector {
-  render() {
-    let { value } = this.props;
-    let { visible } = this.state;
-
-    return (
-      <Table
-        className="start-vars-type-list"
+      <div
         sx={{
-          marginBottom: '10px',
-          width: '100%',
+          height: 'calc(100vh - 160px)',
+          overflow: 'scroll',
         }}
       >
-        <TableHead>
-          <TableRow>
-            <TableCell
-              className="start-vars-list-item"
-              sx={{
-                width: '75%',
-              }}
-            >
-              Items
-            </TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {value.take(visible).map((item, index) => (
-            <TableRow key={index}>
-              <TableCell className="start-vars-list-item">
-                {inspectorFor(item)}
+        <Table
+          sx={{
+            width: '100%',
+          }}
+        >
+          <TableHead>
+            <TableRow>
+              <TableCell
+                sx={{
+                  fontWeight: 'bold',
+                  width: '25%',
+                }}
+              >
+                Variable
+              </TableCell>
+              <TableCell
+                sx={{
+                  width: '75%',
+                }}
+              >
+                Value
               </TableCell>
             </TableRow>
-          ))}
-        </TableBody>
-        {value.size > visible && this.footer()}
-      </Table>
-    );
-  }
+          </TableHead>
+          {current && (
+            <TableBody>
+              {Object.entries(current.ns).map(([key, value]) => (
+                <TableRow key={key}>
+                  <TableCell>{key}</TableCell>
+                  <TableCell>{inspectorFor(value)}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          )}
+        </Table>
+      </div>
+    </div>
+  );
 }
 
-immutable.List.prototype[inspectorKey] = ListInspector;
+function NoneInspector() {
+  return <span>*none*</span>;
+}
 
-class TableInspector extends ExpandableInspector {
-  render() {
-    let { value } = this.props;
-    let { visible } = this.state;
+function BooleanInspector({ value }) {
+  return <span>{value ? '*true*' : '*false*'}</span>;
+}
 
-    return (
-      <Table
-        className="start-vars-type-table"
-        sx={{
-          marginBottom: '10px',
-          width: '100%',
-        }}
-      >
-        <TableHead>
-          <TableRow>
-            <TableCell
-              className="start-vars-table-key"
-              sx={{
-                width: '25%',
-              }}
-            >
-              Key
-            </TableCell>
-            <TableCell
-              className="start-vars-table-value"
-              sx={{
-                width: '75%',
-              }}
-            >
-              Value
-            </TableCell>
+function NumberInspector({ value }) {
+  return (
+    <span>
+      {isFinite(value) ? value : value > 0 ? '*infinity*' : '-*infinity'}
+    </span>
+  );
+}
+
+function StringInspector({ value }) {
+  return <span>{value}</span>;
+}
+
+function TimeInspector({ value }) {
+  return <span>{value.toLocaleString()}</span>;
+}
+
+function ExpandableFooter({ onShowMore }) {
+  return (
+    <TableFooter>
+      <TableRow key="trunc">
+        <TableCell colSpan="2" className="start-vars-expando-more">
+          <Button color="secondary" onClick={onShowMore}>
+            More
+          </Button>
+        </TableCell>
+      </TableRow>
+    </TableFooter>
+  );
+}
+
+function ListInspector({ value }) {
+  const [visible, setVisible] = useState(5);
+
+  return (
+    <Table
+      sx={{
+        marginBottom: '10px',
+        width: '100%',
+      }}
+    >
+      <TableHead>
+        <TableRow>
+          <TableCell
+            sx={{
+              width: '75%',
+            }}
+          >
+            Items
+          </TableCell>
+        </TableRow>
+      </TableHead>
+      <TableBody>
+        {value.slice(0, visible).map((item, index) => (
+          <TableRow key={index}>
+            <TableCell>{inspectorFor(item)}</TableCell>
           </TableRow>
-        </TableHead>
-        <TableBody>
-          {value
-            .take(visible)
-            .map((value, key) => (
-              <TableRow key={key}>
-                <TableCell className="start-vars-table-key">
-                  {inspectorFor(key)}
-                </TableCell>
-                <TableCell className="start-vars-table-item">
-                  {inspectorFor(value)}
-                </TableCell>
-              </TableRow>
-            ))
-            .toList()}
-        </TableBody>
-        {value.size > visible && this.footer()}
-      </Table>
-    );
-  }
+        ))}
+      </TableBody>
+      {value.size > visible && (
+        <ExpandableFooter onShowMore={() => setVisible(visible + 5)} />
+      )}
+    </Table>
+  );
 }
 
-immutable.OrderedMap.prototype[inspectorKey] = TableInspector;
+function TableInspector({ value }) {
+  const [visible, setVisible] = useState(5);
+
+  return (
+    <Table
+      sx={{
+        marginBottom: '10px',
+        width: '100%',
+      }}
+    >
+      <TableHead>
+        <TableRow>
+          <TableCell
+            sx={{
+              width: '25%',
+            }}
+          >
+            Key
+          </TableCell>
+          <TableCell
+            sx={{
+              width: '75%',
+            }}
+          >
+            Value
+          </TableCell>
+        </TableRow>
+      </TableHead>
+      <TableBody>
+        {Object.entries()
+          .slice(0, visible)
+          .map(([key, value]) => (
+            <TableRow key={key}>
+              <TableCell>{inspectorFor(key)}</TableCell>
+              <TableCell>{inspectorFor(value)}</TableCell>
+            </TableRow>
+          ))}
+      </TableBody>
+      {value.size > visible && (
+        <ExpandableFooter onShowMore={() => setVisible(visible + 5)} />
+      )}
+    </Table>
+  );
+}
+
+export const inspectorKey = Symbol('START_INSPECTOR');
 
 function inspectorFor(value) {
-  let inspector =
-    value === null || value === undefined ? NoneInspector : value[inspectorKey];
-
-  return createElement(inspector, { value });
+  if (value === null || value === undefined) {
+    return <NoneInspector />;
+  } else {
+    switch (typeof value) {
+      case 'boolean':
+        return <BooleanInspector value={value} />;
+      case 'number':
+        return <NumberInspector value={value} />;
+      case 'string':
+        return <StringInspector value={value} />;
+      case 'object':
+        if (value[inspectorKey]) {
+          return value[inspectorKey](value);
+        } else if (value.constructor === Date) {
+          return <TimeInspector value={value} />;
+        } else if (Array.isArray(value)) {
+          return <ListInspector value={value} />;
+        } else {
+          return <TableInspector value={value} />;
+        }
+      default:
+        throw new Error(`could not determine type for ${value}`);
+    }
+  }
 }
