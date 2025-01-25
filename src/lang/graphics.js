@@ -127,9 +127,11 @@ export const graphicsGlobals = (app) => {
   function addShape(shape) {
     app.setGfx((gfx) =>
       produce(gfx, (dgfx) => {
-        shape.sprops = gfx.sprops;
-        shape.tprops = gfx.tprops;
-        dgfx.shapes.push(shape);
+        dgfx.shapes.push(
+          produce(shape, (dshape) => {
+            dshape.sprops = gfx.sprops;
+            dshape.tprops = gfx.tprops;
+          }));
       })
     );
   }
