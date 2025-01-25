@@ -5,7 +5,7 @@ import { useEffect, useRef } from 'react';
 
 import { makeBlocklyBuilder } from '../../src/lang/builder.js';
 
-// import toolbox from './toolbox.xml';
+import toolbox from './toolbox.xml';
 
 export default function Builder({ setParser }) {
   const ref = useRef();
@@ -16,8 +16,7 @@ export default function Builder({ setParser }) {
     }
 
     const blockly = Blockly.inject(ref.current, {
-      // toolbox,
-      toolbox: '<xml></xml>',
+      toolbox,
       collapse: true,
       comments: true,
       disable: true,

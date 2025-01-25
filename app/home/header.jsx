@@ -34,7 +34,9 @@ function SettingsMenu({ option, mode, choices, updateMode }) {
 
   return (
     <>
-      <Button variant="secondary" onClick={openMenu}>{option}</Button>
+      <Button variant="text" color="secondary" onClick={openMenu}>
+        {option}
+      </Button>
       <Menu open={!!anchor} anchorEl={anchor} onClose={closeMenu}>
         {choices.map((value) => (
           <MenuItem
@@ -84,7 +86,9 @@ export default function Header({
           variant="contained"
           onClick={runProgram}
           sx={{
-            marginLeft: 6,
+            marginLeft: 2,
+            backgroundColor: '#cccccc',
+            color: '#222222',
           }}
         >
           Run

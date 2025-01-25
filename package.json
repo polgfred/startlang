@@ -40,6 +40,7 @@
     "eslint-plugin-react": "^7.37.4",
     "eslint-plugin-react-hooks": "^5.1.0",
     "globals": "^15.14.0",
+    "html-loader": "^5.1.0",
     "immer": "^10.1.1",
     "peggy": "^4.2.0",
     "prettier": "^3.4.2",
