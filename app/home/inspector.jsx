@@ -71,7 +71,7 @@ export default function Inspector({ hist, snap, updateSlider }) {
           </TableHead>
           {current && (
             <TableBody>
-              {Object.entries(current.ns).map(([key, value]) => (
+              {Object.entries(current.gns).map(([key, value]) => (
                 <TableRow key={key}>
                   <TableCell>{key}</TableCell>
                   <TableCell>{inspectorFor(value)}</TableCell>

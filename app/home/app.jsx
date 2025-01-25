@@ -10,8 +10,8 @@ import Builder from './builder.jsx';
 import Editor from './editor.jsx';
 import Graphics from './graphics.jsx';
 import Header from './header.jsx';
+import Inspector from './inspector.jsx';
 import Term from './term.jsx';
-// import Inspector from './inspector.jsx';
 
 const theme = createTheme({
   palette: {
@@ -31,10 +31,10 @@ export default function App() {
   const [buf, setBuf] = useState([]);
   const [parser, setParser] = useState(() => {});
   const [{ prompt, onInputComplete }, setInputState] = useState({});
-  // const [{ hist, snap }, setHistory] = useState({
-  //   hist: [],
-  //   snap: 0,
-  // });
+  const [{ hist, snap }, setHistory] = useState({
+    hist: [],
+    snap: 0,
+  });
 
   const clearDisplay = useCallback(() => {
     setGfx(graphicsProps);
@@ -46,7 +46,7 @@ export default function App() {
   }, [clearDisplay]);
 
   const clearHistory = useCallback(() => {
-    // setHistory({ hist: [], snap: 0 });
+    setHistory({ hist: [], snap: 0 });
   }, []);
 
   const handleInput = useCallback(
@@ -59,41 +59,19 @@ export default function App() {
     [onInputComplete]
   );
 
-  // TODO: get history working
-  // updateSlider(ev) {
-  //   let { hist } = this.state,
-  //     snap = ev.target.value,
-  //     current = hist[snap];
-  //
-  //   if (current) {
-  //     this.setState({
-  //       snap,
-  //       gfx: current.gfx,
-  //       buf: current.buf,
-  //     });
-  //   }
-  // }
-  //
-  // snapshot() {
-  //   // change hist mutably, but still strigger a state change
-  //   this.setState(state => {
-  //     let interp = this.interp,
-  //       hist = state.hist;
-  //
-  //     hist.push({
-  //       fn: interp.fn,
-  //       ns: interp.ns,
-  //       st: interp.st,
-  //       frame: interp.frame,
-  //       fst: interp.fst,
-  //       gfx: state.gfx,
-  //       buf: state.buf,
-  //     });
-  //     return { hist, snap: hist.length };
-  //   });
-  // }
+  const updateSlider = useCallback(
+    (ev) => {
+      const snap = ev.target.value;
+      const current = hist[snap];
 
-  const snapshot = useCallback(() => {}, []);
+      if (current) {
+        setHistory({ hist, snap });
+        setGfx(current.gfx);
+        setBuf(current.buf);
+      }
+    },
+    [hist]
+  );
 
   const bindings = useMemo(
     () => ({
@@ -101,9 +79,8 @@ export default function App() {
       setGfx,
       setBuf,
       setInputState,
-      snapshot,
     }),
-    [clearDisplay, snapshot]
+    [clearDisplay]
   );
 
   const runProgram = useCallback(async () => {
@@ -112,18 +89,34 @@ export default function App() {
 
     const interp = makeInterpreter();
     interp.registerGlobals(graphicsGlobals(bindings));
+    interp.registerGlobals({
+      snapshot() {
+        hist.push({
+          ...interp.snapshot(),
+          gfx,
+          buf,
+        });
 
+        setHistory({
+          hist,
+          snap: hist.length,
+        });
+      },
+    });
+
+    /* eslint-disable no-console */
     try {
       await interp.run(parser());
-      console.log('done'); // eslint-disable-line no-console
-      console.log(interp.snapshot()); // eslint-disable-line no-console
+      console.log('done');
+      console.log(interp.snapshot());
     } catch (err) {
-      console.log(err.stack); // eslint-disable-line no-console
-      console.log(interp.snapshot()); // eslint-disable-line no-console
+      console.log(err.stack);
+      console.log(interp.snapshot());
     }
-  }, [parser, bindings, refreshState, clearHistory]);
+    /* eslint-enable no-console */
+  }, [refreshState, clearHistory, bindings, hist, gfx, buf, parser]);
 
-  const inspect = false;
+  const inspect = true;
 
   return (
     <ThemeProvider theme={theme}>
@@ -221,11 +214,11 @@ export default function App() {
                       padding: '10px',
                     }}
                   >
-                    {/* <Inspector
-                  hist={hist}
-                  snap={snap}
-                  updateSlider={() => {} updateSlider}
-                /> */}
+                    <Inspector
+                      hist={hist}
+                      snap={snap}
+                      updateSlider={updateSlider}
+                    />
                   </Paper>
                 </div>
               )}
