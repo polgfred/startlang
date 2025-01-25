@@ -1,7 +1,7 @@
 'use client';
 
 import { Paper, ThemeProvider, createTheme } from '@mui/material';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 
 import { graphicsGlobals, graphicsProps } from '../../src/lang/graphics.js';
 import { makeInterpreter } from '../../src/lang/interpreter.js';
@@ -27,8 +27,6 @@ const theme = createTheme({
 export default function App() {
   const [viewMode, setViewMode] = useState('split');
   const [editMode, setEditMode] = useState('source');
-  const [gfx, setGfx] = useState(graphicsProps);
-  const [buf, setBuf] = useState([]);
   const [parser, setParser] = useState(() => {});
   const [{ prompt, onInputComplete }, setInputState] = useState({});
   const [{ hist, snap }, setHistory] = useState({
@@ -36,10 +34,33 @@ export default function App() {
     snap: 0,
   });
 
-  const clearDisplay = useCallback(() => {
-    setGfx(graphicsProps);
-    setBuf([]);
+  const [, setRenderCount] = useState(0);
+  const forceRerender = useCallback((count) => {
+    setRenderCount(count + 1);
   }, []);
+
+  const gfx = useRef(graphicsProps);
+  const setGfx = useCallback(
+    (mut) => {
+      gfx.current = mut(gfx.current);
+      forceRerender();
+    },
+    [forceRerender]
+  );
+
+  const buf = useRef([]);
+  const setBuf = useCallback(
+    (mut) => {
+      buf.current = mut(buf.current);
+      forceRerender();
+    },
+    [forceRerender]
+  );
+
+  const clearDisplay = useCallback(() => {
+    setGfx(() => graphicsProps);
+    setBuf(() => []);
+  }, [setBuf, setGfx]);
 
   const refreshState = useCallback(() => {
     clearDisplay();
@@ -66,11 +87,11 @@ export default function App() {
 
       if (current) {
         setHistory({ hist, snap });
-        setGfx(current.gfx);
-        setBuf(current.buf);
+        setGfx(() => current.gfx);
+        setBuf(() => current.buf);
       }
     },
-    [hist]
+    [hist, setBuf, setGfx]
   );
 
   const bindings = useMemo(
@@ -80,7 +101,7 @@ export default function App() {
       setBuf,
       setInputState,
     }),
-    [clearDisplay]
+    [clearDisplay, setBuf, setGfx]
   );
 
   const runProgram = useCallback(async () => {
@@ -93,8 +114,8 @@ export default function App() {
       snapshot() {
         hist.push({
           ...interp.snapshot(),
-          gfx,
-          buf,
+          gfx: gfx.current,
+          buf: buf.current,
         });
 
         setHistory({
@@ -178,7 +199,7 @@ export default function App() {
                       padding: '10px',
                     }}
                   >
-                    <Graphics shapes={gfx.shapes} />
+                    <Graphics shapes={gfx.current.shapes} />
                   </Paper>
                 </div>
               )}
@@ -196,7 +217,11 @@ export default function App() {
                       padding: '10px',
                     }}
                   >
-                    <Term buf={buf} prompt={prompt} handleInput={handleInput} />
+                    <Term
+                      buf={buf.current}
+                      prompt={prompt}
+                      handleInput={handleInput}
+                    />
                   </Paper>
                 </div>
               )}
