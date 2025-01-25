@@ -76,12 +76,12 @@ export default function Header({
           updateMode={updateViewMode}
           choices={['graphics', 'text', 'split']}
         />
-        <SettingsMenu
+        {/* <SettingsMenu
           option="edit"
           mode={editMode}
           updateMode={updateEditMode}
           choices={['blocks', 'source']}
-        />
+        /> */}
         <Button
           variant="contained"
           onClick={runProgram}
