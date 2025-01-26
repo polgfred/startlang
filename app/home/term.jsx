@@ -36,6 +36,7 @@ export default function Term({ buf, prompt, handleInput }) {
     <div
       sx={{
         height: '100%',
+        overflow: 'auto',
       }}
     >
       <div
@@ -69,17 +70,14 @@ export default function Term({ buf, prompt, handleInput }) {
         sx={{
           fontFamily: 'Roboto',
           fontSize: '14px',
-          overflow: 'scroll',
         }}
-        style={{
-          height: `calc(35vh - ${prompt ? 152 : 80}px)`,
-        }}
+        // style={{
+        //   height: `calc(100% - ${prompt ? 0 : 0}px)`,
+        // }}
       >
-        <div>
-          {buf.map((elem, index) => (
-            <p key={index}>{elem}</p>
-          ))}
-        </div>
+        {buf.map((elem, index) => (
+          <p key={index}>{elem}</p>
+        ))}
       </div>
     </div>
   );

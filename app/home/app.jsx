@@ -1,12 +1,17 @@
 'use client';
 
-import { Paper, ThemeProvider, createTheme } from '@mui/material';
+import {
+  Grid2 as Grid,
+  Paper,
+  Stack,
+  ThemeProvider,
+  createTheme,
+} from '@mui/material';
 import { useCallback, useMemo, useRef, useState } from 'react';
 
 import { graphicsGlobals, graphicsProps } from '../../src/lang/graphics.js';
 import { makeInterpreter } from '../../src/lang/interpreter.js';
 
-import Builder from './builder.jsx';
 import Editor from './editor.jsx';
 import Graphics from './graphics.jsx';
 import Header from './header.jsx';
@@ -25,8 +30,7 @@ const theme = createTheme({
 });
 
 export default function App() {
-  const [viewMode, setViewMode] = useState('split');
-  const [editMode, setEditMode] = useState('source');
+  const [viewMode, setViewMode] = useState('text');
   const [parser, setParser] = useState(() => {});
   const [{ prompt, onInputComplete }, setInputState] = useState({});
   const [{ hist, snap }, setHistory] = useState({
@@ -66,10 +70,6 @@ export default function App() {
     clearDisplay();
   }, [clearDisplay]);
 
-  const clearHistory = useCallback(() => {
-    setHistory({ hist: [], snap: 0 });
-  }, []);
-
   const handleInput = useCallback(
     (input) => {
       if (onInputComplete) {
@@ -106,7 +106,8 @@ export default function App() {
 
   const runProgram = useCallback(async () => {
     refreshState();
-    clearHistory();
+
+    const hist = [];
 
     const interp = makeInterpreter();
     interp.registerGlobals(graphicsGlobals(bindings));
@@ -135,138 +136,110 @@ export default function App() {
       console.log(interp.snapshot());
     }
     /* eslint-enable no-console */
-  }, [refreshState, clearHistory, bindings, hist, gfx, buf, parser]);
-
-  const inspect = true;
+  }, [refreshState, bindings, gfx, buf, parser]);
 
   return (
     <ThemeProvider theme={theme}>
-      <div
+      <Stack
         sx={(theme) => ({
           backgroundColor: theme.palette.background.default,
-          display: 'flex',
-          flexDirection: 'row',
+          flexDirection: 'column',
           width: '100vw',
           height: '100vh',
         })}
       >
-        <div
+        <Header
+          viewMode={viewMode}
+          updateViewMode={setViewMode}
+          runProgram={runProgram}
+        />
+        <Grid
+          container
           sx={{
-            height: '100vh',
-            display: 'flex',
-            flexDirection: 'column',
-            flex: 1,
+            height: 'calc(100% - 65px)',
+            marginTop: '65px',
           }}
         >
-          <div
+          <Grid
+            size={6}
             sx={{
-              flex: 0,
+              height: '100%',
             }}
           >
-            <Header
-              viewMode={viewMode}
-              editMode={editMode}
-              updateViewMode={setViewMode}
-              updateEditMode={setEditMode}
-              runProgram={runProgram}
-            />
-          </div>
-          <div
-            sx={{
-              display: 'flex',
-              flexDirection: 'row',
-              flex: '1 1 auto',
-            }}
-          >
-            <div
+            <Stack
               sx={{
-                display: 'flex',
                 flexDirection: 'column',
-                flex: '1 1 50%',
+                height: '100%',
               }}
             >
               {viewMode !== 'text' && (
-                <div
+                <Paper
+                  elevation={3}
                   sx={{
-                    flex: '1 1 75%',
+                    height: 'calc(100% - 30px)',
+                    margin: '5px',
+                    padding: '10px',
+                    flex: 3,
                   }}
                 >
-                  <Paper
-                    elevation={3}
-                    sx={{
-                      height: 'calc(100% - 30px)',
-                      margin: '5px',
-                      padding: '10px',
-                    }}
-                  >
-                    <Graphics shapes={gfx.current.shapes} />
-                  </Paper>
-                </div>
+                  <Graphics shapes={gfx.current.shapes} />
+                </Paper>
               )}
               {viewMode !== 'graphics' && (
-                <div
+                <Paper
+                  elevation={3}
                   sx={{
-                    flex: '1 1 25%',
+                    height: 'calc(100% - 30px)',
+                    margin: '5px',
+                    padding: '10px',
+                    flex: 1,
                   }}
                 >
-                  <Paper
-                    elevation={3}
-                    sx={{
-                      height: 'calc(100% - 30px)',
-                      margin: '5px',
-                      padding: '10px',
-                    }}
-                  >
-                    <Term
-                      buf={buf.current}
-                      prompt={prompt}
-                      handleInput={handleInput}
-                    />
-                  </Paper>
-                </div>
+                  <Term
+                    buf={buf.current}
+                    prompt={prompt}
+                    handleInput={handleInput}
+                  />
+                </Paper>
               )}
-              {inspect && (
-                <div
-                  sx={{
-                    flex: '1 1 auto',
-                  }}
-                >
-                  <Paper
-                    elevation={3}
-                    sx={{
-                      height: 'calc(100% - 30px)',
-                      margin: '5px',
-                      padding: '10px',
-                    }}
-                  >
-                    <Inspector
-                      hist={hist}
-                      snap={snap}
-                      updateSlider={updateSlider}
-                    />
-                  </Paper>
-                </div>
-              )}
-            </div>
-            <div
+            </Stack>
+          </Grid>
+          <Grid
+            size={3}
+            sx={{
+              height: '100%',
+            }}
+          >
+            <Paper
+              elevation={3}
               sx={{
-                flex: '1 1 50%',
+                height: 'calc(100% - 30px)',
+                margin: '5px',
+                padding: '10px',
               }}
             >
-              <Paper
-                elevation={3}
-                sx={{
-                  height: 'calc(100% - 10px)',
-                  margin: '5px',
-                }}
-              >
-                {editMode === 'blocks' && <Builder setParser={setParser} />}
-                {editMode === 'source' && <Editor setParser={setParser} />}
-              </Paper>
-            </div>
-          </div>
-        </div>
-      </div>
+              <Inspector hist={hist} snap={snap} updateSlider={updateSlider} />
+            </Paper>
+          </Grid>
+          <Grid
+            size={3}
+            sx={{
+              height: '100%',
+            }}
+          >
+            <Paper
+              elevation={3}
+              sx={{
+                height: 'calc(100% - 30px)',
+                margin: '5px',
+                padding: '10px',
+              }}
+            >
+              <Editor setParser={setParser} />
+            </Paper>
+          </Grid>
+        </Grid>
+      </Stack>
     </ThemeProvider>
   );
 }

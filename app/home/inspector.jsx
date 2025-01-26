@@ -17,32 +17,28 @@ export default function Inspector({ hist, snap, updateSlider }) {
   return (
     <div
       sx={{
-        fontFamily: 'Roboto',
-        fontSize: 14,
-        height: 'calc(100vh - 120px)',
+        width: '100%',
+        height: '100%',
       }}
     >
-      <div
+      <input
+        type="range"
+        min={0}
+        max={hist.length - 1}
+        value={snap}
+        onChange={updateSlider}
         sx={{
-          marginBottom: '20px',
+          margin: 1,
+          width: 'calc(100% - 20px)',
         }}
-      >
-        <input
-          type="range"
-          min={0}
-          max={hist.length - 1}
-          value={snap}
-          onChange={updateSlider}
-          sx={{
-            margin: '0 10px',
-            width: 'calc(100% - 20px)',
-          }}
-        />
-      </div>
+      />
       <div
         sx={{
-          height: 'calc(100vh - 160px)',
-          overflow: 'scroll',
+          fontFamily: 'Roboto',
+          fontSize: 14,
+          height: 'calc(100% - 40px)',
+          marginTop: 1,
+          overflow: 'auto',
         }}
       >
         <Table
@@ -109,14 +105,13 @@ function TimeInspector({ value }) {
   return <span>{value.toLocaleString()}</span>;
 }
 
-function ExpandableFooter({ onShowMore }) {
+function ExpandableFooter({ onShowLess, onShowMore }) {
   return (
     <TableFooter>
       <TableRow key="trunc">
-        <TableCell colSpan="2" className="start-vars-expando-more">
-          <Button color="secondary" onClick={onShowMore}>
-            More
-          </Button>
+        <TableCell colSpan="2">
+          <Button onClick={onShowLess}>Less</Button>
+          <Button onClick={onShowMore}>More</Button>
         </TableCell>
       </TableRow>
     </TableFooter>
@@ -151,8 +146,11 @@ function ListInspector({ value }) {
           </TableRow>
         ))}
       </TableBody>
-      {value.size > visible && (
-        <ExpandableFooter onShowMore={() => setVisible(visible + 5)} />
+      {value.length > visible && (
+        <ExpandableFooter
+          onShowLess={() => setVisible(visible - 5)}
+          onShowMore={() => setVisible(visible + 5)}
+        />
       )}
     </Table>
   );
@@ -187,7 +185,7 @@ function TableInspector({ value }) {
         </TableRow>
       </TableHead>
       <TableBody>
-        {Object.entries()
+        {Object.entries(value)
           .slice(0, visible)
           .map(([key, value]) => (
             <TableRow key={key}>
@@ -196,8 +194,11 @@ function TableInspector({ value }) {
             </TableRow>
           ))}
       </TableBody>
-      {value.size > visible && (
-        <ExpandableFooter onShowMore={() => setVisible(visible + 5)} />
+      {Object.keys(value).length > visible && (
+        <ExpandableFooter
+          onShowLess={() => setVisible(visible - 5)}
+          onShowMore={() => setVisible(visible + 5)}
+        />
       )}
     </Table>
   );

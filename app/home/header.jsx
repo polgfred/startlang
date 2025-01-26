@@ -52,15 +52,9 @@ function SettingsMenu({ option, mode, choices, updateMode }) {
   );
 }
 
-export default function Header({
-  viewMode,
-  editMode,
-  updateViewMode,
-  updateEditMode,
-  runProgram,
-}) {
+export default function Header({ viewMode, updateViewMode, runProgram }) {
   return (
-    <AppBar position="static">
+    <AppBar>
       <Toolbar color="light">
         <Typography
           variant="body1"
@@ -74,7 +68,7 @@ export default function Header({
           option="view"
           mode={viewMode}
           updateMode={updateViewMode}
-          choices={['graphics', 'text', 'split']}
+          choices={['graphics', 'text']}
         />
         {/* <SettingsMenu
           option="edit"
