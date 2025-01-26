@@ -24,6 +24,7 @@
   "devDependencies": {
     "@blockly/field-angle": "^5.0.12",
     "@eslint/js": "^9.18.0",
+    "@monaco-editor/react": "^4.7.0-rc.0",
     "@mui/material": "^6.4.0",
     "@mui/material-pigment-css": "^6.4.0",
     "@pigment-css/nextjs-plugin": "^0.0.30",

@@ -161,7 +161,7 @@ export default function App() {
           }}
         >
           <Grid
-            size={6}
+            size={4}
             sx={{
               height: '100%',
             }}
@@ -205,7 +205,7 @@ export default function App() {
             </Stack>
           </Grid>
           <Grid
-            size={3}
+            size={4}
             sx={{
               height: '100%',
             }}
@@ -222,7 +222,7 @@ export default function App() {
             </Paper>
           </Grid>
           <Grid
-            size={3}
+            size={4}
             sx={{
               height: '100%',
             }}

@@ -1,49 +1,31 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import Monaco from '@monaco-editor/react';
+import { useCallback } from 'react';
 
 import { parse } from '../../src/lang/parser.peggy';
 
 export default function Editor({ setParser }) {
-  const ref = useRef();
+  const onEditorMount = useCallback(
+    (editor) => {
+      editor.focus();
 
-  useEffect(() => {
-    if (!ref.current) {
-      return;
-    }
-
-    ref.current.focus();
-
-    setParser((/* parser */) => {
-      return () => {
-        return parse(ref.current.value + '\n');
-      };
-    });
-  }, [setParser]);
+      setParser((/* parser */) => {
+        return () => {
+          return parse(editor.getValue() + '\n');
+        };
+      });
+    },
+    [setParser]
+  );
 
   return (
-    <div
-      sx={{
-        position: 'relative',
-        fontFamily: 'Roboto Mono !important',
-        fontSize: '14px !important',
-        height: '100%',
+    <Monaco
+      defaultValue={'print "Hello, World!"'}
+      onMount={onEditorMount}
+      options={{
+        minimap: { enabled: false },
       }}
-    >
-      <textarea
-        ref={ref}
-        sx={{
-          height: 'calc(100% - 20px)',
-          width: 'calc(100% - 20px)',
-          fontFamily: 'Roboto Mono',
-          fontSize: 14,
-          border: 'none',
-          outline: 'none',
-          resize: 'none',
-          padding: '10px',
-          overflow: 'auto',
-        }}
-      />
-    </div>
+    />
   );
 }
