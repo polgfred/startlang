@@ -2,10 +2,17 @@ opacity 1/4
 anchor "center"
 
 for t from 0 to 360 by 3 do
-  fill color(rand(), rand(), rand())
+  red = rand()
+  green = rand()
+  blue = rand()
+  rgb = color(red, green, blue)
+  fill rgb
+
   rotate t
   scale t/180
   rect t, t, 60, 40
-  ;sleep 1/25
+
+  sleep 1/250
   repaint
+  snapshot
 end
