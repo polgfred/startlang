@@ -2,15 +2,14 @@ import { produce } from 'immer';
 
 import { handle } from './interpreter.js';
 
+function waitForImmediate() {
+  return new Promise((resolve) => {
+    setTimeout(resolve, 0);
+  });
+}
+
 export const graphicsGlobals = (app) => {
   return {
-    repaint() {
-      // let the DOM catch up
-      return new Promise((resolve) => {
-        queueMicrotask(resolve);
-      });
-    },
-
     clear() {
       app.clearDisplay();
     },
@@ -24,6 +23,7 @@ export const graphicsGlobals = (app) => {
       } else {
         termOutput('');
       }
+      return waitForImmediate();
     },
 
     input(prompt) {
@@ -41,22 +41,27 @@ export const graphicsGlobals = (app) => {
 
     rect(x, y, width, height) {
       addShape(rect({ x, y, width, height }));
+      return waitForImmediate();
     },
 
     circle(cx, cy, r) {
       addShape(circle({ cx, cy, r }));
+      return waitForImmediate();
     },
 
     ellipse(cx, cy, rx, ry) {
       addShape(ellipse({ cx, cy, rx, ry }));
+      return waitForImmediate();
     },
 
     line(x1, y1, x2, y2) {
       addShape(line({ x1, y1, x2, y2 }));
+      return waitForImmediate();
     },
 
     text(x, y, value) {
       addShape(text({ x, y, value }));
+      return waitForImmediate();
     },
 
     polygon(...points) {
@@ -64,6 +69,7 @@ export const graphicsGlobals = (app) => {
         points = points[0];
       }
       addShape(polygon({ points }));
+      return waitForImmediate();
     },
 
     // set shape and text attributes

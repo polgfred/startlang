@@ -92,7 +92,11 @@ function BooleanInspector({ value }) {
 function NumberInspector({ value }) {
   return (
     <span>
-      {isFinite(value) ? value : value > 0 ? '*infinity*' : '-*infinity'}
+      {isFinite(value)
+        ? Math.round((value + Number.EPSILON) * 1e6) / 1e6
+        : value > 0
+          ? '*infinity*'
+          : '-*infinity'}
     </span>
   );
 }
