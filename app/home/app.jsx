@@ -142,9 +142,9 @@ export default function App() {
   return (
     <ThemeProvider theme={theme}>
       <Stack
+        direction="column"
         sx={(theme) => ({
           backgroundColor: theme.palette.background.default,
-          flexDirection: 'column',
           width: '100vw',
           height: '100vh',
         })}
@@ -168,8 +168,8 @@ export default function App() {
             }}
           >
             <Stack
+              direction="column"
               sx={{
-                flexDirection: 'column',
                 height: '100%',
               }}
             >
