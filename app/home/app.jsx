@@ -39,8 +39,8 @@ export default function App() {
   });
 
   const [, setRenderCount] = useState(0);
-  const forceRerender = useCallback((count) => {
-    setRenderCount(count + 1);
+  const forceRerender = useCallback(() => {
+    setRenderCount((count) => count + 1);
   }, []);
 
   const gfx = useRef(graphicsProps);
@@ -67,6 +67,7 @@ export default function App() {
   }, [setBuf, setGfx]);
 
   const refreshState = useCallback(() => {
+    setHistory({ hist: [], snap: 0 });
     clearDisplay();
   }, [clearDisplay]);
 
