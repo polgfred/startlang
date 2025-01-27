@@ -127,16 +127,14 @@ export default function App() {
       },
     });
 
-    /* eslint-disable no-console */
     try {
       await interp.run(parser());
-      console.log('done');
-      console.log(interp.snapshot());
     } catch (err) {
+      /* eslint-disable no-console */
       console.log(err.stack);
       console.log(interp.snapshot());
+      /* eslint-enable no-console */
     }
-    /* eslint-enable no-console */
   }, [refreshState, bindings, gfx, buf, parser]);
 
   return (
