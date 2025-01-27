@@ -17,6 +17,10 @@ export default withPigment(
         {
           test: /\.xml$/,
           loader: 'html-loader',
+        },
+        {
+          test: /\.start$/,
+          loader: 'text-loader',
         }
       );
       return config;
