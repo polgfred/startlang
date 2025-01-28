@@ -3,11 +3,9 @@ import path from 'node:path';
 import { withPigment } from '@pigment-css/nextjs-plugin';
 import { createTheme } from '@mui/material';
 
-export const reactStrictMode = false;
-export const output = 'standalone';
-
 export default withPigment(
   {
+    output: 'standalone',
     webpack(config) {
       config.module.rules.push(
         {

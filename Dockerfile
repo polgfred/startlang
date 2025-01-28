@@ -1,12 +1,25 @@
 FROM node:22
-WORKDIR /startlang
+WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm install
-COPY peggy-loader.js postcss.config.js webpack.config.js ./
+RUN npm clean-install
+COPY ./app ./app
 COPY ./src ./src
-COPY ./static ./static
+COPY ./tests ./tests
+COPY next.config.js peggy-loader.js ./
+ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
-FROM nginx:alpine
-COPY --from=0 /startlang/static /usr/share/nginx/html
-COPY --from=0 /startlang/node_modules/blockly/media /usr/share/nginx/html/blockly/media
+FROM node:22-slim
+WORKDIR /app
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV PORT=3000
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+RUN mkdir .next
+RUN chown nextjs:nodejs .next
+COPY --from=0 --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=0 --chown=nextjs:nodejs /app/.next/static ./.next/static
+USER nextjs
+EXPOSE 3000
+CMD ["node", "server.js"]
