@@ -30,7 +30,7 @@ const theme = createTheme({
 });
 
 export default function App() {
-  const [viewMode, setViewMode] = useState('text');
+  const [viewMode, setViewMode] = useState('graphics');
   const [parser, setParser] = useState(() => {});
   const [{ prompt, onInputComplete }, setInputState] = useState({});
   const [{ hist, snap }, setHistory] = useState({
@@ -171,7 +171,7 @@ export default function App() {
                 height: '100%',
               }}
             >
-              {viewMode !== 'text' && (
+              {viewMode === 'graphics' && (
                 <Paper
                   elevation={3}
                   sx={{
@@ -184,7 +184,7 @@ export default function App() {
                   <Graphics shapes={gfx.current.shapes} />
                 </Paper>
               )}
-              {viewMode !== 'graphics' && (
+              {viewMode === 'text' && (
                 <Paper
                   elevation={3}
                   sx={{
