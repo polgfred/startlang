@@ -1,10 +1,28 @@
+;
+; Eratosthenes' sieve for prime numbers
+;
+
+; get the upper limit
 upper = num(input("How high? "))
+
+; create an array to hold non-primes
 marked = list()
 
+; start at 2, the first prime number
 i = 2
+
+; count from i until we hit the upper limit
 while i <= upper do
+  ; the value i has not been marked as non-prime
   print "`i` is prime"
+
+  ; count from i^2 to the upper limit by i -
+  ; this marks all multiples of i as non-prime
   for j from exp(i, 2) to upper by i do marked[j] = true
+
+  ; skip over this i because it's prime
   i = i + 1
+
+  ; skip over everything that has been marked as non-prime
   while marked[i] do i = i + 1
 end

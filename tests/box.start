@@ -1,14 +1,23 @@
+; draw shapes see-thru and outlined in white
 opacity 1/4
-anchor "center"
+stroke "white"
 
-for t from 0 to 360 by 3 do
+; count from 0 to 360 in 3 degree increments
+for a from 0 to 360 by 3 do
+  ; randomly generate a fill color
   red = rand()
   green = rand()
   blue = rand()
   rgb = color(red, green, blue)
   fill rgb
 
-  rotate t
-  scale t/180
-  rect t, t, 60, 40
+  ; set the rotation and scale factor
+  rotate a
+  scale a/180
+
+  ; draw a 60x40 box
+  rect a, a, 60, 40
+
+  ; see what happens when you uncomment this!
+  ; snapshot
 end

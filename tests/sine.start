@@ -1,13 +1,22 @@
+; draw the x and y axes in grey
 stroke "lightgrey"
+line 0, 400, 720, 400
+line 360, 40, 360, 760
 
-line 0,360,720,360
-line 360,0,360,720
-
+; set the main drawing color to blue
 stroke "blue"
 
-for x1 from -360 to 355 by 5 do
-  x2 = x1+5
-  y1 = 360*sin(x1/2)
-  y2 = 360*sin(x2/2)
-  line 360+x1,360-y1,360+x2,360-y2
+; count from -360 to 360 in 5 degree increments
+for x1 from -180 to 175 do
+  x2 = x1 + 5
+
+  ; calculate the sin values for x1 and x2
+  y1 = 180 * sin(x1)
+  y2 = 180 * sin(x2)
+
+  ; draw a connecting line segment
+  ; (play with these numbers and see what happens!)
+  line 360 + x1*2, 400 - y1*2, 360 + x2*2, 400 - y2*2
+
+  ; snapshot
 end
