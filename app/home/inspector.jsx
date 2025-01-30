@@ -8,8 +8,59 @@ import {
   TableFooter,
   TableHead,
   TableRow,
+  Typography,
 } from '@mui/material';
 import { useState } from 'react';
+
+function NamespaceInspector({ title, ns }) {
+  return (
+    <Table
+      sx={{
+        marginBottom: '10px',
+        width: '100%',
+      }}
+    >
+      <TableHead>
+        <TableRow>
+          <TableCell
+            colSpan={2}
+            sx={{
+              fontWeight: 'bold',
+            }}
+          >
+            <Typography variant="h6">{title}</Typography>
+          </TableCell>
+        </TableRow>
+        <TableRow>
+          <TableCell
+            sx={{
+              width: '25%',
+              fontWeight: 'bold',
+            }}
+          >
+            Variable
+          </TableCell>
+          <TableCell
+            sx={{
+              width: '75%',
+              fontWeight: 'bold',
+            }}
+          >
+            Value
+          </TableCell>
+        </TableRow>
+      </TableHead>
+      <TableBody>
+        {Object.entries(ns).map(([key, value]) => (
+          <TableRow key={key}>
+            <TableCell>{key}</TableCell>
+            <TableCell>{inspectorFor(value)}</TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  );
+}
 
 export default function Inspector({ hist, snap, updateSlider }) {
   const current = hist[snap] || hist[hist.length - 1];
@@ -41,41 +92,12 @@ export default function Inspector({ hist, snap, updateSlider }) {
           overflow: 'auto',
         }}
       >
-        <Table
-          sx={{
-            width: '100%',
-          }}
-        >
-          <TableHead>
-            <TableRow>
-              <TableCell
-                sx={{
-                  fontWeight: 'bold',
-                  width: '25%',
-                }}
-              >
-                Variable
-              </TableCell>
-              <TableCell
-                sx={{
-                  width: '75%',
-                }}
-              >
-                Value
-              </TableCell>
-            </TableRow>
-          </TableHead>
-          {current && (
-            <TableBody>
-              {Object.entries(current.gns).map(([key, value]) => (
-                <TableRow key={key}>
-                  <TableCell>{key}</TableCell>
-                  <TableCell>{inspectorFor(value)}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          )}
-        </Table>
+        {current && (
+          <>
+            <NamespaceInspector title="Global" ns={current.gns} />
+            <NamespaceInspector title="Local" ns={current.lns} />
+          </>
+        )}
       </div>
     </div>
   );
