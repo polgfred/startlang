@@ -27,12 +27,6 @@ function Shape({ shape }) {
   if (opacity >= 0 && opacity < 1) {
     style.opacity = opacity;
   }
-  if (fface) {
-    style.fontFamily = fface;
-  }
-  if (fsize) {
-    style.fontSize = fsize;
-  }
 
   const transform = transforms.join(' ');
 
@@ -94,6 +88,12 @@ function Shape({ shape }) {
     }
     case 'text': {
       const { x, y, value } = shape;
+      if (fface) {
+        style.fontFamily = fface;
+      }
+      if (fsize) {
+        style.fontSize = fsize;
+      }
       return (
         <text
           x={x}
