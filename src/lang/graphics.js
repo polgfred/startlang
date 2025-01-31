@@ -40,35 +40,32 @@ export const graphicsGlobals = (app) => {
     // shape creation
 
     rect(x, y, width, height) {
-      addShape(rect({ x, y, width, height }));
+      addShape({ type: 'rect', x, y, width, height });
       return waitForImmediate();
     },
 
     circle(cx, cy, r) {
-      addShape(circle({ cx, cy, r }));
+      addShape({ type: 'circle', cx, cy, r });
       return waitForImmediate();
     },
 
     ellipse(cx, cy, rx, ry) {
-      addShape(ellipse({ cx, cy, rx, ry }));
+      addShape({ type: 'ellipse', cx, cy, rx, ry });
       return waitForImmediate();
     },
 
     line(x1, y1, x2, y2) {
-      addShape(line({ x1, y1, x2, y2 }));
+      addShape({ type: 'line', x1, y1, x2, y2 });
       return waitForImmediate();
     },
 
     text(x, y, value) {
-      addShape(text({ x, y, value }));
+      addShape({ type: 'text', x, y, value });
       return waitForImmediate();
     },
 
     polygon(...points) {
-      if (Array.isArray(points[0])) {
-        points = points[0];
-      }
-      addShape(polygon({ points }));
+      addShape({ type: 'polygon', points });
       return waitForImmediate();
     },
 
@@ -190,64 +187,3 @@ export const graphicsProps = {
   sprops: shapeProps,
   tprops: textProps,
 };
-
-function rect(attrs) {
-  return {
-    type: 'rect',
-    x: 0,
-    y: 0,
-    width: 0,
-    height: 0,
-    ...attrs,
-  };
-}
-
-function circle(attrs) {
-  return {
-    type: 'circle',
-    cx: 0,
-    cy: 0,
-    r: 0,
-    ...attrs,
-  };
-}
-
-function ellipse(attrs) {
-  return {
-    type: 'ellipse',
-    cx: 0,
-    cy: 0,
-    rx: 0,
-    ry: 0,
-    ...attrs,
-  };
-}
-
-function line(attrs) {
-  return {
-    type: 'line',
-    x1: 0,
-    y1: 0,
-    x2: 0,
-    y2: 0,
-    ...attrs,
-  };
-}
-
-function polygon(attrs) {
-  return {
-    type: 'polygon',
-    points: [],
-    ...attrs,
-  };
-}
-
-function text(attrs) {
-  return {
-    type: 'text',
-    x: 0,
-    y: 0,
-    value: '',
-    ...attrs,
-  };
-}
