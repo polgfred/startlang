@@ -1,6 +1,5 @@
-; draw shapes see-thru and outlined in white
+; draw shapes see-thru
 opacity 1/4
-stroke "white"
 
 begin random_color do
   ; randomly generate a fill color
@@ -19,7 +18,7 @@ for a from 0 to 360 by 5 do
 
   ; set the rotation and scale factor
   rotate a
-  scale a/180
+  scale a/60
 
   ; draw a 60x40 box
   rect a, a, 60, 40
