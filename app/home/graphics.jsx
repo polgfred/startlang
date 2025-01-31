@@ -5,9 +5,7 @@ function Shape({ shape }) {
     sprops: { rotate, scalex, scaley, anchor, stroke, fill, opacity },
     tprops: { fface, fsize, align },
   } = shape;
-  const styles = {
-    style: {},
-  };
+  const style = {};
   const transforms = [];
 
   if (rotate !== 0) {
@@ -17,23 +15,23 @@ function Shape({ shape }) {
     transforms.push(`scale(${scalex} ${scaley})`);
   }
   if (anchor) {
-    styles.style.transformOrigin = anchor;
-    styles.style.transformBox = 'fill-box';
+    style.transformOrigin = anchor;
+    style.transformBox = 'fill-box';
   }
   if (stroke) {
-    styles.style.stroke = stroke;
+    style.stroke = stroke;
   }
   if (fill) {
-    styles.style.fill = fill;
+    style.fill = fill;
   }
   if (opacity >= 0 && opacity < 1) {
-    styles.style.opacity = opacity;
+    style.opacity = opacity;
   }
   if (fface) {
-    styles.fontFamily = fface;
+    style.fontFamily = fface;
   }
   if (fsize) {
-    styles.fontSize = fsize;
+    style.fontSize = fsize;
   }
 
   const transform = transforms.join(' ');
@@ -48,13 +46,15 @@ function Shape({ shape }) {
           width={width}
           height={height}
           transform={transform}
-          {...styles}
+          style={style}
         />
       );
     }
     case 'circle': {
       const { cx, cy, r } = shape;
-      return <circle cx={cx} cy={cy} r={r} transform={transform} {...styles} />;
+      return (
+        <circle cx={cx} cy={cy} r={r} transform={transform} style={style} />
+      );
     }
     case 'ellipse': {
       const { cx, cy, rx, ry } = shape;
@@ -65,7 +65,7 @@ function Shape({ shape }) {
           rx={rx}
           ry={ry}
           transform={transform}
-          {...styles}
+          style={style}
         />
       );
     }
@@ -78,20 +78,30 @@ function Shape({ shape }) {
           x2={x2}
           y2={y2}
           transform={transform}
-          {...styles}
+          style={style}
         />
       );
     }
     case 'polygon': {
       const { points } = shape;
       return (
-        <polygon points={points.join(',')} transform={transform} {...styles} />
+        <polygon
+          points={points.join(',')}
+          transform={transform}
+          style={style}
+        />
       );
     }
     case 'text': {
       const { x, y, value } = shape;
       return (
-        <text x={x} y={y} textAnchor={align} transform={transform} {...styles}>
+        <text
+          x={x}
+          y={y}
+          textAnchor={align}
+          transform={transform}
+          style={style}
+        >
           {value}
         </text>
       );
