@@ -31,7 +31,6 @@ export default function Editor({ setParser }) {
     });
     monaco.languages.setMonarchTokensProvider('start', {
       defaultToken: '',
-      ignoreCase: true,
       keywords: [
         'and',
         'begin',
