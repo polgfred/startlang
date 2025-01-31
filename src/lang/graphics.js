@@ -75,7 +75,7 @@ export const graphicsGlobals = (app) => {
     // set shape and text attributes
 
     color(r, g, b) {
-      const hex = (v) => ('0' + Math.round(255 * v).toString(16)).substr(-2);
+      const hex = (v) => ('0' + Math.round(255 * v).toString(16)).slice(-2);
       return `#${hex(r)}${hex(g)}${hex(b)}`;
     },
 
