@@ -32,6 +32,7 @@ const theme = createTheme({
 export default function App() {
   const [viewMode, setViewMode] = useState('graphics');
   const [parser, setParser] = useState(() => {});
+  const [isRunning, setIsRunning] = useState(false);
   const [{ prompt, onInputComplete }, setInputState] = useState({});
   const [{ hist, snap }, setHistory] = useState({
     hist: [],
@@ -128,12 +129,15 @@ export default function App() {
     });
 
     try {
+      setIsRunning(true);
       await interp.run(parser());
     } catch (err) {
       /* eslint-disable no-console */
       console.log(err.stack);
       console.log(interp.snapshot());
       /* eslint-enable no-console */
+    } finally {
+      setIsRunning(false);
     }
   }, [refreshState, bindings, gfx, buf, parser]);
 
@@ -151,6 +155,7 @@ export default function App() {
           viewMode={viewMode}
           updateViewMode={setViewMode}
           runProgram={runProgram}
+          isRunning={isRunning}
         />
         <Grid
           container

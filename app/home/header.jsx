@@ -52,7 +52,12 @@ function SettingsMenu({ option, mode, choices, updateMode }) {
   );
 }
 
-export default function Header({ viewMode, updateViewMode, runProgram }) {
+export default function Header({
+  viewMode,
+  updateViewMode,
+  runProgram,
+  isRunning,
+}) {
   return (
     <AppBar>
       <Toolbar color="light">
@@ -70,14 +75,9 @@ export default function Header({ viewMode, updateViewMode, runProgram }) {
           updateMode={updateViewMode}
           choices={['graphics', 'text']}
         />
-        {/* <SettingsMenu
-          option="edit"
-          mode={editMode}
-          updateMode={updateEditMode}
-          choices={['blocks', 'source']}
-        /> */}
         <Button
           variant="contained"
+          disabled={isRunning}
           onClick={runProgram}
           sx={{
             marginLeft: 2,
