@@ -6,28 +6,6 @@
     while: 'loop',
     call: 'call'
   };
-
-  const inspectMarker = {
-    repeat: 'loop',
-    for: 'loop',
-    forIn: 'loop',
-    while: 'loop',
-    if: 'stmt',
-    begin: 'stmt',
-    call: 'stmt',
-    exit: 'stmt',
-    break: 'stmt',
-    next: 'stmt',
-    return: 'stmt',
-    literal: 'expr',
-    var: 'expr',
-    let: 'stmt',
-    index: 'expr',
-    letIndex: 'stmt',
-    logicalOp: 'expr',
-    binaryOp: 'expr',
-    unaryOp: 'expr'
-  };
 }}
 
 {
@@ -44,11 +22,6 @@
     // then the flow marker
     if (flowMarker[type]) {
       node.flow = flowMarker[type];
-    }
-
-    // then the inspect marker
-    if (inspectMarker[type]) {
-      node.inspect = inspectMarker[type];
     }
 
     // then the passed-in attributes
