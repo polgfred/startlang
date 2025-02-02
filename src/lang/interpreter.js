@@ -1,5 +1,3 @@
-/* eslint-disable no-case-declarations */
-
 import { produce, original } from 'immer';
 
 import {
@@ -397,7 +395,7 @@ export function makeInterpreter() {
 
     repeat(node, state, dfra) {
       switch (state) {
-        case 0:
+        case 0: {
           if (node.times) {
             dfra.state = 1;
             return node.times;
@@ -405,11 +403,13 @@ export function makeInterpreter() {
             dfra.state = 3;
             break;
           }
-        case 1:
+        }
+        case 1: {
           dfra.state = 2;
           dfra.times = res.rhs;
           break;
-        case 2:
+        }
+        case 2: {
           const { count, times } = fra;
           if (count < times) {
             dfra.count++;
@@ -417,23 +417,27 @@ export function makeInterpreter() {
           } else {
             return popOut;
           }
-        case 3:
+        }
+        case 3: {
           // repeat forever
           return node.body;
+        }
       }
     },
 
     for(node, state, dfra) {
       switch (state) {
-        case 0:
+        case 0: {
           dfra.state = 1;
           return node.from;
-        case 1:
+        }
+        case 1: {
           dfra.state = 2;
           dfra.from = res.rhs;
           dfra.count = res.rhs;
           return node.to;
-        case 2:
+        }
+        case 2: {
           if (node.by) {
             dfra.state = 3;
             dfra.to = res.rhs;
@@ -443,11 +447,13 @@ export function makeInterpreter() {
             dfra.to = res.rhs;
             break;
           }
-        case 3:
+        }
+        case 3: {
           dfra.state = 4;
           dfra.by = res.rhs;
           break;
-        case 4:
+        }
+        case 4: {
           const { count, to, by } = fra;
           if ((by > 0 && count <= to) || (by < 0 && count >= to)) {
             set(node.name, count);
@@ -456,19 +462,22 @@ export function makeInterpreter() {
           } else {
             return popOut;
           }
+        }
       }
     },
 
     forIn(node, state, dfra) {
       switch (state) {
-        case 0:
+        case 0: {
           dfra.state = 1;
           return node.range;
-        case 1:
+        }
+        case 1: {
           dfra.state = 2;
           dfra.iter = handle(res.rhs).enumerate(res.rhs);
           break;
-        case 2:
+        }
+        case 2: {
           const { iter } = fra;
           if (iter.more) {
             set(node.name, iter.value);
@@ -478,30 +487,34 @@ export function makeInterpreter() {
           } else {
             return popOut;
           }
+        }
       }
     },
 
     while(node, state, dfra) {
       switch (state) {
-        case 0:
+        case 0: {
           dfra.state = 1;
           return node.cond;
-        case 1:
+        }
+        case 1: {
           if (res.rhs) {
             dfra.state = 0;
             return node.body;
           } else {
             return popOut;
           }
+        }
       }
     },
 
     if(node, state, dfra) {
       switch (state) {
-        case 0:
+        case 0: {
           dfra.state = 1;
           return node.cond;
-        case 1:
+        }
+        case 1: {
           if (res.rhs) {
             dfra.state = 2;
             return node.tbody;
@@ -511,8 +524,10 @@ export function makeInterpreter() {
           } else {
             return popOut;
           }
-        case 2:
+        }
+        case 2: {
           return popOut;
+        }
       }
     },
 
@@ -526,7 +541,7 @@ export function makeInterpreter() {
 
     call(node, state, dfra) {
       switch (state) {
-        case 0:
+        case 0: {
           const { count } = fra;
           if (node.args && count < node.args.length) {
             dfra.state = 1;
@@ -538,13 +553,15 @@ export function makeInterpreter() {
             dfra.state = 4;
             break;
           }
-        case 1:
+        }
+        case 1: {
           dfra.state = 0;
           dfra.args.push(res.rhs);
           dfra.assn.push(res.lhs);
           dfra.count++;
           break;
-        case 2:
+        }
+        case 2: {
           // handle a user-defined function
           const ufn = gfn[node.name];
           // push on a new namespace
@@ -558,9 +575,11 @@ export function makeInterpreter() {
           dfra.state = 3;
           dfra.ns = true;
           return ufn.body;
-        case 3:
+        }
+        case 3: {
           return popOut;
-        case 4:
+        }
+        case 4: {
           // handle a runtime API function
           const ret = syscall(node.name, fra.args);
           if (ret && ret.then) {
@@ -573,6 +592,7 @@ export function makeInterpreter() {
             handleResult(ret, fra.assn);
             return popOut;
           }
+        }
       }
     },
 
@@ -590,7 +610,7 @@ export function makeInterpreter() {
 
     return(node, state, dfra) {
       switch (state) {
-        case 0:
+        case 0: {
           if (node.result) {
             dfra.state = 1;
             return node.result;
@@ -598,9 +618,11 @@ export function makeInterpreter() {
             setResult();
             return { pop: 'over', flow: 'call' };
           }
-        case 1:
+        }
+        case 1: {
           setResult(res.rhs);
           return { pop: 'over', flow: 'call' };
+        }
       }
     },
 
@@ -620,18 +642,20 @@ export function makeInterpreter() {
 
     let(node, state, dfra) {
       switch (state) {
-        case 0:
+        case 0: {
           dfra.state = 1;
           return node.value;
-        case 1:
+        }
+        case 1: {
           set(node.name, res.rhs, node.local);
           return popOut;
+        }
       }
     },
 
     index(node, state, dfra) {
       switch (state) {
-        case 0:
+        case 0: {
           const { count } = fra;
           if (count < node.indexes.length) {
             dfra.state = 1;
@@ -640,12 +664,14 @@ export function makeInterpreter() {
             dfra.state = 2;
             break;
           }
-        case 1:
+        }
+        case 1: {
           dfra.state = 0;
           dfra.indexes.push(res.rhs);
           dfra.count++;
           break;
-        case 2:
+        }
+        case 2: {
           const { indexes } = fra;
           // return the rhs/lhs pair for this slot
           setResult({
@@ -653,12 +679,13 @@ export function makeInterpreter() {
             lhs: { name: node.name, indexes },
           });
           return popOut;
+        }
       }
     },
 
     letIndex(node, state, dfra) {
       switch (state) {
-        case 0:
+        case 0: {
           const { count } = fra;
           if (count < node.indexes.length) {
             dfra.state = 1;
@@ -667,17 +694,21 @@ export function makeInterpreter() {
             dfra.state = 2;
             break;
           }
-        case 1:
+        }
+        case 1: {
           dfra.state = 0;
           dfra.indexes.push(res.rhs);
           dfra.count++;
           break;
-        case 2:
+        }
+        case 2: {
           dfra.state = 3;
           return node.value;
-        case 3:
+        }
+        case 3: {
           setIndex(node.name, fra.indexes, res.rhs);
           return popOut;
+        }
       }
     },
 
@@ -685,10 +716,11 @@ export function makeInterpreter() {
       switch (node.op) {
         case 'and':
           switch (state) {
-            case 0:
+            case 0: {
               dfra.state = 1;
               return node.left;
-            case 1:
+            }
+            case 1: {
               if (!res.rhs) {
                 setResult(false);
                 return popOut;
@@ -696,18 +728,21 @@ export function makeInterpreter() {
                 dfra.state = 2;
                 return node.right;
               }
-            case 2:
+            }
+            case 2: {
               setResult(!!res.rhs);
               return popOut;
+            }
           }
           break;
 
         case 'or':
           switch (state) {
-            case 0:
+            case 0: {
               dfra.state = 1;
               return node.left;
-            case 1:
+            }
+            case 1: {
               if (res.rhs) {
                 setResult(true);
                 return popOut;
@@ -715,20 +750,24 @@ export function makeInterpreter() {
                 dfra.state = 2;
                 return node.right;
               }
-            case 2:
+            }
+            case 2: {
               setResult(!!res.rhs);
               return popOut;
+            }
           }
           break;
 
         case 'not':
           switch (state) {
-            case 0:
+            case 0: {
               dfra.state = 1;
               return node.right;
-            case 1:
+            }
+            case 1: {
               setResult(!res.rhs);
               return popOut;
+            }
           }
           break;
       }
@@ -736,29 +775,34 @@ export function makeInterpreter() {
 
     binaryOp(node, state, dfra) {
       switch (state) {
-        case 0:
+        case 0: {
           dfra.state = 1;
           return node.left;
-        case 1:
+        }
+        case 1: {
           dfra.state = 2;
           dfra.left = res.rhs;
           return node.right;
-        case 2:
+        }
+        case 2: {
           const binaryop = handle(fra.left).binaryops[node.op];
           setResult(binaryop(fra.left, res.rhs));
           return popOut;
+        }
       }
     },
 
     unaryOp(node, state, dfra) {
       switch (state) {
-        case 0:
+        case 0: {
           dfra.state = 1;
           return node.right;
-        case 1:
+        }
+        case 1: {
           const unaryop = handle(res.rhs).unaryops[node.op];
           setResult(unaryop(res.rhs));
           return popOut;
+        }
       }
     },
   };
