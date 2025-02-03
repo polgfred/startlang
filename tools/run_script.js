@@ -55,7 +55,6 @@ async function main() {
   }
 
   const interp = makeInterpreter();
-
   interp.registerGlobals({
     print(...values) {
       if (values.length > 0) {
@@ -84,6 +83,7 @@ async function main() {
   });
 
   try {
+    interp.init();
     const result = await interp.run(node);
 
     if (result) {

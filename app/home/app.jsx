@@ -130,6 +130,7 @@ export default function App() {
 
     try {
       setIsRunning(true);
+      interp.init();
       await interp.run(parser());
     } catch (err) {
       /* eslint-disable no-console */

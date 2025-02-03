@@ -146,10 +146,14 @@ export function makeInterpreter() {
     }
   }
 
-  function run(node) {
-    // initialize the interpreter state
+  function init() {
+    // initialize the global interpreter state
     gfn = {};
     gns = {};
+  }
+
+  function run(node) {
+    // initialize the local state
     lns = {};
     lst = [];
     fra = makeFrame(node);
@@ -811,6 +815,7 @@ export function makeInterpreter() {
   return {
     registerGlobals,
     registerHandler,
+    init,
     run,
     snapshot,
     reset,
