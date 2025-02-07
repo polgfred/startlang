@@ -2,12 +2,15 @@ import deepEqual from 'deep-equal';
 import { produce } from 'immer';
 
 import { type Interpreter } from './interpreter';
+import { numberMethods } from './methods';
 
 export class BaseHandler {
   protected interpreter: Interpreter;
+  protected methods: object = {};
 
-  constructor(interpreter: Interpreter) {
+  constructor(interpreter: Interpreter, methods: object = {}) {
     this.interpreter = interpreter;
+    this.methods = methods;
   }
 
   shouldHandle(value: any): boolean {
@@ -51,6 +54,15 @@ export class BaseHandler {
     }
   }
 
+  runMethod(name: string, args: any[]) {
+    const method = this.methods[name];
+    if (!method || typeof method !== 'function') {
+      throw new Error(`method not found: ${name}`);
+    }
+
+    method.call(this.interpreter, args);
+  }
+
   ///
 
   protected adjustIndex(index: number, size: number) {
@@ -90,6 +102,10 @@ export class BooleanHandler extends BaseHandler {
 }
 
 export class NumberHandler extends BaseHandler {
+  constructor(interpreter: Interpreter) {
+    super(interpreter, numberMethods);
+  }
+
   shouldHandle(value: any) {
     return typeof value === 'number';
   }
