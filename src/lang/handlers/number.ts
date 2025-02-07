@@ -1,6 +1,74 @@
-import { Interpreter } from './interpreter';
+import { Interpreter } from '../interpreter';
+import { DataHandler } from './base';
 
-export const numberMethods = {
+export class NumberHandler extends DataHandler {
+  constructor(interpreter: Interpreter) {
+    super(interpreter, numberMethods);
+  }
+
+  shouldHandle(value: any) {
+    return typeof value === 'number';
+  }
+
+  getPrettyValue(value: number) {
+    if (isFinite(value)) {
+      return String(value);
+    } else {
+      return value > 0 ? '*infinity*' : '-*infinity*';
+    }
+  }
+
+  evalUnaryOp(op: string, right: any) {
+    this.assertNumeric(right);
+
+    switch (op) {
+      case '+':
+        return right;
+      case '-':
+        return -right;
+      case '~':
+        return ~right;
+      default:
+        return super.evalUnaryOp(op, right);
+    }
+  }
+
+  evalBinaryOp(op: string, left: any, right: any) {
+    this.assertNumeric(left);
+    this.assertNumeric(right);
+
+    switch (op) {
+      case '+':
+        return left + right;
+      case '-':
+        return left - right;
+      case '*':
+        return left * right;
+      case '/':
+        return left / right;
+      case '%':
+        return left % right;
+      case '&':
+        return left & right;
+      case '|':
+        return left | right;
+      case '^':
+        return left ^ right;
+      default:
+        return super.evalBinaryOp(op, left, right);
+    }
+  }
+
+  ///
+
+  private assertNumeric(value: any): asserts value is number {
+    if (typeof value !== 'number') {
+      throw new Error(`expected number, got ${value}`);
+    }
+  }
+}
+
+const numberMethods = {
   abs(this: Interpreter, [value]: [number]) {
     this.setResult(Math.abs(value));
   },
@@ -35,7 +103,8 @@ export const numberMethods = {
 
   exp(this: Interpreter, [base, value]: [number, number?]) {
     if (value === undefined) {
-      this.setResult(Math.exp(base));
+      value = base;
+      this.setResult(Math.exp(value));
     } else {
       this.setResult(Math.pow(base, value));
     }
@@ -79,11 +148,11 @@ export const numberMethods = {
     this.setResult(Math.tan((value * Math.PI) / 180));
   },
 
-  max(this: Interpreter, args: number[]) {
-    this.setResult(Math.max(...args));
+  max(this: Interpreter, values: number[]) {
+    this.setResult(Math.max(...values));
   },
 
-  min(this: Interpreter, args: number[]) {
-    this.setResult(Math.min(...args));
+  min(this: Interpreter, values: number[]) {
+    this.setResult(Math.min(...values));
   },
 };
