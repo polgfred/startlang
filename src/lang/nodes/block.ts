@@ -7,29 +7,26 @@ export class BlockNode extends StatementNode {
     super();
   }
 
-  makeFrame(interpreter: Interpreter) {
-    return new BlockFrame(interpreter, this);
+  makeFrame() {
+    return new BlockFrame(this);
   }
 }
 
 class BlockFrame extends Frame {
   count: number = 0;
 
-  constructor(
-    interpreter: Interpreter,
-    private node: BlockNode
-  ) {
-    super(interpreter);
+  constructor(private node: BlockNode) {
+    super();
   }
 
-  visit() {
+  visit(interpreter: Interpreter) {
     if (this.count < this.node.elems.length) {
-      this.update(null, (draft) => {
+      interpreter.updateFrame(this, null, (draft) => {
         draft.count++;
       });
-      this.interpreter.pushNode(this.node.elems[this.count]);
+      interpreter.pushNode(this.node.elems[this.count]);
     } else {
-      this.interpreter.popNode();
+      interpreter.popNode();
     }
   }
 }

@@ -10,25 +10,22 @@ export class RepeatNode extends StatementNode {
     super();
   }
 
-  makeFrame(interpreter: Interpreter) {
+  makeFrame() {
     if (this.times === null) {
-      return new RepeatFrame(interpreter, this);
+      return new RepeatFrame(this);
     } else {
-      return new RepeatTimesFrame(interpreter, this);
+      return new RepeatTimesFrame(this);
     }
   }
 }
 
 class RepeatFrame extends Frame {
-  constructor(
-    interpreter: Interpreter,
-    public node: RepeatNode
-  ) {
-    super(interpreter);
+  constructor(public node: RepeatNode) {
+    super();
   }
 
-  visit() {
-    this.interpreter.pushNode(this.node.body);
+  visit(interpreter: Interpreter) {
+    interpreter.pushNode(this.node.body);
   }
 }
 
@@ -36,34 +33,31 @@ class RepeatTimesFrame extends Frame {
   times: number = 0;
   count: number = 0;
 
-  constructor(
-    interpreter: Interpreter,
-    public node: RepeatNode
-  ) {
-    super(interpreter);
+  constructor(public node: RepeatNode) {
+    super();
   }
 
-  visit() {
+  visit(interpreter: Interpreter) {
     switch (this.state) {
       case 0: {
-        this.update(1);
-        this.interpreter.pushNode(this.node.times!);
+        interpreter.updateFrame(this, 1);
+        interpreter.pushNode(this.node.times!);
         break;
       }
       case 1: {
-        this.update(2, (draft) => {
-          draft.times = Number(this.interpreter.lastResult);
+        interpreter.updateFrame(this, 2, (draft) => {
+          draft.times = Number(interpreter.lastResult);
         });
         break;
       }
       case 2: {
         if (this.count < this.times) {
-          this.update(null, (draft) => {
+          interpreter.updateFrame(this, null, (draft) => {
             draft.count++;
           });
-          this.interpreter.pushNode(this.node.body);
+          interpreter.pushNode(this.node.body);
         } else {
-          this.interpreter.popNode();
+          interpreter.popNode();
         }
         break;
       }

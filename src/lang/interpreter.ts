@@ -1,4 +1,4 @@
-import { original, produce } from 'immer';
+import { Draft, original, produce } from 'immer';
 
 import { DataHandler, installHandlers } from './handlers';
 import { Frame, Node } from './nodes';
@@ -9,6 +9,8 @@ class NullFrame extends Frame {
   }
 }
 
+const nullFrame = new NullFrame();
+
 export class Interpreter {
   dataHandlers: DataHandler[] = [];
   systemFunctions: Record<string, any> = {};
@@ -16,9 +18,8 @@ export class Interpreter {
   globalNamespace: Record<string, any> = {};
   namespaceStack: any[] = [];
   topNamespace: Record<string, any> = {};
-  nullFrame: Frame = new NullFrame(this);
   frameStack: Frame[] = [];
-  topFrame: Frame = this.nullFrame;
+  topFrame: Frame = nullFrame;
   lastResult: any = null;
 
   constructor() {
@@ -62,7 +63,7 @@ export class Interpreter {
     this.globalNamespace = {};
     this.topNamespace = {};
     this.namespaceStack = [];
-    this.topFrame = node.makeFrame(this);
+    this.topFrame = node.makeFrame();
     this.frameStack = [];
     this.setResult();
 
@@ -70,24 +71,37 @@ export class Interpreter {
   }
 
   async runLoop() {
-    while (this.topFrame !== this.nullFrame) {
-      const result = this.topFrame.visit();
+    while (this.topFrame !== nullFrame) {
+      const result = this.topFrame.visit(this);
       if (result instanceof Promise) {
         await result;
       }
     }
   }
 
+  updateFrame<T extends Frame>(
+    frame: T,
+    state: number | null,
+    updater?: (draft: Draft<T>) => void
+  ) {
+    this.topFrame = produce(frame, (draft) => {
+      if (state !== null) {
+        draft.state = state;
+      }
+      updater?.(draft);
+    });
+  }
+
   pushNode(node: Node) {
     this.frameStack = produce(this.frameStack, (draft) => {
       draft.push(this.topFrame);
     });
-    this.topFrame = node.makeFrame(this);
+    this.topFrame = node.makeFrame();
   }
 
   popNode() {
     if (this.frameStack.length === 0) {
-      this.topFrame = this.nullFrame;
+      this.topFrame = nullFrame;
     } else {
       this.frameStack = produce(this.frameStack, (draft) => {
         // @ts-expect-error type of original() is wrong
@@ -129,7 +143,7 @@ export class Interpreter {
       } else if (ctrl.pop === 'until') {
         this.popUntil(ctrl.flow);
       } else if (ctrl.pop === 'exit') {
-        this.topFrame = this.nullFrame;
+        this.topFrame = nullFrame;
         this.frameStack = [];
       }
     }

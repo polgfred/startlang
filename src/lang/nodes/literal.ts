@@ -6,21 +6,18 @@ export class LiteralNode extends ValueNode {
     super();
   }
 
-  makeFrame(interpreter: Interpreter) {
-    return new LiteralFrame(interpreter, this);
+  makeFrame() {
+    return new LiteralFrame(this);
   }
 }
 
 export class LiteralFrame extends Frame {
-  constructor(
-    interpreter: Interpreter,
-    public node: LiteralNode
-  ) {
-    super(interpreter);
+  constructor(public node: LiteralNode) {
+    super();
   }
 
-  visit() {
-    this.interpreter.lastResult = this.node.value;
-    this.interpreter.popNode();
+  visit(interpreter: Interpreter) {
+    interpreter.lastResult = this.node.value;
+    interpreter.popNode();
   }
 }

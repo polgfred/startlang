@@ -11,8 +11,8 @@ export class ForInNode extends StatementNode {
     super();
   }
 
-  makeFrame(interpreter: Interpreter) {
-    return new ForInFrame(interpreter, this);
+  makeFrame() {
+    return new ForInFrame(this);
   }
 }
 
@@ -20,34 +20,31 @@ export class ForInFrame extends Frame {
   iterable: any;
   index: number = 0;
 
-  constructor(
-    interpreter: Interpreter,
-    public node: ForInNode
-  ) {
-    super(interpreter);
+  constructor(public node: ForInNode) {
+    super();
   }
 
-  visit() {
+  visit(interpreter: Interpreter) {
     switch (this.state) {
       case 0: {
-        this.update(1);
-        this.interpreter.pushNode(this.node.iterable);
+        interpreter.updateFrame(this, 1);
+        interpreter.pushNode(this.node.iterable);
         break;
       }
       case 1: {
-        this.update(2, (draft) => {
-          draft.iterable = this.interpreter.lastResult;
+        interpreter.updateFrame(this, 2, (draft) => {
+          draft.iterable = interpreter.lastResult;
         });
         break;
       }
       case 2: {
         if (this.index < this.iterable.length) {
-          this.update(null, (draft) => {
+          interpreter.updateFrame(this, null, (draft) => {
             draft.index++;
           });
-          this.interpreter.pushNode(this.node.body);
+          interpreter.pushNode(this.node.body);
         } else {
-          this.interpreter.popNode();
+          interpreter.popNode();
         }
         break;
       }

@@ -10,32 +10,29 @@ export class WhileNode extends StatementNode {
     super();
   }
 
-  makeFrame(interpreter: Interpreter) {
-    return new WhileFrame(interpreter, this);
+  makeFrame() {
+    return new WhileFrame(this);
   }
 }
 
 export class WhileFrame extends Frame {
-  constructor(
-    interpreter: Interpreter,
-    public node: WhileNode
-  ) {
-    super(interpreter);
+  constructor(public node: WhileNode) {
+    super();
   }
 
-  visit() {
+  visit(interpreter: Interpreter) {
     switch (this.state) {
       case 0: {
-        this.update(1);
-        this.interpreter.pushNode(this.node.condition);
+        interpreter.updateFrame(this, 1);
+        interpreter.pushNode(this.node.condition);
         break;
       }
       case 1: {
-        if (Boolean(this.interpreter.lastResult)) {
-          this.update(0);
-          this.interpreter.pushNode(this.node.body);
+        if (Boolean(interpreter.lastResult)) {
+          interpreter.updateFrame(this, 0);
+          interpreter.pushNode(this.node.body);
         } else {
-          this.interpreter.popNode();
+          interpreter.popNode();
         }
         break;
       }

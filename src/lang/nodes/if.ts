@@ -11,37 +11,34 @@ export class IfNode extends StatementNode {
     super();
   }
 
-  makeFrame(interpreter: Interpreter) {
-    return new IfFrame(interpreter, this);
+  makeFrame() {
+    return new IfFrame(this);
   }
 }
 
 export class IfFrame extends Frame {
-  constructor(
-    interpreter: Interpreter,
-    public node: IfNode
-  ) {
-    super(interpreter);
+  constructor(public node: IfNode) {
+    super();
   }
 
-  visit() {
+  visit(interpreter: Interpreter) {
     switch (this.state) {
       case 0: {
-        this.update(1);
-        this.interpreter.pushNode(this.node.condition);
+        interpreter.updateFrame(this, 1);
+        interpreter.pushNode(this.node.condition);
         break;
       }
       case 1: {
-        this.update(2);
-        if (Boolean(this.interpreter.lastResult)) {
-          this.interpreter.pushNode(this.node.thenBody);
+        interpreter.updateFrame(this, 2);
+        if (Boolean(interpreter.lastResult)) {
+          interpreter.pushNode(this.node.thenBody);
         } else if (this.node.elseBody !== null) {
-          this.interpreter.pushNode(this.node.elseBody);
+          interpreter.pushNode(this.node.elseBody);
         }
         break;
       }
       case 2: {
-        this.interpreter.popNode();
+        interpreter.popNode();
         break;
       }
     }

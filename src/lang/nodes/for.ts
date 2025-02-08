@@ -12,8 +12,8 @@ export class ForNode extends StatementNode {
     super();
   }
 
-  makeFrame(interpreter: Interpreter) {
-    return new ForFrame(interpreter, this);
+  makeFrame() {
+    return new ForFrame(this);
   }
 }
 
@@ -22,43 +22,40 @@ export class ForFrame extends Frame {
   limit: number = 0;
   step: number = 1;
 
-  constructor(
-    interpreter: Interpreter,
-    public node: ForNode
-  ) {
-    super(interpreter);
+  constructor(public node: ForNode) {
+    super();
   }
 
-  visit() {
+  visit(interpreter: Interpreter) {
     switch (this.state) {
       case 0: {
-        this.update(1);
-        this.interpreter.pushNode(this.node.initial);
+        interpreter.updateFrame(this, 1);
+        interpreter.pushNode(this.node.initial);
         break;
       }
       case 1: {
-        this.update(2, (draft) => {
-          draft.index = this.interpreter.lastResult;
+        interpreter.updateFrame(this, 2, (draft) => {
+          draft.index = interpreter.lastResult;
         });
-        this.interpreter.pushNode(this.node.limit);
+        interpreter.pushNode(this.node.limit);
         break;
       }
       case 2: {
         if (this.node.step !== null) {
-          this.update(3, (draft) => {
-            draft.limit = this.interpreter.lastResult;
+          interpreter.updateFrame(this, 3, (draft) => {
+            draft.limit = interpreter.lastResult;
           });
-          this.interpreter.pushNode(this.node.step);
+          interpreter.pushNode(this.node.step);
         } else {
-          this.update(4, (draft) => {
-            draft.limit = this.interpreter.lastResult;
+          interpreter.updateFrame(this, 4, (draft) => {
+            draft.limit = interpreter.lastResult;
           });
         }
         break;
       }
       case 3: {
-        this.update(4, (draft) => {
-          draft.step = this.interpreter.lastResult;
+        interpreter.updateFrame(this, 4, (draft) => {
+          draft.step = interpreter.lastResult;
         });
         break;
       }
@@ -66,12 +63,12 @@ export class ForFrame extends Frame {
         if (
           this.step > 0 ? this.index <= this.limit : this.index >= this.limit
         ) {
-          this.update(null, (draft) => {
+          interpreter.updateFrame(this, null, (draft) => {
             draft.index += this.step;
           });
-          this.interpreter.pushNode(this.node.body);
+          interpreter.pushNode(this.node.body);
         } else {
-          this.interpreter.popNode();
+          interpreter.popNode();
         }
       }
     }
