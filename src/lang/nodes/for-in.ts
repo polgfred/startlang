@@ -32,21 +32,18 @@ export class ForInFrame extends Frame {
   visit() {
     switch (this.state) {
       case 0: {
-        this.update((draft) => {
-          draft.state = 1;
-        });
+        this.update(1);
         this.interpreter.pushNode(this.node.iterable);
         break;
       }
       case 1: {
-        this.update((draft) => {
-          draft.state = 2;
+        this.update(2, (draft) => {
           draft.iterable = this.interpreter.lastResult;
         });
         break;
       }
       case 2: {
-        this.update((draft) => {
+        this.update(null, (draft) => {
           draft.index++;
         });
         if (this.index < this.iterable.length) {

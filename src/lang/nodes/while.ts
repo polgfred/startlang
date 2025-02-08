@@ -28,17 +28,13 @@ export class WhileFrame extends Frame {
   visit() {
     switch (this.state) {
       case 0: {
-        this.update((draft) => {
-          draft.state = 1;
-        });
+        this.update(1);
         this.interpreter.pushNode(this.node.condition);
         break;
       }
       case 1: {
         if (Boolean(this.interpreter.lastResult)) {
-          this.update((draft) => {
-            draft.state = 0;
-          });
+          this.update(0);
           this.interpreter.pushNode(this.node.body);
         } else {
           this.interpreter.popNode();

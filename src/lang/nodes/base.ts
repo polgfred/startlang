@@ -1,4 +1,4 @@
-import { immerable, produce } from 'immer';
+import { Draft, immerable, produce } from 'immer';
 
 import { Interpreter } from '../interpreter';
 
@@ -25,8 +25,16 @@ export class Frame {
 
   ///
 
-  protected update(update: (draft: this) => void): void {
-    this.interpreter.topFrame = produce(this, update);
+  protected update(
+    state: number | null,
+    updater?: (draft: Draft<this>) => void
+  ): void {
+    this.interpreter.topFrame = produce(this, (draft) => {
+      if (state !== null) {
+        draft.state = state;
+      }
+      updater?.(draft);
+    });
   }
 }
 

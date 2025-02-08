@@ -29,16 +29,12 @@ export class IfFrame extends Frame {
   visit() {
     switch (this.state) {
       case 0: {
-        this.update((draft) => {
-          draft.state = 1;
-        });
+        this.update(1);
         this.interpreter.pushNode(this.node.condition);
         break;
       }
       case 1: {
-        this.update((draft) => {
-          draft.state = 2;
-        });
+        this.update(2);
         if (Boolean(this.interpreter.lastResult)) {
           this.interpreter.pushNode(this.node.thenBody);
         } else if (this.node.elseBody !== null) {
