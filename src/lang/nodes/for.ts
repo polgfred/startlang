@@ -4,9 +4,9 @@ import { Frame, StatementNode, ValueNode } from './base';
 export class ForNode extends StatementNode {
   constructor(
     public name: string,
-    public from: ValueNode,
-    public to: ValueNode,
-    public by: ValueNode | null,
+    public initial: ValueNode,
+    public limit: ValueNode,
+    public step: ValueNode | null,
     public body: StatementNode
   ) {
     super();
@@ -33,22 +33,22 @@ export class ForFrame extends Frame {
     switch (this.state) {
       case 0: {
         this.update(1);
-        this.interpreter.pushNode(this.node.from);
+        this.interpreter.pushNode(this.node.initial);
         break;
       }
       case 1: {
         this.update(2, (draft) => {
           draft.index = this.interpreter.lastResult;
         });
-        this.interpreter.pushNode(this.node.to);
+        this.interpreter.pushNode(this.node.limit);
         break;
       }
       case 2: {
-        if (this.node.by !== null) {
+        if (this.node.step !== null) {
           this.update(3, (draft) => {
             draft.limit = this.interpreter.lastResult;
           });
-          this.interpreter.pushNode(this.node.by);
+          this.interpreter.pushNode(this.node.step);
         } else {
           this.update(4, (draft) => {
             draft.limit = this.interpreter.lastResult;
