@@ -2,8 +2,6 @@ import { Interpreter } from '../interpreter';
 import { ValueNode, Frame } from './base';
 
 export class LiteralNode extends ValueNode {
-  static type = 'literal';
-
   constructor(public value: any) {
     super();
   }

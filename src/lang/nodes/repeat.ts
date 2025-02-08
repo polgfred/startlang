@@ -3,8 +3,6 @@ import { Interpreter } from '../interpreter';
 import { ValueNode, Frame, StatementNode } from './base';
 
 export class RepeatNode extends StatementNode {
-  static type = 'repeat';
-
   constructor(
     public times: ValueNode | null,
     public body: StatementNode

@@ -3,8 +3,6 @@ import { Interpreter } from '../interpreter';
 import { Frame, StatementNode } from './base';
 
 export class BlockNode extends StatementNode {
-  static type = 'block';
-
   constructor(public elems: StatementNode[]) {
     super();
   }

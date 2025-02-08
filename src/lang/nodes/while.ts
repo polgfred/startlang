@@ -3,8 +3,6 @@ import { Interpreter } from '../interpreter';
 import { StatementNode, ValueNode, Frame } from './base';
 
 export class WhileNode extends StatementNode {
-  static type = 'while';
-
   constructor(
     public condition: ValueNode,
     public body: StatementNode

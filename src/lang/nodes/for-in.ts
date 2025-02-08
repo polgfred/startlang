@@ -3,8 +3,6 @@ import { Interpreter } from '../interpreter';
 import { Frame, StatementNode, ValueNode } from './base';
 
 export class ForInNode extends StatementNode {
-  static type = 'for-in';
-
   constructor(
     public variable: string,
     public iterable: ValueNode,

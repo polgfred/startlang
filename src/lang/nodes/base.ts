@@ -3,8 +3,6 @@ import { Draft, immerable, produce } from 'immer';
 import { Interpreter } from '../interpreter';
 
 export class Node {
-  static type: string;
-
   makeFrame(interpreter: Interpreter): Frame {
     throw new Error('not implemented');
   }

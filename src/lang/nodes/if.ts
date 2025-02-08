@@ -3,8 +3,6 @@ import { Interpreter } from '../interpreter';
 import { Frame, StatementNode, ValueNode } from './base';
 
 export class IfNode extends StatementNode {
-  static type = 'if';
-
   constructor(
     public condition: ValueNode,
     public thenBody: StatementNode,

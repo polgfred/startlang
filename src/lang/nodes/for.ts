@@ -2,8 +2,6 @@ import { Interpreter } from '../interpreter';
 import { Frame, StatementNode, ValueNode } from './base';
 
 export class ForNode extends StatementNode {
-  static type = 'for';
-
   constructor(
     public name: string,
     public from: ValueNode,
