@@ -1,7 +1,7 @@
 import { Interpreter } from '../interpreter';
-import { ExpressionNode, Frame } from './base';
+import { ValueNode, Frame } from './base';
 
-export class LiteralNode extends ExpressionNode {
+export class LiteralNode extends ValueNode {
   static type = 'literal';
 
   value: any;

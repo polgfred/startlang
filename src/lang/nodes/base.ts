@@ -12,7 +12,7 @@ export class Node {
 
 export class StatementNode extends Node {}
 
-export class ExpressionNode extends Node {}
+export class ValueNode extends Node {}
 
 export class Frame {
   interpreter: Interpreter;

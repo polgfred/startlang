@@ -1,14 +1,14 @@
 import { Interpreter } from '../interpreter';
 
-import { ExpressionNode, Frame, StatementNode } from './base';
+import { ValueNode, Frame, StatementNode } from './base';
 
 export class RepeatNode extends StatementNode {
   static type = 'repeat';
 
-  times: ExpressionNode | null;
+  times: ValueNode | null;
   body: StatementNode;
 
-  constructor(times: ExpressionNode | null, body: StatementNode) {
+  constructor(times: ValueNode | null, body: StatementNode) {
     super();
     this.times = times;
     this.body = body;
