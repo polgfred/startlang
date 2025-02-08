@@ -49,13 +49,17 @@ class RepeatTimesFrame extends Frame {
   visit() {
     switch (this.state) {
       case 0: {
+        this.update((draft) => {
+          draft.state = 1;
+        });
         this.interpreter.pushNode(this.node.times!);
-        this.updateState(1);
         break;
       }
       case 1: {
-        this.times = this.interpreter.lastResult;
-        this.updateState(2);
+        this.update((draft) => {
+          draft.state = 2;
+          draft.times = Number(this.interpreter.lastResult);
+        });
         break;
       }
       case 2: {

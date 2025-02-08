@@ -1,50 +1,44 @@
-import { produce } from 'immer';
-import {
-  BaseHandler,
-  BooleanHandler,
-  ListHandler,
-  NoneHandler,
-  NumberHandler,
-  StringHandler,
-  TableHandler,
-} from './builtins';
+import { original, produce } from 'immer';
 
-const hop = Object.prototype.hasOwnProperty;
+import { DataHandler, installHandlers } from './handlers';
+import { Frame, Node } from './nodes';
+
+class NullFrame extends Frame {
+  visit() {
+    throw new Error('no program running');
+  }
+}
 
 export class Interpreter {
-  private globals: Record<string, any> = {};
-  private handlers: BaseHandler[] = [];
-  private gfn: Record<string, any> = {};
-  private gns: Record<string, any> = {};
-  private lns: Record<string, any> = {};
-  private lst: any[] = [];
-  private fra: any = null;
-  private fst: any[] = [];
-  private res: any = null;
+  dataHandlers: DataHandler[] = [];
+  systemFunctions: Record<string, any> = {};
+  globalFunctions: Record<string, any> = {};
+  globalNamespace: Record<string, any> = {};
+  namespaceStack: any[] = [];
+  topNamespace: Record<string, any> = {};
+  nullFrame: Frame = new NullFrame(this);
+  frameStack: Frame[] = [];
+  topFrame: Frame = this.nullFrame;
+  lastResult: any = null;
 
   constructor() {
     // this.registerGlobals(builtinGlobals);
-    this.registerHandler(new NoneHandler(this));
-    this.registerHandler(new BooleanHandler(this));
-    this.registerHandler(new NumberHandler(this));
-    this.registerHandler(new StringHandler(this));
-    this.registerHandler(new ListHandler(this));
-    this.registerHandler(new TableHandler(this));
+    installHandlers.call(this);
   }
 
   private registerGlobals(fns: Record<string, any>) {
     for (const name in fns) {
-      this.globals[name] = fns[name];
+      this.systemFunctions[name] = fns[name];
     }
   }
 
-  private registerHandler(handler: BaseHandler) {
-    this.handlers.push(handler);
+  registerHandler(handler: DataHandler) {
+    this.dataHandlers.push(handler);
     // this.registerGlobals(handler.globals);
   }
 
   getHandler(value: any) {
-    for (const handler of this.handlers) {
+    for (const handler of this.dataHandlers) {
       if (handler.shouldHandle(value)) {
         return handler;
       }
@@ -55,69 +49,73 @@ export class Interpreter {
 
   private syscall(name: string, args: any[]) {
     const fn =
-      (args.length > 0 && handle(args[0]).methods[name]) || this.globals[name];
+      (args.length > 0 && this.getHandler(args[0]).getMethod(name)) ||
+      this.systemFunctions[name];
     if (!fn) {
       throw new Error(`object not found or not a function: ${name}`);
     }
     return fn(...args);
   }
 
-  private async loop() {
-    while (this.fra) {
-      const { node, state } = this.fra;
-      const method = nodes[node.type];
-      let ctrl;
-      if (method.length === 3) {
-        this.fra = produce(this.fra, (dfra) => {
-          ctrl = method(node, state, dfra);
-        });
-      } else {
-        ctrl = method(node, state);
-      }
-      if (ctrl) {
-        if (ctrl.then) {
-          const rctrl = await ctrl;
-          if (rctrl) {
-            this.flow(rctrl);
-          }
-        } else {
-          this.flow(ctrl);
-        }
+  run(node: Node) {
+    this.globalFunctions = {};
+    this.globalNamespace = {};
+    this.topNamespace = {};
+    this.namespaceStack = [];
+    this.topFrame = node.makeFrame(this);
+    this.frameStack = [];
+    this.setResult();
+
+    return this.runLoop();
+  }
+
+  async runLoop() {
+    while (this.topFrame !== this.nullFrame) {
+      const result = this.topFrame.visit();
+      if (result instanceof Promise) {
+        await result;
       }
     }
   }
 
-  public run(node: any) {
-    this.gfn = {};
-    this.gns = {};
-    this.lns = {};
-    this.lst = [];
-    this.fra = makeFrame(node);
-    this.fst = [];
-    this.setResult();
-    return this.loop();
+  pushNode(node: Node) {
+    this.frameStack = produce(this.frameStack, (draft) => {
+      draft.push(this.topFrame);
+    });
+    this.topFrame = node.makeFrame(this);
+  }
+
+  popNode() {
+    if (this.frameStack.length === 0) {
+      this.topFrame = this.nullFrame;
+    } else {
+      this.frameStack = produce(this.frameStack, (draft) => {
+        // @ts-expect-error type of original() is wrong
+        this.topFrame = original(draft.pop());
+      });
+    }
   }
 
   public snapshot() {
     return {
-      gfn: this.gfn,
-      gns: this.gns,
-      lns: this.lns,
-      lst: this.lst,
-      fra: this.fra,
-      fst: this.fst,
-      res: this.res,
+      gfn: this.globalFunctions,
+      gns: this.globalNamespace,
+      lns: this.topNamespace,
+      lst: this.namespaceStack,
+      fra: this.topFrame,
+      fst: this.frameStack,
+      res: this.lastResult,
     };
   }
 
   public reset(snap: any) {
-    this.gfn = snap.gfn;
-    this.gns = snap.gns;
-    this.lns = snap.lns;
-    this.lst = snap.lst;
-    this.fra = snap.fra;
-    this.fst = snap.fst;
-    this.res = snap.res;
+    this.globalFunctions = snap.gfn;
+    this.globalNamespace = snap.gns;
+    this.topNamespace = snap.lns;
+    this.namespaceStack = snap.lst;
+    this.topFrame = snap.fra;
+    this.frameStack = snap.fst;
+    this.lastResult = snap.res;
   }
 
   private flow(ctrl: any) {
@@ -131,8 +129,8 @@ export class Interpreter {
       } else if (ctrl.pop === 'until') {
         this.popUntil(ctrl.flow);
       } else if (ctrl.pop === 'exit') {
-        this.fra = null;
-        this.fst = [];
+        this.topFrame = this.nullFrame;
+        this.frameStack = [];
       }
     }
   }
@@ -146,38 +144,38 @@ export class Interpreter {
         lhs: { name: node.name },
       });
     } else {
-      this.fst = produce(this.fst, (dfst) => {
-        dfst.push(this.fra);
+      this.frameStack = produce(this.frameStack, (dfst) => {
+        dfst.push(this.topFrame);
       });
-      this.fra = makeFrame(node);
+      this.topFrame = makeFrame(node);
     }
   }
 
   private pushns() {
-    this.lst = produce(this.lst, (dlst) => {
-      dlst.push(this.lns);
+    this.namespaceStack = produce(this.namespaceStack, (dlst) => {
+      dlst.push(this.topNamespace);
     });
-    this.lns = {};
+    this.topNamespace = {};
   }
 
   private pop() {
-    if (this.fra.ns) {
-      this.lst = produce(this.lst, (dlst) => {
-        this.lns = original(dlst.pop());
+    if (this.topFrame.ns) {
+      this.namespaceStack = produce(this.namespaceStack, (dlst) => {
+        this.topNamespace = original(dlst.pop());
       });
     }
-    if (this.fst.length === 0) {
-      this.fra = null;
+    if (this.frameStack.length === 0) {
+      this.topFrame = this.nullFrame;
     } else {
-      this.fst = produce(this.fst, (dfst) => {
-        this.fra = original(dfst.pop());
+      this.frameStack = produce(this.frameStack, (dfst) => {
+        this.topFrame = original(dfst.pop());
       });
     }
   }
 
   private popOver(flow: string) {
-    while (this.fra) {
-      const { node } = this.fra;
+    while (this.topFrame) {
+      const { node } = this.topFrame;
       this.pop();
       if (node.flow === flow) {
         break;
@@ -186,8 +184,8 @@ export class Interpreter {
   }
 
   private popUntil(flow: string) {
-    while (this.fra) {
-      if (this.fra.node.flow === flow) {
+    while (this.topFrame) {
+      if (this.topFrame.node.flow === flow) {
         break;
       }
       this.pop();
@@ -195,28 +193,28 @@ export class Interpreter {
   }
 
   setResult(result?: any) {
-    if (!result || !hop.call(result, 'rhs')) {
-      this.res = { rhs: result };
+    if (!result || !('rhs' in result)) {
+      this.lastResult = { rhs: result };
     } else {
-      this.res = result;
+      this.lastResult = result;
     }
   }
 
   private get(name: string) {
-    if (hop.call(this.lns, name)) {
-      return this.lns[name];
+    if (name in this.topNamespace) {
+      return this.topNamespace[name];
     } else {
-      return this.gns[name];
+      return this.globalNamespace[name];
     }
   }
 
   private set(name: string, value: any, local = false) {
-    if (local || hop.call(this.lns, name)) {
-      this.lns = produce(this.lns, (dns) => {
+    if (local || name in this.topNamespace) {
+      this.topNamespace = produce(this.topNamespace, (dns) => {
         dns[name] = value;
       });
     } else {
-      this.gns = produce(this.gns, (dgns) => {
+      this.globalNamespace = produce(this.globalNamespace, (dgns) => {
         dgns[name] = value;
       });
     }

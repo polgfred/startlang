@@ -25,6 +25,10 @@ export class DataHandler {
     throw new Error(`indexing not supported for ${value}`);
   }
 
+  getMethod(name: string): (this: Interpreter, args: any[]) => any {
+    return this.methods[name];
+  }
+
   evalUnaryOp(op: string, right: any): any {
     throw new Error(`unary operator ${op} not supported`);
   }

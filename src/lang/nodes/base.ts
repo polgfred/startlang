@@ -31,12 +31,6 @@ export class Frame {
   protected update(update: (draft: this) => void): void {
     this.interpreter.topFrame = produce(this, update);
   }
-
-  protected updateState(state: number): void {
-    this.update((draft) => {
-      draft.state = state;
-    });
-  }
 }
 
 Frame[immerable] = true;
