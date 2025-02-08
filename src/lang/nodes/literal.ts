@@ -4,11 +4,8 @@ import { ValueNode, Frame } from './base';
 export class LiteralNode extends ValueNode {
   static type = 'literal';
 
-  value: any;
-
-  constructor(value: any) {
+  constructor(public value: any) {
     super();
-    this.value = value;
   }
 
   makeFrame(interpreter: Interpreter) {
@@ -17,11 +14,11 @@ export class LiteralNode extends ValueNode {
 }
 
 export class LiteralFrame extends Frame {
-  node: LiteralNode;
-
-  constructor(interpreter: Interpreter, node: LiteralNode) {
+  constructor(
+    interpreter: Interpreter,
+    public node: LiteralNode
+  ) {
     super(interpreter);
-    this.node = node;
   }
 
   visit() {

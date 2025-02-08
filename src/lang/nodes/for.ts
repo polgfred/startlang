@@ -4,26 +4,14 @@ import { Frame, StatementNode, ValueNode } from './base';
 export class ForNode extends StatementNode {
   static type = 'for';
 
-  name: string;
-  from: ValueNode;
-  to: ValueNode;
-  by: ValueNode | null;
-  iterable: ValueNode;
-  body: StatementNode;
-
   constructor(
-    name: string,
-    from: ValueNode,
-    to: ValueNode,
-    by: ValueNode | null,
-    body: StatementNode
+    public name: string,
+    public from: ValueNode,
+    public to: ValueNode,
+    public by: ValueNode | null,
+    public body: StatementNode
   ) {
     super();
-    this.name = name;
-    this.from = from;
-    this.to = to;
-    this.by = by;
-    this.body = body;
   }
 
   makeFrame(interpreter: Interpreter) {
@@ -32,14 +20,15 @@ export class ForNode extends StatementNode {
 }
 
 export class ForFrame extends Frame {
-  node: ForNode;
   index: number = 0;
   limit: number = 0;
   step: number = 1;
 
-  constructor(interpreter: Interpreter, node: ForNode) {
+  constructor(
+    interpreter: Interpreter,
+    public node: ForNode
+  ) {
     super(interpreter);
-    this.node = node;
   }
 
   visit() {

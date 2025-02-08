@@ -5,11 +5,8 @@ import { Frame, StatementNode } from './base';
 export class BlockNode extends StatementNode {
   static type = 'block';
 
-  elems: StatementNode[];
-
-  constructor(elems: StatementNode[]) {
+  constructor(public elems: StatementNode[]) {
     super();
-    this.elems = elems;
   }
 
   makeFrame(interpreter: Interpreter) {
@@ -18,13 +15,13 @@ export class BlockNode extends StatementNode {
 }
 
 class BlockFrame extends Frame {
-  node: BlockNode;
-
   count: number = 0;
 
-  constructor(interpreter: Interpreter, node: BlockNode) {
+  constructor(
+    interpreter: Interpreter,
+    private node: BlockNode
+  ) {
     super(interpreter);
-    this.node = node;
   }
 
   visit() {

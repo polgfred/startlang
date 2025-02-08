@@ -5,15 +5,12 @@ import { Frame, StatementNode, ValueNode } from './base';
 export class ForInNode extends StatementNode {
   static type = 'for-in';
 
-  name: string;
-  iterable: ValueNode;
-  body: StatementNode;
-
-  constructor(variable: string, iterable: ValueNode, body: StatementNode) {
+  constructor(
+    public variable: string,
+    public iterable: ValueNode,
+    public body: StatementNode
+  ) {
     super();
-    this.name = variable;
-    this.iterable = iterable;
-    this.body = body;
   }
 
   makeFrame(interpreter: Interpreter) {
@@ -22,13 +19,14 @@ export class ForInNode extends StatementNode {
 }
 
 export class ForInFrame extends Frame {
-  node: ForInNode;
   iterable: any;
   index: number = 0;
 
-  constructor(interpreter: Interpreter, node: ForInNode) {
+  constructor(
+    interpreter: Interpreter,
+    public node: ForInNode
+  ) {
     super(interpreter);
-    this.node = node;
   }
 
   visit() {

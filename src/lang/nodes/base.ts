@@ -15,12 +15,9 @@ export class StatementNode extends Node {}
 export class ValueNode extends Node {}
 
 export class Frame {
-  interpreter: Interpreter;
   state: number = 0;
 
-  constructor(interpreter: Interpreter) {
-    this.interpreter = interpreter;
-  }
+  constructor(protected interpreter: Interpreter) {}
 
   visit(): void | Promise<void> {
     throw new Error('not implemented');

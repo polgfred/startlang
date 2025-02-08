@@ -5,19 +5,12 @@ import { Frame, StatementNode, ValueNode } from './base';
 export class IfNode extends StatementNode {
   static type = 'if';
 
-  condition: ValueNode;
-  thenBody: StatementNode;
-  elseBody: StatementNode | null;
-
   constructor(
-    condition: ValueNode,
-    thenBody: StatementNode,
-    elseBody: StatementNode | null = null
+    public condition: ValueNode,
+    public thenBody: StatementNode,
+    public elseBody: StatementNode | null = null
   ) {
     super();
-    this.condition = condition;
-    this.thenBody = thenBody;
-    this.elseBody = elseBody;
   }
 
   makeFrame(interpreter: Interpreter) {
@@ -26,11 +19,11 @@ export class IfNode extends StatementNode {
 }
 
 export class IfFrame extends Frame {
-  node: IfNode;
-
-  constructor(interpreter: Interpreter, node: IfNode) {
+  constructor(
+    interpreter: Interpreter,
+    public node: IfNode
+  ) {
     super(interpreter);
-    this.node = node;
   }
 
   visit() {

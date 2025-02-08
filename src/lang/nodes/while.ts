@@ -5,13 +5,11 @@ import { StatementNode, ValueNode, Frame } from './base';
 export class WhileNode extends StatementNode {
   static type = 'while';
 
-  condition: ValueNode;
-  body: StatementNode;
-
-  constructor(condition: ValueNode, body: StatementNode) {
+  constructor(
+    public condition: ValueNode,
+    public body: StatementNode
+  ) {
     super();
-    this.condition = condition;
-    this.body = body;
   }
 
   makeFrame(interpreter: Interpreter) {
@@ -20,11 +18,11 @@ export class WhileNode extends StatementNode {
 }
 
 export class WhileFrame extends Frame {
-  node: WhileNode;
-
-  constructor(interpreter: Interpreter, node: WhileNode) {
+  constructor(
+    interpreter: Interpreter,
+    public node: WhileNode
+  ) {
     super(interpreter);
-    this.node = node;
   }
 
   visit() {

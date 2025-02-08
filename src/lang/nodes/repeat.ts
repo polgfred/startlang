@@ -5,13 +5,11 @@ import { ValueNode, Frame, StatementNode } from './base';
 export class RepeatNode extends StatementNode {
   static type = 'repeat';
 
-  times: ValueNode | null;
-  body: StatementNode;
-
-  constructor(times: ValueNode | null, body: StatementNode) {
+  constructor(
+    public times: ValueNode | null,
+    public body: StatementNode
+  ) {
     super();
-    this.times = times;
-    this.body = body;
   }
 
   makeFrame(interpreter: Interpreter) {
@@ -24,11 +22,11 @@ export class RepeatNode extends StatementNode {
 }
 
 class RepeatFrame extends Frame {
-  node: RepeatNode;
-
-  constructor(interpreter: Interpreter, node: RepeatNode) {
+  constructor(
+    interpreter: Interpreter,
+    public node: RepeatNode
+  ) {
     super(interpreter);
-    this.node = node;
   }
 
   visit() {
@@ -37,13 +35,14 @@ class RepeatFrame extends Frame {
 }
 
 class RepeatTimesFrame extends Frame {
-  node: RepeatNode;
   times: number = 0;
   count: number = 0;
 
-  constructor(interpreter: Interpreter, node: RepeatNode) {
+  constructor(
+    interpreter: Interpreter,
+    public node: RepeatNode
+  ) {
     super(interpreter);
-    this.node = node;
   }
 
   visit() {
