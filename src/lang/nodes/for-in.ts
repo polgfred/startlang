@@ -41,10 +41,10 @@ export class ForInFrame extends Frame {
         break;
       }
       case 2: {
-        this.update(null, (draft) => {
-          draft.index++;
-        });
         if (this.index < this.iterable.length) {
+          this.update(null, (draft) => {
+            draft.index++;
+          });
           this.interpreter.pushNode(this.node.body);
         } else {
           this.interpreter.popNode();

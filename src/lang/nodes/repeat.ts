@@ -59,7 +59,7 @@ class RepeatTimesFrame extends Frame {
       case 2: {
         if (this.count < this.times) {
           this.update(null, (draft) => {
-            draft.count = this.count + 1;
+            draft.count++;
           });
           this.interpreter.pushNode(this.node.body);
         } else {
