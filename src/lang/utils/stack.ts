@@ -15,6 +15,9 @@ export class Stack<T> {
   }
 
   pop() {
+    if (!this.parent) {
+      throw new Error('cannot pop bottom frame');
+    }
     return this.parent;
   }
 }

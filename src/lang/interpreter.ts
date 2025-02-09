@@ -91,7 +91,7 @@ export class Interpreter {
   }
 
   popFrame() {
-    this.topFrame = this.topFrame.pop() ?? rootFrame;
+    this.topFrame = this.topFrame.pop();
   }
 
   popOut() {
