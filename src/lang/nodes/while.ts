@@ -30,7 +30,7 @@ export class WhileFrame extends Frame {
         break;
       }
       case 1: {
-        if (Boolean(interpreter.lastResult)) {
+        if (interpreter.lastResult) {
           interpreter.updateFrame(this, 0);
           interpreter.pushFrame(this.node.body);
         } else {
