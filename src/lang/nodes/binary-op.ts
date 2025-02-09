@@ -39,8 +39,7 @@ export class BinaryOpFrame extends Frame {
       }
       case 2: {
         const right = interpreter.lastResult;
-        const handler = interpreter.getHandler(this.left);
-        interpreter.lastResult = handler.evalBinaryOp(
+        interpreter.lastResult = interpreter.evalBinaryOp(
           this.node.operator,
           this.left,
           right

@@ -181,6 +181,20 @@ export class Interpreter {
     this.setVariable(name, setNextResult(this.getVariable(name), 0));
   }
 
+  evalUnaryOp(op: string, right: any) {
+    const handler = this.getHandler(right);
+    return handler.evalUnaryOp(op, right);
+  }
+
+  evalBinaryOp(op: string, left: any, right: any) {
+    const leftHandler = this.getHandler(left);
+    const rightHandler = this.getHandler(right);
+    if (leftHandler !== rightHandler) {
+      throw new Error('operands must be of the same type');
+    }
+    return leftHandler.evalBinaryOp(op, left, right);
+  }
+
   snapshot() {
     return {
       gfn: this.globalFunctions,

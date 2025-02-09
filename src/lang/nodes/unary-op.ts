@@ -29,8 +29,10 @@ export class UnaryOpFrame extends Frame {
       }
       case 1: {
         const right = interpreter.lastResult;
-        const handler = interpreter.getHandler(right);
-        interpreter.lastResult = handler.evalUnaryOp(this.node.operator, right);
+        interpreter.lastResult = interpreter.evalUnaryOp(
+          this.node.operator,
+          right
+        );
         interpreter.popFrame();
       }
     }
