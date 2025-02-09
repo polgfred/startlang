@@ -1,50 +1,26 @@
 import { immerable } from 'immer';
 
 import { Interpreter } from '../interpreter';
+import { Stack } from '../utils/stack';
 
-export class Node {
-  makeFrame(): Frame {
-    throw new Error('not implemented');
-  }
+export abstract class Node {
+  abstract makeFrame(): Frame;
 }
 
-export class StatementNode extends Node {}
+export abstract class StatementNode extends Node {}
 
-export class ValueNode extends Node {}
+export abstract class ValueNode extends Node {}
 
-export class Frame {
+export abstract class Frame {
   state: number = 0;
 
-  visit(interpreter: Interpreter): void | Promise<void> {
-    throw new Error('not implemented');
-  }
+  abstract visit(interpreter: Interpreter): void | Promise<void>;
 }
 
 Frame[immerable] = true;
 
-export class FrameStack {
-  static root = new FrameStack(new Frame());
-
-  constructor(
-    public top: Frame,
-    public parent: FrameStack = FrameStack.root
-  ) {
-    Object.freeze(this);
-  }
-
-  swap(frame: Frame) {
-    return new FrameStack(frame, this.parent);
-  }
-
-  push(frame: Frame) {
-    return new FrameStack(frame, this);
-  }
-
-  pop() {
-    return this.parent;
-  }
-
-  isRoot() {
-    return this === FrameStack.root;
-  }
+class RootFrame extends Frame {
+  visit(interpreter: Interpreter) {}
 }
+
+export const rootFrame: Stack<Frame> = new Stack(new RootFrame());

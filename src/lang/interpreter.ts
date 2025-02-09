@@ -1,7 +1,7 @@
 import { Draft, original, produce } from 'immer';
 
 import { DataHandler, installHandlers } from './handlers';
-import { Frame, FrameStack, Node } from './nodes';
+import { Frame, Node, rootFrame } from './nodes';
 
 export class Interpreter {
   dataHandlers: DataHandler[] = [];
@@ -10,7 +10,7 @@ export class Interpreter {
   globalNamespace: Record<string, any> = {};
   namespaceStack: any[] = [];
   topNamespace: Record<string, any> = {};
-  frames = FrameStack.root;
+  topFrame = rootFrame;
   lastResult: any = null;
 
   constructor() {
@@ -54,15 +54,15 @@ export class Interpreter {
     this.globalNamespace = {};
     this.topNamespace = {};
     this.namespaceStack = [];
-    this.frames = new FrameStack(node.makeFrame());
+    this.topFrame = this.topFrame.push(node.makeFrame());
     this.setResult();
 
     return this.runLoop();
   }
 
   async runLoop() {
-    while (!this.frames.isRoot()) {
-      const result = this.frames.top.visit(this);
+    while (this.topFrame !== rootFrame) {
+      const result = this.topFrame.value.visit(this);
       if (result instanceof Promise) {
         await result;
       }
@@ -74,7 +74,7 @@ export class Interpreter {
     state: number | null,
     updater?: (draft: Draft<T>) => void
   ) {
-    this.frames = this.frames.swap(
+    this.topFrame = this.topFrame.swap(
       produce(frame, (draft) => {
         if (state !== null) {
           draft.state = state;
@@ -87,11 +87,11 @@ export class Interpreter {
   }
 
   pushFrame(node: Node) {
-    this.frames = this.frames.push(node.makeFrame());
+    this.topFrame = this.topFrame.push(node.makeFrame());
   }
 
   popFrame() {
-    this.frames = this.frames.pop();
+    this.topFrame = this.topFrame.pop() ?? rootFrame;
   }
 
   public snapshot() {
@@ -100,7 +100,7 @@ export class Interpreter {
       gns: this.globalNamespace,
       lns: this.topNamespace,
       lst: this.namespaceStack,
-      fra: this.frames,
+      fra: this.topFrame,
       res: this.lastResult,
     };
   }
@@ -110,7 +110,7 @@ export class Interpreter {
     this.globalNamespace = snap.gns;
     this.topNamespace = snap.lns;
     this.namespaceStack = snap.lst;
-    this.frames = snap.fra;
+    this.topFrame = snap.fra;
     this.lastResult = snap.res;
   }
 
@@ -126,7 +126,7 @@ export class Interpreter {
         this.popUntil(ctrl.flow);
       } else if (ctrl.pop === 'exit') {
         this.topFrame = nullFrame;
-        this.frames = [];
+        this.topFrame = [];
       }
     }
   }
@@ -140,7 +140,7 @@ export class Interpreter {
         lhs: { name: node.name },
       });
     } else {
-      this.frames = produce(this.frames, (dfst) => {
+      this.topFrame = produce(this.topFrame, (dfst) => {
         dfst.push(this.topFrame);
       });
       this.topFrame = makeFrame(node);
@@ -160,10 +160,10 @@ export class Interpreter {
         this.topNamespace = original(dlst.pop());
       });
     }
-    if (this.frames.length === 0) {
+    if (this.topFrame.length === 0) {
       this.topFrame = this.nullFrame;
     } else {
-      this.frames = produce(this.frames, (dfst) => {
+      this.topFrame = produce(this.topFrame, (dfst) => {
         this.topFrame = original(dfst.pop());
       });
     }
