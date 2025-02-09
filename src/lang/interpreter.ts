@@ -92,7 +92,7 @@ export class Interpreter {
     if (node instanceof LiteralNode) {
       this.lastResult = node.value;
     } else if (node instanceof VarNode) {
-      this.lastResult = this.getVariableValue(node.name);
+      this.lastResult = this.getVariable(node.name);
     } else {
       this.topFrame = this.topFrame.push(node.makeFrame());
     }
@@ -133,7 +133,7 @@ export class Interpreter {
     this.topNamespace = this.topNamespace.pop();
   }
 
-  getVariableValue(name: string) {
+  getVariable(name: string) {
     if (name in this.topNamespace.value) {
       return this.topNamespace.value[name];
     } else {
@@ -141,7 +141,7 @@ export class Interpreter {
     }
   }
 
-  setVariableValue(name: string, value: any, local = false) {
+  setVariable(name: string, value: any, local = false) {
     if (local || name in this.topNamespace.value) {
       this.topNamespace = this.topNamespace.swap(
         produce(this.topNamespace, (draft) => {
@@ -155,56 +155,30 @@ export class Interpreter {
     }
   }
 
-  getIndex(name: string, indexes: any[]) {
-    const max = indexes.length - 1;
-    return this.next(this.get(name), 0);
-
-    next = (b: any, i: number) => {
-      const h = handle(b);
-      const idx = indexes[i];
-      return i === max
-        ? h.getindex(b, idx)
-        : this.next(h.getindex(b, idx), i + 1);
-    };
+  getVariableIndex(name: string, indexes: any[]) {
+    return indexes.reduce((currentValue, currentIndex) => {
+      const handler = this.getHandler(currentValue);
+      return handler.getIndex(currentValue, currentIndex);
+    }, this.getVariable(name));
   }
 
-  setIndex(name: string, indexes: any[], value: any) {
-    const max = indexes.length - 1;
-    this.set(name, this.next(this.get(name), 0));
-
-    next = (b: any, i: number) => {
-      const h = handle(b);
-      const idx = indexes[i];
-      if (i === max) {
-        return h.setindex(b, idx, value);
+  setVariableIndex(name: string, indexes: any[], value: any) {
+    const setNextResult = (currentValue: any, i: number) => {
+      const handler = this.getHandler(currentValue);
+      const currentIndex = indexes[i];
+      if (i === indexes.length - 1) {
+        return handler.setIndex(currentValue, currentIndex, value);
       } else {
-        const nv = h.getindex(b, idx);
-        return h.setindex(b, idx, this.next(nv, i + 1));
+        const nextValue = handler.getIndex(currentValue, currentIndex);
+        return handler.setIndex(
+          currentValue,
+          currentIndex,
+          setNextResult(nextValue, i + 1)
+        );
       }
     };
-  }
 
-  handleResult(ret: any, assn: any[]) {
-    if (ret) {
-      const repl = ret[assignKey];
-      if (repl) {
-        for (let i = 0; i < repl.length; ++i) {
-          const r = repl[i];
-          if (r !== undefined) {
-            const a = assn[i];
-            if (a !== undefined) {
-              if (a.indexes) {
-                this.setIndex(a.name, a.indexes, r);
-              } else {
-                this.set(a.name, r);
-              }
-            }
-          }
-        }
-        ret = ret[resultKey] || repl[0];
-      }
-    }
-    this.setResult(ret);
+    this.setVariable(name, setNextResult(this.getVariable(name), 0));
   }
 
   snapshot() {

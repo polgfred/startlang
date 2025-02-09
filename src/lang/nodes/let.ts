@@ -28,7 +28,7 @@ export class LetFrame extends Frame {
         break;
       }
       case 1: {
-        interpreter.setVariableValue(this.node.name, interpreter.lastResult);
+        interpreter.setVariable(this.node.name, interpreter.lastResult);
         interpreter.popFrame();
         break;
       }

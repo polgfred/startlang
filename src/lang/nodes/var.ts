@@ -18,7 +18,7 @@ export class VarFrame extends Frame {
   }
 
   visit(interpreter: Interpreter) {
-    interpreter.lastResult = interpreter.getVariableValue(this.node.name);
+    interpreter.lastResult = interpreter.getVariable(this.node.name);
     interpreter.popFrame();
   }
 }

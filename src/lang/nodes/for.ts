@@ -65,7 +65,7 @@ export class ForFrame extends Frame {
         if (
           this.step > 0 ? this.index <= this.limit : this.index >= this.limit
         ) {
-          interpreter.setVariableValue(this.node.name, this.index);
+          interpreter.setVariable(this.node.name, this.index);
           interpreter.updateFrame(this, null, (draft) => {
             draft.index += this.step;
           });
