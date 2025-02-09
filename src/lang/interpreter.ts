@@ -134,9 +134,11 @@ export class Interpreter {
   }
 
   getVariableValue(name: string) {
-    return name in this.topNamespace.value
-      ? this.topNamespace.value[name]
-      : this.globalNamespace[name];
+    if (name in this.topNamespace.value) {
+      return this.topNamespace.value[name];
+    } else {
+      return this.globalNamespace[name];
+    }
   }
 
   setVariableValue(name: string, value: any, local = false) {
@@ -153,25 +155,7 @@ export class Interpreter {
     }
   }
 
-  public snapshot() {
-    return {
-      gfn: this.globalFunctions,
-      gns: this.globalNamespace,
-      fra: this.topFrame,
-      lns: this.topNamespace,
-      res: this.lastResult,
-    };
-  }
-
-  public reset(snap: any) {
-    this.globalFunctions = snap.gfn;
-    this.globalNamespace = snap.gns;
-    this.topFrame = snap.fra;
-    this.topNamespace = snap.lns;
-    this.lastResult = snap.res;
-  }
-
-  private getIndex(name: string, indexes: any[]) {
+  getIndex(name: string, indexes: any[]) {
     const max = indexes.length - 1;
     return this.next(this.get(name), 0);
 
@@ -184,7 +168,7 @@ export class Interpreter {
     };
   }
 
-  private setIndex(name: string, indexes: any[], value: any) {
+  setIndex(name: string, indexes: any[], value: any) {
     const max = indexes.length - 1;
     this.set(name, this.next(this.get(name), 0));
 
@@ -221,5 +205,23 @@ export class Interpreter {
       }
     }
     this.setResult(ret);
+  }
+
+  snapshot() {
+    return {
+      gfn: this.globalFunctions,
+      gns: this.globalNamespace,
+      fra: this.topFrame,
+      lns: this.topNamespace,
+      res: this.lastResult,
+    };
+  }
+
+  reset(snap: any) {
+    this.globalFunctions = snap.gfn;
+    this.globalNamespace = snap.gns;
+    this.topFrame = snap.fra;
+    this.topNamespace = snap.lns;
+    this.lastResult = snap.res;
   }
 }
