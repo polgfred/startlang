@@ -21,7 +21,7 @@ export class Interpreter {
     installHandlers.call(this);
   }
 
-  private registerGlobals(fns: Record<string, any>) {
+  private registerGlobals(fns: object) {
     for (const name in fns) {
       this.systemFunctions[name] = fns[name];
     }
