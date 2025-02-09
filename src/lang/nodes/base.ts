@@ -21,3 +21,30 @@ export class Frame {
 }
 
 Frame[immerable] = true;
+
+export class FrameStack {
+  static root = new FrameStack(new Frame());
+
+  constructor(
+    public top: Frame,
+    public parent: FrameStack = FrameStack.root
+  ) {
+    Object.freeze(this);
+  }
+
+  swap(frame: Frame) {
+    return new FrameStack(frame, this.parent);
+  }
+
+  push(frame: Frame) {
+    return new FrameStack(frame, this);
+  }
+
+  pop() {
+    return this.parent;
+  }
+
+  isRoot() {
+    return this === FrameStack.root;
+  }
+}

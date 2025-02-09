@@ -18,6 +18,6 @@ export class LiteralFrame extends Frame {
 
   visit(interpreter: Interpreter) {
     interpreter.lastResult = this.node.value;
-    interpreter.popNode();
+    interpreter.popFrame();
   }
 }

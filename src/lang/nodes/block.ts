@@ -15,7 +15,7 @@ export class BlockNode extends StatementNode {
 class BlockFrame extends Frame {
   count: number = 0;
 
-  constructor(private node: BlockNode) {
+  constructor(public node: BlockNode) {
     super();
   }
 
@@ -24,9 +24,9 @@ class BlockFrame extends Frame {
       interpreter.updateFrame(this, null, (draft) => {
         draft.count++;
       });
-      interpreter.pushNode(this.node.elems[this.count]);
+      interpreter.pushFrame(this.node.elems[this.count]);
     } else {
-      interpreter.popNode();
+      interpreter.popFrame();
     }
   }
 }

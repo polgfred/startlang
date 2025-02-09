@@ -28,7 +28,7 @@ export class ForInFrame extends Frame {
     switch (this.state) {
       case 0: {
         interpreter.updateFrame(this, 1);
-        interpreter.pushNode(this.node.iterable);
+        interpreter.pushFrame(this.node.iterable);
         break;
       }
       case 1: {
@@ -42,9 +42,9 @@ export class ForInFrame extends Frame {
           interpreter.updateFrame(this, null, (draft) => {
             draft.index++;
           });
-          interpreter.pushNode(this.node.body);
+          interpreter.pushFrame(this.node.body);
         } else {
-          interpreter.popNode();
+          interpreter.popFrame();
         }
         break;
       }

@@ -1,15 +1,7 @@
 import { Draft, original, produce } from 'immer';
 
 import { DataHandler, installHandlers } from './handlers';
-import { Frame, Node } from './nodes';
-
-class NullFrame extends Frame {
-  visit() {
-    throw new Error('no program running');
-  }
-}
-
-const nullFrame = new NullFrame();
+import { Frame, FrameStack, Node } from './nodes';
 
 export class Interpreter {
   dataHandlers: DataHandler[] = [];
@@ -18,8 +10,7 @@ export class Interpreter {
   globalNamespace: Record<string, any> = {};
   namespaceStack: any[] = [];
   topNamespace: Record<string, any> = {};
-  frameStack: Frame[] = [];
-  topFrame: Frame = nullFrame;
+  frames = FrameStack.root;
   lastResult: any = null;
 
   constructor() {
@@ -63,16 +54,15 @@ export class Interpreter {
     this.globalNamespace = {};
     this.topNamespace = {};
     this.namespaceStack = [];
-    this.topFrame = node.makeFrame();
-    this.frameStack = [];
+    this.frames = new FrameStack(node.makeFrame());
     this.setResult();
 
     return this.runLoop();
   }
 
   async runLoop() {
-    while (this.topFrame !== nullFrame) {
-      const result = this.topFrame.visit(this);
+    while (!this.frames.isRoot()) {
+      const result = this.frames.top.visit(this);
       if (result instanceof Promise) {
         await result;
       }
@@ -84,30 +74,24 @@ export class Interpreter {
     state: number | null,
     updater?: (draft: Draft<T>) => void
   ) {
-    this.topFrame = produce(frame, (draft) => {
-      if (state !== null) {
-        draft.state = state;
-      }
-      updater?.(draft);
-    });
+    this.frames = this.frames.swap(
+      produce(frame, (draft) => {
+        if (state !== null) {
+          draft.state = state;
+        }
+        if (updater) {
+          updater(draft);
+        }
+      })
+    );
   }
 
-  pushNode(node: Node) {
-    this.frameStack = produce(this.frameStack, (draft) => {
-      draft.push(this.topFrame);
-    });
-    this.topFrame = node.makeFrame();
+  pushFrame(node: Node) {
+    this.frames = this.frames.push(node.makeFrame());
   }
 
-  popNode() {
-    if (this.frameStack.length === 0) {
-      this.topFrame = nullFrame;
-    } else {
-      this.frameStack = produce(this.frameStack, (draft) => {
-        // @ts-expect-error type of original() is wrong
-        this.topFrame = original(draft.pop());
-      });
-    }
+  popFrame() {
+    this.frames = this.frames.pop();
   }
 
   public snapshot() {
@@ -116,8 +100,7 @@ export class Interpreter {
       gns: this.globalNamespace,
       lns: this.topNamespace,
       lst: this.namespaceStack,
-      fra: this.topFrame,
-      fst: this.frameStack,
+      fra: this.frames,
       res: this.lastResult,
     };
   }
@@ -127,8 +110,7 @@ export class Interpreter {
     this.globalNamespace = snap.gns;
     this.topNamespace = snap.lns;
     this.namespaceStack = snap.lst;
-    this.topFrame = snap.fra;
-    this.frameStack = snap.fst;
+    this.frames = snap.fra;
     this.lastResult = snap.res;
   }
 
@@ -144,7 +126,7 @@ export class Interpreter {
         this.popUntil(ctrl.flow);
       } else if (ctrl.pop === 'exit') {
         this.topFrame = nullFrame;
-        this.frameStack = [];
+        this.frames = [];
       }
     }
   }
@@ -158,7 +140,7 @@ export class Interpreter {
         lhs: { name: node.name },
       });
     } else {
-      this.frameStack = produce(this.frameStack, (dfst) => {
+      this.frames = produce(this.frames, (dfst) => {
         dfst.push(this.topFrame);
       });
       this.topFrame = makeFrame(node);
@@ -178,10 +160,10 @@ export class Interpreter {
         this.topNamespace = original(dlst.pop());
       });
     }
-    if (this.frameStack.length === 0) {
+    if (this.frames.length === 0) {
       this.topFrame = this.nullFrame;
     } else {
-      this.frameStack = produce(this.frameStack, (dfst) => {
+      this.frames = produce(this.frames, (dfst) => {
         this.topFrame = original(dfst.pop());
       });
     }

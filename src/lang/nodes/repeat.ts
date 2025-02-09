@@ -25,7 +25,7 @@ class RepeatFrame extends Frame {
   }
 
   visit(interpreter: Interpreter) {
-    interpreter.pushNode(this.node.body);
+    interpreter.pushFrame(this.node.body);
   }
 }
 
@@ -41,7 +41,7 @@ class RepeatTimesFrame extends Frame {
     switch (this.state) {
       case 0: {
         interpreter.updateFrame(this, 1);
-        interpreter.pushNode(this.node.times!);
+        interpreter.pushFrame(this.node.times!);
         break;
       }
       case 1: {
@@ -55,9 +55,9 @@ class RepeatTimesFrame extends Frame {
           interpreter.updateFrame(this, null, (draft) => {
             draft.count++;
           });
-          interpreter.pushNode(this.node.body);
+          interpreter.pushFrame(this.node.body);
         } else {
-          interpreter.popNode();
+          interpreter.popFrame();
         }
         break;
       }
