@@ -25,3 +25,5 @@ class RootFrame extends Frame {
 }
 
 export const rootFrame: Stack<Frame> = new Stack(new RootFrame());
+
+export const rootNamespace: Stack<object> = new Stack(Object.create(null));
