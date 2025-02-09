@@ -40,6 +40,10 @@ export class ForInFrame extends Frame {
       }
       case 2: {
         if (this.index < this.iterable.length) {
+          interpreter.setVariableValue(
+            this.node.variable,
+            this.iterable[this.index]
+          );
           interpreter.updateFrame(this, null, (draft) => {
             draft.index++;
           });

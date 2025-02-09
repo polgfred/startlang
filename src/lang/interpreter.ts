@@ -3,13 +3,15 @@ import { Draft, original, produce } from 'immer';
 import { DataHandler, installHandlers } from './handlers';
 import { Frame, Node, rootFrame } from './nodes';
 
+const emptyObject = Object.create(null);
+
 export class Interpreter {
   dataHandlers: DataHandler[] = [];
-  systemFunctions: Record<string, any> = {};
-  globalFunctions: Record<string, any> = {};
-  globalNamespace: Record<string, any> = {};
+  systemFunctions: Record<string, any> = emptyObject;
+  globalFunctions: Record<string, any> = emptyObject;
+  globalNamespace: Record<string, any> = emptyObject;
   namespaceStack: any[] = [];
-  topNamespace: Record<string, any> = {};
+  topNamespace: Record<string, any> = emptyObject;
   topFrame = rootFrame;
   lastResult: any = null;
 
@@ -115,6 +117,16 @@ export class Interpreter {
       }
       this.popFrame();
     }
+  }
+
+  getVariableValue(name: string) {
+    return this.globalNamespace[name];
+  }
+
+  setVariableValue(name: string, value: any) {
+    this.globalNamespace = produce(this.globalNamespace, (draft) => {
+      draft[name] = value;
+    });
   }
 
   public snapshot() {

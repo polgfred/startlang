@@ -1,4 +1,5 @@
 import { Interpreter } from '../interpreter';
+
 import { Frame, StatementNode } from './base';
 
 export class BreakNode extends StatementNode {
