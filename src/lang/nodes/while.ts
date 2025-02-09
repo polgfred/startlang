@@ -16,6 +16,8 @@ export class WhileNode extends StatementNode {
 }
 
 export class WhileFrame extends Frame {
+  flowMarker = 'loop' as const;
+
   constructor(public node: WhileNode) {
     super();
   }

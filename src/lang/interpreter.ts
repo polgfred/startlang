@@ -94,6 +94,29 @@ export class Interpreter {
     this.topFrame = this.topFrame.pop() ?? rootFrame;
   }
 
+  popOut() {
+    this.topFrame = rootFrame;
+  }
+
+  popOver(flow: 'loop' | 'call') {
+    while (this.topFrame !== rootFrame) {
+      const { flowMarker } = this.topFrame.value;
+      this.popFrame();
+      if (flow === flowMarker) {
+        break;
+      }
+    }
+  }
+
+  popUntil(flow: 'loop' | 'call') {
+    while (this.topFrame !== rootFrame) {
+      if (flow === this.topFrame.value.flowMarker) {
+        break;
+      }
+      this.popFrame();
+    }
+  }
+
   public snapshot() {
     return {
       gfn: this.globalFunctions,
@@ -112,23 +135,6 @@ export class Interpreter {
     this.namespaceStack = snap.lst;
     this.topFrame = snap.fra;
     this.lastResult = snap.res;
-  }
-
-  private flow(ctrl: any) {
-    if (ctrl.type) {
-      this.push(ctrl);
-    } else if (ctrl.pop) {
-      if (ctrl.pop === 'out') {
-        this.pop();
-      } else if (ctrl.pop === 'over') {
-        this.popOver(ctrl.flow);
-      } else if (ctrl.pop === 'until') {
-        this.popUntil(ctrl.flow);
-      } else if (ctrl.pop === 'exit') {
-        this.topFrame = nullFrame;
-        this.topFrame = [];
-      }
-    }
   }
 
   private push(node: any) {
@@ -166,25 +172,6 @@ export class Interpreter {
       this.topFrame = produce(this.topFrame, (dfst) => {
         this.topFrame = original(dfst.pop());
       });
-    }
-  }
-
-  private popOver(flow: string) {
-    while (this.topFrame) {
-      const { node } = this.topFrame;
-      this.pop();
-      if (node.flow === flow) {
-        break;
-      }
-    }
-  }
-
-  private popUntil(flow: string) {
-    while (this.topFrame) {
-      if (this.topFrame.node.flow === flow) {
-        break;
-      }
-      this.pop();
     }
   }
 

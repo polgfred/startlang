@@ -17,6 +17,7 @@ export class ForInNode extends StatementNode {
 }
 
 export class ForInFrame extends Frame {
+  flowMarker = 'loop' as const;
   iterable: any;
   index: number = 0;
 

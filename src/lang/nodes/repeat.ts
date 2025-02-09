@@ -20,6 +20,8 @@ export class RepeatNode extends StatementNode {
 }
 
 class RepeatFrame extends Frame {
+  flowMarker = 'loop' as const;
+
   constructor(public node: RepeatNode) {
     super();
   }

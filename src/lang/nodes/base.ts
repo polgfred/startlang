@@ -12,6 +12,7 @@ export abstract class StatementNode extends Node {}
 export abstract class ValueNode extends Node {}
 
 export abstract class Frame {
+  flowMarker: 'loop' | 'call' | null = null;
   state: number = 0;
 
   abstract visit(interpreter: Interpreter): void | Promise<void>;
