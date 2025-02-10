@@ -1,4 +1,4 @@
-import { Draft, produce } from 'immer';
+import { Draft, original, produce } from 'immer';
 
 import { DataHandler, installHandlers } from './handlers';
 import { Frame, Node, rootFrame, rootNamespace } from './nodes';
@@ -156,29 +156,28 @@ export class Interpreter {
   }
 
   getVariableIndex(name: string, indexes: any[]) {
-    return indexes.reduce((currentValue, currentIndex) => {
-      const handler = this.getHandler(currentValue);
-      return handler.getIndex(currentValue, currentIndex);
-    }, this.getVariable(name));
+    let value = this.getVariable(name);
+    for (let i = 0; i < indexes.length; i++) {
+      const handler = this.getHandler(value);
+      value = handler.getIndex(value, indexes[i]);
+    }
+    return value;
   }
 
   setVariableIndex(name: string, indexes: any[], value: any) {
-    const setNextResult = (currentValue: any, i: number) => {
-      const handler = this.getHandler(currentValue);
-      const currentIndex = indexes[i];
-      if (i === indexes.length - 1) {
-        return handler.setIndex(currentValue, currentIndex, value);
-      } else {
-        const nextValue = handler.getIndex(currentValue, currentIndex);
-        return handler.setIndex(
-          currentValue,
-          currentIndex,
-          setNextResult(nextValue, i + 1)
-        );
-      }
-    };
-
-    this.setVariable(name, setNextResult(this.getVariable(name), 0));
+    this.setVariable(
+      name,
+      produce(this.getVariable(name), (draft: any) => {
+        for (let i = 0; i < indexes.length; i++) {
+          const handler = this.getHandler(original(draft));
+          if (i < indexes.length - 1) {
+            draft = handler.getIndex(draft, indexes[i]);
+          } else {
+            handler.setIndex(draft, indexes[i], value);
+          }
+        }
+      })
+    );
   }
 
   evalUnaryOp(op: string, right: any) {

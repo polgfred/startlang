@@ -1,4 +1,3 @@
-import { produce } from 'immer';
 import deepEqual from 'deep-equal';
 
 import { DataHandler } from './base';
@@ -23,9 +22,7 @@ export class ListHandler extends DataHandler {
 
   setIndex(value: any[], index: number, element: any) {
     index = this.adjustIndex(index, value.length);
-    return produce(value, (draft) => {
-      draft[index] = element;
-    });
+    value[index] = element;
   }
 
   evalBinaryOp(op: string, left: any, right: any) {

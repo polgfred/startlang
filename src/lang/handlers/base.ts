@@ -1,3 +1,4 @@
+import { Draft, original } from 'immer';
 import { Interpreter } from '../interpreter';
 
 export class DataHandler {
@@ -21,7 +22,7 @@ export class DataHandler {
     throw new Error(`indexing not supported for ${value}`);
   }
 
-  setIndex(value: any, index: number | string, element: any): any {
+  setIndex(value: Draft<any>, index: number | string, element: any): void {
     throw new Error(`indexing not supported for ${value}`);
   }
 
