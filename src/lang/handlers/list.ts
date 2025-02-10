@@ -26,8 +26,6 @@ export class ListHandler extends DataHandler {
   }
 
   evalBinaryOp(op: string, left: any, right: any) {
-    this.assertSameType(left, right);
-
     switch (op) {
       case '$':
         return left + right;

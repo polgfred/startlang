@@ -35,8 +35,6 @@ export class DataHandler {
   }
 
   evalBinaryOp(op: string, left: any, right: any): any {
-    this.assertSameType(left, right);
-
     switch (op) {
       case '=':
         return left === right;
@@ -68,16 +66,5 @@ export class DataHandler {
 
   protected adjustIndex(index: number, size: number) {
     return index > 0 ? index - 1 : Math.max(0, size + index);
-  }
-
-  protected assertSameType(left: any, right: any) {
-    const leftHandler = this.interpreter.getHandler(left);
-    const rightHandler = this.interpreter.getHandler(right);
-
-    if (leftHandler !== rightHandler) {
-      throw new Error(
-        `binary operator not supported on different types: ${left} and ${right}`
-      );
-    }
   }
 }
