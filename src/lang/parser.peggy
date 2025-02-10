@@ -18,6 +18,7 @@ import {
   NextNode,
   RepeatNode,
   ReturnNode,
+  TemplateStringNode,
   UnaryOpNode,
   VarIndexNode,
   VarNode,
@@ -68,18 +69,22 @@ import {
     }
   }
 
-  // take a chain of string segments and construct a concatenation expression
-  function buildString(left, rest) {
-    if (rest.length === 0) {
-      return left;
+  // take a series of string segments and construct a template string node
+  // (or a literal node if there's just a single string segment)
+  function buildString(segments) {
+    if (
+      segments.length === 1 &&
+      segments[0] instanceof LiteralNode &&
+      typeof segments[0].value === 'string'
+    ) {
+      return segments[0];
     } else {
-      const right = rest.shift();
-      const node = new BinaryOpNode('$', left, right);
-      return buildString(node, rest);
+      return new TemplateStringNode(segments);
     }
   }
 
-  // take a base name, indexes, and (optionally) a value, and construct an indexish node
+  // take a base name, indexes, and (optionally) a value, and construct a
+  // var-index or let-index node
   function buildIndex(name, indexes, value) {
     if (value === undefined) {
       return new VarIndexNode(name, indexes);
@@ -332,15 +337,9 @@ PrimaryExpr
 // Strings
 
 String 'a string'
-  = '"' rest:StringSegment* '"'
+  = '"' segments:StringSegment* '"'
     {
-      // if the first segment isn't a string literal, prepend an empty string
-      const first = (rest.length > 0
-                      && (rest[0] instanceof LiteralNode)
-                      && typeof rest[0].value === 'string')
-                        ? rest.shift()
-                        : new LiteralNode('')
-      return buildString(first, rest);
+      return buildString(segments);
     }
 
 StringSegment

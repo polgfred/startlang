@@ -16,6 +16,7 @@ export * from './logical-op';
 export * from './next';
 export * from './repeat';
 export * from './return';
+export * from './template-string';
 export * from './unary-op';
 export * from './var-index';
 export * from './var';
