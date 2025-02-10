@@ -258,7 +258,7 @@ ConcatExpr
     { return buildBinaryExpr(first, rest) }
 
 ConcatOp
-  = '$'
+  = '::'
 
 // Math
 

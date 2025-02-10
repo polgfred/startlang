@@ -38,7 +38,7 @@ export class ListHandler extends DataHandler {
 
   evalBinaryOp(op: string, left: any, right: any) {
     switch (op) {
-      case '$':
+      case '::':
         return [...left, ...right];
       case '=':
         return deepEqual(left, right, { strict: true });

@@ -20,6 +20,15 @@ export class StringHandler extends DataHandler {
     index = adjustIndex(index, value.length);
     return value.charAt(index);
   }
+
+  evalBinaryOp(op: string, left: any, right: any) {
+    switch (op) {
+      case '::':
+        return left + right;
+      default:
+        return super.evalBinaryOp(op, left, right);
+    }
+  }
 }
 
 const stringMethods = {
