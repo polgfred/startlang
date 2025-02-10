@@ -1,23 +1,31 @@
 /* eslint-disable no-console */
 
 import console from 'node:console';
-import { readFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import process from 'node:process';
 import readline from 'node:readline';
 import { inspect } from 'node:util';
 
 import peggy from 'peggy';
 
-import { handle, makeInterpreter } from '../src/lang/interpreter.js';
+import { Interpreter } from '../src/lang/interpreter';
 
-const options = {},
-  parserOptions = {},
-  parser = peggy.generate(
-    await readFile(`${import.meta.dirname}/../src/lang/parser.peggy`, 'utf-8')
-  ),
-  output = (obj) => {
-    console.log(inspect(obj, { colors: true, depth: null }));
-  };
+const options = {};
+const parserOptions = {};
+
+const source = peggy.generate(
+  await readFile(`${import.meta.dirname}/../src/lang/parser.peggy`, 'utf-8'),
+  {
+    output: 'source',
+    format: 'es',
+  }
+);
+await writeFile(`${import.meta.dirname}/../src/lang/parser.js`, source);
+const parser = await import('../src/lang/parser.js');
+
+function output(obj) {
+  console.log(inspect(obj, { colors: true, depth: null }));
+}
 
 if (process.argv.indexOf('--ast') != -1) {
   options.ast = true;
@@ -54,20 +62,20 @@ async function main() {
     process.exit();
   }
 
-  const interp = makeInterpreter();
+  const interp = new Interpreter();
   interp.registerGlobals({
-    print(...values) {
+    print(interp, values) {
       if (values.length > 0) {
         for (let i = 0; i < values.length; ++i) {
           const v = values[i];
-          console.log(handle(v).repr(v));
+          console.log(interp.getHandler(v).getPrettyValue(v));
         }
       } else {
         console.log();
       }
     },
 
-    input(message) {
+    input(interp, [message]) {
       return new Promise((resolve) => {
         const rl = readline.createInterface({
           input: process.stdin,
@@ -83,7 +91,6 @@ async function main() {
   });
 
   try {
-    interp.init();
     const result = await interp.run(node);
 
     if (result) {

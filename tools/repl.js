@@ -1,14 +1,14 @@
 /* eslint-disable no-console */
 
 import console from 'node:console';
-import { readFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import process from 'node:process';
 import readline from 'node:readline';
 import { inspect } from 'node:util';
 
 import peggy from 'peggy';
 
-import { handle, makeInterpreter } from '../src/lang/interpreter.js';
+import { Interpreter } from '../src/lang/interpreter';
 
 async function main() {
   const rl = readline.createInterface({
@@ -16,17 +16,23 @@ async function main() {
     output: process.stdout,
   });
 
-  const parser = peggy.generate(
-    await readFile(`${import.meta.dirname}/../src/lang/parser.peggy`, 'utf-8')
+  const source = peggy.generate(
+    await readFile(`${import.meta.dirname}/../src/lang/parser.peggy`, 'utf-8'),
+    {
+      output: 'source',
+      format: 'es',
+    }
   );
+  await writeFile(`${import.meta.dirname}/../src/lang/parser.js`, source);
+  const parser = await import('../src/lang/parser.js');
 
-  const interp = makeInterpreter();
+  const interp = new Interpreter();
   interp.registerGlobals({
-    print(...values) {
+    print(interp, values) {
       if (values.length > 0) {
         for (let i = 0; i < values.length; ++i) {
           const v = values[i];
-          console.log(handle(v).repr(v));
+          console.log(interp.getHandler(v).getPrettyValue(v));
         }
       } else {
         console.log();
@@ -47,7 +53,6 @@ async function main() {
       });
     },
   });
-  interp.init();
 
   let lines = [];
 
