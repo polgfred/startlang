@@ -47,7 +47,7 @@ export class CallFrame extends Frame {
       case 2: {
         const func = interpreter.globalFunctions[this.node.name];
         interpreter.pushNamespace();
-        for (let i = 0; i < func.args.length; i++) {
+        for (let i = 0; i < func.params.length; i++) {
           interpreter.setVariable(func.params[i], this.args[i]);
         }
         interpreter.updateFrame(this, 3);
