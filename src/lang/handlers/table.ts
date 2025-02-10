@@ -2,7 +2,13 @@ import deepEqual from 'deep-equal';
 
 import { DataHandler } from './base';
 
+import { Interpreter } from '../interpreter';
+
 export class TableHandler extends DataHandler {
+  constructor(interpreter: Interpreter) {
+    super(interpreter, tableGlobals, tableMethods);
+  }
+
   shouldHandle(value: any) {
     return typeof value === 'object' && value !== null && !Array.isArray(value);
   }
@@ -36,3 +42,15 @@ export class TableHandler extends DataHandler {
     }
   }
 }
+
+const tableGlobals = {
+  table(interpreter: Interpreter, pairs: any[]) {
+    const table = Object.create(null);
+    for (var i = 0; i < pairs.length; i += 2) {
+      table[pairs[i]] = pairs[i + 1];
+    }
+    interpreter.setResult(Object.freeze(table));
+  },
+};
+
+const tableMethods = {};

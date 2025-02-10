@@ -5,31 +5,26 @@ import { Frame, Node, rootFrame, rootNamespace } from './nodes';
 import { LiteralNode } from './nodes/literal';
 import { VarNode } from './nodes/var';
 
-const emptyObject: object = Object.create(null);
-
 export class Interpreter {
   dataHandlers: DataHandler[] = [];
-  systemFunctions = emptyObject;
-  globalFunctions = emptyObject;
-  globalNamespace = emptyObject;
+  systemFunctions = Object.create(null);
+  globalFunctions = Object.create(null);
+  globalNamespace = Object.create(null);
   topFrame = rootFrame;
   topNamespace = rootNamespace;
   lastResult: any = null;
 
   constructor() {
-    // this.registerGlobals(builtinGlobals);
-    installHandlers.call(this);
+    installHandlers(this);
   }
 
-  private registerGlobals(fns: object) {
-    for (const name in fns) {
-      this.systemFunctions[name] = fns[name];
-    }
+  registerGlobals(fns: object) {
+    Object.assign(this.systemFunctions, fns);
   }
 
   registerHandler(handler: DataHandler) {
     this.dataHandlers.push(handler);
-    // this.registerGlobals(handler.globals);
+    this.registerGlobals(handler.globals);
   }
 
   getHandler(value: any) {
@@ -42,19 +37,7 @@ export class Interpreter {
     throw new Error(`could not determine type for ${value}`);
   }
 
-  private syscall(name: string, args: any[]) {
-    const fn =
-      (args.length > 0 && this.getHandler(args[0]).getMethod(name)) ||
-      this.systemFunctions[name];
-    if (!fn) {
-      throw new Error(`object not found or not a function: ${name}`);
-    }
-    return fn(...args);
-  }
-
   run(node: Node) {
-    this.globalFunctions = {};
-    this.globalNamespace = {};
     this.topNamespace = rootNamespace;
     this.topFrame = this.topFrame.push(node.makeFrame());
     this.lastResult = null;
@@ -127,7 +110,7 @@ export class Interpreter {
   }
 
   pushNamespace() {
-    this.topNamespace = this.topNamespace.push(emptyObject);
+    this.topNamespace = this.topNamespace.push(Object.create(null));
   }
 
   popNamespace() {
@@ -193,6 +176,19 @@ export class Interpreter {
       throw new Error('operands must be of the same type');
     }
     return leftHandler.evalBinaryOp(op, left, right);
+  }
+
+  runFunction(name: string, args: any[]) {
+    if (args.length > 0) {
+      const handler = this.getHandler(args[0]);
+      if (name in handler.methods) {
+        return handler.methods[name](this, args);
+      }
+    }
+    if (name in this.systemFunctions) {
+      return this.systemFunctions[name](this, args);
+    }
+    throw new Error(`object not found or not a function: ${name}`);
   }
 
   setResult(value: any) {

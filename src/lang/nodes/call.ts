@@ -60,15 +60,12 @@ export class CallFrame extends Frame {
         break;
       }
       case 4: {
-        const func = interpreter.systemFunctions[this.node.name];
-        const result = func(interpreter, this.args);
+        const result = interpreter.runFunction(this.node.name, this.args);
         if (result instanceof Promise) {
-          return result.then((result) => {
-            interpreter.lastResult = result;
+          return result.then(() => {
             interpreter.popFrame();
           });
         } else {
-          interpreter.lastResult = result;
           interpreter.popFrame();
         }
       }

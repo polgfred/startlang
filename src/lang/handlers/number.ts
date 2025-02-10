@@ -1,9 +1,10 @@
 import { Interpreter } from '../interpreter';
+
 import { DataHandler } from './base';
 
 export class NumberHandler extends DataHandler {
   constructor(interpreter: Interpreter) {
-    super(interpreter, numberMethods);
+    super(interpreter, numberGlobals, numberMethods);
   }
 
   shouldHandle(value: any) {
@@ -19,8 +20,6 @@ export class NumberHandler extends DataHandler {
   }
 
   evalUnaryOp(op: string, right: any) {
-    this.assertNumeric(right);
-
     switch (op) {
       case '+':
         return right;
@@ -34,9 +33,6 @@ export class NumberHandler extends DataHandler {
   }
 
   evalBinaryOp(op: string, left: any, right: any) {
-    this.assertNumeric(left);
-    this.assertNumeric(right);
-
     switch (op) {
       case '+':
         return left + right;
@@ -58,101 +54,75 @@ export class NumberHandler extends DataHandler {
         return super.evalBinaryOp(op, left, right);
     }
   }
-
-  ///
-
-  private assertNumeric(value: any): asserts value is number {
-    if (typeof value !== 'number') {
-      throw new Error(`expected number, got ${value}`);
-    }
-  }
 }
 
+const numberGlobals = {
+  rand(interpreter: Interpreter) {
+    interpreter.setResult(Math.random());
+  },
+};
+
 const numberMethods = {
-  abs(this: Interpreter, [value]: [number]) {
-    this.setResult(Math.abs(value));
+  abs(interpreter: Interpreter, [value]: [number]) {
+    interpreter.setResult(Math.abs(value));
   },
 
-  acos(this: Interpreter, [n]: [number]) {
-    this.setResult((Math.acos(n) * 180) / Math.PI);
+  acos(interpreter: Interpreter, [n]: [number]) {
+    interpreter.setResult((Math.acos(n) * 180) / Math.PI);
   },
 
-  asin(this: Interpreter, [value]: [number]) {
-    this.setResult((Math.asin(value) * 180) / Math.PI);
+  asin(interpreter: Interpreter, [value]: [number]) {
+    interpreter.setResult((Math.asin(value) * 180) / Math.PI);
   },
 
-  atan(this: Interpreter, [value]: [number]) {
-    this.setResult((Math.atan(value) * 180) / Math.PI);
+  atan(interpreter: Interpreter, [value]: [number]) {
+    interpreter.setResult((Math.atan(value) * 180) / Math.PI);
   },
 
-  cbrt(this: Interpreter, [value]: [number]) {
-    this.setResult(Math.cbrt(value));
+  cbrt(interpreter: Interpreter, [value]: [number]) {
+    interpreter.setResult(Math.cbrt(value));
   },
 
-  ceil(this: Interpreter, [value]: [number]) {
-    this.setResult(Math.ceil(value));
+  cos(interpreter: Interpreter, [value]: [number]) {
+    interpreter.setResult(Math.cos((value * Math.PI) / 180));
   },
 
-  clamp(this: Interpreter, [value, lo, hi]: [number, number, number]) {
-    this.setResult(Math.min(Math.max(value, lo), hi));
-  },
-
-  cos(this: Interpreter, [value]: [number]) {
-    this.setResult(Math.cos((value * Math.PI) / 180));
-  },
-
-  exp(this: Interpreter, [base, value]: [number, number?]) {
+  exp(interpreter: Interpreter, [base, value]: [number, number?]) {
     if (value === undefined) {
       value = base;
-      this.setResult(Math.exp(value));
+      interpreter.setResult(Math.exp(value));
     } else {
-      this.setResult(Math.pow(base, value));
+      interpreter.setResult(Math.pow(base, value));
     }
   },
 
-  floor(this: Interpreter, [value]: [number]) {
-    this.setResult(Math.floor(value));
-  },
-
-  log(this: Interpreter, [base, value]: [number, number?]) {
+  log(interpreter: Interpreter, [base, value]: [number, number?]) {
     if (value === undefined) {
-      this.setResult(Math.log(base));
+      interpreter.setResult(Math.log(base));
     } else if (base === 10) {
-      this.setResult(Math.log10(value));
+      interpreter.setResult(Math.log10(value));
     } else {
-      this.setResult(Math.log10(value) / Math.log10(base));
+      interpreter.setResult(Math.log10(value) / Math.log10(base));
     }
   },
 
-  rand(this: Interpreter, [lo, hi]: [number, number]) {
-    this.setResult(Math.floor(Math.random() * (hi - lo + 1)) + lo);
+  rand(interpreter: Interpreter, [lo, hi]: [number, number]) {
+    interpreter.setResult(Math.floor(Math.random() * (hi - lo + 1)) + lo);
   },
 
-  round(this: Interpreter, [value]: [number]) {
-    this.setResult(Math.round(value));
+  round(interpreter: Interpreter, [value]: [number]) {
+    interpreter.setResult(Math.round(value));
   },
 
-  sign(this: Interpreter, [value]: [number]) {
-    this.setResult(Math.sign(value));
+  sin(interpreter: Interpreter, [value]: [number]) {
+    interpreter.setResult(Math.sin((value * Math.PI) / 180));
   },
 
-  sin(this: Interpreter, [value]: [number]) {
-    this.setResult(Math.sin((value * Math.PI) / 180));
+  sqrt(interpreter: Interpreter, [value]: [number]) {
+    interpreter.setResult(Math.sqrt(value));
   },
 
-  sqrt(this: Interpreter, [value]: [number]) {
-    this.setResult(Math.sqrt(value));
-  },
-
-  tan(this: Interpreter, [value]: [number]) {
-    this.setResult(Math.tan((value * Math.PI) / 180));
-  },
-
-  max(this: Interpreter, values: number[]) {
-    this.setResult(Math.max(...values));
-  },
-
-  min(this: Interpreter, values: number[]) {
-    this.setResult(Math.min(...values));
+  tan(interpreter: Interpreter, [value]: [number]) {
+    interpreter.setResult(Math.tan((value * Math.PI) / 180));
   },
 };

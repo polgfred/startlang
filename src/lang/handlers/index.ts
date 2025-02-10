@@ -9,11 +9,11 @@ import { Interpreter } from '../interpreter';
 
 export { DataHandler } from './base';
 
-export function installHandlers(this: Interpreter) {
-  this.registerHandler(new NoneHandler(this));
-  this.registerHandler(new BooleanHandler(this));
-  this.registerHandler(new NumberHandler(this));
-  this.registerHandler(new StringHandler(this));
-  this.registerHandler(new ListHandler(this));
-  this.registerHandler(new TableHandler(this));
+export function installHandlers(interpreter: Interpreter) {
+  interpreter.registerHandler(new NoneHandler(interpreter));
+  interpreter.registerHandler(new BooleanHandler(interpreter));
+  interpreter.registerHandler(new NumberHandler(interpreter));
+  interpreter.registerHandler(new StringHandler(interpreter));
+  interpreter.registerHandler(new ListHandler(interpreter));
+  interpreter.registerHandler(new TableHandler(interpreter));
 }

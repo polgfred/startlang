@@ -2,7 +2,13 @@ import deepEqual from 'deep-equal';
 
 import { DataHandler } from './base';
 
+import { Interpreter } from '../interpreter';
+
 export class ListHandler extends DataHandler {
+  constructor(interpreter: Interpreter) {
+    super(interpreter, listGlobals, listMethods);
+  }
+
   shouldHandle(value: any) {
     return Array.isArray(value);
   }
@@ -38,3 +44,11 @@ export class ListHandler extends DataHandler {
     }
   }
 }
+
+const listGlobals = {
+  list(interpreter: Interpreter, elements: any[]) {
+    interpreter.setResult(Object.freeze(elements));
+  },
+};
+
+const listMethods = {};

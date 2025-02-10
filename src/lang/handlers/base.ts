@@ -1,33 +1,23 @@
 import { Draft, original } from 'immer';
 import { Interpreter } from '../interpreter';
 
-export class DataHandler {
-  protected interpreter: Interpreter;
-  protected methods: object = {};
+export abstract class DataHandler {
+  constructor(
+    protected interpreter: Interpreter,
+    public globals: object = {},
+    public methods: object = {}
+  ) {}
 
-  constructor(interpreter: Interpreter, methods: object = {}) {
-    this.interpreter = interpreter;
-    this.methods = methods;
-  }
+  abstract shouldHandle(value: any): boolean;
 
-  shouldHandle(value: any): boolean {
-    throw new Error('not supported');
-  }
-
-  getPrettyValue(value: any): string {
-    throw new Error('not supported');
-  }
+  abstract getPrettyValue(value: any): string;
 
   getIndex(value: any, index: number | string): any {
-    throw new Error(`indexing not supported for ${value}`);
+    throw new Error('not supported');
   }
 
   setIndex(value: Draft<any>, index: number | string, element: any): void {
-    throw new Error(`indexing not supported for ${value}`);
-  }
-
-  getMethod(name: string): (this: Interpreter, args: any[]) => any {
-    return this.methods[name];
+    throw new Error('not supported');
   }
 
   evalUnaryOp(op: string, right: any): any {
@@ -51,15 +41,6 @@ export class DataHandler {
       default:
         throw new Error(`binary operator ${op} not supported`);
     }
-  }
-
-  runMethod(name: string, args: any[]) {
-    const method = this.methods[name];
-    if (!method || typeof method !== 'function') {
-      throw new Error(`method not found: ${name}`);
-    }
-
-    method.call(this.interpreter, args);
   }
 
   ///
