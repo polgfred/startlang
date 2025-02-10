@@ -1,12 +1,12 @@
 import { Interpreter } from '../interpreter';
 
-import { Frame, ValueNode } from './base';
+import { Frame, Node } from './base';
 
-export class BinaryOpNode extends ValueNode {
+export class BinaryOpNode extends Node {
   constructor(
     public readonly operator: string,
-    public readonly left: ValueNode,
-    public readonly right: ValueNode
+    public readonly left: Node,
+    public readonly right: Node
   ) {
     super();
   }

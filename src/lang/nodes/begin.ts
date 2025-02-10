@@ -1,13 +1,14 @@
 import { produce } from 'immer';
+
 import { Interpreter } from '../interpreter';
 
-import { Frame, StatementNode } from './base';
+import { Frame, Node } from './base';
 
-export class BeginNode extends StatementNode {
+export class BeginNode extends Node {
   constructor(
     public readonly name: string,
     public readonly params: string[],
-    public readonly body: StatementNode
+    public readonly body: Node
   ) {
     super();
   }

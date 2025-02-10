@@ -1,8 +1,8 @@
 import { Interpreter } from '../interpreter';
 
-import { Frame, ValueNode } from './base';
+import { Frame, Node } from './base';
 
-export class VarNode extends ValueNode {
+export class VarNode extends Node {
   constructor(public readonly name: string) {
     super();
   }

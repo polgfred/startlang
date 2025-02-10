@@ -1,11 +1,11 @@
 import { Interpreter } from '../interpreter';
 
-import { Frame, ValueNode } from './base';
+import { Frame, Node } from './base';
 
-export class CallNode extends ValueNode {
+export class CallNode extends Node {
   constructor(
     public readonly name: string,
-    public readonly args: ValueNode[]
+    public readonly args: Node[]
   ) {
     super();
   }

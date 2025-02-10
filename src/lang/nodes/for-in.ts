@@ -1,12 +1,12 @@
 import { Interpreter } from '../interpreter';
 
-import { Frame, StatementNode, ValueNode } from './base';
+import { Frame, Node } from './base';
 
-export class ForInNode extends StatementNode {
+export class ForInNode extends Node {
   constructor(
     public readonly name: string,
-    public readonly iterable: ValueNode,
-    public readonly body: StatementNode
+    public readonly iterable: Node,
+    public readonly body: Node
   ) {
     super();
   }

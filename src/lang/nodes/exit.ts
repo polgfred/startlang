@@ -1,8 +1,8 @@
 import { Interpreter } from '../interpreter';
 
-import { Frame, StatementNode } from './base';
+import { Frame, Node } from './base';
 
-export class ExitNode extends StatementNode {
+export class ExitNode extends Node {
   makeFrame() {
     return new ExitFrame(this);
   }

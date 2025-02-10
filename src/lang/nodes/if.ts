@@ -1,12 +1,12 @@
 import { Interpreter } from '../interpreter';
 
-import { Frame, StatementNode, ValueNode } from './base';
+import { Frame, Node } from './base';
 
-export class IfNode extends StatementNode {
+export class IfNode extends Node {
   constructor(
-    public readonly condition: ValueNode,
-    public readonly thenBody: StatementNode,
-    public readonly elseBody: StatementNode | null = null
+    public readonly condition: Node,
+    public readonly thenBody: Node,
+    public readonly elseBody: Node | null = null
   ) {
     super();
   }

@@ -1,9 +1,9 @@
 import { Interpreter } from '../interpreter';
 
-import { Frame, StatementNode } from './base';
+import { Frame, Node } from './base';
 
-export class BlockNode extends StatementNode {
-  constructor(public elems: StatementNode[]) {
+export class BlockNode extends Node {
+  constructor(public elems: Node[]) {
     super();
   }
 

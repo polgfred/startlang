@@ -1,9 +1,9 @@
 import { Interpreter } from '../interpreter';
 
-import { Frame, ValueNode } from './base';
+import { Frame, Node } from './base';
 
-export class TemplateStringNode extends ValueNode {
-  constructor(public readonly segments: ValueNode[]) {
+export class TemplateStringNode extends Node {
+  constructor(public readonly segments: Node[]) {
     super();
   }
 

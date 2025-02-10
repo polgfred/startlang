@@ -1,14 +1,14 @@
 import { Interpreter } from '../interpreter';
 
-import { Frame, StatementNode, ValueNode } from './base';
+import { Frame, Node } from './base';
 
-export class ForNode extends StatementNode {
+export class ForNode extends Node {
   constructor(
     public readonly name: string,
-    public readonly initial: ValueNode,
-    public readonly limit: ValueNode,
-    public readonly step: ValueNode | null,
-    public readonly body: StatementNode
+    public readonly initial: Node,
+    public readonly limit: Node,
+    public readonly step: Node | null,
+    public readonly body: Node
   ) {
     super();
   }

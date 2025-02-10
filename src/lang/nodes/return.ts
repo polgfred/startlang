@@ -1,8 +1,9 @@
 import { Interpreter } from '../interpreter';
-import { Frame, StatementNode, ValueNode } from './base';
 
-export class ReturnNode extends StatementNode {
-  constructor(public readonly result: ValueNode | null) {
+import { Frame, Node } from './base';
+
+export class ReturnNode extends Node {
+  constructor(public readonly result: Node | null) {
     super();
   }
 

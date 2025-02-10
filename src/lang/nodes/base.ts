@@ -7,10 +7,6 @@ export abstract class Node {
   abstract makeFrame(): Frame;
 }
 
-export abstract class StatementNode extends Node {}
-
-export abstract class ValueNode extends Node {}
-
 export abstract class Frame {
   readonly state: number = 0;
 

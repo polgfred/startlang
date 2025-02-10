@@ -1,8 +1,8 @@
 import { Interpreter } from '../interpreter';
 
-import { Frame, StatementNode } from './base';
+import { Frame, Node } from './base';
 
-export class BreakNode extends StatementNode {
+export class BreakNode extends Node {
   makeFrame() {
     return new BreakFrame(this);
   }

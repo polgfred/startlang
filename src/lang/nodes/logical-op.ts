@@ -1,11 +1,11 @@
 import { Interpreter } from '../interpreter';
 
-import { Frame, ValueNode } from './base';
+import { Frame, Node } from './base';
 
-export class LogicalOpNode extends ValueNode {
+export class LogicalOpNode extends Node {
   constructor(
     public readonly operator: 'and' | 'or',
-    public readonly values: ValueNode[]
+    public readonly values: Node[]
   ) {
     super();
   }
@@ -20,8 +20,8 @@ export class LogicalOpNode extends ValueNode {
   }
 }
 
-export class LogicalNotNode extends ValueNode {
-  constructor(public readonly value: ValueNode) {
+export class LogicalNotNode extends Node {
+  constructor(public readonly value: Node) {
     super();
   }
 

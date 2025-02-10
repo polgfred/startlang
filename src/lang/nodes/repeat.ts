@@ -1,11 +1,11 @@
 import { Interpreter } from '../interpreter';
 
-import { ValueNode, Frame, StatementNode } from './base';
+import { Frame, Node } from './base';
 
-export class RepeatNode extends StatementNode {
+export class RepeatNode extends Node {
   constructor(
-    public readonly times: ValueNode | null,
-    public readonly body: StatementNode
+    public readonly times: Node | null,
+    public readonly body: Node
   ) {
     super();
   }

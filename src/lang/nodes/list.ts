@@ -1,9 +1,9 @@
 import { Interpreter } from '../interpreter';
 
-import { Frame, ValueNode } from './base';
+import { Frame, Node } from './base';
 
-export class ListNode extends ValueNode {
-  constructor(public readonly items: ValueNode[]) {
+export class ListNode extends Node {
+  constructor(public readonly items: Node[]) {
     super();
   }
 

@@ -1,11 +1,11 @@
 import { Interpreter } from '../interpreter';
 
-import { StatementNode, ValueNode, Frame } from './base';
+import { Frame, Node } from './base';
 
-export class WhileNode extends StatementNode {
+export class WhileNode extends Node {
   constructor(
-    public readonly condition: ValueNode,
-    public readonly body: StatementNode
+    public readonly condition: Node,
+    public readonly body: Node
   ) {
     super();
   }

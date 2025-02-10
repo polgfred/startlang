@@ -1,12 +1,12 @@
 import { Interpreter } from '../interpreter';
 
-import { Frame, StatementNode, ValueNode } from './base';
+import { Frame, Node } from './base';
 
-export class LetIndexNode extends StatementNode {
+export class LetIndexNode extends Node {
   constructor(
     public readonly name: string,
-    public readonly indexes: ValueNode[],
-    public readonly value: ValueNode
+    public readonly indexes: Node[],
+    public readonly value: Node
   ) {
     super();
   }
