@@ -16,7 +16,11 @@ export abstract class DataHandler {
     throw new Error('not supported');
   }
 
-  setIndex(value: Draft<any>, index: number | string, element: any): void {
+  setIndex(value: any, index: number | string, element: any): void {
+    throw new Error('not supported');
+  }
+
+  getIterable(value: any): any[] {
     throw new Error('not supported');
   }
 

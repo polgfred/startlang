@@ -32,6 +32,10 @@ export class ListHandler extends DataHandler {
     value[index] = element;
   }
 
+  getIterable(value: any): any[] {
+    return value;
+  }
+
   evalBinaryOp(op: string, left: any, right: any) {
     switch (op) {
       case '$':

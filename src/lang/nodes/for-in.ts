@@ -34,7 +34,8 @@ export class ForInFrame extends Frame {
       }
       case 1: {
         interpreter.updateFrame(this, 2, (draft) => {
-          draft.iterable = interpreter.lastResult;
+          const handler = interpreter.getHandler(interpreter.lastResult);
+          draft.iterable = handler.getIterable(interpreter.lastResult);
         });
         break;
       }
