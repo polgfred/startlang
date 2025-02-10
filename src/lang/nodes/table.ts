@@ -18,12 +18,10 @@ export class TableNode extends ValueNode {
 const emptyTable: object = Object.freeze(Object.create(null));
 
 export class TableFrame extends Frame {
+  declare node: TableNode;
+
   count: number = 0;
   items = emptyTable;
-
-  constructor(public node: TableNode) {
-    super();
-  }
 
   visit(interpreter: Interpreter) {
     switch (this.state) {

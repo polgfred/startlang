@@ -13,11 +13,9 @@ export class BlockNode extends StatementNode {
 }
 
 class BlockFrame extends Frame {
-  count: number = 0;
+  declare node: BlockNode;
 
-  constructor(public node: BlockNode) {
-    super();
-  }
+  count: number = 0;
 
   visit(interpreter: Interpreter) {
     if (this.count < this.node.elems.length) {

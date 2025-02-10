@@ -9,9 +9,7 @@ export class ExitNode extends StatementNode {
 }
 
 export class ExitFrame extends Frame {
-  constructor(public node: ExitNode) {
-    super();
-  }
+  declare node: ExitNode;
 
   visit(interpreter: Interpreter) {
     interpreter.popOut();

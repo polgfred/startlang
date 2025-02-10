@@ -13,9 +13,7 @@ export class LiteralNode extends ValueNode {
 }
 
 export class LiteralFrame extends Frame {
-  constructor(public node: LiteralNode) {
-    super();
-  }
+  declare node: LiteralNode;
 
   visit(interpreter: Interpreter) {
     interpreter.lastResult = this.node.value;

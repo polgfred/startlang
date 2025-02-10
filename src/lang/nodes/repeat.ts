@@ -20,11 +20,9 @@ export class RepeatNode extends StatementNode {
 }
 
 class RepeatFrame extends Frame {
-  flowMarker = 'loop' as const;
+  declare node: RepeatNode;
 
-  constructor(public node: RepeatNode) {
-    super();
-  }
+  flowMarker = 'loop' as const;
 
   visit(interpreter: Interpreter) {
     interpreter.pushFrame(this.node.body);
@@ -32,12 +30,10 @@ class RepeatFrame extends Frame {
 }
 
 class RepeatTimesFrame extends Frame {
+  declare node: RepeatNode;
+
   times: number = 0;
   count: number = 0;
-
-  constructor(public node: RepeatNode) {
-    super();
-  }
 
   visit(interpreter: Interpreter) {
     switch (this.state) {

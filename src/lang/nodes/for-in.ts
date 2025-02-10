@@ -17,13 +17,11 @@ export class ForInNode extends StatementNode {
 }
 
 export class ForInFrame extends Frame {
+  declare node: ForInNode;
+
   flowMarker = 'loop' as const;
   iterable: any;
   index: number = 0;
-
-  constructor(public node: ForInNode) {
-    super();
-  }
 
   visit(interpreter: Interpreter) {
     switch (this.state) {

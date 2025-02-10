@@ -15,12 +15,10 @@ export class ListNode extends ValueNode {
 const emptyList: readonly any[] = Object.freeze([]);
 
 export class ListFrame extends Frame {
+  declare node: ListNode;
+
   count: number = 0;
   items = emptyList;
-
-  constructor(public node: ListNode) {
-    super();
-  }
 
   visit(interpreter: Interpreter) {
     switch (this.state) {

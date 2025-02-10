@@ -31,11 +31,9 @@ export class LogicalNotNode extends ValueNode {
 }
 
 export class LogicalAndFrame extends Frame {
-  count: number = 0;
+  declare node: LogicalOpNode;
 
-  constructor(public node: LogicalOpNode) {
-    super();
-  }
+  count: number = 0;
 
   visit(interpreter: Interpreter) {
     switch (this.state) {
@@ -69,11 +67,9 @@ export class LogicalAndFrame extends Frame {
 }
 
 export class LogicalOrFrame extends Frame {
-  count: number = 0;
+  declare node: LogicalOpNode;
 
-  constructor(public node: LogicalOpNode) {
-    super();
-  }
+  count: number = 0;
 
   visit(interpreter: Interpreter) {
     switch (this.state) {
@@ -107,9 +103,7 @@ export class LogicalOrFrame extends Frame {
 }
 
 export class LogicalNotFrame extends Frame {
-  constructor(public node: LogicalNotNode) {
-    super();
-  }
+  declare node: LogicalNotNode;
 
   visit(interpreter: Interpreter) {
     switch (this.state) {

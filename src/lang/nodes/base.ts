@@ -15,6 +15,8 @@ export abstract class Frame {
   flowMarker: 'loop' | 'call' | null = null;
   state: number = 0;
 
+  constructor(public readonly node: Node) {}
+
   abstract visit(interpreter: Interpreter): void | Promise<void>;
 
   dispose(interpreter: Interpreter) {}
@@ -22,10 +24,16 @@ export abstract class Frame {
 
 Frame[immerable] = true;
 
+class RootNode extends Node {
+  makeFrame() {
+    return new RootFrame(this);
+  }
+}
+
 class RootFrame extends Frame {
   visit(interpreter: Interpreter) {}
 }
 
-export const rootFrame: Stack<Frame> = new Stack(new RootFrame());
+export const rootFrame: Stack<Frame> = new Stack(new RootNode().makeFrame());
 
 export const rootNamespace: Stack<object> = new Stack(Object.create(null));

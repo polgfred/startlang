@@ -17,9 +17,7 @@ export class IfNode extends StatementNode {
 }
 
 export class IfFrame extends Frame {
-  constructor(public node: IfNode) {
-    super();
-  }
+  declare node: IfNode;
 
   visit(interpreter: Interpreter) {
     switch (this.state) {

@@ -18,9 +18,7 @@ export class BeginNode extends StatementNode {
 }
 
 export class BeginFrame extends Frame {
-  constructor(public node: BeginNode) {
-    super();
-  }
+  declare node: BeginNode;
 
   visit(interpreter: Interpreter) {
     interpreter.globalFunctions = produce(

@@ -9,9 +9,7 @@ export class BreakNode extends StatementNode {
 }
 
 export class BreakFrame extends Frame {
-  constructor(public node: BreakNode) {
-    super();
-  }
+  declare node: BreakNode;
 
   visit(interpreter: Interpreter) {
     interpreter.popOver('loop');

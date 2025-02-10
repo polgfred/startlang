@@ -16,9 +16,7 @@ export class UnaryOpNode extends ValueNode {
 }
 
 export class UnaryOpFrame extends Frame {
-  constructor(public node: UnaryOpNode) {
-    super();
-  }
+  declare node: UnaryOpNode;
 
   visit(interpreter: Interpreter) {
     switch (this.state) {

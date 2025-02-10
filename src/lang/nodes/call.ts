@@ -16,14 +16,12 @@ export class CallNode extends ValueNode {
 }
 
 export class CallFrame extends Frame {
+  declare node: CallNode;
+
   flowMarker = 'call' as const;
   count: number = 0;
   args: any[] = [];
   hasNamespace = false;
-
-  constructor(public node: CallNode) {
-    super();
-  }
 
   visit(interpreter: Interpreter) {
     switch (this.state) {

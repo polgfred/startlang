@@ -16,9 +16,7 @@ export class ReturnNode extends StatementNode {
 }
 
 export class ReturnFrame extends Frame {
-  constructor(public node: ReturnNode) {
-    super();
-  }
+  declare node: ReturnNode;
 
   visit(interpreter: Interpreter) {
     interpreter.popOver('call');
@@ -26,9 +24,7 @@ export class ReturnFrame extends Frame {
 }
 
 export class ReturnValueFrame extends Frame {
-  constructor(public node: ReturnNode) {
-    super();
-  }
+  declare node: ReturnNode;
 
   visit(interpreter: Interpreter) {
     switch (this.state) {

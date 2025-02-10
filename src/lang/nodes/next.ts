@@ -8,9 +8,7 @@ export class NextNode extends StatementNode {
 }
 
 export class NextFrame extends Frame {
-  constructor(public node: NextNode) {
-    super();
-  }
+  declare node: NextNode;
 
   visit(interpreter: Interpreter) {
     interpreter.popUntil('loop');

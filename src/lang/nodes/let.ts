@@ -17,9 +17,7 @@ export class LetNode extends StatementNode {
 }
 
 export class LetFrame extends Frame {
-  constructor(public node: LetNode) {
-    super();
-  }
+  declare node: LetNode;
 
   visit(interpreter: Interpreter) {
     switch (this.state) {

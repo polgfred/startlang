@@ -17,12 +17,10 @@ export class LetIndexNode extends StatementNode {
 }
 
 export class LetIndexFrame extends Frame {
+  declare node: LetIndexNode;
+
   count: number = 0;
   indexes: any[] = [];
-
-  constructor(public node: LetIndexNode) {
-    super();
-  }
 
   visit(interpreter: Interpreter) {
     switch (this.state) {

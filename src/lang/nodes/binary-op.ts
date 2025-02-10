@@ -17,11 +17,9 @@ export class BinaryOpNode extends ValueNode {
 }
 
 export class BinaryOpFrame extends Frame {
-  left: any;
+  declare node: BinaryOpNode;
 
-  constructor(public node: BinaryOpNode) {
-    super();
-  }
+  left: any;
 
   visit(interpreter: Interpreter) {
     switch (this.state) {

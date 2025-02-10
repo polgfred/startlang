@@ -13,12 +13,10 @@ export class TemplateStringNode extends ValueNode {
 }
 
 export class TemplateStringFrame extends Frame {
+  declare node: TemplateStringNode;
+
   count: number = 0;
   segments: string[] = [];
-
-  constructor(public node: TemplateStringNode) {
-    super();
-  }
 
   visit(interpreter: Interpreter) {
     switch (this.state) {

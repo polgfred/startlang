@@ -16,12 +16,10 @@ export class VarIndexNode extends ValueNode {
 }
 
 export class VarIndexFrame extends Frame {
+  declare node: VarIndexNode;
+
   count: number = 0;
   indexes: any[] = [];
-
-  constructor(public node: VarIndexNode) {
-    super();
-  }
 
   visit(interpreter: Interpreter) {
     switch (this.state) {

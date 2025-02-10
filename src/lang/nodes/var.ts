@@ -13,9 +13,7 @@ export class VarNode extends ValueNode {
 }
 
 export class VarFrame extends Frame {
-  constructor(public node: VarNode) {
-    super();
-  }
+  declare node: VarNode;
 
   visit(interpreter: Interpreter) {
     interpreter.lastResult = interpreter.getVariable(this.node.name);
