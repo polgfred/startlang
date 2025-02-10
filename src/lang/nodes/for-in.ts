@@ -4,7 +4,7 @@ import { Frame, StatementNode, ValueNode } from './base';
 
 export class ForInNode extends StatementNode {
   constructor(
-    public variable: string,
+    public name: string,
     public iterable: ValueNode,
     public body: StatementNode
   ) {
@@ -40,10 +40,7 @@ export class ForInFrame extends Frame {
       }
       case 2: {
         if (this.index < this.iterable.length) {
-          interpreter.setVariable(
-            this.node.variable,
-            this.iterable[this.index]
-          );
+          interpreter.setVariable(this.node.name, this.iterable[this.index]);
           interpreter.updateFrame(this, null, (draft) => {
             draft.index++;
           });

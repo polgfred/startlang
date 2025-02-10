@@ -2,12 +2,12 @@ import { Interpreter } from '../interpreter';
 import { Frame, StatementNode, ValueNode } from './base';
 
 export class ReturnNode extends StatementNode {
-  constructor(public value: ValueNode | null) {
+  constructor(public result: ValueNode | null) {
     super();
   }
 
   makeFrame() {
-    if (this.value === null) {
+    if (this.result === null) {
       return new ReturnFrame(this);
     } else {
       return new ReturnValueFrame(this);
@@ -34,7 +34,7 @@ export class ReturnValueFrame extends Frame {
     switch (this.state) {
       case 0: {
         interpreter.updateFrame(this, 1);
-        interpreter.pushFrame(this.node.value!);
+        interpreter.pushFrame(this.node.result!);
         break;
       }
       case 1: {

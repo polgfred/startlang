@@ -1,72 +1,69 @@
 {{
-  const flowMarker = {
-    repeat: 'loop',
-    for: 'loop',
-    forIn: 'loop',
-    while: 'loop',
-    call: 'call'
-  };
+import {
+  BeginNode,
+  BinaryOpNode,
+  BlockNode,
+  BreakNode,
+  CallNode,
+  ExitNode,
+  ForInNode,
+  ForNode,
+  IfNode,
+  LetIndexNode,
+  LetNode,
+  LiteralNode,
+  LogicalOpNode,
+  LogicalNotNode,
+  NextNode,
+  RepeatNode,
+  ReturnNode,
+  UnaryOpNode,
+  VarIndexNode,
+  VarNode,
+  WhileNode
+} from './nodes';
 }}
 
 {
-  // build an object for this node
-  function buildNode(type, attrs) {
-    // if we're a block with one statement, just return the statement itself
-    if (type === 'block' && attrs.elems.length === 1) {
-      return attrs.elems[0];
-    }
-
-    // show the type first
-    const node = { type };
-
-    // then the flow marker
-    if (flowMarker[type]) {
-      node.flow = flowMarker[type];
-    }
-
-    // then the passed-in attributes
-    Object.assign(node, attrs);
-
-    // then the source metadata
-    if (options.meta) {
-      node.meta = {
-        text: text(),
-        location: location()
-      };
-    }
-
-    return node;
-  }
-
   // take a series of tests, and (optionally) a final else body, and construct an if-tree
-  function buildIfTree(tests, fbody) {
-    const [cond, tbody] = tests.shift();
+  function buildIfTree(tests, elseBody) {
+    const [condition, thenBody] = tests.shift();
     if (tests.length > 0) {
       // insert the next-level tree into the false slot
-      fbody = buildIfTree(tests, fbody);
+      elseBody = buildIfTree(tests, elseBody);
     }
-    return buildNode('if', { cond, tbody, fbody });
+    return new IfNode(condition, thenBody, elseBody);
   }
 
   // take a chain of equal-precedence exprs and construct a left-folding tree
-  function buildBinaryExpr(type, left, rest) {
+  function buildBinaryExpr(left, rest) {
     if (rest.length === 0) {
       return left;
     } else {
-      const [op, right] = rest.shift();
-      const node = buildNode(type, { op, left, right });
-      return buildBinaryExpr(type, node, rest);
+      const [operator, right] = rest.shift();
+      const node = new BinaryOpNode(operator, left, right);
+      return buildBinaryExpr(node, rest);
+    }
+  }
+
+  function buildLogicalExpr(left, rest) {
+    if (rest.length === 0) {
+      return left;
+    } else {
+      const [operator, right] = rest.shift();
+      const node = new LogicalOpNode(operator, [left, right]);
+      return buildLogicalExpr(node, rest);
     }
   }
 
   // take a chain of unary ops and construct a right-folding tree
-  function buildUnaryExpr(type, ops, right) {
+  function buildUnaryExpr(ops, right) {
     if (ops.length === 0) {
       return right;
     } else {
-      const op = ops.pop();
-      const node = buildNode(type, { op, right });
-      return buildUnaryExpr(type, ops, node);
+      const operator = ops.pop();
+      const node = new UnaryOpNode(operator, right);
+      return buildUnaryExpr(ops, node);
     }
   }
 
@@ -76,7 +73,7 @@
       return left;
     } else {
       const right = rest.shift();
-      const node = buildNode('binaryOp', { op: '$', left, right });
+      const node = new BinaryOpNode('$', left, right);
       return buildString(node, rest);
     }
   }
@@ -84,9 +81,9 @@
   // take a base name, indexes, and (optionally) a value, and construct an indexish node
   function buildIndex(name, indexes, value) {
     if (value === undefined) {
-      return buildNode('index', { name, indexes });
+      return new VarIndexNode(name, indexes);
     } else {
-      return buildNode('letIndex', { name, indexes, value });
+      return new LetIndexNode(name, indexes, value);
     }
   }
 }
@@ -102,7 +99,7 @@ start
 
 Block
   = elems:(__ @BlockElement EOL)*
-    { return buildNode('block', { elems }) }
+    { return elems.length === 1 ? elems[0] : new BlockNode(elems) }
 
 BlockElement
   = Control
@@ -130,33 +127,33 @@ If
 Repeat
   // repeat 10
   = 'repeat' WB __ times:Value __ 'do' WB __ body:EndBody
-    { return buildNode('repeat', { times, body }) }
+    { return new RepeatNode(times, body) }
   // repeat (forever)
   / 'repeat' WB __ 'do' WB __ body:EndBody
-    { return buildNode('repeat', { body }) }
+    { return new RepeatNode(null, body) }
 
 For
   // for i from a to b by c
-  = 'for' WB __ name:Symbol __ 'from' WB __ from:Value __ 'to' WB __ to:Value
-      by:(__ 'by' WB __ @Value)? __ 'do' WB __ body:EndBody
-    { return buildNode('for', { name, from, to, by, body }) }
+  = 'for' WB __ name:Symbol __ 'from' WB __ initial:Value __ 'to' WB __ limit:Value
+      step:(__ 'by' WB __ @Value)? __ 'do' WB __ body:EndBody
+    { return new ForNode(name, initial, limit, step, body) }
   // for i in x
-  / 'for' WB __ name:Symbol __ 'in' WB __ range:Value __ 'do' WB __ body:EndBody
-    { return buildNode('forIn', { name, range, body }) }
+  / 'for' WB __ name:Symbol __ 'in' WB __ iterable:Value __ 'do' WB __ body:EndBody
+    { return new ForInNode(name, iterable, body) }
 
 While
-  = 'while' WB __ cond:Value __ 'do' WB __ body:EndBody
-    { return buildNode('while', { cond, body }) }
+  = 'while' WB __ condition:Value __ 'do' WB __ body:EndBody
+    { return new WhileNode(condition, body) }
 
 Begin
   = 'begin' WB __ name:Symbol
       params:(__ '(' EOL? __ @Params? __ ')')? __ 'do' WB __ body:EndBody
-    { return buildNode('begin', { name, params, body }) }
+    { return new BeginNode(name, params ?? [], body) }
 
 EndBody
   = Statement
-  / EOL b:Block __ 'end'
-    { return b }
+  / EOL block:Block __ 'end'
+    { return block }
 
 Params
   = first:Symbol rest:(__ ',' __ EOL? __ @Symbol)*
@@ -169,23 +166,23 @@ Statement
 
 Flow
   = 'exit' WB
-    { return buildNode('exit') }
+    { return new ExitNode() }
   / 'break' WB
-    { return buildNode('break') }
+    { return new BreakNode() }
   / 'next' WB
-    { return buildNode('next') }
+    { return new NextNode() }
   / 'return' WB result:(__ @Value)?
-    { return buildNode('return', { result }) }
+    { return new ReturnNode(result ?? null) }
 
 Let
   = 'local' WB __ name:Symbol __ '=' __ value:Value
-    { return buildNode('let', { name, value, local: true }) }
+    { return new LetNode(name, value, true) }
   / ('let' WB)? __ name:Symbol __ indexes:Indexes? __ '=' __ value:Value
     {
       return (
         indexes
           ? buildIndex(name, indexes, value)
-          : buildNode('let', { name, value })
+          : new LetNode(name, value, false)
         )
     }
 
@@ -197,11 +194,11 @@ Call
   //  2- try to match zero or more parenthesized arguments
   //  3- match a bare call with no parens or args
   = name:Symbol __ args:Values
-    { return buildNode('call', { name, args }) }
+    { return new CallNode(name, args) }
   / name:Symbol __ '(' __ EOL? __ args:Values? __ ')'
-    { return buildNode('call', { name, args }) }
+    { return new CallNode(name, args ?? []) }
   / name:Symbol
-    { return buildNode('call', { name, args: null }) }
+    { return new CallNode(name, []) }
 
 // Values
 
@@ -216,7 +213,7 @@ Value 'a value'
 
 ConjExpr
   = first:NotExpr rest:(__ @ConjOp __ @NotExpr)*
-    { return buildBinaryExpr('logicalOp', first, rest) }
+    { return buildLogicalExpr(first, rest) }
 
 ConjOp
   = 'and' WB
@@ -226,7 +223,7 @@ ConjOp
 
 NotExpr
   = op:NotOp __ right:RelExpr
-    { return buildNode('logicalOp', { op, right }) }
+    { return new LogicalNotNode(right) }
   / RelExpr
 
 NotOp
@@ -234,8 +231,8 @@ NotOp
     { return 'not' }
 
 RelExpr
-  = left:ConcatExpr __ op:RelOp __ right:ConcatExpr
-    { return buildNode('binaryOp', { op, left, right }) }
+  = left:ConcatExpr __ operator:RelOp __ right:ConcatExpr
+    { return new BinaryOpNode(operator, left, right) }
   / ConcatExpr
 
 RelOp
@@ -250,7 +247,7 @@ RelOp
 
 ConcatExpr
   = first:BitExpr rest:(__ @ConcatOp __ @BitExpr)*
-    { return buildBinaryExpr('binaryOp', first, rest) }
+    { return buildBinaryExpr(first, rest) }
 
 ConcatOp
   = '$'
@@ -259,7 +256,7 @@ ConcatOp
 
 BitExpr
   = first:AddExpr rest:(__ @BitOp __ @AddExpr)*
-    { return buildBinaryExpr('binaryOp', first, rest) }
+    { return buildBinaryExpr(first, rest) }
 
 BitOp
   = '&'
@@ -268,7 +265,7 @@ BitOp
 
 AddExpr
   = first:MultExpr rest:(__ @AddOp __ @MultExpr)*
-    { return buildBinaryExpr('binaryOp', first, rest) }
+    { return buildBinaryExpr(first, rest) }
 
 AddOp
   = '+'
@@ -276,7 +273,7 @@ AddOp
 
 MultExpr
   = first:UnaryExpr rest:(__ @MultOp __ @UnaryExpr)*
-    { return buildBinaryExpr('binaryOp', first, rest) }
+    { return buildBinaryExpr(first, rest) }
 
 MultOp
   = '*'
@@ -285,7 +282,7 @@ MultOp
 
 UnaryExpr
   = ops:(__ @UnaryOp)* __ right:CallExpr
-    { return buildUnaryExpr('unaryOp', ops, right) }
+    { return buildUnaryExpr(ops, right) }
 
 UnaryOp
   = '+'
@@ -296,7 +293,7 @@ UnaryOp
 
 CallExpr
   = name:Symbol __ '(' __ EOL? __ args:Values? __ ')'
-    { return buildNode('call', { name, args }) }
+    { return new CallNode(name, args ?? []) }
   / IndexExpr
 
 // Indexes
@@ -307,7 +304,7 @@ IndexExpr
       return (
         indexes
           ? buildIndex(name, indexes)
-          : buildNode('var', { name })
+          : new VarNode(name)
       )
     }
   / PrimaryExpr
@@ -323,7 +320,7 @@ IndexSegment
     { return [first, ...rest] }
   / '.' __ name:Symbol
     // segment consisting of one literal node
-    { return [buildNode('literal', { value: name })] }
+    { return [new LiteralNode(name)] }
 
 PrimaryExpr
   = String
@@ -338,10 +335,10 @@ String 'a string'
     {
       // if the first segment isn't a string literal, prepend an empty string
       const first = (rest.length > 0
-                      && rest[0].type === 'literal'
+                      && (rest[0] instanceof LiteralNode)
                       && typeof rest[0].value === 'string')
                         ? rest.shift()
-                        : buildNode('literal', { value: '' })
+                        : new LiteralNode('')
       return buildString(first, rest);
     }
 
@@ -350,7 +347,7 @@ StringSegment
     // interpolation of value expressions
     { return val }
   / chars:Char+
-    { return buildNode('literal', { value: chars.join('') }) }
+    { return new LiteralNode(chars.join('')) }
 
 Char
   = '""'
@@ -368,19 +365,19 @@ Literal
 
 None
   = 'none' WB
-    { return buildNode('literal', { value: null }) }
+    { return new LiteralNode(null) }
 
 Boolean
   = 'true'  WB
-    { return buildNode('literal', { value: true }) }
+    { return new LiteralNode(true) }
   / 'false' WB
-    { return buildNode('literal', { value: false }) }
+    { return new LiteralNode(false) }
 
 Number 'a number'
   = 'infinity' WB
-    { return buildNode('literal', { value: Infinity }) }
+    { return new LiteralNode(Infinity) }
   / num:NumberFormat
-    { return buildNode('literal', { value: parseFloat(num) }) }
+    { return new LiteralNode(parseFloat(num)) }
 
 NumberFormat
   = $(Digits ('.' Digits)? ([eE] [-+]? Digits)?)

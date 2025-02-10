@@ -5,7 +5,7 @@ import { Frame, ValueNode } from './base';
 export class CallNode extends ValueNode {
   constructor(
     public name: string,
-    public args: ValueNode[] = []
+    public args: ValueNode[]
   ) {
     super();
   }

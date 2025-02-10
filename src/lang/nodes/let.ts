@@ -5,7 +5,8 @@ import { Frame, StatementNode, ValueNode } from './base';
 export class LetNode extends StatementNode {
   constructor(
     public name: string,
-    public value: ValueNode
+    public value: ValueNode,
+    public isLocal: boolean = false
   ) {
     super();
   }
@@ -28,7 +29,11 @@ export class LetFrame extends Frame {
         break;
       }
       case 1: {
-        interpreter.setVariable(this.node.name, interpreter.lastResult);
+        interpreter.setVariable(
+          this.node.name,
+          interpreter.lastResult,
+          this.node.isLocal
+        );
         interpreter.popFrame();
         break;
       }
