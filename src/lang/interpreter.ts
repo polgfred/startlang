@@ -178,7 +178,7 @@ export class Interpreter {
     return leftHandler.evalBinaryOp(op, left, right);
   }
 
-  runFunction(name: string, args: any[]) {
+  invokeFunction(name: string, args: any[]) {
     if (args.length > 0) {
       const handler = this.getHandler(args[0]);
       if (name in handler.methods) {
