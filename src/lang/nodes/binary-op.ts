@@ -4,9 +4,9 @@ import { Frame, ValueNode } from './base';
 
 export class BinaryOpNode extends ValueNode {
   constructor(
-    public operator: string,
-    public left: ValueNode,
-    public right: ValueNode
+    public readonly operator: string,
+    public readonly left: ValueNode,
+    public readonly right: ValueNode
   ) {
     super();
   }
@@ -19,7 +19,7 @@ export class BinaryOpNode extends ValueNode {
 export class BinaryOpFrame extends Frame {
   declare node: BinaryOpNode;
 
-  left: any;
+  readonly left: any;
 
   visit(interpreter: Interpreter) {
     switch (this.state) {

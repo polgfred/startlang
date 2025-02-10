@@ -3,7 +3,7 @@ import { Interpreter } from '../interpreter';
 import { Frame, ValueNode } from './base';
 
 export class TemplateStringNode extends ValueNode {
-  constructor(public segments: ValueNode[]) {
+  constructor(public readonly segments: ValueNode[]) {
     super();
   }
 
@@ -12,11 +12,13 @@ export class TemplateStringNode extends ValueNode {
   }
 }
 
+const emptyList: readonly string[] = Object.freeze([]);
+
 export class TemplateStringFrame extends Frame {
   declare node: TemplateStringNode;
 
-  count: number = 0;
-  segments: string[] = [];
+  readonly count: number = 0;
+  readonly segments: readonly string[] = emptyList;
 
   visit(interpreter: Interpreter) {
     switch (this.state) {

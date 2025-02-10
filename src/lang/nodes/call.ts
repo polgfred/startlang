@@ -4,8 +4,8 @@ import { Frame, ValueNode } from './base';
 
 export class CallNode extends ValueNode {
   constructor(
-    public name: string,
-    public args: ValueNode[]
+    public readonly name: string,
+    public readonly args: ValueNode[]
   ) {
     super();
   }
@@ -18,9 +18,9 @@ export class CallNode extends ValueNode {
 export class CallFrame extends Frame {
   declare node: CallNode;
 
-  count: number = 0;
-  args: any[] = [];
-  hasNamespace = false;
+  readonly count: number = 0;
+  readonly args: any[] = [];
+  readonly hasNamespace: boolean = false;
 
   visit(interpreter: Interpreter) {
     switch (this.state) {

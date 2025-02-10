@@ -4,9 +4,9 @@ import { Frame, StatementNode, ValueNode } from './base';
 
 export class IfNode extends StatementNode {
   constructor(
-    public condition: ValueNode,
-    public thenBody: StatementNode,
-    public elseBody: StatementNode | null = null
+    public readonly condition: ValueNode,
+    public readonly thenBody: StatementNode,
+    public readonly elseBody: StatementNode | null = null
   ) {
     super();
   }

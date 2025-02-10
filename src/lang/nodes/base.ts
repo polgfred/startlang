@@ -12,7 +12,7 @@ export abstract class StatementNode extends Node {}
 export abstract class ValueNode extends Node {}
 
 export abstract class Frame {
-  state: number = 0;
+  readonly state: number = 0;
 
   constructor(public readonly node: Node) {}
 

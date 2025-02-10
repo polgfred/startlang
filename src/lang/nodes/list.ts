@@ -3,7 +3,7 @@ import { Interpreter } from '../interpreter';
 import { Frame, ValueNode } from './base';
 
 export class ListNode extends ValueNode {
-  constructor(public items: ValueNode[]) {
+  constructor(public readonly items: ValueNode[]) {
     super();
   }
 
@@ -17,8 +17,8 @@ const emptyList: readonly any[] = Object.freeze([]);
 export class ListFrame extends Frame {
   declare node: ListNode;
 
-  count: number = 0;
-  items = emptyList;
+  readonly count: number = 0;
+  readonly items = emptyList;
 
   visit(interpreter: Interpreter) {
     switch (this.state) {

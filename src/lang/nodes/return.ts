@@ -2,7 +2,7 @@ import { Interpreter } from '../interpreter';
 import { Frame, StatementNode, ValueNode } from './base';
 
 export class ReturnNode extends StatementNode {
-  constructor(public result: ValueNode | null) {
+  constructor(public readonly result: ValueNode | null) {
     super();
   }
 

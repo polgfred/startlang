@@ -4,8 +4,8 @@ import { Frame, ValueNode } from './base';
 
 export class UnaryOpNode extends ValueNode {
   constructor(
-    public operator: string,
-    public right: ValueNode
+    public readonly operator: string,
+    public readonly right: ValueNode
   ) {
     super();
   }

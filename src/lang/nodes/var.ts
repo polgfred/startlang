@@ -3,7 +3,7 @@ import { Interpreter } from '../interpreter';
 import { Frame, ValueNode } from './base';
 
 export class VarNode extends ValueNode {
-  constructor(public name: string) {
+  constructor(public readonly name: string) {
     super();
   }
 

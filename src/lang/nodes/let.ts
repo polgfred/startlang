@@ -4,9 +4,9 @@ import { Frame, StatementNode, ValueNode } from './base';
 
 export class LetNode extends StatementNode {
   constructor(
-    public name: string,
-    public value: ValueNode,
-    public isLocal: boolean = false
+    public readonly name: string,
+    public readonly value: ValueNode,
+    public readonly isLocal: boolean = false
   ) {
     super();
   }

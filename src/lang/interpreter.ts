@@ -140,7 +140,7 @@ export class Interpreter {
     }
   }
 
-  getVariableIndex(name: string, indexes: any[]) {
+  getVariableIndex(name: string, indexes: readonly any[]) {
     let value = this.getVariable(name);
     for (let i = 0; i < indexes.length; i++) {
       const handler = this.getHandler(value);
@@ -149,7 +149,7 @@ export class Interpreter {
     return value;
   }
 
-  setVariableIndex(name: string, indexes: any[], value: any) {
+  setVariableIndex(name: string, indexes: readonly any[], value: any) {
     this.setVariable(
       name,
       produce(this.getVariable(name), (draft: any) => {

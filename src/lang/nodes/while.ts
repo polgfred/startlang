@@ -4,8 +4,8 @@ import { StatementNode, ValueNode, Frame } from './base';
 
 export class WhileNode extends StatementNode {
   constructor(
-    public condition: ValueNode,
-    public body: StatementNode
+    public readonly condition: ValueNode,
+    public readonly body: StatementNode
   ) {
     super();
   }

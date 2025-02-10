@@ -4,11 +4,11 @@ import { Frame, StatementNode, ValueNode } from './base';
 
 export class ForNode extends StatementNode {
   constructor(
-    public name: string,
-    public initial: ValueNode,
-    public limit: ValueNode,
-    public step: ValueNode | null,
-    public body: StatementNode
+    public readonly name: string,
+    public readonly initial: ValueNode,
+    public readonly limit: ValueNode,
+    public readonly step: ValueNode | null,
+    public readonly body: StatementNode
   ) {
     super();
   }
@@ -21,9 +21,9 @@ export class ForNode extends StatementNode {
 export class ForFrame extends Frame {
   declare node: ForNode;
 
-  index: number = 0;
-  limit: number = 0;
-  step: number = 1;
+  readonly index: number = 0;
+  readonly limit: number = 0;
+  readonly step: number = 1;
 
   visit(interpreter: Interpreter) {
     switch (this.state) {

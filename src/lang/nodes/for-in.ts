@@ -4,9 +4,9 @@ import { Frame, StatementNode, ValueNode } from './base';
 
 export class ForInNode extends StatementNode {
   constructor(
-    public name: string,
-    public iterable: ValueNode,
-    public body: StatementNode
+    public readonly name: string,
+    public readonly iterable: ValueNode,
+    public readonly body: StatementNode
   ) {
     super();
   }
@@ -16,11 +16,13 @@ export class ForInNode extends StatementNode {
   }
 }
 
+const emptyList: readonly any[] = Object.freeze([]);
+
 export class ForInFrame extends Frame {
   declare node: ForInNode;
 
-  iterable: any;
-  index: number = 0;
+  readonly count: number = 0;
+  readonly iterable: readonly any[] = emptyList;
 
   visit(interpreter: Interpreter) {
     switch (this.state) {
@@ -37,10 +39,10 @@ export class ForInFrame extends Frame {
         break;
       }
       case 2: {
-        if (this.index < this.iterable.length) {
-          interpreter.setVariable(this.node.name, this.iterable[this.index]);
+        if (this.count < this.iterable.length) {
+          interpreter.setVariable(this.node.name, this.iterable[this.count]);
           interpreter.updateFrame(this, null, (draft) => {
-            draft.index++;
+            draft.count++;
           });
           interpreter.pushFrame(this.node.body);
         } else {

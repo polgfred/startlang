@@ -4,8 +4,8 @@ import { Frame, ValueNode } from './base';
 
 export class LogicalOpNode extends ValueNode {
   constructor(
-    public operator: 'and' | 'or',
-    public values: ValueNode[]
+    public readonly operator: 'and' | 'or',
+    public readonly values: ValueNode[]
   ) {
     super();
   }
@@ -21,7 +21,7 @@ export class LogicalOpNode extends ValueNode {
 }
 
 export class LogicalNotNode extends ValueNode {
-  constructor(public value: ValueNode) {
+  constructor(public readonly value: ValueNode) {
     super();
   }
 
@@ -33,7 +33,7 @@ export class LogicalNotNode extends ValueNode {
 export class LogicalAndFrame extends Frame {
   declare node: LogicalOpNode;
 
-  count: number = 0;
+  readonly count: number = 0;
 
   visit(interpreter: Interpreter) {
     switch (this.state) {
@@ -69,7 +69,7 @@ export class LogicalAndFrame extends Frame {
 export class LogicalOrFrame extends Frame {
   declare node: LogicalOpNode;
 
-  count: number = 0;
+  readonly count: number = 0;
 
   visit(interpreter: Interpreter) {
     switch (this.state) {

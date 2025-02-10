@@ -4,8 +4,8 @@ import { Frame, ValueNode } from './base';
 
 export class VarIndexNode extends ValueNode {
   constructor(
-    public name: string,
-    public indexes: ValueNode[]
+    public readonly name: string,
+    public readonly indexes: ValueNode[]
   ) {
     super();
   }
@@ -15,11 +15,13 @@ export class VarIndexNode extends ValueNode {
   }
 }
 
+const emptyList: readonly any[] = Object.freeze([]);
+
 export class VarIndexFrame extends Frame {
   declare node: VarIndexNode;
 
-  count: number = 0;
-  indexes: any[] = [];
+  readonly count: number = 0;
+  readonly indexes: readonly any[] = emptyList;
 
   visit(interpreter: Interpreter) {
     switch (this.state) {

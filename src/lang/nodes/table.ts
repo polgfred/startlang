@@ -4,8 +4,8 @@ import { Frame, ValueNode } from './base';
 
 export class TableNode extends ValueNode {
   constructor(
-    public keys: string[],
-    public values: ValueNode[]
+    public readonly keys: string[],
+    public readonly values: ValueNode[]
   ) {
     super();
   }
@@ -20,8 +20,8 @@ const emptyTable: object = Object.freeze(Object.create(null));
 export class TableFrame extends Frame {
   declare node: TableNode;
 
-  count: number = 0;
-  items = emptyTable;
+  readonly count: number = 0;
+  readonly items: object = emptyTable;
 
   visit(interpreter: Interpreter) {
     switch (this.state) {

@@ -4,8 +4,8 @@ import { ValueNode, Frame, StatementNode } from './base';
 
 export class RepeatNode extends StatementNode {
   constructor(
-    public times: ValueNode | null,
-    public body: StatementNode
+    public readonly times: ValueNode | null,
+    public readonly body: StatementNode
   ) {
     super();
   }
@@ -30,8 +30,8 @@ class RepeatFrame extends Frame {
 class RepeatTimesFrame extends Frame {
   declare node: RepeatNode;
 
-  times: number = 0;
-  count: number = 0;
+  readonly times: number = 0;
+  readonly count: number = 0;
 
   visit(interpreter: Interpreter) {
     switch (this.state) {

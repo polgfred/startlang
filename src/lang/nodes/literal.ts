@@ -3,7 +3,7 @@ import { Interpreter } from '../interpreter';
 import { ValueNode, Frame } from './base';
 
 export class LiteralNode extends ValueNode {
-  constructor(public value: any) {
+  constructor(public readonly value: any) {
     super();
   }
 

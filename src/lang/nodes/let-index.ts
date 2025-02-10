@@ -4,9 +4,9 @@ import { Frame, StatementNode, ValueNode } from './base';
 
 export class LetIndexNode extends StatementNode {
   constructor(
-    public name: string,
-    public indexes: ValueNode[],
-    public value: ValueNode
+    public readonly name: string,
+    public readonly indexes: ValueNode[],
+    public readonly value: ValueNode
   ) {
     super();
   }
@@ -19,8 +19,8 @@ export class LetIndexNode extends StatementNode {
 export class LetIndexFrame extends Frame {
   declare node: LetIndexNode;
 
-  count: number = 0;
-  indexes: any[] = [];
+  readonly count: number = 0;
+  readonly indexes: any[] = [];
 
   visit(interpreter: Interpreter) {
     switch (this.state) {

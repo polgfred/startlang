@@ -5,9 +5,9 @@ import { Frame, StatementNode } from './base';
 
 export class BeginNode extends StatementNode {
   constructor(
-    public name: string,
-    public params: string[],
-    public body: StatementNode
+    public readonly name: string,
+    public readonly params: string[],
+    public readonly body: StatementNode
   ) {
     super();
   }
