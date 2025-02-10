@@ -104,6 +104,7 @@ export class Interpreter {
 
   popOut() {
     this.topFrame = rootFrame;
+    this.topNamespace = rootNamespace;
   }
 
   popOver(flow: 'loop' | 'call') {
@@ -192,6 +193,10 @@ export class Interpreter {
       throw new Error('operands must be of the same type');
     }
     return leftHandler.evalBinaryOp(op, left, right);
+  }
+
+  setResult(value: any) {
+    this.lastResult = value;
   }
 
   snapshot() {
