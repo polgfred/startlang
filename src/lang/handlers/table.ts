@@ -26,13 +26,13 @@ export class TableHandler extends DataHandler {
   evalBinaryOp(op: string, left: any, right: any) {
     switch (op) {
       case '$':
-        return left + right;
+        return { ...left, ...right };
       case '=':
         return deepEqual(left, right, { strict: true });
       case '!=':
         return !deepEqual(left, right, { strict: true });
       default:
-        return super.evalBinaryOp(op, left, right);
+        throw new Error(`binary operator ${op} not supported`);
     }
   }
 }
