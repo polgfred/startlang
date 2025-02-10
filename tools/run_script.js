@@ -83,8 +83,9 @@ async function main() {
         });
 
         rl.question(message, (answer) => {
+          interp.setResult(answer);
           rl.close();
-          resolve(answer);
+          resolve();
         });
       });
     },

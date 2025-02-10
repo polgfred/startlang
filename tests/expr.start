@@ -28,14 +28,14 @@ if a+2 = b then
   print "3 should not see this"
 end
 
-g = list(0,1,2,3,4,5)
-h = list(0,1,2,3,4,5)
+g = [0,1,2,3,4,5]
+h = [0,1,2,3,4,5]
 
 if g = h then print "4a should see this"
 if g != h then print "4b should not see this"
 
-t = table("name","Fred","age",40)
-u = table("name","Fred","age",40)
+t = {name="Fred",age=40}
+u = {name="Fred",age=40}
 
 if t = u then print "5a should see this"
 
@@ -43,7 +43,7 @@ t.likes = "computers"
 
 if t != u then print "5b should see this"
 
-remove t, "likes"
+t.likes = none
 t.age = 41
 
 if t != u then print "5c should see this"

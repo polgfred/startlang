@@ -32,6 +32,15 @@ export class StringHandler extends DataHandler {
 }
 
 const stringMethods = {
+  num(interpreter: Interpreter, [value]: [string]) {
+    const num = Number(value);
+    if (isNaN(num)) {
+      throw new Error(`cannot convert ${value} to number`);
+    } else {
+      interpreter.setResult(num);
+    }
+  },
+
   len(interpreter: Interpreter, [value]: [string]) {
     interpreter.setResult(value.length);
   },
