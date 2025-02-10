@@ -18,8 +18,6 @@ export class WhileNode extends StatementNode {
 export class WhileFrame extends Frame {
   declare node: WhileNode;
 
-  flowMarker = 'loop' as const;
-
   visit(interpreter: Interpreter) {
     switch (this.state) {
       case 0: {
@@ -37,5 +35,9 @@ export class WhileFrame extends Frame {
         break;
       }
     }
+  }
+
+  isFlowBoundary(flow: 'loop' | 'call') {
+    return flow === 'loop';
   }
 }

@@ -93,9 +93,9 @@ export class Interpreter {
 
   popOver(flow: 'loop' | 'call') {
     while (this.topFrame !== rootFrame) {
-      const { flowMarker } = this.topFrame.value;
+      const isBoundary = this.topFrame.value.isFlowBoundary(flow);
       this.popFrame();
-      if (flow === flowMarker) {
+      if (isBoundary) {
         break;
       }
     }
@@ -103,7 +103,7 @@ export class Interpreter {
 
   popUntil(flow: 'loop' | 'call') {
     while (this.topFrame !== rootFrame) {
-      if (flow === this.topFrame.value.flowMarker) {
+      if (this.topFrame.value.isFlowBoundary(flow)) {
         break;
       }
       this.popFrame();

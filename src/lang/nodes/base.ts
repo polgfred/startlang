@@ -12,7 +12,6 @@ export abstract class StatementNode extends Node {}
 export abstract class ValueNode extends Node {}
 
 export abstract class Frame {
-  flowMarker: 'loop' | 'call' | null = null;
   state: number = 0;
 
   constructor(public readonly node: Node) {}
@@ -20,6 +19,9 @@ export abstract class Frame {
   abstract visit(interpreter: Interpreter): void | Promise<void>;
 
   dispose(interpreter: Interpreter) {}
+  isFlowBoundary(flow: 'loop' | 'call'): boolean {
+    return false;
+  }
 }
 
 Frame[immerable] = true;
@@ -31,7 +33,9 @@ class RootNode extends Node {
 }
 
 class RootFrame extends Frame {
-  visit(interpreter: Interpreter) {}
+  visit(interpreter: Interpreter) {
+    // this is just here as a sentinel frame
+  }
 }
 
 export const rootFrame: Stack<Frame> = new Stack(new RootNode().makeFrame());

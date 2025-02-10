@@ -22,8 +22,6 @@ export class RepeatNode extends StatementNode {
 class RepeatFrame extends Frame {
   declare node: RepeatNode;
 
-  flowMarker = 'loop' as const;
-
   visit(interpreter: Interpreter) {
     interpreter.pushFrame(this.node.body);
   }
@@ -60,5 +58,9 @@ class RepeatTimesFrame extends Frame {
         break;
       }
     }
+  }
+
+  isFlowBoundary(flow: 'loop' | 'call') {
+    return flow === 'loop';
   }
 }

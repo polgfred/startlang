@@ -21,7 +21,6 @@ export class ForNode extends StatementNode {
 export class ForFrame extends Frame {
   declare node: ForNode;
 
-  flowMarker = 'loop' as const;
   index: number = 0;
   limit: number = 0;
   step: number = 1;
@@ -73,5 +72,9 @@ export class ForFrame extends Frame {
         }
       }
     }
+  }
+
+  isFlowBoundary(flow: 'loop' | 'call') {
+    return flow === 'loop';
   }
 }

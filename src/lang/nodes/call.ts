@@ -18,7 +18,6 @@ export class CallNode extends ValueNode {
 export class CallFrame extends Frame {
   declare node: CallNode;
 
-  flowMarker = 'call' as const;
   count: number = 0;
   args: any[] = [];
   hasNamespace = false;
@@ -76,5 +75,9 @@ export class CallFrame extends Frame {
     if (this.hasNamespace) {
       interpreter.popNamespace();
     }
+  }
+
+  isFlowBoundary(flow: 'loop' | 'call') {
+    return true;
   }
 }
