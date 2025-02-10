@@ -1,6 +1,13 @@
+import { Interpreter } from '../interpreter';
+import { adjustIndex } from '../utils';
+
 import { DataHandler } from './base';
 
 export class StringHandler extends DataHandler {
+  constructor(interpreter: Interpreter) {
+    super(interpreter, {}, stringMethods);
+  }
+
   shouldHandle(value: any) {
     return typeof value === 'string';
   }
@@ -10,7 +17,26 @@ export class StringHandler extends DataHandler {
   }
 
   getIndex(value: string, index: number) {
-    index = this.adjustIndex(index, value.length);
+    index = adjustIndex(index, value.length);
     return value.charAt(index);
   }
 }
+
+const stringMethods = {
+  len(interpreter: Interpreter, [value]: [string]) {
+    interpreter.setResult(value.length);
+  },
+
+  range(
+    interpreter: Interpreter,
+    [value, start, end]: [string, number, number]
+  ) {
+    start = adjustIndex(start, value.length);
+    end = adjustIndex(end, value.length);
+    interpreter.setResult(value.substring(start, end + 1));
+  },
+
+  split(interpreter: Interpreter, [value, sep]: [string, string]) {
+    interpreter.setResult(value.split(sep));
+  },
+};

@@ -1,8 +1,8 @@
 import deepEqual from 'deep-equal';
 
-import { DataHandler } from './base';
-
 import { Interpreter } from '../interpreter';
+
+import { DataHandler } from './base';
 
 export class TableHandler extends DataHandler {
   constructor(interpreter: Interpreter) {
@@ -53,4 +53,12 @@ const tableGlobals = {
   },
 };
 
-const tableMethods = {};
+const tableMethods = {
+  len(interpreter: Interpreter, [value]: [object]) {
+    interpreter.setResult(Object.keys(value).length);
+  },
+
+  keys(interpreter: Interpreter, [value]: [object]) {
+    interpreter.setResult(Object.keys(value));
+  },
+};

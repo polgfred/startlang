@@ -1,8 +1,9 @@
 import deepEqual from 'deep-equal';
 
-import { DataHandler } from './base';
-
 import { Interpreter } from '../interpreter';
+import { adjustIndex } from '../utils';
+
+import { DataHandler } from './base';
 
 export class ListHandler extends DataHandler {
   constructor(interpreter: Interpreter) {
@@ -22,12 +23,12 @@ export class ListHandler extends DataHandler {
   }
 
   getIndex(value: any[], index: number) {
-    index = this.adjustIndex(index, value.length);
+    index = adjustIndex(index, value.length);
     return value[index];
   }
 
   setIndex(value: any[], index: number, element: any) {
-    index = this.adjustIndex(index, value.length);
+    index = adjustIndex(index, value.length);
     value[index] = element;
   }
 
@@ -51,4 +52,21 @@ const listGlobals = {
   },
 };
 
-const listMethods = {};
+const listMethods = {
+  len(interpreter: Interpreter, [value]: [any[]]) {
+    interpreter.setResult(value.length);
+  },
+
+  range(
+    interpreter: Interpreter,
+    [value, start, end]: [any[], number, number]
+  ) {
+    start = adjustIndex(start, value.length);
+    end = adjustIndex(end, value.length);
+    interpreter.setResult(value.slice(start, end + 1));
+  },
+
+  join(interpreter: Interpreter, [value, sep]: [any[], string]) {
+    interpreter.setResult(value.join(sep));
+  },
+};
