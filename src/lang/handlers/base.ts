@@ -1,4 +1,4 @@
-import { Draft, original } from 'immer';
+import { Draft } from 'immer';
 import { Interpreter } from '../interpreter';
 
 export abstract class DataHandler {
