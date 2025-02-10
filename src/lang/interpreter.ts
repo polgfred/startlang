@@ -47,7 +47,7 @@ export class Interpreter {
 
   async runLoop() {
     while (this.topFrame !== rootFrame) {
-      const result = this.topFrame.value.visit(this);
+      const result = this.topFrame.head.visit(this);
       if (result instanceof Promise) {
         await result;
       }
@@ -82,7 +82,7 @@ export class Interpreter {
   }
 
   popFrame() {
-    this.topFrame.value.dispose(this);
+    this.topFrame.head.dispose(this);
     this.topFrame = this.topFrame.pop();
   }
 
@@ -93,7 +93,7 @@ export class Interpreter {
 
   popOver(flow: 'loop' | 'call') {
     while (this.topFrame !== rootFrame) {
-      const isBoundary = this.topFrame.value.isFlowBoundary(flow);
+      const isBoundary = this.topFrame.head.isFlowBoundary(flow);
       this.popFrame();
       if (isBoundary) {
         break;
@@ -103,7 +103,7 @@ export class Interpreter {
 
   popUntil(flow: 'loop' | 'call') {
     while (this.topFrame !== rootFrame) {
-      if (this.topFrame.value.isFlowBoundary(flow)) {
+      if (this.topFrame.head.isFlowBoundary(flow)) {
         break;
       }
       this.popFrame();
@@ -119,17 +119,17 @@ export class Interpreter {
   }
 
   getVariable(name: string) {
-    if (name in this.topNamespace.value) {
-      return this.topNamespace.value[name];
+    if (name in this.topNamespace.head) {
+      return this.topNamespace.head[name];
     } else {
       return this.globalNamespace[name];
     }
   }
 
   setVariable(name: string, value: any, local = false) {
-    if (local || name in this.topNamespace.value) {
+    if (local || name in this.topNamespace.head) {
       this.topNamespace = this.topNamespace.swap(
-        produce(this.topNamespace.value, (draft) => {
+        produce(this.topNamespace.head, (draft) => {
           draft[name] = value;
         })
       );

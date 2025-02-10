@@ -1,7 +1,7 @@
 import { immerable } from 'immer';
 
 import { Interpreter } from '../interpreter';
-import { Stack } from '../utils/stack';
+import { Cons } from '../utils/cons';
 
 export abstract class Node {
   abstract makeFrame(): Frame;
@@ -34,6 +34,6 @@ class RootFrame extends Frame {
   }
 }
 
-export const rootFrame: Stack<Frame> = new Stack(new RootNode().makeFrame());
+export const rootFrame: Cons<Frame> = new Cons(new RootNode().makeFrame());
 
-export const rootNamespace: Stack<object> = new Stack(Object.create(null));
+export const rootNamespace: Cons<object> = new Cons(Object.create(null));
