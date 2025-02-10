@@ -7,9 +7,9 @@ import { VarNode } from './nodes/var';
 
 export class Interpreter {
   dataHandlers: DataHandler[] = [];
-  systemFunctions = Object.create(null);
-  globalFunctions = Object.create(null);
-  globalNamespace = Object.create(null);
+  systemFunctions: object = Object.create(null);
+  globalFunctions: object = Object.create(null);
+  globalNamespace: object = Object.create(null);
   topFrame = rootFrame;
   topNamespace = rootNamespace;
   lastResult: any = null;
