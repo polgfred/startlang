@@ -56,7 +56,7 @@ begin func1(i) do
 end
 
 begin func2(i) do
-  j = i
+  local j = i
   while j < func1(i) do j = j + 11
   return j
 end

@@ -82,6 +82,7 @@ export class Interpreter {
   }
 
   popFrame() {
+    this.topFrame.value.dispose(this);
     this.topFrame = this.topFrame.pop();
   }
 

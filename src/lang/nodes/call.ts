@@ -19,6 +19,7 @@ export class CallFrame extends Frame {
   flowMarker = 'call' as const;
   count: number = 0;
   args: any[] = [];
+  hasNamespace = false;
 
   constructor(public node: CallNode) {
     super();
@@ -48,14 +49,15 @@ export class CallFrame extends Frame {
         const func = interpreter.globalFunctions[this.node.name];
         interpreter.pushNamespace();
         for (let i = 0; i < func.params.length; i++) {
-          interpreter.setVariable(func.params[i], this.args[i]);
+          interpreter.setVariable(func.params[i], this.args[i], true);
         }
-        interpreter.updateFrame(this, 3);
+        interpreter.updateFrame(this, 3, (draft) => {
+          draft.hasNamespace = true;
+        });
         interpreter.pushFrame(func.body);
         break;
       }
       case 3: {
-        interpreter.popNamespace();
         interpreter.popFrame();
         break;
       }
@@ -69,6 +71,12 @@ export class CallFrame extends Frame {
           interpreter.popFrame();
         }
       }
+    }
+  }
+
+  dispose(interpreter: Interpreter) {
+    if (this.hasNamespace) {
+      interpreter.popNamespace();
     }
   }
 }

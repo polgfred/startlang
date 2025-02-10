@@ -16,6 +16,8 @@ export abstract class Frame {
   state: number = 0;
 
   abstract visit(interpreter: Interpreter): void | Promise<void>;
+
+  dispose(interpreter: Interpreter) {}
 }
 
 Frame[immerable] = true;
