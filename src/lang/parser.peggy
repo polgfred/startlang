@@ -12,12 +12,14 @@ import {
   IfNode,
   LetIndexNode,
   LetNode,
+  ListNode,
   LiteralNode,
   LogicalOpNode,
   LogicalNotNode,
   NextNode,
   RepeatNode,
   ReturnNode,
+  TableNode,
   TemplateStringNode,
   UnaryOpNode,
   VarIndexNode,
@@ -287,13 +289,36 @@ MultOp
   / '%'
 
 UnaryExpr
-  = ops:(__ @UnaryOp)* __ right:CallExpr
+  = ops:(__ @UnaryOp)* __ right:ListExpr
     { return buildUnaryExpr(ops, right) }
 
 UnaryOp
   = '+'
   / '-'
   / '~'
+
+// Lists and Tables
+
+ListExpr
+  = '[' __ values:Values? __ ']'
+    { return new ListNode(values ?? []) }
+  / TableExpr
+
+Pair = key:Symbol __ '=' __ value:Value
+  { return [key, value] }
+
+Pairs = first:Pair rest:(__ ',' __ EOL? __ @Pair)*
+  { return [first, ...rest] }
+
+TableExpr
+  = '{' __ pairs:Pairs? __ '}'
+    {
+      return new TableNode(
+        pairs?.map(([key]) => key) ?? [],
+        pairs?.map(([, value]) => value) ?? []
+      );
+    }
+  / CallExpr
 
 // Invocation
 

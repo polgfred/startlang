@@ -7,7 +7,7 @@ import { DataHandler } from './base';
 
 export class ListHandler extends DataHandler {
   constructor(interpreter: Interpreter) {
-    super(interpreter, listGlobals, listMethods);
+    super(interpreter, {}, listMethods);
   }
 
   shouldHandle(value: any) {
@@ -45,12 +45,6 @@ export class ListHandler extends DataHandler {
     }
   }
 }
-
-const listGlobals = {
-  list(interpreter: Interpreter, elements: any[]) {
-    interpreter.setResult(Object.freeze(elements));
-  },
-};
 
 const listMethods = {
   len(interpreter: Interpreter, [value]: [any[]]) {

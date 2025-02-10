@@ -6,7 +6,7 @@ import { DataHandler } from './base';
 
 export class TableHandler extends DataHandler {
   constructor(interpreter: Interpreter) {
-    super(interpreter, tableGlobals, tableMethods);
+    super(interpreter, {}, tableMethods);
   }
 
   shouldHandle(value: any) {
@@ -18,7 +18,7 @@ export class TableHandler extends DataHandler {
       const handler = this.interpreter.getHandler(v);
       return `${key}=${handler.getPrettyValue(v)}`;
     });
-    return `[${prettyValues.join(', ')}]`;
+    return `{${prettyValues.join(', ')}}`;
   }
 
   getIndex(value: object, index: string) {
@@ -42,16 +42,6 @@ export class TableHandler extends DataHandler {
     }
   }
 }
-
-const tableGlobals = {
-  table(interpreter: Interpreter, pairs: any[]) {
-    const table = Object.create(null);
-    for (var i = 0; i < pairs.length; i += 2) {
-      table[pairs[i]] = pairs[i + 1];
-    }
-    interpreter.setResult(Object.freeze(table));
-  },
-};
 
 const tableMethods = {
   len(interpreter: Interpreter, [value]: [object]) {
