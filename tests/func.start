@@ -9,32 +9,32 @@ end
 print len(a)
 
 begin inner3 do
-  print "    - inner3 `foo` should be 124"
+  print "    - inner3 {foo} should be 124"
   local foo = 99 ; makes a new foo
-  print "    - inner3 `foo` should be 99"
+  print "    - inner3 {foo} should be 99"
 end
 
 begin inner2 do
-  print "  - inner2 `foo` should be 123"
+  print "  - inner2 {foo} should be 123"
   let foo = foo + 1 ; refers to the global foo
-  print "  - inner2 `foo` should be 124"
+  print "  - inner2 {foo} should be 124"
   inner3
-  print "  - inner2 `foo` should be 124"
+  print "  - inner2 {foo} should be 124"
 end
 
 begin inner1(foo) do ; implies local foo
-  print "inner1 `foo` should be 42"
+  print "inner1 {foo} should be 42"
   inner2
-  print "inner1 `foo` should be 42"
+  print "inner1 {foo} should be 42"
   let foo = foo + 1
-  print "inner1 `foo` should be 43"
+  print "inner1 {foo} should be 43"
 end
 
 let foo = 123
-print "outer `foo` should be 123"
+print "outer {foo} should be 123"
 
 inner1 42
-print "outer `foo` should be 124"
+print "outer {foo} should be 124"
 
 begin compare(first, second) do
   if first > second then
@@ -47,7 +47,7 @@ begin compare(first, second) do
 end
 
 for x from 8 to 13 do
-  print "compare(`x`, 10) is `compare(x, 10)`"
+  print "compare({x}, 10) is {compare(x, 10)}"
 end
 
 begin func1(i) do
@@ -61,4 +61,4 @@ begin func2(i) do
   return j
 end
 
-print "func2(10) = `func2(10)` = 87"
+print "func2(10) = {func2(10)} = 87"

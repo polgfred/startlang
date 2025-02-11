@@ -7,7 +7,7 @@ y = (x + 1)
 
 begin john do
   for i from 1 to 10 by 2 do
-    print "`i` `x` hi, ""there"""
+    print "{i} {x} hi, ""there"""
     if x then f1 else f2
   end
 end

@@ -368,7 +368,7 @@ String 'a string'
     }
 
 StringSegment
-  = "`" __ val:Value __ "`"
+  = "{" __ val:Value __ "}"
     // interpolation of value expressions
     { return val }
   / chars:Char+
@@ -377,9 +377,13 @@ StringSegment
 Char
   = '""'
     { return '"' }
-  / '``'
-    { return '`' }
-  / [^"`]
+  / '{{'
+    { return "{" /*}*/ }
+  / '}}'
+    { return /*{*/ '}' }
+  / '{}'
+    { return '{}' }
+  / [^"{}]
 
 // Data
 
