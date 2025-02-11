@@ -11,13 +11,17 @@ import {
   rootNamespace,
 } from './nodes/index.js';
 
-const emptyObject: object = Object.freeze(Object.create(null));
+export interface RuntimeFunction {
+  (interpreter: Interpreter, ...args: any[]): any;
+}
+
+const emptyObject = Object.freeze(Object.create(null));
 
 export class Interpreter<HostType = unknown> {
   dataHandlers: DataHandler[] = [];
-  systemFunctions = emptyObject;
-  globalFunctions = emptyObject;
-  globalNamespace = emptyObject;
+  systemFunctions: Record<string, RuntimeFunction> = emptyObject;
+  globalFunctions: Record<string, BeginNode> = emptyObject;
+  globalNamespace: Record<string, any> = emptyObject;
   topFrame = rootFrame;
   topNamespace = rootNamespace;
   lastResult: any = null;
@@ -26,7 +30,7 @@ export class Interpreter<HostType = unknown> {
     installHandlers(this);
   }
 
-  registerGlobals(funcs: object) {
+  registerGlobals(funcs: Record<string, RuntimeFunction>) {
     this.systemFunctions = produce(this.systemFunctions, (draft) => {
       Object.assign(draft, funcs);
     });

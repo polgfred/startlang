@@ -1,10 +1,10 @@
-import { Interpreter } from '../interpreter.js';
+import { Interpreter, RuntimeFunction } from '../interpreter.js';
 
 export abstract class DataHandler {
   constructor(
     protected readonly interpreter: Interpreter,
-    public readonly globals: object = {},
-    public readonly methods: object = {}
+    public readonly globals: Record<string, RuntimeFunction> = {},
+    public readonly methods: Record<string, RuntimeFunction> = {}
   ) {}
 
   abstract shouldHandle(value: any): boolean;
