@@ -5,11 +5,13 @@ import { BeginNode, Frame, Node, rootFrame, rootNamespace } from './nodes';
 import { LiteralNode } from './nodes/literal';
 import { VarNode } from './nodes/var';
 
+const emptyObject: object = Object.freeze(Object.create(null));
+
 export class Interpreter {
   dataHandlers: DataHandler[] = [];
-  systemFunctions: object = Object.create(null);
-  globalFunctions: object = Object.create(null);
-  globalNamespace: object = Object.create(null);
+  systemFunctions = emptyObject;
+  globalFunctions = emptyObject;
+  globalNamespace = emptyObject;
   topFrame = rootFrame;
   topNamespace = rootNamespace;
   lastResult: any = null;
@@ -18,8 +20,10 @@ export class Interpreter {
     installHandlers(this);
   }
 
-  registerGlobals(fns: object) {
-    Object.assign(this.systemFunctions, fns);
+  registerGlobals(funcs: object) {
+    this.systemFunctions = produce(this.systemFunctions, (draft) => {
+      Object.assign(draft, funcs);
+    });
   }
 
   registerHandler(handler: DataHandler) {
@@ -111,7 +115,7 @@ export class Interpreter {
   }
 
   pushNamespace() {
-    this.topNamespace = this.topNamespace.push(Object.create(null));
+    this.topNamespace = this.topNamespace.push(emptyObject);
   }
 
   popNamespace() {
@@ -150,19 +154,17 @@ export class Interpreter {
   }
 
   setVariableIndex(name: string, indexes: readonly any[], value: any) {
-    this.setVariable(
-      name,
-      produce(this.getVariable(name), (draft: any) => {
-        for (let i = 0; i < indexes.length; i++) {
-          const handler = this.getHandler(original(draft));
-          if (i < indexes.length - 1) {
-            draft = handler.getIndex(draft, indexes[i]);
-          } else {
-            handler.setIndex(draft, indexes[i], value);
-          }
+    const newValue = produce(this.getVariable(name), (draft: any) => {
+      for (let i = 0; i < indexes.length; i++) {
+        const handler = this.getHandler(original(draft));
+        if (i < indexes.length - 1) {
+          draft = handler.getIndex(draft, indexes[i]);
+        } else {
+          handler.setIndex(draft, indexes[i], value);
         }
-      })
-    );
+      }
+    });
+    this.setVariable(name, newValue);
   }
 
   evalUnaryOp(op: string, right: any) {
