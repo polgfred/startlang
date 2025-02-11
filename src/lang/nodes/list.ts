@@ -26,15 +26,15 @@ export class ListFrame extends Frame {
     switch (this.state) {
       case 0: {
         if (this.count < items.length) {
-          interpreter.updateFrame(this, 1);
+          interpreter.swapFrame(this, 1);
           interpreter.pushFrame(items[this.count]);
         } else {
-          interpreter.updateFrame(this, 2);
+          interpreter.swapFrame(this, 2);
         }
         break;
       }
       case 1: {
-        interpreter.updateFrame(this, 0, (draft) => {
+        interpreter.swapFrame(this, 0, (draft) => {
           draft.items[this.count] = interpreter.lastResult;
           draft.count++;
         });

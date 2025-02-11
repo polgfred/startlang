@@ -26,12 +26,12 @@ export class BinaryOpFrame extends Frame {
 
     switch (this.state) {
       case 0: {
-        interpreter.updateFrame(this, 1);
+        interpreter.swapFrame(this, 1);
         interpreter.pushFrame(left);
         break;
       }
       case 1: {
-        interpreter.updateFrame(this, 2, (draft) => {
+        interpreter.swapFrame(this, 2, (draft) => {
           draft.left = interpreter.lastResult;
         });
         interpreter.pushFrame(right);

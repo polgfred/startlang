@@ -28,17 +28,17 @@ export class CallFrame extends Frame {
     switch (this.state) {
       case 0: {
         if (this.count < args.length) {
-          interpreter.updateFrame(this, 1);
+          interpreter.swapFrame(this, 1);
           interpreter.pushFrame(args[this.count]);
         } else if (name in interpreter.globalFunctions) {
-          interpreter.updateFrame(this, 2);
+          interpreter.swapFrame(this, 2);
         } else {
-          interpreter.updateFrame(this, 4);
+          interpreter.swapFrame(this, 4);
         }
         break;
       }
       case 1: {
-        interpreter.updateFrame(this, 0, (draft) => {
+        interpreter.swapFrame(this, 0, (draft) => {
           draft.args[this.count] = interpreter.lastResult;
           draft.count++;
         });
@@ -50,7 +50,7 @@ export class CallFrame extends Frame {
         for (let i = 0; i < func.params.length; i++) {
           interpreter.setVariable(func.params[i], this.args[i], true);
         }
-        interpreter.updateFrame(this, 3, (draft) => {
+        interpreter.swapFrame(this, 3, (draft) => {
           draft.hasNamespace = true;
         });
         interpreter.pushFrame(func.body);
@@ -61,7 +61,7 @@ export class CallFrame extends Frame {
         break;
       }
       case 4: {
-        const result = interpreter.invokeFunction(name, this.args);
+        const result = interpreter.invokeRuntimeFunction(name, this.args);
         if (result instanceof Promise) {
           return result.then(() => {
             interpreter.popFrame();

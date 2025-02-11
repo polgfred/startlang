@@ -23,7 +23,7 @@ export class UnaryOpFrame extends Frame {
 
     switch (this.state) {
       case 0: {
-        interpreter.updateFrame(this, 1);
+        interpreter.swapFrame(this, 1);
         interpreter.pushFrame(right);
         break;
       }

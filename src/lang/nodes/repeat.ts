@@ -38,19 +38,19 @@ class RepeatTimesFrame extends Frame {
 
     switch (this.state) {
       case 0: {
-        interpreter.updateFrame(this, 1);
+        interpreter.swapFrame(this, 1);
         interpreter.pushFrame(times!);
         break;
       }
       case 1: {
-        interpreter.updateFrame(this, 2, (draft) => {
+        interpreter.swapFrame(this, 2, (draft) => {
           draft.times = Number(interpreter.lastResult);
         });
         break;
       }
       case 2: {
         if (this.count < this.times) {
-          interpreter.updateFrame(this, null, (draft) => {
+          interpreter.swapFrame(this, null, (draft) => {
             draft.count++;
           });
           interpreter.pushFrame(body);

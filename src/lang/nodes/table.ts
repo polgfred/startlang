@@ -31,15 +31,15 @@ export class TableFrame extends Frame {
     switch (this.state) {
       case 0: {
         if (this.count < pairs.length) {
-          interpreter.updateFrame(this, 1);
+          interpreter.swapFrame(this, 1);
           interpreter.pushFrame(pairs[this.count].value);
         } else {
-          interpreter.updateFrame(this, 2);
+          interpreter.swapFrame(this, 2);
         }
         break;
       }
       case 1: {
-        interpreter.updateFrame(this, 0, (draft) => {
+        interpreter.swapFrame(this, 0, (draft) => {
           draft.items[pairs[this.count].key] = interpreter.lastResult;
           draft.count++;
         });

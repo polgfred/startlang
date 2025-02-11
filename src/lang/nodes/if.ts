@@ -24,13 +24,13 @@ export class IfFrame extends Frame {
 
     switch (this.state) {
       case 0: {
-        interpreter.updateFrame(this, 1);
+        interpreter.swapFrame(this, 1);
         interpreter.pushFrame(condition);
         break;
       }
       case 1: {
-        interpreter.updateFrame(this, 2);
-        if (Boolean(interpreter.lastResult)) {
+        interpreter.swapFrame(this, 2);
+        if (interpreter.lastResult) {
           interpreter.pushFrame(thenBody);
         } else if (elseBody !== null) {
           interpreter.pushFrame(elseBody);

@@ -21,7 +21,7 @@ class BlockFrame extends Frame {
     const { elems } = this.node;
 
     if (this.count < elems.length) {
-      interpreter.updateFrame(this, null, (draft) => {
+      interpreter.swapFrame(this, null, (draft) => {
         draft.count++;
       });
       interpreter.pushFrame(elems[this.count]);

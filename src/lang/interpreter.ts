@@ -58,7 +58,7 @@ export class Interpreter {
     }
   }
 
-  updateFrame<T extends Frame>(
+  swapFrame<T extends Frame>(
     frame: T,
     state: number | null,
     updater?: (draft: Draft<T>) => void
@@ -188,7 +188,7 @@ export class Interpreter {
     });
   }
 
-  invokeFunction(name: string, args: any[]) {
+  invokeRuntimeFunction(name: string, args: any[]) {
     if (args.length > 0) {
       const handler = this.getHandler(args[0]);
       if (name in handler.methods) {

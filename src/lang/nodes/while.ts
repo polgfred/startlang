@@ -23,13 +23,13 @@ export class WhileFrame extends Frame {
 
     switch (this.state) {
       case 0: {
-        interpreter.updateFrame(this, 1);
+        interpreter.swapFrame(this, 1);
         interpreter.pushFrame(condition);
         break;
       }
       case 1: {
         if (interpreter.lastResult) {
-          interpreter.updateFrame(this, 0);
+          interpreter.swapFrame(this, 0);
           interpreter.pushFrame(body);
         } else {
           interpreter.popFrame();
