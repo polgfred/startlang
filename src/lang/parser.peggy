@@ -302,19 +302,14 @@ ListExpr
   / TableExpr
 
 Pair = key:Symbol __ '=' __ value:Value
-  { return [key, value] }
+  { return { key, value } }
 
 Pairs = first:Pair rest:(__ ',' __ EOL? __ @Pair)*
   { return [first, ...rest] }
 
 TableExpr
   = '{' __ pairs:Pairs? __ '}'
-    {
-      return new TableNode(
-        pairs?.map(([key]) => key) ?? [],
-        pairs?.map(([, value]) => value) ?? []
-      );
-    }
+    { return new TableNode(pairs ?? []) }
   / CallExpr
 
 // Invocation

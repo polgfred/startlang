@@ -4,8 +4,10 @@ import { Frame, Node } from './base';
 
 export class TableNode extends Node {
   constructor(
-    public readonly keys: string[],
-    public readonly values: Node[]
+    public readonly pairs: {
+      readonly key: string;
+      readonly value: Node;
+    }[]
   ) {
     super();
   }
@@ -24,11 +26,13 @@ export class TableFrame extends Frame {
   readonly items: object = emptyTable;
 
   visit(interpreter: Interpreter) {
+    const { pairs } = this.node;
+
     switch (this.state) {
       case 0: {
-        if (this.count < this.node.keys.length) {
+        if (this.count < pairs.length) {
           interpreter.updateFrame(this, 1);
-          interpreter.pushFrame(this.node.values[this.count]);
+          interpreter.pushFrame(pairs[this.count].value);
         } else {
           interpreter.updateFrame(this, 2);
         }
@@ -36,7 +40,7 @@ export class TableFrame extends Frame {
       }
       case 1: {
         interpreter.updateFrame(this, 0, (draft) => {
-          draft.items[this.node.keys[this.count]] = interpreter.lastResult;
+          draft.items[pairs[this.count].key] = interpreter.lastResult;
           draft.count++;
         });
         break;
