@@ -22,12 +22,7 @@ export class BeginFrame extends Frame {
   declare node: BeginNode;
 
   visit(interpreter: Interpreter) {
-    interpreter.globalFunctions = produce(
-      interpreter.globalFunctions,
-      (draft) => {
-        draft[this.node.name] = this.node;
-      }
-    );
+    interpreter.installGlobalFunction(this.node);
     interpreter.popFrame();
   }
 }

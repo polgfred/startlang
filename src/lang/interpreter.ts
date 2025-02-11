@@ -1,7 +1,7 @@
 import { Draft, original, produce } from 'immer';
 
 import { DataHandler, installHandlers } from './handlers';
-import { Frame, Node, rootFrame, rootNamespace } from './nodes';
+import { BeginNode, Frame, Node, rootFrame, rootNamespace } from './nodes';
 import { LiteralNode } from './nodes/literal';
 import { VarNode } from './nodes/var';
 
@@ -177,6 +177,12 @@ export class Interpreter {
       throw new Error('operands must be of the same type');
     }
     return leftHandler.evalBinaryOp(op, left, right);
+  }
+
+  installGlobalFunction(node: BeginNode) {
+    this.globalFunctions = produce(this.globalFunctions, (draft) => {
+      draft[node.name] = node;
+    });
   }
 
   invokeFunction(name: string, args: any[]) {
