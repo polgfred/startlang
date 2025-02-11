@@ -1,10 +1,8 @@
 export class Cons<T> {
   constructor(
-    public head: T,
-    public tail: Cons<T> | null = null
-  ) {
-    Object.freeze(this);
-  }
+    public readonly head: T,
+    public readonly tail: Cons<T> | null = null
+  ) {}
 
   swap(value: T) {
     return new Cons(value, this.tail);
