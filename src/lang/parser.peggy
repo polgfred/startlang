@@ -360,11 +360,11 @@ String 'a string'
     }
 
 StringSegment
-  = "{" __ val:Value __ "}"
+  = chars:Char+
+    { return new LiteralNode(chars.join('')) }
+  / "{" __ val:Value __ "}"
     // interpolation of value expressions
     { return val }
-  / chars:Char+
-    { return new LiteralNode(chars.join('')) }
 
 Char
   = '""'
