@@ -1,30 +1,18 @@
 /* eslint-disable no-console */
 
 import console from 'node:console';
-import { readFile, writeFile } from 'node:fs/promises';
 import process from 'node:process';
 import readline from 'node:readline';
 import { inspect } from 'node:util';
 
-import peggy from 'peggy';
-
 import { Interpreter } from '../src/lang/interpreter';
+import { parse, SyntaxError } from '../src/lang/parser.peggy';
 
 async function main() {
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
   });
-
-  const source = peggy.generate(
-    await readFile(`${import.meta.dirname}/../src/lang/parser.peggy`, 'utf-8'),
-    {
-      output: 'source',
-      format: 'es',
-    }
-  );
-  await writeFile(`${import.meta.dirname}/../src/lang/parser.js`, source);
-  const parser = await import('../src/lang/parser.js');
 
   const interp = new Interpreter();
   interp.registerGlobals({
@@ -71,10 +59,10 @@ async function main() {
     lines.push(line);
 
     try {
-      const node = parser.parse(lines.join('\n') + '\n');
+      const node = parse(lines.join('\n') + '\n');
       await interp.run(node);
     } catch (err) {
-      if (err instanceof parser.SyntaxError) {
+      if (err instanceof SyntaxError) {
         // get more input
         rl.setPrompt('... ');
         rl.prompt();

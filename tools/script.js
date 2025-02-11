@@ -1,27 +1,16 @@
 /* eslint-disable no-console */
 
 import console from 'node:console';
-import { readFile, writeFile } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import process from 'node:process';
 import readline from 'node:readline';
 import { inspect } from 'node:util';
 
-import peggy from 'peggy';
-
 import { Interpreter } from '../src/lang/interpreter';
+import { parse } from '../src/lang/parser.peggy';
 
 const options = {};
 const parserOptions = {};
-
-const source = peggy.generate(
-  await readFile(`${import.meta.dirname}/../src/lang/parser.peggy`, 'utf-8'),
-  {
-    output: 'source',
-    format: 'es',
-  }
-);
-await writeFile(`${import.meta.dirname}/../src/lang/parser.js`, source);
-const parser = await import('../src/lang/parser.js');
 
 function output(obj) {
   console.log(inspect(obj, { colors: true, depth: null }));
@@ -51,7 +40,7 @@ async function main() {
 
   let node;
   try {
-    node = parser.parse(source, parserOptions);
+    node = parse(source, parserOptions);
   } catch (err) {
     console.log(err.stack);
     process.exit();

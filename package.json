@@ -7,9 +7,9 @@
   "scripts": {
     "build": "NODE_ENV=production next build",
     "dev": "NODE_ENV=development next dev",
-    "repl": "tsx ./tools/repl.js",
-    "script": "tsx ./tools/script.js",
-    "format": "prettier --write ./src/**/*.js",
+    "repl": "tsx --import ./tools/hooks.js ./tools/repl.js",
+    "script": "tsx --import ./tools/hooks.js ./tools/script.js",
+    "format": "prettier --write ./src/**/*.[jt]s",
     "lint": "eslint ./app ./src"
   },
   "repository": {

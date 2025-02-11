@@ -25,7 +25,7 @@ import {
   VarIndexNode,
   VarNode,
   WhileNode
-} from './nodes';
+} from './nodes/index.js';
 }}
 
 {
