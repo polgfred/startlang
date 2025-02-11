@@ -8,6 +8,8 @@ export abstract class Node {
 }
 
 export abstract class Frame {
+  static [immerable] = true;
+
   readonly state: number = 0;
 
   constructor(public readonly node: Node) {}
@@ -19,8 +21,6 @@ export abstract class Frame {
     return false;
   }
 }
-
-Frame[immerable] = true;
 
 class RootNode extends Node {
   makeFrame() {

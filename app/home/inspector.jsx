@@ -95,7 +95,7 @@ export default function Inspector({ hist, snap, updateSlider }) {
         {current && (
           <>
             <NamespaceInspector title="Global" ns={current.gns} />
-            <NamespaceInspector title="Local" ns={current.lns} />
+            <NamespaceInspector title="Local" ns={current.lns.head} />
           </>
         )}
       </div>
@@ -230,8 +230,6 @@ function TableInspector({ value }) {
   );
 }
 
-export const inspectorKey = Symbol('START_INSPECTOR');
-
 function inspectorFor(value) {
   if (value === null || value === undefined) {
     return <NoneInspector />;
@@ -244,9 +242,7 @@ function inspectorFor(value) {
       case 'string':
         return <StringInspector value={value} />;
       case 'object':
-        if (value[inspectorKey]) {
-          return value[inspectorKey](value);
-        } else if (value.constructor === Date) {
+        if (value.constructor === Date) {
           return <TimeInspector value={value} />;
         } else if (Array.isArray(value)) {
           return <ListInspector value={value} />;

@@ -5,6 +5,8 @@ import { Interpreter } from '../interpreter.js';
 import {
   ShapeProps,
   TextProps,
+  shapeProps,
+  textProps,
   Shape,
   Text,
   Polygon,
@@ -15,10 +17,16 @@ import {
 } from './shapes/index.js';
 
 interface GraphicsProps {
-  shapes: Shape[];
+  shapes: readonly Shape[];
   shapeProps: ShapeProps;
   textProps: TextProps;
 }
+
+export const graphicsProps: GraphicsProps = Object.freeze({
+  shapes: Object.freeze([]),
+  shapeProps,
+  textProps,
+});
 
 interface AppHost {
   clearDisplay(): void;
@@ -65,10 +73,15 @@ export const graphicsGlobals = {
   },
 
   color(interpreter: AppInterpreter, [red, green, blue, alpha = 1]: number[]) {
+    const r = `${Number((red * 100).toFixed(6))}%`;
+    const g = `${Number((green * 100).toFixed(6))}%`;
+    const b = `${Number((blue * 100).toFixed(6))}%`;
+    const a = `${Number((alpha * 100).toFixed(6))}%`;
+
     if (alpha === 1) {
-      interpreter.setResult(`rgb(${red},${green},${blue})`);
+      interpreter.setResult(`rgb(${r} ${g} ${b})`);
     } else {
-      interpreter.setResult(`rgba(${red},${green},${blue},${alpha})`);
+      interpreter.setResult(`rgb(${r} ${g} ${b} / ${a})`);
     }
   },
 

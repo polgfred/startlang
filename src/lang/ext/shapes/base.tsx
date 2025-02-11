@@ -34,6 +34,8 @@ export const textProps: TextProps = Object.freeze({
 });
 
 export abstract class Shape {
+  static [immerable] = true;
+
   readonly shapeProps: ShapeProps = shapeProps;
   readonly textProps: TextProps = textProps;
 
@@ -64,12 +66,10 @@ export abstract class Shape {
     if (fill) {
       additionalProps.style.fill = fill;
     }
-    if (opacity >= 0 && opacity < 1) {
+    if (opacity !== null && opacity >= 0 && opacity < 1) {
       additionalProps.style.opacity = opacity;
     }
 
     return additionalProps;
   }
 }
-
-Shape[immerable] = true;

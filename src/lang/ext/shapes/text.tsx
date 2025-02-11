@@ -1,4 +1,4 @@
-import { Shape } from './base.js';
+import { Shape } from './base.jsx';
 
 export class Text extends Shape {
   constructor(

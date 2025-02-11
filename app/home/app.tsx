@@ -9,8 +9,8 @@ import {
 } from '@mui/material';
 import { useCallback, useMemo, useRef, useState } from 'react';
 
-import { graphicsGlobals, graphicsProps } from '../../src/lang/graphics.js';
-import { makeInterpreter } from '../../src/lang/interpreter.js';
+import { graphicsGlobals, graphicsProps } from '../../src/lang/ext/graphics.js';
+import { Interpreter } from '../../src/lang/interpreter.js';
 
 import Editor from './editor.jsx';
 import Graphics from './graphics.jsx';
@@ -31,11 +31,14 @@ const theme = createTheme({
 
 export default function App() {
   const [viewMode, setViewMode] = useState('graphics');
-  const [parser, setParser] = useState(() => {});
+  const [parser, setParser] = useState(() => () => ({}) as any);
   const [isRunning, setIsRunning] = useState(false);
-  const [{ prompt, onInputComplete }, setInputState] = useState({});
+  const [{ prompt, onInputComplete }, setInputState] = useState({
+    prompt: '',
+    onInputComplete: () => {},
+  });
   const [{ hist, snap }, setHistory] = useState({
-    hist: [],
+    hist: [] as any[],
     snap: 0,
   });
 
@@ -76,7 +79,10 @@ export default function App() {
     (input) => {
       if (onInputComplete) {
         onInputComplete(input);
-        setInputState({});
+        setInputState({
+          prompt: '',
+          onInputComplete: () => {},
+        });
       }
     },
     [onInputComplete]
@@ -99,7 +105,7 @@ export default function App() {
   const bindings = useMemo(
     () => ({
       clearDisplay,
-      setGfx,
+      setGraphicsData: setGfx,
       setBuf,
       setInputState,
     }),
@@ -109,10 +115,10 @@ export default function App() {
   const runProgram = useCallback(async () => {
     refreshState();
 
-    const hist = [];
+    const hist = [] as any[];
 
-    const interp = makeInterpreter();
-    interp.registerGlobals(graphicsGlobals(bindings));
+    const interp = new Interpreter(bindings);
+    interp.registerGlobals(graphicsGlobals);
     interp.registerGlobals({
       snapshot() {
         hist.push({
@@ -130,7 +136,6 @@ export default function App() {
 
     try {
       setIsRunning(true);
-      interp.init();
       await interp.run(parser());
     } catch (err) {
       /* eslint-disable no-console */

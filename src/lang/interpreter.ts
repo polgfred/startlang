@@ -13,7 +13,7 @@ import {
 
 const emptyObject: object = Object.freeze(Object.create(null));
 
-export class Interpreter {
+export class Interpreter<HostType = unknown> {
   dataHandlers: DataHandler[] = [];
   systemFunctions = emptyObject;
   globalFunctions = emptyObject;
@@ -22,7 +22,7 @@ export class Interpreter {
   topNamespace = rootNamespace;
   lastResult: any = null;
 
-  constructor() {
+  constructor(public readonly host: HostType) {
     installHandlers(this);
   }
 
@@ -49,7 +49,7 @@ export class Interpreter {
 
   run(node: Node) {
     this.topNamespace = rootNamespace;
-    this.topFrame = this.topFrame.push(node.makeFrame());
+    this.topFrame = rootFrame.push(node.makeFrame());
     this.lastResult = null;
 
     return this.runLoop();

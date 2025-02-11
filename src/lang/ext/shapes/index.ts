@@ -1,8 +1,8 @@
-export * from './base.js';
+export * from './base.jsx';
 
-export * from './circle.js';
-export * from './ellipse.js';
-export * from './line.js';
-export * from './polygon.js';
-export * from './rect.js';
-export * from './text.js';
+export * from './circle.jsx';
+export * from './ellipse.jsx';
+export * from './line.jsx';
+export * from './polygon.jsx';
+export * from './rect.jsx';
+export * from './text.jsx';
