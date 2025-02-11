@@ -1,13 +1,13 @@
 'use client';
 
-import Monaco from '@monaco-editor/react';
+import Monaco, { BeforeMount, OnMount } from '@monaco-editor/react';
 import { useCallback } from 'react';
 
 import { parse } from '../../src/lang/parser.peggy';
 import boxScript from '../../tests/box.start';
 
 export default function Editor({ setParser }) {
-  const onBeforeMount = useCallback((monaco) => {
+  const onBeforeMount: BeforeMount = useCallback((monaco) => {
     monaco.languages.register({ id: 'start' });
     monaco.languages.setLanguageConfiguration('start', {
       comments: {
@@ -16,10 +16,12 @@ export default function Editor({ setParser }) {
       brackets: [
         ['(', ')'],
         ['[', ']'],
+        ['{', '}'],
       ],
       autoClosingPairs: [
         { open: '[', close: ']', notIn: ['string'] },
         { open: '(', close: ')', notIn: ['string'] },
+        { open: '{', close: '}', notIn: ['string'] },
         { open: '"', close: '"', notIn: ['string'] },
       ],
       folding: {
@@ -59,60 +61,30 @@ export default function Editor({ setParser }) {
         // builtins
         'abs',
         'acos',
-        'add',
         'asin',
         'atan',
-        'avg',
+        'bitand',
+        'bitnot',
+        'bitor',
+        'bitxor',
         'cbrt',
-        'ceil',
-        'clamp',
-        'clear',
         'cos',
-        'copy',
-        'cos',
-        'diff',
-        'endof',
         'exp',
-        'first',
-        'floor',
-        'input',
-        'insert',
         'join',
         'keys',
-        'last',
         'len',
-        'list',
+        'len',
+        'len',
         'log',
-        'lower',
-        'max',
-        'min',
         'num',
-        'part',
-        'pow',
-        'print',
-        'put',
         'rand',
-        'remove',
-        'replace',
-        'reverse',
+        'range',
+        'range',
         'round',
-        'rsort',
-        'shuffle',
-        'sign',
         'sin',
-        'sleep',
-        'sort',
         'split',
         'sqrt',
-        'startof',
-        'str',
-        'sub',
-        'sum',
-        'swap',
-        'table',
         'tan',
-        'time',
-        'upper',
         // graphics
         'align',
         'anchor',
@@ -123,7 +95,6 @@ export default function Editor({ setParser }) {
         'font',
         'line',
         'polygon',
-        'polyline',
         'opacity',
         'rect',
         'rotate',
@@ -152,17 +123,19 @@ export default function Editor({ setParser }) {
         ],
         string: [
           [/""/, 'string'],
-          [/``/, 'string'],
-          [/`/, { token: 'string', next: '@interp' }],
-          [/[^"`]+/, 'string'],
+          [/{{/, 'string'],
+          [/}}/, 'string'],
+          [/{}/, 'string'],
+          [/{/, { token: 'string', next: '@interp' }],
+          [/[^"{]+/, 'string'],
           [/"/, 'string', '@pop'],
         ],
-        interp: [[/`/, 'string', '@pop'], { include: 'root' }],
+        interp: [[/}/, 'string', '@pop'], { include: 'root' }],
       },
     });
   }, []);
 
-  const onEditorMount = useCallback(
+  const onEditorMount: OnMount = useCallback(
     (editor) => {
       editor.focus();
 

@@ -107,15 +107,11 @@ export const graphicsGlobals = {
     updateGraphicsProps(interpreter, { scalex, scaley });
   },
 
-  fontFace(interpreter: Interpreter, [fontFace]: [string]) {
-    updateGraphicsProps(interpreter, null, { fontFamily: fontFace });
+  font(interpreter: Interpreter, [fontFamily, fontSize]: [string, number]) {
+    updateGraphicsProps(interpreter, null, { fontFamily, fontSize });
   },
 
-  fontSize(interpreter: Interpreter, [fontSize]: [number]) {
-    updateGraphicsProps(interpreter, null, { fontSize });
-  },
-
-  textAlign(interpreter: Interpreter, [textAlign]: [string]) {
+  align(interpreter: Interpreter, [textAlign]: [string]) {
     updateGraphicsProps(interpreter, null, { textAlign });
   },
 
