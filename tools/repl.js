@@ -25,16 +25,11 @@ async function main() {
       }
     },
 
-    input(message) {
+    input(interp, [message]) {
       return new Promise((resolve) => {
-        const rl = readline.createInterface({
-          input: process.stdin,
-          output: process.stdout,
-        });
-
         rl.question(message, (answer) => {
-          rl.close();
-          resolve(answer);
+          interp.setResult(answer);
+          resolve();
         });
       });
     },
@@ -46,6 +41,11 @@ async function main() {
     if (line === '.exit') {
       rl.close();
       process.exit();
+    } else if (line === '.clear') {
+      lines = [];
+      rl.setPrompt('> ');
+      rl.prompt();
+      return;
     } else if (line === '.dump') {
       const snap = interp.snapshot();
       console.log(inspect(Object.keys(snap.gfn)));

@@ -52,6 +52,11 @@ async function main() {
     process.exit();
   }
 
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+
   const interp = new Interpreter();
   interp.registerGlobals({
     print(interp, values) {
@@ -67,14 +72,8 @@ async function main() {
 
     input(interp, [message]) {
       return new Promise((resolve) => {
-        const rl = readline.createInterface({
-          input: process.stdin,
-          output: process.stdout,
-        });
-
         rl.question(message, (answer) => {
           interp.setResult(answer);
-          rl.close();
           resolve();
         });
       });
@@ -87,15 +86,14 @@ async function main() {
     if (result) {
       output(result);
     }
-
-    if (options.ns) {
-      output(interp.snapshot());
-    }
   } catch (err) {
     console.log(err.stack);
-    output(interp.snapshot());
-    process.exit();
   }
+
+  if (options.ns) {
+    output(interp.snapshot());
+  }
+  rl.close();
 }
 
 main();
