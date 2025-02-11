@@ -254,22 +254,13 @@ RelOp
 // Concatenation
 
 ConcatExpr
-  = first:BitExpr rest:(__ @ConcatOp __ @BitExpr)*
+  = first:AddExpr rest:(__ @ConcatOp __ @AddExpr)*
     { return buildBinaryExpr(first, rest) }
 
 ConcatOp
   = '::'
 
 // Math
-
-BitExpr
-  = first:AddExpr rest:(__ @BitOp __ @AddExpr)*
-    { return buildBinaryExpr(first, rest) }
-
-BitOp
-  = '&'
-  / '|'
-  / '^'
 
 AddExpr
   = first:MultExpr rest:(__ @AddOp __ @MultExpr)*
@@ -280,13 +271,20 @@ AddOp
   / '-'
 
 MultExpr
-  = first:UnaryExpr rest:(__ @MultOp __ @UnaryExpr)*
+  = first:PowExpr rest:(__ @MultOp __ @PowExpr)*
     { return buildBinaryExpr(first, rest) }
 
 MultOp
   = '*'
   / '/'
   / '%'
+
+PowExpr
+  = first:UnaryExpr rest:(__ @PowOp __ @UnaryExpr)*
+    { return buildBinaryExpr(first, rest) }
+
+PowOp
+  = '^'
 
 UnaryExpr
   = ops:(__ @UnaryOp)* __ right:ListExpr
@@ -295,7 +293,6 @@ UnaryExpr
 UnaryOp
   = '+'
   / '-'
-  / '~'
 
 // Lists and Tables
 

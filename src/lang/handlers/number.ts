@@ -44,12 +44,8 @@ export class NumberHandler extends DataHandler {
         return left / right;
       case '%':
         return left % right;
-      case '&':
-        return left & right;
-      case '|':
-        return left | right;
       case '^':
-        return left ^ right;
+        return Math.pow(left, right);
       default:
         return super.evalBinaryOp(op, left, right);
     }
@@ -79,6 +75,22 @@ const numberMethods = {
     interpreter.setResult((Math.atan(value) * 180) / Math.PI);
   },
 
+  bitand(interpreter: Interpreter, [left, right]: [number, number]) {
+    interpreter.setResult(left & right);
+  },
+
+  bitnot(interpreter: Interpreter, [value]: [number]) {
+    interpreter.setResult(~value);
+  },
+
+  bitor(interpreter: Interpreter, [left, right]: [number, number]) {
+    interpreter.setResult(left | right);
+  },
+
+  bitxor(interpreter: Interpreter, [left, right]: [number, number]) {
+    interpreter.setResult(left ^ right);
+  },
+
   cbrt(interpreter: Interpreter, [value]: [number]) {
     interpreter.setResult(Math.cbrt(value));
   },
@@ -87,22 +99,17 @@ const numberMethods = {
     interpreter.setResult(Math.cos((value * Math.PI) / 180));
   },
 
-  exp(interpreter: Interpreter, [base, value]: [number, number?]) {
-    if (value === undefined) {
-      value = base;
-      interpreter.setResult(Math.exp(value));
-    } else {
-      interpreter.setResult(Math.pow(base, value));
-    }
+  exp(interpreter: Interpreter, [value]: [number]) {
+    interpreter.setResult(Math.exp(value));
   },
 
-  log(interpreter: Interpreter, [base, value]: [number, number?]) {
-    if (value === undefined) {
-      interpreter.setResult(Math.log(base));
+  log(interpreter: Interpreter, [value, base]: [number, number?]) {
+    if (base === undefined) {
+      interpreter.setResult(Math.log(value));
     } else if (base === 10) {
       interpreter.setResult(Math.log10(value));
     } else {
-      interpreter.setResult(Math.log10(value) / Math.log10(base));
+      interpreter.setResult(Math.log(value) / Math.log(base));
     }
   },
 
