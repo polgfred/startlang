@@ -2,9 +2,9 @@ import { Interpreter } from '../interpreter.js';
 
 export abstract class DataHandler {
   constructor(
-    protected interpreter: Interpreter,
-    public globals: object = {},
-    public methods: object = {}
+    protected readonly interpreter: Interpreter,
+    public readonly globals: object = {},
+    public readonly methods: object = {}
   ) {}
 
   abstract shouldHandle(value: any): boolean;
