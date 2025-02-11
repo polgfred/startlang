@@ -39,14 +39,12 @@ function waitForImmediate() {
   });
 }
 
-type AppInterpreter = Interpreter<AppHost>;
-
 function updateGraphicsProps(
-  interpreter: AppInterpreter,
+  interpreter: Interpreter,
   shapePropsOverrides: Partial<ShapeProps> | null = null,
   textPropsOverrides: Partial<TextProps> | null = null
 ) {
-  interpreter.host.setGraphicsData((graphicsProps) =>
+  (interpreter.host as AppHost).setGraphicsData((graphicsProps) =>
     produce(graphicsProps, (draft) => {
       Object.assign(draft.shapeProps, shapePropsOverrides);
       Object.assign(draft.textProps, textPropsOverrides);
@@ -54,8 +52,8 @@ function updateGraphicsProps(
   );
 }
 
-function addShape(interpreter: AppInterpreter, shape: Shape) {
-  interpreter.host.setGraphicsData((graphicsProps) =>
+function addShape(interpreter: Interpreter, shape: Shape) {
+  (interpreter.host as AppHost).setGraphicsData((graphicsProps) =>
     produce(graphicsProps, (draft) => {
       draft.shapes.push(
         produce(shape, (draft2) => {
@@ -68,11 +66,11 @@ function addShape(interpreter: AppInterpreter, shape: Shape) {
 }
 
 export const graphicsGlobals = {
-  clear(interpreter: AppInterpreter) {
-    interpreter.host.clearDisplay();
+  clear(interpreter: Interpreter) {
+    (interpreter.host as AppHost).clearDisplay();
   },
 
-  color(interpreter: AppInterpreter, [red, green, blue, alpha = 1]: number[]) {
+  color(interpreter: Interpreter, [red, green, blue, alpha = 1]: number[]) {
     const r = `${Number((red * 100).toFixed(6))}%`;
     const g = `${Number((green * 100).toFixed(6))}%`;
     const b = `${Number((blue * 100).toFixed(6))}%`;
@@ -85,68 +83,68 @@ export const graphicsGlobals = {
     }
   },
 
-  fill(interpreter: AppInterpreter, [color]: [string]) {
+  fill(interpreter: Interpreter, [color]: [string]) {
     updateGraphicsProps(interpreter, { fill: color });
   },
 
-  stroke(interpreter: AppInterpreter, [color]: [string]) {
+  stroke(interpreter: Interpreter, [color]: [string]) {
     updateGraphicsProps(interpreter, { stroke: color });
   },
 
-  opacity(interpreter: AppInterpreter, [value]: [number]) {
+  opacity(interpreter: Interpreter, [value]: [number]) {
     updateGraphicsProps(interpreter, { opacity: value });
   },
 
-  anchor(interpreter: AppInterpreter, [anchor]: [string]) {
+  anchor(interpreter: Interpreter, [anchor]: [string]) {
     updateGraphicsProps(interpreter, { anchor });
   },
 
-  rotate(interpreter: AppInterpreter, [angle]: [number]) {
+  rotate(interpreter: Interpreter, [angle]: [number]) {
     updateGraphicsProps(interpreter, { rotate: angle });
   },
 
-  scale(interpreter: AppInterpreter, [scalex, scaley = scalex]: number[]) {
+  scale(interpreter: Interpreter, [scalex, scaley = scalex]: number[]) {
     updateGraphicsProps(interpreter, { scalex, scaley });
   },
 
-  fontFace(interpreter: AppInterpreter, [fontFace]: [string]) {
+  fontFace(interpreter: Interpreter, [fontFace]: [string]) {
     updateGraphicsProps(interpreter, null, { fontFamily: fontFace });
   },
 
-  fontSize(interpreter: AppInterpreter, [fontSize]: [number]) {
+  fontSize(interpreter: Interpreter, [fontSize]: [number]) {
     updateGraphicsProps(interpreter, null, { fontSize });
   },
 
-  textAlign(interpreter: AppInterpreter, [textAlign]: [string]) {
+  textAlign(interpreter: Interpreter, [textAlign]: [string]) {
     updateGraphicsProps(interpreter, null, { textAlign });
   },
 
-  rect(interpreter: AppInterpreter, [x, y, width, height]: number[]) {
+  rect(interpreter: Interpreter, [x, y, width, height]: number[]) {
     addShape(interpreter, new Rect(x, y, width, height));
     return waitForImmediate();
   },
 
-  circle(interpreter: AppInterpreter, [cx, cy, radius]: number[]) {
+  circle(interpreter: Interpreter, [cx, cy, radius]: number[]) {
     addShape(interpreter, new Circle(cx, cy, radius));
     return waitForImmediate();
   },
 
-  ellipse(interpreter: AppInterpreter, [cx, cy, rx, ry]: number[]) {
+  ellipse(interpreter: Interpreter, [cx, cy, rx, ry]: number[]) {
     addShape(interpreter, new Ellipse(cx, cy, rx, ry));
     return waitForImmediate();
   },
 
-  line(interpreter: AppInterpreter, [x1, y1, x2, y2]: number[]) {
+  line(interpreter: Interpreter, [x1, y1, x2, y2]: number[]) {
     addShape(interpreter, new Line(x1, y1, x2, y2));
     return waitForImmediate();
   },
 
-  polygon(interpreter: AppInterpreter, [points]: [[number, number][]]) {
+  polygon(interpreter: Interpreter, [points]: [[number, number][]]) {
     addShape(interpreter, new Polygon(points));
     return waitForImmediate();
   },
 
-  text(interpreter: AppInterpreter, [x, y, text]: [number, number, string]) {
+  text(interpreter: Interpreter, [x, y, text]: [number, number, string]) {
     addShape(interpreter, new Text(x, y, text));
     return waitForImmediate();
   },

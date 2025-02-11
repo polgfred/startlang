@@ -17,7 +17,7 @@ export interface RuntimeFunction {
 
 const emptyObject = Object.freeze(Object.create(null));
 
-export class Interpreter<HostType = unknown> {
+export class Interpreter {
   dataHandlers: DataHandler[] = [];
   systemFunctions: Record<string, RuntimeFunction> = emptyObject;
   globalFunctions: Record<string, BeginNode> = emptyObject;
@@ -26,7 +26,7 @@ export class Interpreter<HostType = unknown> {
   topNamespace = rootNamespace;
   lastResult: any = null;
 
-  constructor(public readonly host: HostType) {
+  constructor(public readonly host: unknown) {
     installHandlers(this);
   }
 
