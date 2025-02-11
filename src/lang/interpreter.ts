@@ -145,26 +145,27 @@ export class Interpreter {
   }
 
   getVariableIndex(name: string, indexes: readonly any[]) {
-    let value = this.getVariable(name);
-    for (let i = 0; i < indexes.length; i++) {
+    return indexes.reduce((value, index) => {
       const handler = this.getHandler(value);
-      value = handler.getIndex(value, indexes[i]);
-    }
-    return value;
+      return handler.getIndex(value, index);
+    }, this.getVariable(name));
   }
 
   setVariableIndex(name: string, indexes: readonly any[], value: any) {
-    const newValue = produce(this.getVariable(name), (draft: any) => {
-      for (let i = 0; i < indexes.length; i++) {
-        const handler = this.getHandler(original(draft));
-        if (i < indexes.length - 1) {
-          draft = handler.getIndex(draft, indexes[i]);
-        } else {
-          handler.setIndex(draft, indexes[i], value);
-        }
-      }
-    });
-    this.setVariable(name, newValue);
+    const currentValue = this.getVariable(name);
+    this.setVariable(
+      name,
+      produce(currentValue, (draft: any) => {
+        indexes.reduce((draft, index, i) => {
+          const handler = this.getHandler(original(draft));
+          if (i === indexes.length - 1) {
+            handler.setIndex(draft, index, value);
+          } else {
+            return handler.getIndex(draft, index);
+          }
+        }, draft);
+      })
+    );
   }
 
   evalUnaryOp(op: string, right: any) {
