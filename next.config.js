@@ -7,6 +7,10 @@ export default withPigment(
   {
     output: 'standalone',
     webpack(config) {
+      config.resolve.extensionAlias = {
+        '.js': ['.ts', '.js'],
+        '.jsx': ['.tsx', '.jsx'],
+      };
       config.module.rules.push(
         {
           test: /\.peggy$/,
