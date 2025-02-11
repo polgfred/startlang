@@ -1,9 +1,9 @@
 import deepEqual from 'deep-equal';
 
-import { Interpreter } from '../interpreter';
-import { adjustIndex } from '../utils';
+import { Interpreter } from '../interpreter.js';
+import { adjustIndex } from '../utils/index.js';
 
-import { DataHandler } from './base';
+import { DataHandler } from './base.js';
 
 export class ListHandler extends DataHandler {
   constructor(interpreter: Interpreter) {

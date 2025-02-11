@@ -1,7 +1,7 @@
 import { immerable } from 'immer';
 
-import { Interpreter } from '../interpreter';
-import { Cons } from '../utils/cons';
+import { Interpreter } from '../interpreter.js';
+import { Cons } from '../utils/cons.js';
 
 export abstract class Node {
   abstract makeFrame(): Frame;

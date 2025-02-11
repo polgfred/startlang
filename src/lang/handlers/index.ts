@@ -1,13 +1,13 @@
-import { BooleanHandler } from './boolean';
-import { ListHandler } from './list';
-import { NoneHandler } from './none';
-import { NumberHandler } from './number';
-import { StringHandler } from './string';
-import { TableHandler } from './table';
+import { BooleanHandler } from './boolean.js';
+import { ListHandler } from './list.js';
+import { NoneHandler } from './none.js';
+import { NumberHandler } from './number.js';
+import { StringHandler } from './string.js';
+import { TableHandler } from './table.js';
 
-import { Interpreter } from '../interpreter';
+import { Interpreter } from '../interpreter.js';
 
-export { DataHandler } from './base';
+export { DataHandler } from './base.js';
 
 export function installHandlers(interpreter: Interpreter) {
   interpreter.registerHandler(new NoneHandler(interpreter));

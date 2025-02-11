@@ -1,9 +1,15 @@
 import { Draft, original, produce } from 'immer';
 
-import { DataHandler, installHandlers } from './handlers';
-import { BeginNode, Frame, Node, rootFrame, rootNamespace } from './nodes';
-import { LiteralNode } from './nodes/literal';
-import { VarNode } from './nodes/var';
+import { DataHandler, installHandlers } from './handlers/index.js';
+import {
+  Frame,
+  Node,
+  BeginNode,
+  LiteralNode,
+  VarNode,
+  rootFrame,
+  rootNamespace,
+} from './nodes/index.js';
 
 const emptyObject: object = Object.freeze(Object.create(null));
 

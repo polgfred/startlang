@@ -1,8 +1,8 @@
 import deepEqual from 'deep-equal';
 
-import { Interpreter } from '../interpreter';
+import { Interpreter } from '../interpreter.js';
 
-import { DataHandler } from './base';
+import { DataHandler } from './base.js';
 
 export class TableHandler extends DataHandler {
   constructor(interpreter: Interpreter) {

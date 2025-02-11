@@ -1,7 +1,7 @@
-import { Interpreter } from '../interpreter';
-import { adjustIndex } from '../utils';
+import { Interpreter } from '../interpreter.js';
+import { adjustIndex } from '../utils/index.js';
 
-import { DataHandler } from './base';
+import { DataHandler } from './base.js';
 
 export class StringHandler extends DataHandler {
   constructor(interpreter: Interpreter) {

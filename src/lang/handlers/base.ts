@@ -1,4 +1,4 @@
-import { Interpreter } from '../interpreter';
+import { Interpreter } from '../interpreter.js';
 
 export abstract class DataHandler {
   constructor(

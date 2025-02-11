@@ -1,4 +1,4 @@
-import { DataHandler } from './base';
+import { DataHandler } from './base.js';
 
 export class NoneHandler extends DataHandler {
   shouldHandle(value: any) {

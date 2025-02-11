@@ -1,6 +1,6 @@
-import { Interpreter } from '../interpreter';
+import { Interpreter } from '../interpreter.js';
 
-import { DataHandler } from './base';
+import { DataHandler } from './base.js';
 
 export class NumberHandler extends DataHandler {
   constructor(interpreter: Interpreter) {
