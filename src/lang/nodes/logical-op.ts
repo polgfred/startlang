@@ -48,7 +48,7 @@ export class LogicalAndFrame extends Frame {
       }
       case 1: {
         if (!interpreter.lastResult) {
-          interpreter.lastResult = false;
+          interpreter.setResult(false);
           interpreter.popFrame();
         } else {
           interpreter.updateFrame(this, 0, (draft) => {
@@ -58,7 +58,7 @@ export class LogicalAndFrame extends Frame {
         break;
       }
       case 2: {
-        interpreter.lastResult = true;
+        interpreter.setResult(true);
         interpreter.popFrame();
         break;
       }
@@ -84,7 +84,7 @@ export class LogicalOrFrame extends Frame {
       }
       case 1: {
         if (interpreter.lastResult) {
-          interpreter.lastResult = true;
+          interpreter.setResult(true);
           interpreter.popFrame();
         } else {
           interpreter.updateFrame(this, 0, (draft) => {
@@ -94,7 +94,7 @@ export class LogicalOrFrame extends Frame {
         break;
       }
       case 2: {
-        interpreter.lastResult = false;
+        interpreter.setResult(false);
         interpreter.popFrame();
         break;
       }
@@ -113,7 +113,7 @@ export class LogicalNotFrame extends Frame {
         break;
       }
       case 1: {
-        interpreter.lastResult = !interpreter.lastResult;
+        interpreter.setResult(!interpreter.lastResult);
         interpreter.popFrame();
         break;
       }

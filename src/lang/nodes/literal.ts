@@ -16,7 +16,7 @@ export class LiteralFrame extends Frame {
   declare node: LiteralNode;
 
   visit(interpreter: Interpreter) {
-    interpreter.lastResult = this.node.value;
+    interpreter.setResult(this.node.value);
     interpreter.popFrame();
   }
 }

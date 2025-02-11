@@ -42,9 +42,8 @@ export class VarIndexFrame extends Frame {
         break;
       }
       case 2: {
-        interpreter.lastResult = interpreter.getVariableIndex(
-          this.node.name,
-          this.indexes
+        interpreter.setResult(
+          interpreter.getVariableIndex(this.node.name, this.indexes)
         );
         interpreter.popFrame();
         break;
