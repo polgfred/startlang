@@ -7,7 +7,8 @@
   "scripts": {
     "build": "NODE_ENV=production next build",
     "dev": "NODE_ENV=development next dev",
-    "run_script": "node ./tools/run_script.js",
+    "repl": "tsx ./tools/repl.js",
+    "script": "tsx ./tools/script.js",
     "format": "prettier --write ./src/**/*.js",
     "lint": "eslint ./app ./src"
   },
@@ -47,6 +48,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "text-loader": "^0.0.1",
+    "tsx": "^4.19.2",
     "typescript": "^5.7.3"
   }
 }
