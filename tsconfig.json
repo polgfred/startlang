@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "module": "nodenext",
+    "target": "esnext",
+    "moduleResolution": "nodenext",
+    "jsx": "react-jsx",
+    "lib": [
+      "dom",
+      "esnext"
+    ]
+  },
+  "include": [
+    "app/**/*",
+    "src/**/*",
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}
