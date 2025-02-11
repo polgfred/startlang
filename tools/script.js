@@ -1,12 +1,10 @@
-/* eslint-disable no-console */
-
 import console from 'node:console';
 import { readFile } from 'node:fs/promises';
 import process from 'node:process';
 import readline from 'node:readline';
 import { inspect } from 'node:util';
 
-import { Interpreter } from '../src/lang/interpreter';
+import { Interpreter } from '../src/lang/interpreter.js';
 import { parse } from '../src/lang/parser.peggy';
 
 const options = {};
@@ -35,6 +33,9 @@ async function main() {
   try {
     source = await readFile(process.argv[2], 'utf-8');
   } catch (err) {
+    if (err.code !== 'ENOENT') {
+      throw err;
+    }
     source = process.argv[2] + '\n';
   }
 

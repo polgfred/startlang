@@ -1,11 +1,9 @@
-/* eslint-disable no-console */
-
 import console from 'node:console';
 import process from 'node:process';
 import readline from 'node:readline';
 import { inspect } from 'node:util';
 
-import { Interpreter } from '../src/lang/interpreter';
+import { Interpreter } from '../src/lang/interpreter.js';
 import { parse, SyntaxError } from '../src/lang/parser.peggy';
 
 async function main() {
