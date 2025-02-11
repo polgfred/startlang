@@ -25,10 +25,12 @@ export class ForInFrame extends Frame {
   readonly iterable: readonly any[] = emptyList;
 
   visit(interpreter: Interpreter) {
+    const { name, iterable, body } = this.node;
+
     switch (this.state) {
       case 0: {
         interpreter.updateFrame(this, 1);
-        interpreter.pushFrame(this.node.iterable);
+        interpreter.pushFrame(iterable);
         break;
       }
       case 1: {
@@ -40,11 +42,11 @@ export class ForInFrame extends Frame {
       }
       case 2: {
         if (this.count < this.iterable.length) {
-          interpreter.setVariable(this.node.name, this.iterable[this.count]);
+          interpreter.setVariable(name, this.iterable[this.count]);
           interpreter.updateFrame(this, null, (draft) => {
             draft.count++;
           });
-          interpreter.pushFrame(this.node.body);
+          interpreter.pushFrame(body);
         } else {
           interpreter.popFrame();
         }

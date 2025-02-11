@@ -26,25 +26,27 @@ export class ForFrame extends Frame {
   readonly step: number = 1;
 
   visit(interpreter: Interpreter) {
+    const { name, initial, limit, step, body } = this.node;
+
     switch (this.state) {
       case 0: {
         interpreter.updateFrame(this, 1);
-        interpreter.pushFrame(this.node.initial);
+        interpreter.pushFrame(initial);
         break;
       }
       case 1: {
         interpreter.updateFrame(this, 2, (draft) => {
           draft.index = interpreter.lastResult;
         });
-        interpreter.pushFrame(this.node.limit);
+        interpreter.pushFrame(limit);
         break;
       }
       case 2: {
-        if (this.node.step !== null) {
+        if (step !== null) {
           interpreter.updateFrame(this, 3, (draft) => {
             draft.limit = interpreter.lastResult;
           });
-          interpreter.pushFrame(this.node.step);
+          interpreter.pushFrame(step);
         } else {
           interpreter.updateFrame(this, 4, (draft) => {
             draft.limit = interpreter.lastResult;
@@ -62,11 +64,11 @@ export class ForFrame extends Frame {
         if (
           this.step > 0 ? this.index <= this.limit : this.index >= this.limit
         ) {
-          interpreter.setVariable(this.node.name, this.index);
+          interpreter.setVariable(name, this.index);
           interpreter.updateFrame(this, null, (draft) => {
             draft.index += this.step;
           });
-          interpreter.pushFrame(this.node.body);
+          interpreter.pushFrame(body);
         } else {
           interpreter.popFrame();
         }

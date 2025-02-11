@@ -23,12 +23,14 @@ export class CallFrame extends Frame {
   readonly hasNamespace: boolean = false;
 
   visit(interpreter: Interpreter) {
+    const { name, args } = this.node;
+
     switch (this.state) {
       case 0: {
-        if (this.count < this.node.args.length) {
+        if (this.count < args.length) {
           interpreter.updateFrame(this, 1);
-          interpreter.pushFrame(this.node.args[this.count]);
-        } else if (this.node.name in interpreter.globalFunctions) {
+          interpreter.pushFrame(args[this.count]);
+        } else if (name in interpreter.globalFunctions) {
           interpreter.updateFrame(this, 2);
         } else {
           interpreter.updateFrame(this, 4);
@@ -43,7 +45,7 @@ export class CallFrame extends Frame {
         break;
       }
       case 2: {
-        const func = interpreter.globalFunctions[this.node.name];
+        const func = interpreter.globalFunctions[name];
         interpreter.pushNamespace();
         for (let i = 0; i < func.params.length; i++) {
           interpreter.setVariable(func.params[i], this.args[i], true);
@@ -59,7 +61,7 @@ export class CallFrame extends Frame {
         break;
       }
       case 4: {
-        const result = interpreter.invokeFunction(this.node.name, this.args);
+        const result = interpreter.invokeFunction(name, this.args);
         if (result instanceof Promise) {
           return result.then(() => {
             interpreter.popFrame();

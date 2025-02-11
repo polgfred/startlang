@@ -20,18 +20,20 @@ export class IfFrame extends Frame {
   declare node: IfNode;
 
   visit(interpreter: Interpreter) {
+    const { condition, thenBody, elseBody } = this.node;
+
     switch (this.state) {
       case 0: {
         interpreter.updateFrame(this, 1);
-        interpreter.pushFrame(this.node.condition);
+        interpreter.pushFrame(condition);
         break;
       }
       case 1: {
         interpreter.updateFrame(this, 2);
         if (Boolean(interpreter.lastResult)) {
-          interpreter.pushFrame(this.node.thenBody);
-        } else if (this.node.elseBody !== null) {
-          interpreter.pushFrame(this.node.elseBody);
+          interpreter.pushFrame(thenBody);
+        } else if (elseBody !== null) {
+          interpreter.pushFrame(elseBody);
         }
         break;
       }

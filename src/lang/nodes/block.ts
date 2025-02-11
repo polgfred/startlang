@@ -18,11 +18,13 @@ class BlockFrame extends Frame {
   readonly count: number = 0;
 
   visit(interpreter: Interpreter) {
-    if (this.count < this.node.elems.length) {
+    const { elems } = this.node;
+
+    if (this.count < elems.length) {
       interpreter.updateFrame(this, null, (draft) => {
         draft.count++;
       });
-      interpreter.pushFrame(this.node.elems[this.count]);
+      interpreter.pushFrame(elems[this.count]);
     } else {
       interpreter.popFrame();
     }

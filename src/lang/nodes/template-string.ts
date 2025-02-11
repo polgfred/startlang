@@ -21,11 +21,13 @@ export class TemplateStringFrame extends Frame {
   readonly segments: readonly string[] = emptyList;
 
   visit(interpreter: Interpreter) {
+    const { segments } = this.node;
+
     switch (this.state) {
       case 0: {
-        if (this.count < this.node.segments.length) {
+        if (this.count < segments.length) {
           interpreter.updateFrame(this, 1);
-          interpreter.pushFrame(this.node.segments[this.count]);
+          interpreter.pushFrame(segments[this.count]);
         } else {
           interpreter.updateFrame(this, 2);
         }

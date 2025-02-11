@@ -36,11 +36,13 @@ export class LogicalAndFrame extends Frame {
   readonly count: number = 0;
 
   visit(interpreter: Interpreter) {
+    const { values } = this.node;
+
     switch (this.state) {
       case 0: {
-        if (this.count < this.node.values.length) {
+        if (this.count < values.length) {
           interpreter.updateFrame(this, 1);
-          interpreter.pushFrame(this.node.values[this.count]);
+          interpreter.pushFrame(values[this.count]);
         } else {
           interpreter.updateFrame(this, 2);
         }
@@ -72,11 +74,13 @@ export class LogicalOrFrame extends Frame {
   readonly count: number = 0;
 
   visit(interpreter: Interpreter) {
+    const { values } = this.node;
+
     switch (this.state) {
       case 0: {
-        if (this.count < this.node.values.length) {
+        if (this.count < values.length) {
           interpreter.updateFrame(this, 1);
-          interpreter.pushFrame(this.node.values[this.count]);
+          interpreter.pushFrame(values[this.count]);
         } else {
           interpreter.updateFrame(this, 2);
         }

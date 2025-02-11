@@ -19,16 +19,18 @@ export class WhileFrame extends Frame {
   declare node: WhileNode;
 
   visit(interpreter: Interpreter) {
+    const { condition, body } = this.node;
+
     switch (this.state) {
       case 0: {
         interpreter.updateFrame(this, 1);
-        interpreter.pushFrame(this.node.condition);
+        interpreter.pushFrame(condition);
         break;
       }
       case 1: {
         if (interpreter.lastResult) {
           interpreter.updateFrame(this, 0);
-          interpreter.pushFrame(this.node.body);
+          interpreter.pushFrame(body);
         } else {
           interpreter.popFrame();
         }

@@ -34,10 +34,12 @@ class RepeatTimesFrame extends Frame {
   readonly count: number = 0;
 
   visit(interpreter: Interpreter) {
+    const { times, body } = this.node;
+
     switch (this.state) {
       case 0: {
         interpreter.updateFrame(this, 1);
-        interpreter.pushFrame(this.node.times!);
+        interpreter.pushFrame(times!);
         break;
       }
       case 1: {
@@ -51,7 +53,7 @@ class RepeatTimesFrame extends Frame {
           interpreter.updateFrame(this, null, (draft) => {
             draft.count++;
           });
-          interpreter.pushFrame(this.node.body);
+          interpreter.pushFrame(body);
         } else {
           interpreter.popFrame();
         }

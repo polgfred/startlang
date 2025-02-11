@@ -24,11 +24,13 @@ export class VarIndexFrame extends Frame {
   readonly indexes: readonly any[] = emptyList;
 
   visit(interpreter: Interpreter) {
+    const { name, indexes } = this.node;
+
     switch (this.state) {
       case 0: {
-        if (this.count < this.node.indexes.length) {
+        if (this.count < indexes.length) {
           interpreter.updateFrame(this, 1);
-          interpreter.pushFrame(this.node.indexes[this.count]);
+          interpreter.pushFrame(indexes[this.count]);
         } else {
           interpreter.updateFrame(this, 2);
         }
@@ -42,9 +44,7 @@ export class VarIndexFrame extends Frame {
         break;
       }
       case 2: {
-        interpreter.setResult(
-          interpreter.getVariableIndex(this.node.name, this.indexes)
-        );
+        interpreter.setResult(interpreter.getVariableIndex(name, this.indexes));
         interpreter.popFrame();
         break;
       }

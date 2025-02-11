@@ -21,11 +21,13 @@ export class ListFrame extends Frame {
   readonly items = emptyList;
 
   visit(interpreter: Interpreter) {
+    const { items } = this.node;
+
     switch (this.state) {
       case 0: {
-        if (this.count < this.node.items.length) {
+        if (this.count < items.length) {
           interpreter.updateFrame(this, 1);
-          interpreter.pushFrame(this.node.items[this.count]);
+          interpreter.pushFrame(items[this.count]);
         } else {
           interpreter.updateFrame(this, 2);
         }

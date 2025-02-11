@@ -20,18 +20,16 @@ export class LetFrame extends Frame {
   declare node: LetNode;
 
   visit(interpreter: Interpreter) {
+    const { name, value, isLocal } = this.node;
+
     switch (this.state) {
       case 0: {
         interpreter.updateFrame(this, 1);
-        interpreter.pushFrame(this.node.value);
+        interpreter.pushFrame(value);
         break;
       }
       case 1: {
-        interpreter.setVariable(
-          this.node.name,
-          interpreter.lastResult,
-          this.node.isLocal
-        );
+        interpreter.setVariable(name, interpreter.lastResult, isLocal);
         interpreter.popFrame();
         break;
       }
