@@ -33,6 +33,9 @@ const theme = createTheme({
 });
 
 export default function App() {
+  const [, renderCount] = useState(0);
+  const forceRender = useCallback(() => renderCount((c) => c + 1), []);
+
   const [viewMode, setViewMode] = useState('graphics');
   const editorRef = useRef<editor.ICodeEditor | null>(null);
   const [isRunning, setIsRunning] = useState(false);
@@ -45,7 +48,7 @@ export default function App() {
     snap: 0,
   });
 
-  const appHost = useAppHost();
+  const { current: appHost } = useAppHost(forceRender);
 
   const refreshState = useCallback(() => {
     setHistory({ hist: [], snap: 0 });
@@ -65,15 +68,20 @@ export default function App() {
     [onInputComplete]
   );
 
-  const updateSlider = useCallback((ev) => {
-    // const snap = ev.target.value;
-    // const current = hist[snap];
-    // if (current) {
-    //   setHistory({ hist, snap });
-    //   setGfx(() => current.gfx);
-    //   setBuf(() => current.buf);
-    // }
-  }, []);
+  const updateSlider = useCallback(
+    (ev) => {
+      const snap = ev.target.value;
+      const current = hist[snap];
+      if (current) {
+        console.log(snap, current);
+        setHistory({ hist, snap });
+        appHost.resetShapes(current.gfx);
+        // setGfx(() => current.gfx);
+        // setBuf(() => current.buf);
+      }
+    },
+    [hist]
+  );
 
   const runProgram = useCallback(async () => {
     refreshState();
@@ -86,7 +94,7 @@ export default function App() {
       snapshot() {
         hist.push({
           ...interp.snapshot(),
-          // gfx: gfx.current,
+          gfx: appHost.shapes,
           // buf: buf.current,
         });
 

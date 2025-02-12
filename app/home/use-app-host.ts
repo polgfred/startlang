@@ -1,5 +1,5 @@
 import { produce } from 'immer';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 
 import { AppHost } from '../../src/lang/ext/graphics.js';
 import {
@@ -8,13 +8,12 @@ import {
   TextProps,
 } from '../../src/lang/ext/shapes/index.js';
 
-export function useAppHost(): AppHost {
-  // const [, setRenderCount] = useState(0);
-  // const forceRerender = useCallback(() => {
-  //   setRenderCount((count) => count + 1);
-  // }, []);
+class AppHostImpl implements AppHost {
+  constructor(private readonly forceRender: () => void) {}
 
-  const shapeProps = useRef<ShapeProps>({
+  public shapes: readonly Shape[] = [];
+
+  shapeProps: ShapeProps = {
     fill: null,
     stroke: null,
     opacity: 1,
@@ -22,52 +21,44 @@ export function useAppHost(): AppHost {
     rotate: 0,
     scalex: 1,
     scaley: 1,
-  });
+  };
 
-  const updateShapeProps = useCallback((newProps: Partial<ShapeProps>) => {
-    shapeProps.current = produce(shapeProps.current, (draft) => {
-      Object.assign(draft, newProps);
-    });
-  }, []);
-
-  const textProps = useRef<TextProps>({
+  textProps: TextProps = {
     fontFamily: 'Helvetica',
     fontSize: 36,
     textAlign: 'start',
-  });
+  };
 
-  const updateTextProps = useCallback((newProps: Partial<TextProps>) => {
-    textProps.current = produce(textProps.current, (draft) => {
+  clearDisplay() {
+    this.shapes = [];
+    this.forceRender();
+  }
+
+  resetShapes(shapes: readonly Shape[]) {
+    this.shapes = shapes;
+    this.forceRender();
+  }
+
+  updateShapeProps(newProps: Partial<ShapeProps>) {
+    this.shapeProps = produce(this.shapeProps, (draft) => {
       Object.assign(draft, newProps);
     });
-  }, []);
+  }
 
-  const shapes = useRef<readonly Shape[]>([]);
+  updateTextProps(newProps: Partial<TextProps>) {
+    this.textProps = produce(this.textProps, (draft) => {
+      Object.assign(draft, newProps);
+    });
+  }
 
-  const addShape = useCallback((shape: Shape) => {
-    shapes.current = produce(shapes.current, (draft) => {
+  addShape(shape: Shape) {
+    this.shapes = produce(this.shapes, (draft) => {
       draft.push(shape);
     });
-  }, []);
+    this.forceRender();
+  }
+}
 
-  return useMemo(
-    () => ({
-      get shapeProps() {
-        return shapeProps.current;
-      },
-      get textProps() {
-        return textProps.current;
-      },
-      get shapes() {
-        return shapes.current;
-      },
-      clearDisplay() {
-        shapes.current = [];
-      },
-      updateShapeProps,
-      updateTextProps,
-      addShape,
-    }),
-    []
-  );
+export function useAppHost(forceRender: () => void) {
+  return useRef(new AppHostImpl(forceRender));
 }
