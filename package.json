@@ -10,6 +10,7 @@
     "repl": "tsx --import ./tools/hooks.js ./tools/repl.js",
     "script": "tsx --import ./tools/hooks.js ./tools/script.js",
     "format": "prettier --write ./src/**/*.[jt]s",
+    "typecheck": "tsc --noEmit",
     "lint": "eslint ./app ./src"
   },
   "repository": {
