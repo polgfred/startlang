@@ -1,6 +1,8 @@
 import { Fragment } from 'react';
 
-export default function Graphics({ shapes }) {
+import { Shape } from '../../src/lang/ext/shapes/index.js';
+
+export default function Graphics({ shapes }: { shapes: readonly Shape[] }) {
   return (
     <svg
       sx={{

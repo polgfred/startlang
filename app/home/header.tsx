@@ -1,5 +1,3 @@
-'use client';
-
 import {
   AppBar,
   Button,
@@ -8,13 +6,23 @@ import {
   Toolbar,
   Typography,
 } from '@mui/material';
-import { useCallback, useState } from 'react';
+import { MouseEvent, useCallback, useState } from 'react';
 
-function SettingsMenu({ option, mode, choices, updateMode }) {
-  const [anchor, setAnchor] = useState();
+function SettingsMenu({
+  option,
+  mode,
+  choices,
+  updateMode,
+}: {
+  option: string;
+  choices: readonly string[];
+  mode: string;
+  updateMode: (value: string) => void;
+}) {
+  const [anchor, setAnchor] = useState<HTMLElement | null>(null);
 
   const openMenu = useCallback(
-    (ev) => {
+    (ev: MouseEvent<HTMLButtonElement>) => {
       setAnchor(ev.currentTarget);
     },
     [setAnchor]
@@ -25,7 +33,7 @@ function SettingsMenu({ option, mode, choices, updateMode }) {
   }, [setAnchor]);
 
   const handleUpdateMode = useCallback(
-    (value) => {
+    (value: string) => {
       updateMode(value);
       closeMenu();
     },
@@ -37,7 +45,7 @@ function SettingsMenu({ option, mode, choices, updateMode }) {
       <Button variant="text" color="secondary" onClick={openMenu}>
         {option}
       </Button>
-      <Menu open={!!anchor} anchorEl={anchor} onClose={closeMenu}>
+      <Menu open={anchor !== null} anchorEl={anchor} onClose={closeMenu}>
         {choices.map((value) => (
           <MenuItem
             key={`menu-item-${option}-${value}`}
@@ -57,6 +65,11 @@ export default function Header({
   updateViewMode,
   runProgram,
   isRunning,
+}: {
+  viewMode: string;
+  updateViewMode: (value: string) => void;
+  runProgram: () => void;
+  isRunning: boolean;
 }) {
   return (
     <AppBar>

@@ -1,5 +1,3 @@
-'use client';
-
 import {
   Button,
   Table,
@@ -10,9 +8,17 @@ import {
   TableRow,
   Typography,
 } from '@mui/material';
-import { useState } from 'react';
+import { ChangeEvent, useCallback, useState } from 'react';
 
-function NamespaceInspector({ title, ns }) {
+import { HistoryItem } from '../../src/lang/ext/graphics.js';
+
+function NamespaceInspector({
+  title,
+  namespace,
+}: {
+  title: string;
+  namespace: Record<string, any>;
+}) {
   return (
     <Table
       sx={{
@@ -51,7 +57,7 @@ function NamespaceInspector({ title, ns }) {
         </TableRow>
       </TableHead>
       <TableBody>
-        {Object.entries(ns).map(([key, value]) => (
+        {Object.entries(namespace).map(([key, value]) => (
           <TableRow key={key}>
             <TableCell>{key}</TableCell>
             <TableCell>{inspectorFor(value)}</TableCell>
@@ -62,8 +68,23 @@ function NamespaceInspector({ title, ns }) {
   );
 }
 
-export default function Inspector({ hist, snap, updateSlider }) {
-  const current = hist[snap] || hist[hist.length - 1];
+export default function Inspector({
+  historyItem,
+  historyIndex,
+  historyLength,
+  updateSlider,
+}: {
+  historyItem: HistoryItem;
+  historyIndex: number;
+  historyLength: number;
+  updateSlider: (index: number) => void;
+}) {
+  const handleSliderChange = useCallback(
+    (ev: ChangeEvent<HTMLInputElement>) => {
+      updateSlider(Number(ev.target.value));
+    },
+    []
+  );
 
   return (
     <div
@@ -75,9 +96,9 @@ export default function Inspector({ hist, snap, updateSlider }) {
       <input
         type="range"
         min={0}
-        max={hist.length - 1}
-        value={snap}
-        onChange={updateSlider}
+        max={historyLength - 1}
+        value={historyIndex}
+        onChange={handleSliderChange}
         sx={{
           margin: 1,
           width: 'calc(100% - 20px)',
@@ -92,12 +113,14 @@ export default function Inspector({ hist, snap, updateSlider }) {
           overflow: 'auto',
         }}
       >
-        {current && (
-          <>
-            <NamespaceInspector title="Global" ns={current.globalNamespace} />
-            <NamespaceInspector title="Local" ns={current.topNamespace.head} />
-          </>
-        )}
+        <NamespaceInspector
+          title="Global"
+          namespace={historyItem.globalNamespace}
+        />
+        <NamespaceInspector
+          title="Local"
+          namespace={historyItem.topNamespace.head}
+        />
       </div>
     </div>
   );
@@ -107,11 +130,11 @@ function NoneInspector() {
   return <span>*none*</span>;
 }
 
-function BooleanInspector({ value }) {
+function BooleanInspector({ value }: { value: boolean }) {
   return <span>{value ? '*true*' : '*false*'}</span>;
 }
 
-function NumberInspector({ value }) {
+function NumberInspector({ value }: { value: number }) {
   return (
     <span>
       {isFinite(value)
@@ -123,19 +146,21 @@ function NumberInspector({ value }) {
   );
 }
 
-function StringInspector({ value }) {
+function StringInspector({ value }: { value: string }) {
   return <span>{value}</span>;
 }
 
-function TimeInspector({ value }) {
-  return <span>{value.toLocaleString()}</span>;
-}
-
-function ExpandableFooter({ onShowLess, onShowMore }) {
+function ExpandableFooter({
+  onShowLess,
+  onShowMore,
+}: {
+  onShowLess: () => void;
+  onShowMore: () => void;
+}) {
   return (
     <TableFooter>
       <TableRow key="trunc">
-        <TableCell colSpan="2">
+        <TableCell colSpan={2}>
           <Button onClick={onShowLess}>Less</Button>
           <Button onClick={onShowMore}>More</Button>
         </TableCell>
@@ -144,7 +169,7 @@ function ExpandableFooter({ onShowLess, onShowMore }) {
   );
 }
 
-function ListInspector({ value }) {
+function ListInspector({ value }: { value: any[] }) {
   const [visible, setVisible] = useState(5);
 
   return (
@@ -182,7 +207,7 @@ function ListInspector({ value }) {
   );
 }
 
-function TableInspector({ value }) {
+function TableInspector({ value }: { value: Record<string, any> }) {
   const [visible, setVisible] = useState(5);
 
   return (
@@ -230,7 +255,7 @@ function TableInspector({ value }) {
   );
 }
 
-function inspectorFor(value) {
+function inspectorFor(value: unknown) {
   if (value === null || value === undefined) {
     return <NoneInspector />;
   } else {
@@ -242,9 +267,7 @@ function inspectorFor(value) {
       case 'string':
         return <StringInspector value={value} />;
       case 'object':
-        if (value.constructor === Date) {
-          return <TimeInspector value={value} />;
-        } else if (Array.isArray(value)) {
+        if (Array.isArray(value)) {
           return <ListInspector value={value} />;
         } else {
           return <TableInspector value={value} />;

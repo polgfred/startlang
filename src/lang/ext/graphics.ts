@@ -13,7 +13,7 @@ import {
   Rect,
 } from './shapes/index.js';
 
-type HistoryItem = Pick<
+export type HistoryItem = Pick<
   Interpreter,
   | 'globalFunctions'
   | 'globalNamespace'

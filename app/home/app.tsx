@@ -80,8 +80,8 @@ export default function App() {
     }
   }, []);
 
-  const updateSlider = useCallback((ev: ChangeEvent<HTMLInputElement>) => {
-    const historyItem = appHost.moveToHistoryIndex(Number(ev.target.value));
+  const updateSlider = useCallback((index: number) => {
+    const historyItem = appHost.moveToHistoryIndex(index);
     interp.restoreSnapshot(historyItem);
     forceRender();
   }, []);
@@ -167,11 +167,14 @@ export default function App() {
                 padding: '10px',
               }}
             >
-              <Inspector
-                hist={appHost.history}
-                snap={appHost.historyIndex}
-                updateSlider={updateSlider}
-              />
+              {appHost.historyIndex < appHost.history.length && (
+                <Inspector
+                  historyItem={appHost.history[appHost.historyIndex]}
+                  historyIndex={appHost.historyIndex}
+                  historyLength={appHost.history.length}
+                  updateSlider={updateSlider}
+                />
+              )}
             </Paper>
           </Grid>
           <Grid
