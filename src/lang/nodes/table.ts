@@ -17,13 +17,13 @@ export class TableNode extends Node {
   }
 }
 
-const emptyTable: object = Object.freeze(Object.create(null));
+const emptyTable: Record<string, any> = Object.freeze(Object.create(null));
 
 export class TableFrame extends Frame {
   declare node: TableNode;
 
   readonly count: number = 0;
-  readonly items: object = emptyTable;
+  readonly items = emptyTable;
 
   visit(interpreter: Interpreter) {
     const { pairs } = this.node;

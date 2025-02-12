@@ -13,7 +13,7 @@ export class TableHandler extends DataHandler {
     return typeof value === 'object' && value !== null && !Array.isArray(value);
   }
 
-  getPrettyValue(value: object) {
+  getPrettyValue(value: Record<string, any>) {
     const prettyValues = Object.entries(value).map(([key, v]) => {
       const handler = this.interpreter.getHandler(v);
       return `${key}=${handler.getPrettyValue(v)}`;
@@ -21,11 +21,11 @@ export class TableHandler extends DataHandler {
     return `{${prettyValues.join(', ')}}`;
   }
 
-  getIndex(value: object, index: string) {
+  getIndex(value: Record<string, any>, index: string) {
     return value[index];
   }
 
-  setIndex(value: object, index: string, element: any) {
+  setIndex(value: Record<string, any>, index: string, element: any) {
     value[index] = element;
   }
 
@@ -48,11 +48,11 @@ export class TableHandler extends DataHandler {
 }
 
 const tableMethods = {
-  len(interpreter: Interpreter, [value]: [object]) {
+  len(interpreter: Interpreter, [value]: [Record<string, any>]) {
     interpreter.setResult(Object.keys(value).length);
   },
 
-  keys(interpreter: Interpreter, [value]: [object]) {
+  keys(interpreter: Interpreter, [value]: [Record<string, any>]) {
     interpreter.setResult(Object.keys(value));
   },
 };
