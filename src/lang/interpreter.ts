@@ -153,8 +153,8 @@ export class Interpreter {
     }
   }
 
-  setVariable(name: string, value: any, local = false) {
-    if (local || name in this.topNamespace.head) {
+  setVariable(name: string, value: any) {
+    if (this.topNamespace !== rootNamespace) {
       this.topNamespace = this.topNamespace.swap(
         produce(this.topNamespace.head, (draft) => {
           draft[name] = value;

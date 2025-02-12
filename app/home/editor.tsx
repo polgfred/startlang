@@ -49,7 +49,6 @@ export default function Editor({
         'if',
         'in',
         'let',
-        'local',
         'next',
         'not',
         'or',

@@ -1,12 +1,12 @@
 begin shmoop do
-  local z = 10
+  z = 10
   print z
 end
 
 begin loop do
   y = x*2
   if y+7 > 18 then print "{y+7} is ""greater"" than 18"
-  local z = 5
+  z = 5
   shmoop
   print z
 end

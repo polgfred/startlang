@@ -3,10 +3,10 @@ opacity 1/4
 
 begin random_color do
   ; randomly generate a fill color
-  local red = rand()
-  local green = rand()
-  local blue = rand()
-  local rgb = color(red, green, blue)
+  red = rand()
+  green = rand()
+  blue = rand()
+  rgb = color(red, green, blue)
   snapshot
 
   return rgb

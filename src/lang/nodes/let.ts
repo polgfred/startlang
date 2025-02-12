@@ -5,8 +5,7 @@ import { Frame, Node } from './base.js';
 export class LetNode extends Node {
   constructor(
     public readonly name: string,
-    public readonly value: Node,
-    public readonly isLocal: boolean = false
+    public readonly value: Node
   ) {
     super();
   }
@@ -20,7 +19,7 @@ export class LetFrame extends Frame {
   declare node: LetNode;
 
   visit(interpreter: Interpreter) {
-    const { name, value, isLocal } = this.node;
+    const { name, value } = this.node;
 
     switch (this.state) {
       case 0: {
@@ -29,7 +28,7 @@ export class LetFrame extends Frame {
         break;
       }
       case 1: {
-        interpreter.setVariable(name, interpreter.lastResult, isLocal);
+        interpreter.setVariable(name, interpreter.lastResult);
         interpreter.popFrame();
         break;
       }

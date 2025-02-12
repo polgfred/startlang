@@ -9,20 +9,20 @@ end
 print len(a)
 
 begin inner3 do
-  print "    - inner3 {foo} should be 124"
-  local foo = 99 ; makes a new foo
+  print "    - inner3 {foo} should be 123"
+  foo = 99 ; makes a new foo
   print "    - inner3 {foo} should be 99"
 end
 
 begin inner2 do
   print "  - inner2 {foo} should be 123"
-  let foo = foo + 1 ; refers to the global foo
+  let foo = foo + 1 ; makes a new foo
   print "  - inner2 {foo} should be 124"
   inner3
   print "  - inner2 {foo} should be 124"
 end
 
-begin inner1(foo) do ; implies local foo
+begin inner1(foo) do
   print "inner1 {foo} should be 42"
   inner2
   print "inner1 {foo} should be 42"
@@ -34,7 +34,7 @@ let foo = 123
 print "outer {foo} should be 123"
 
 inner1 42
-print "outer {foo} should be 124"
+print "outer {foo} should be 123"
 
 begin compare(first, second) do
   if first > second then
@@ -56,7 +56,7 @@ begin func1(i) do
 end
 
 begin func2(i) do
-  local j = i
+  j = i
   while j < func1(i) do j = j + 11
   return j
 end

@@ -208,13 +208,10 @@ Flow
   / "return" WB result:(__ @Value)? { return new ReturnNode(result ?? null); }
 
 Let
-  = "local" WB name:Symbol __ "=" __ value:Value {
-      return new LetNode(name, value, true);
-    }
-  / ("let" WB)? __ name:Symbol __ indexes:Indexes? __ "=" __ value:Value {
+  = ("let" WB)? name:Symbol __ indexes:Indexes? __ "=" __ value:Value {
       return indexes
         ? buildIndex(name, indexes, value)
-        : new LetNode(name, value, false);
+        : new LetNode(name, value);
     }
 
 Call

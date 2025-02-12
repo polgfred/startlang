@@ -48,7 +48,7 @@ export class CallFrame extends Frame {
         const func = interpreter.globalFunctions[name];
         interpreter.pushNamespace();
         for (let i = 0; i < func.params.length; i++) {
-          interpreter.setVariable(func.params[i], this.args[i], true);
+          interpreter.setVariable(func.params[i], this.args[i]);
         }
         interpreter.swapFrame(this, 3, (draft) => {
           draft.hasNamespace = true;
