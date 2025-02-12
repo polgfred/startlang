@@ -19,7 +19,6 @@ import Graphics from './graphics.jsx';
 import Header from './header.jsx';
 import Inspector from './inspector.jsx';
 import Term from './term.jsx';
-import { useForceRender } from './use-force-render.js';
 import { useHistory } from './use-history.js';
 
 const theme = createTheme({
@@ -33,23 +32,54 @@ const theme = createTheme({
   },
 });
 
+function useForceRender() {
+  const [, setTick] = useState(0);
+  return () => {
+    setTick((tick) => tick + 1);
+  };
+}
+
+function usePromptForInput() {
+  const [inputState, setInputState] = useState<{
+    prompt: string;
+    onInputComplete: (value: string) => void;
+  } | null>(null);
+
+  return {
+    inputState,
+
+    promptForInput(interpreter: Interpreter, [prompt]: [string]) {
+      return new Promise<void>((resolve) => {
+        setInputState({
+          prompt,
+          onInputComplete(value: string) {
+            setInputState(null);
+            interpreter.setResult(value);
+            resolve();
+          },
+        });
+      });
+    },
+  };
+}
+
 export default function App() {
-  const forceRender = useForceRender();
+  const editorRef = useRef<editor.ICodeEditor | null>(null);
 
   const [viewMode, setViewMode] = useState('graphics');
-  const editorRef = useRef<editor.ICodeEditor | null>(null);
   const [isRunning, setIsRunning] = useState(false);
-  const [{ prompt, onInputComplete }, setInputState] = useState({
-    prompt: '',
-    onInputComplete: () => {},
-  });
+
+  const forceRender = useForceRender();
 
   const { current: appHost } = useRef(new AppHost(forceRender));
   const { current: interpreter } = useRef(new Interpreter(appHost));
   const history = useHistory(interpreter, appHost);
 
+  const { inputState, promptForInput } = usePromptForInput();
+
   interpreter.registerGlobals(graphicsGlobals);
   interpreter.registerGlobals({
+    input: promptForInput,
     snapshot() {
       history.push();
     },
@@ -60,22 +90,10 @@ export default function App() {
     forceRender();
   }, []);
 
-  const handleInput = useCallback(
-    (input) => {
-      if (onInputComplete) {
-        onInputComplete(input);
-        setInputState({
-          prompt: '',
-          onInputComplete: () => {},
-        });
-      }
-    },
-    [onInputComplete]
-  );
-
   const runProgram = useCallback(async () => {
     history.clear();
     appHost.clearDisplay();
+    appHost.clearTextBuffer();
     forceRender();
 
     try {
@@ -85,8 +103,7 @@ export default function App() {
       await interpreter.run(rootNode);
     } catch (err: unknown) {
       if (err instanceof Error) {
-        // eslint-disable-next-line no-console
-        console.log(err.stack);
+        console.error(err.stack);
       }
     } finally {
       setIsRunning(false);
@@ -152,9 +169,8 @@ export default function App() {
                   }}
                 >
                   <Term
-                    buf={buf.current}
-                    prompt={prompt}
-                    handleInput={handleInput}
+                    textBuffer={appHost.textBuffer}
+                    inputState={inputState}
                   />
                 </Paper>
               )}

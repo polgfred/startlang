@@ -19,10 +19,12 @@ export interface AppHostSnapshot {
   textProps: TextProps;
 }
 
+const emptyArray = Object.freeze([]);
+
 export class AppHost {
   constructor(private readonly forceRender: () => void) {}
 
-  shapes: readonly Shape[] = [];
+  shapes: readonly Shape[] = emptyArray;
 
   shapeProps: ShapeProps = {
     fill: null,
@@ -41,7 +43,7 @@ export class AppHost {
   };
 
   clearDisplay() {
-    this.shapes = [];
+    this.shapes = emptyArray;
     this.forceRender();
   }
 
@@ -67,6 +69,18 @@ export class AppHost {
       draft.push(shape);
     });
     this.forceRender();
+  }
+
+  textBuffer: readonly string[] = emptyArray;
+
+  clearTextBuffer() {
+    this.textBuffer = emptyArray;
+  }
+
+  pushText(text: string) {
+    this.textBuffer = produce(this.textBuffer, (draft) => {
+      draft.push(text);
+    });
   }
 
   takeSnapshot(): AppHostSnapshot {
@@ -190,5 +204,10 @@ export const graphicsGlobals = {
     const host = getHost(interpreter);
     host.pushShape(new Text(x, y, text, host.textProps, host.shapeProps));
     return waitForImmediate();
+  },
+
+  print(interpreter: Interpreter, [text]: [string]) {
+    const host = getHost(interpreter);
+    host.pushText(text);
   },
 };

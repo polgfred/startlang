@@ -1,35 +1,55 @@
-'use client';
-
 import { Button, Stack, TextField } from '@mui/material';
-import { useCallback, useLayoutEffect, useRef, useState } from 'react';
+import {
+  ChangeEvent,
+  KeyboardEvent,
+  useCallback,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react';
 
-export default function Term({ buf, prompt, handleInput }) {
+interface InputState {
+  prompt: string;
+  onInputComplete: (value: string) => void;
+}
+
+export default function Term({
+  textBuffer,
+  inputState,
+}: {
+  textBuffer: readonly string[];
+  inputState: InputState | null;
+}) {
   const [input, setInput] = useState('');
 
   const handleAccept = useCallback(() => {
-    handleInput(input);
-    setInput('');
-  }, [input, handleInput]);
+    if (inputState) {
+      inputState.onInputComplete(input);
+      setInput('');
+    }
+  }, [input, inputState]);
 
   const handleChange = useCallback(
-    (ev) => {
+    (ev: ChangeEvent<HTMLInputElement>) => {
       setInput(ev.target.value);
     },
     [setInput]
   );
 
   const handleKeyUp = useCallback(
-    (ev) => {
-      if (ev.keyCode === 13) {
+    (ev: KeyboardEvent<HTMLInputElement>) => {
+      if (ev.key === 'Enter') {
         handleAccept();
       }
     },
     [handleAccept]
   );
 
-  const scrollRef = useRef();
+  const scrollRef = useRef<HTMLDivElement | null>(null);
   useLayoutEffect(() => {
-    scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
   });
 
   return (
@@ -39,7 +59,7 @@ export default function Term({ buf, prompt, handleInput }) {
         overflow: 'auto',
       }}
     >
-      {prompt && (
+      {inputState && (
         <Stack
           direction="row"
           sx={{
@@ -52,7 +72,7 @@ export default function Term({ buf, prompt, handleInput }) {
             type="string"
             margin="normal"
             value={input}
-            label={prompt}
+            label={inputState.prompt}
             onChange={handleChange}
             onKeyUp={handleKeyUp}
             autoFocus={true}
@@ -80,8 +100,8 @@ export default function Term({ buf, prompt, handleInput }) {
           fontSize: '14px',
         }}
       >
-        {buf.map((elem, index) => (
-          <p key={index}>{elem}</p>
+        {textBuffer.map((line, index) => (
+          <p key={index}>{line}</p>
         ))}
       </div>
     </div>
