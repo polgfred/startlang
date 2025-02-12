@@ -1,5 +1,6 @@
 import {
   Button,
+  Stack,
   Table,
   TableBody,
   TableCell,
@@ -13,9 +14,11 @@ import { ChangeEvent, useCallback, useState } from 'react';
 import { History } from '../../src/lang/ext/history.js';
 
 export default function Inspector({
+  error,
   history,
   updateSlider,
 }: {
+  error: Error | null;
   history: History;
   updateSlider: (index: number) => void;
 }) {
@@ -27,10 +30,14 @@ export default function Inspector({
   );
 
   return (
-    <div
+    <Stack
       sx={{
         width: '100%',
         height: '100%',
+        fontFamily: 'Roboto',
+        fontSize: 14,
+        marginTop: 1,
+        overflow: 'auto',
       }}
     >
       <input
@@ -44,25 +51,64 @@ export default function Inspector({
           width: 'calc(100% - 20px)',
         }}
       />
-      <div
-        sx={{
-          fontFamily: 'Roboto',
-          fontSize: 14,
-          height: 'calc(100% - 40px)',
-          marginTop: 1,
-          overflow: 'auto',
-        }}
-      >
-        <NamespaceInspector
-          title="Global"
-          namespace={history.current.globalNamespace}
-        />
-        <NamespaceInspector
-          title="Local"
-          namespace={history.current.topNamespace.head}
-        />
-      </div>
-    </div>
+      {error && <ErrorInspector error={error} />}
+      {!history.isEmpty() && (
+        <>
+          <NamespaceInspector
+            title="Global"
+            namespace={history.current.globalNamespace}
+          />
+          <NamespaceInspector
+            title="Local"
+            namespace={history.current.topNamespace.head}
+          />
+        </>
+      )}
+    </Stack>
+  );
+}
+
+function ErrorInspector({ error }: { error: Error }) {
+  return (
+    <Table
+      sx={{
+        marginBottom: '10px',
+        width: '100%',
+      }}
+    >
+      <TableHead>
+        <TableRow>
+          <TableCell
+            colSpan={2}
+            sx={{
+              fontWeight: 'bold',
+            }}
+          >
+            <Typography variant="h6">Error</Typography>
+          </TableCell>
+        </TableRow>
+      </TableHead>
+      <TableBody>
+        <TableRow>
+          <TableCell
+            sx={{
+              width: '25%',
+              fontWeight: 'bold',
+            }}
+          >
+            Message
+          </TableCell>
+          <TableCell
+            sx={{
+              width: '75%',
+              color: '#aa0000',
+            }}
+          >
+            {error.message}
+          </TableCell>
+        </TableRow>
+      </TableBody>
+    </Table>
   );
 }
 

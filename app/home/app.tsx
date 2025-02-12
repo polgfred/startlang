@@ -68,6 +68,7 @@ export default function App() {
 
   const [viewMode, setViewMode] = useState<'graphics' | 'text'>('graphics');
   const [isRunning, setIsRunning] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
   const forceRender = useForceRender();
 
@@ -100,6 +101,7 @@ export default function App() {
   );
 
   const runProgram = useCallback(async () => {
+    setError(null);
     history.clear();
     host.clearDisplay();
     host.clearTextBuffer();
@@ -112,6 +114,7 @@ export default function App() {
       await interpreter.run(rootNode);
     } catch (err: unknown) {
       if (err instanceof Error) {
+        setError(err);
         // eslint-disable-next-line no-console
         console.error(err.stack);
       }
@@ -197,9 +200,11 @@ export default function App() {
                 padding: '10px',
               }}
             >
-              {!history.isEmpty() && (
-                <Inspector history={history} updateSlider={updateSlider} />
-              )}
+              <Inspector
+                error={error}
+                history={history}
+                updateSlider={updateSlider}
+              />
             </Paper>
           </Grid>
           <Grid
