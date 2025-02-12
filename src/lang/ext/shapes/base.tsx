@@ -24,35 +24,35 @@ export abstract class Shape {
 
   abstract getElement(): JSX.Element;
 
-  protected getAdditionalProps() {
+  protected getSVGProps() {
     const { rotate, scalex, scaley, anchor, fill, stroke, opacity } =
       this.shapeProps;
 
-    const additionalProps: { style: CSSProperties; transform: string } = {
+    const svgProps: { style: CSSProperties; transform: string } = {
       style: {},
       transform: '',
     };
 
     if (rotate !== 0) {
-      additionalProps.transform += `rotate(${rotate})`;
+      svgProps.transform += `rotate(${rotate})`;
     }
     if (scalex !== 1 || scaley !== 1) {
-      additionalProps.transform += `scale(${scalex} ${scaley})`;
+      svgProps.transform += `scale(${scalex} ${scaley})`;
     }
     if (anchor) {
-      additionalProps.style.transformOrigin = anchor;
-      additionalProps.style.transformBox = 'fill-box';
+      svgProps.style.transformOrigin = anchor;
+      svgProps.style.transformBox = 'fill-box';
     }
     if (fill) {
-      additionalProps.style.fill = fill;
+      svgProps.style.fill = fill;
     }
     if (stroke) {
-      additionalProps.style.stroke = stroke;
+      svgProps.style.stroke = stroke;
     }
     if (opacity !== null && opacity >= 0 && opacity < 1) {
-      additionalProps.style.opacity = opacity;
+      svgProps.style.opacity = opacity;
     }
 
-    return additionalProps;
+    return svgProps;
   }
 }

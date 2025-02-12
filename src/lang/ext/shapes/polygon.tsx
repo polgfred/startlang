@@ -12,7 +12,7 @@ export class Polygon extends Shape {
     return (
       <polygon
         points={this.points.map(([x, y]) => `${x},${y}`).join(' ')}
-        {...this.getAdditionalProps()}
+        {...this.getSVGProps()}
       />
     );
   }

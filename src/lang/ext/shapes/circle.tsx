@@ -12,12 +12,7 @@ export class Circle extends Shape {
 
   getElement() {
     return (
-      <circle
-        cx={this.cx}
-        cy={this.cy}
-        r={this.r}
-        {...this.getAdditionalProps()}
-      />
+      <circle cx={this.cx} cy={this.cy} r={this.r} {...this.getSVGProps()} />
     );
   }
 }

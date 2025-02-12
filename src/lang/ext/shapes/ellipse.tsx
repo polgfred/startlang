@@ -18,7 +18,7 @@ export class Ellipse extends Shape {
         cy={this.cy}
         rx={this.rx}
         ry={this.ry}
-        {...this.getAdditionalProps()}
+        {...this.getSVGProps()}
       />
     );
   }

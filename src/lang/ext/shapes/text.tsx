@@ -11,24 +11,24 @@ export class Text extends Shape {
     super(shapeProps);
   }
 
-  protected getAdditionalProps() {
-    const additionalProps = super.getAdditionalProps();
+  protected getSVGProps() {
+    const svgProps = super.getSVGProps();
 
     const { fontFamily, fontSize } = this.textProps;
 
     if (fontFamily) {
-      additionalProps.style.fontFamily = fontFamily;
+      svgProps.style.fontFamily = fontFamily;
     }
     if (fontSize) {
-      additionalProps.style.fontSize = fontSize;
+      svgProps.style.fontSize = fontSize;
     }
 
-    return additionalProps;
+    return svgProps;
   }
 
   getElement() {
     return (
-      <text x={this.x} y={this.y} {...this.getAdditionalProps()}>
+      <text x={this.x} y={this.y} {...this.getSVGProps()}>
         {this.text}
       </text>
     );

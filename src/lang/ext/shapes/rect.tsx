@@ -18,7 +18,7 @@ export class Rect extends Shape {
         y={this.y}
         width={this.width}
         height={this.height}
-        {...this.getAdditionalProps()}
+        {...this.getSVGProps()}
       />
     );
   }
