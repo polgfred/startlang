@@ -11,6 +11,7 @@ import {
 import { useCallback, useRef, useState } from 'react';
 
 import { AppHost, graphicsGlobals } from '../../src/lang/ext/graphics.js';
+import { History } from '../../src/lang/ext/history.js';
 import { Interpreter } from '../../src/lang/interpreter.js';
 import { parse } from '../../src/lang/parser.peggy';
 
@@ -19,7 +20,6 @@ import Graphics from './graphics.jsx';
 import Header from './header.jsx';
 import Inspector from './inspector.jsx';
 import Term from './term.jsx';
-import { useHistory } from './use-history.js';
 
 const theme = createTheme({
   palette: {
@@ -73,7 +73,7 @@ export default function App() {
 
   const { current: appHost } = useRef(new AppHost(forceRender));
   const { current: interpreter } = useRef(new Interpreter(appHost));
-  const history = useHistory(interpreter, appHost);
+  const { current: history } = useRef(new History(interpreter, appHost));
 
   const { inputState, promptForInput } = usePromptForInput();
 

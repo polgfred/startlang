@@ -10,7 +10,7 @@ import {
 } from '@mui/material';
 import { ChangeEvent, useCallback, useState } from 'react';
 
-import { History } from './use-history.js';
+import { History } from '../../src/lang/ext/history.js';
 
 export default function Inspector({
   history,
