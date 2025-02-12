@@ -35,7 +35,3 @@ class RootFrame extends Frame {
 }
 
 export const rootFrame: Cons<Frame> = new Cons(new RootNode().makeFrame());
-
-export const rootNamespace: Cons<Record<string, any>> = new Cons(
-  Object.create(null)
-);

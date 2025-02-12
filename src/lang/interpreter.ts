@@ -8,7 +8,6 @@ import {
   LiteralNode,
   VarNode,
   rootFrame,
-  rootNamespace,
 } from './nodes/index.js';
 import { Cons } from './utils/cons.js';
 
@@ -17,6 +16,7 @@ export interface RuntimeFunction {
 }
 
 const emptyObject = Object.freeze(Object.create(null));
+const rootNamespace: Cons<Record<string, any>> = new Cons(emptyObject);
 
 export interface Snapshot {
   globalFunctions: Record<string, BeginNode>;
