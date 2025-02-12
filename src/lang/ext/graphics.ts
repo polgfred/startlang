@@ -66,7 +66,7 @@ export class AppHost {
     });
   }
 
-  addShape(shape: Shape) {
+  pushShape(shape: Shape) {
     this.shapes = produce(this.shapes, (draft) => {
       draft.push(shape);
     });
@@ -181,37 +181,37 @@ export const graphicsGlobals = {
 
   rect(interpreter: Interpreter, [x, y, width, height]: number[]) {
     const host = getHost(interpreter);
-    host.addShape(new Rect(x, y, width, height, host.shapeProps));
+    host.pushShape(new Rect(x, y, width, height, host.shapeProps));
     return waitForImmediate();
   },
 
   circle(interpreter: Interpreter, [cx, cy, radius]: number[]) {
     const host = getHost(interpreter);
-    host.addShape(new Circle(cx, cy, radius, host.shapeProps));
+    host.pushShape(new Circle(cx, cy, radius, host.shapeProps));
     return waitForImmediate();
   },
 
   ellipse(interpreter: Interpreter, [cx, cy, rx, ry]: number[]) {
     const host = getHost(interpreter);
-    host.addShape(new Ellipse(cx, cy, rx, ry, host.shapeProps));
+    host.pushShape(new Ellipse(cx, cy, rx, ry, host.shapeProps));
     return waitForImmediate();
   },
 
   line(interpreter: Interpreter, [x1, y1, x2, y2]: number[]) {
     const host = getHost(interpreter);
-    host.addShape(new Line(x1, y1, x2, y2, host.shapeProps));
+    host.pushShape(new Line(x1, y1, x2, y2, host.shapeProps));
     return waitForImmediate();
   },
 
   polygon(interpreter: Interpreter, [points]: [[number, number][]]) {
     const host = getHost(interpreter);
-    host.addShape(new Polygon(points, host.shapeProps));
+    host.pushShape(new Polygon(points, host.shapeProps));
     return waitForImmediate();
   },
 
   text(interpreter: Interpreter, [x, y, text]: [number, number, string]) {
     const host = getHost(interpreter);
-    host.addShape(new Text(x, y, text, host.textProps, host.shapeProps));
+    host.pushShape(new Text(x, y, text, host.textProps, host.shapeProps));
     return waitForImmediate();
   },
 };
