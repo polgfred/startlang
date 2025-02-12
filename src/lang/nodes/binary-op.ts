@@ -43,6 +43,7 @@ export class BinaryOpFrame extends Frame {
           interpreter.evalBinaryOp(operator, this.left, result)
         );
         interpreter.popFrame();
+        break;
       }
     }
   }

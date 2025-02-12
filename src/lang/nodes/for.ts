@@ -72,6 +72,7 @@ export class ForFrame extends Frame {
         } else {
           interpreter.popFrame();
         }
+        break;
       }
     }
   }

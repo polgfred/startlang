@@ -31,6 +31,7 @@ export class UnaryOpFrame extends Frame {
         const result = interpreter.lastResult;
         interpreter.setResult(interpreter.evalUnaryOp(operator, result));
         interpreter.popFrame();
+        break;
       }
     }
   }

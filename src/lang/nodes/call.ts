@@ -69,6 +69,7 @@ export class CallFrame extends Frame {
         } else {
           interpreter.popFrame();
         }
+        break;
       }
     }
   }
