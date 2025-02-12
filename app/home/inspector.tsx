@@ -10,7 +10,61 @@ import {
 } from '@mui/material';
 import { ChangeEvent, useCallback, useState } from 'react';
 
-import { HistoryItem } from '../../src/lang/ext/graphics.js';
+import { History } from './use-history.js';
+
+export default function Inspector({
+  history,
+  updateSlider,
+}: {
+  history: History;
+  updateSlider: (index: number) => void;
+}) {
+  const handleSliderChange = useCallback(
+    (ev: ChangeEvent<HTMLInputElement>) => {
+      updateSlider(Number(ev.target.value));
+    },
+    []
+  );
+
+  return (
+    <div
+      sx={{
+        width: '100%',
+        height: '100%',
+      }}
+    >
+      <input
+        type="range"
+        min={0}
+        max={history.length - 1}
+        value={history.currentIndex}
+        onChange={handleSliderChange}
+        sx={{
+          margin: 1,
+          width: 'calc(100% - 20px)',
+        }}
+      />
+      <div
+        sx={{
+          fontFamily: 'Roboto',
+          fontSize: 14,
+          height: 'calc(100% - 40px)',
+          marginTop: 1,
+          overflow: 'auto',
+        }}
+      >
+        <NamespaceInspector
+          title="Global"
+          namespace={history.current.globalNamespace}
+        />
+        <NamespaceInspector
+          title="Local"
+          namespace={history.current.topNamespace.head}
+        />
+      </div>
+    </div>
+  );
+}
 
 function NamespaceInspector({
   title,
@@ -65,64 +119,6 @@ function NamespaceInspector({
         ))}
       </TableBody>
     </Table>
-  );
-}
-
-export default function Inspector({
-  historyItem,
-  historyIndex,
-  historyLength,
-  updateSlider,
-}: {
-  historyItem: HistoryItem;
-  historyIndex: number;
-  historyLength: number;
-  updateSlider: (index: number) => void;
-}) {
-  const handleSliderChange = useCallback(
-    (ev: ChangeEvent<HTMLInputElement>) => {
-      updateSlider(Number(ev.target.value));
-    },
-    []
-  );
-
-  return (
-    <div
-      sx={{
-        width: '100%',
-        height: '100%',
-      }}
-    >
-      <input
-        type="range"
-        min={0}
-        max={historyLength - 1}
-        value={historyIndex}
-        onChange={handleSliderChange}
-        sx={{
-          margin: 1,
-          width: 'calc(100% - 20px)',
-        }}
-      />
-      <div
-        sx={{
-          fontFamily: 'Roboto',
-          fontSize: 14,
-          height: 'calc(100% - 40px)',
-          marginTop: 1,
-          overflow: 'auto',
-        }}
-      >
-        <NamespaceInspector
-          title="Global"
-          namespace={historyItem.globalNamespace}
-        />
-        <NamespaceInspector
-          title="Local"
-          namespace={historyItem.topNamespace.head}
-        />
-      </div>
-    </div>
   );
 }
 

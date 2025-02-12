@@ -13,15 +13,11 @@ import {
   Rect,
 } from './shapes/index.js';
 
-export type HistoryItem = Pick<
-  Interpreter,
-  | 'globalFunctions'
-  | 'globalNamespace'
-  | 'topFrame'
-  | 'topNamespace'
-  | 'lastResult'
-> &
-  Pick<AppHost, 'shapes' | 'shapeProps' | 'textProps'>;
+export interface AppHostSnapshot {
+  shapes: readonly Shape[];
+  shapeProps: ShapeProps;
+  textProps: TextProps;
+}
 
 export class AppHost {
   constructor(private readonly forceRender: () => void) {}
@@ -73,27 +69,18 @@ export class AppHost {
     this.forceRender();
   }
 
-  history: HistoryItem[] = [];
-  historyIndex: number = 0;
-
-  clearHistory() {
-    this.history = [];
-    this.historyIndex = 0;
+  takeSnapshot(): AppHostSnapshot {
+    return {
+      shapes: this.shapes,
+      shapeProps: this.shapeProps,
+      textProps: this.textProps,
+    };
   }
 
-  pushHistory(historyItem: HistoryItem) {
-    this.history.push(historyItem);
-    this.historyIndex = this.history.length - 1;
-  }
-
-  moveToHistoryIndex(index: number) {
-    this.historyIndex = index;
-
-    const historyItem = this.history[index];
-    this.shapes = historyItem.shapes;
-    this.shapeProps = historyItem.shapeProps;
-    this.textProps = historyItem.textProps;
-    return historyItem;
+  restoreSnapshot(snapshot: AppHostSnapshot) {
+    this.shapes = snapshot.shapes;
+    this.shapeProps = snapshot.shapeProps;
+    this.textProps = snapshot.textProps;
   }
 }
 
@@ -111,16 +98,6 @@ function getHost(interpreter: Interpreter) {
 }
 
 export const graphicsGlobals = {
-  snapshot(interpreter: Interpreter) {
-    const host = getHost(interpreter);
-    host.pushHistory({
-      ...interpreter.takeSnapshot(),
-      shapes: host.shapes,
-      shapeProps: host.shapeProps,
-      textProps: host.textProps,
-    });
-  },
-
   clear(interpreter: Interpreter) {
     const host = getHost(interpreter);
     host.clearDisplay();

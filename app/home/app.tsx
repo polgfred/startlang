@@ -19,6 +19,8 @@ import Graphics from './graphics.jsx';
 import Header from './header.jsx';
 import Inspector from './inspector.jsx';
 import Term from './term.jsx';
+import { useForceRender } from './use-force-render.js';
+import { useHistory } from './use-history.js';
 
 const theme = createTheme({
   palette: {
@@ -32,8 +34,7 @@ const theme = createTheme({
 });
 
 export default function App() {
-  const [, renderCount] = useState(0);
-  const forceRender = useCallback(() => renderCount((c) => c + 1), []);
+  const forceRender = useForceRender();
 
   const [viewMode, setViewMode] = useState('graphics');
   const editorRef = useRef<editor.ICodeEditor | null>(null);
@@ -44,8 +45,20 @@ export default function App() {
   });
 
   const { current: appHost } = useRef(new AppHost(forceRender));
-  const { current: interp } = useRef(new Interpreter(appHost));
-  interp.registerGlobals(graphicsGlobals);
+  const { current: interpreter } = useRef(new Interpreter(appHost));
+  const history = useHistory(interpreter, appHost);
+
+  interpreter.registerGlobals(graphicsGlobals);
+  interpreter.registerGlobals({
+    snapshot() {
+      history.push();
+    },
+  });
+
+  const updateSlider = useCallback((index: number) => {
+    history.moveToIndex(index);
+    forceRender();
+  }, []);
 
   const handleInput = useCallback(
     (input) => {
@@ -61,7 +74,7 @@ export default function App() {
   );
 
   const runProgram = useCallback(async () => {
-    appHost.clearHistory();
+    history.clear();
     appHost.clearDisplay();
     forceRender();
 
@@ -69,7 +82,7 @@ export default function App() {
       setIsRunning(true);
       const source = (editorRef.current?.getValue() ?? '') + '\n';
       const rootNode = parse(source);
-      await interp.run(rootNode);
+      await interpreter.run(rootNode);
     } catch (err: unknown) {
       if (err instanceof Error) {
         // eslint-disable-next-line no-console
@@ -78,12 +91,6 @@ export default function App() {
     } finally {
       setIsRunning(false);
     }
-  }, []);
-
-  const updateSlider = useCallback((index: number) => {
-    const historyItem = appHost.moveToHistoryIndex(index);
-    interp.restoreSnapshot(historyItem);
-    forceRender();
   }, []);
 
   return (
@@ -167,13 +174,8 @@ export default function App() {
                 padding: '10px',
               }}
             >
-              {appHost.historyIndex < appHost.history.length && (
-                <Inspector
-                  historyItem={appHost.history[appHost.historyIndex]}
-                  historyIndex={appHost.historyIndex}
-                  historyLength={appHost.history.length}
-                  updateSlider={updateSlider}
-                />
+              {!history.isEmpty() && (
+                <Inspector history={history} updateSlider={updateSlider} />
               )}
             </Paper>
           </Grid>

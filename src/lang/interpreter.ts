@@ -10,6 +10,7 @@ import {
   rootFrame,
   rootNamespace,
 } from './nodes/index.js';
+import { Cons } from './utils/cons.js';
 
 export interface RuntimeFunction {
   (interpreter: Interpreter, ...args: any[]): any;
@@ -17,13 +18,21 @@ export interface RuntimeFunction {
 
 const emptyObject = Object.freeze(Object.create(null));
 
+export interface Snapshot {
+  globalFunctions: Record<string, BeginNode>;
+  globalNamespace: Record<string, any>;
+  topNamespace: Cons<Record<string, any>>;
+  topFrame: Cons<Frame>;
+  lastResult: any;
+}
+
 export class Interpreter {
   dataHandlers: DataHandler[] = [];
   systemFunctions: Record<string, RuntimeFunction> = emptyObject;
   globalFunctions: Record<string, BeginNode> = emptyObject;
   globalNamespace: Record<string, any> = emptyObject;
-  topFrame = rootFrame;
   topNamespace = rootNamespace;
+  topFrame = rootFrame;
   lastResult: any = null;
 
   constructor(public readonly host: unknown) {
@@ -215,21 +224,21 @@ export class Interpreter {
     this.lastResult = value;
   }
 
-  takeSnapshot() {
+  takeSnapshot(): Snapshot {
     return {
       globalFunctions: this.globalFunctions,
       globalNamespace: this.globalNamespace,
-      topFrame: this.topFrame,
       topNamespace: this.topNamespace,
+      topFrame: this.topFrame,
       lastResult: this.lastResult,
     };
   }
 
-  restoreSnapshot(snapshot: any) {
+  restoreSnapshot(snapshot: Snapshot) {
     this.globalFunctions = snapshot.globalFunctions;
     this.globalNamespace = snapshot.globalNamespace;
-    this.topFrame = snapshot.topFrame;
     this.topNamespace = snapshot.topNamespace;
+    this.topFrame = snapshot.topFrame;
     this.lastResult = snapshot.lastResult;
   }
 }
