@@ -8,16 +8,18 @@ import {
 } from '@mui/material';
 import { MouseEvent, useCallback, useState } from 'react';
 
-function SettingsMenu({
+type ViewMode = 'graphics' | 'text';
+
+function SettingsMenu<T extends string>({
   option,
   mode,
   choices,
   updateMode,
 }: {
   option: string;
-  choices: readonly string[];
+  choices: readonly T[];
   mode: string;
-  updateMode: (value: string) => void;
+  updateMode: (value: T) => void;
 }) {
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
 
@@ -33,7 +35,7 @@ function SettingsMenu({
   }, [setAnchor]);
 
   const handleUpdateMode = useCallback(
-    (value: string) => {
+    (value: T) => {
       updateMode(value);
       closeMenu();
     },
@@ -46,15 +48,20 @@ function SettingsMenu({
         {option}
       </Button>
       <Menu open={anchor !== null} anchorEl={anchor} onClose={closeMenu}>
-        {choices.map((value) => (
-          <MenuItem
-            key={`menu-item-${option}-${value}`}
-            selected={mode === value}
-            onClick={() => handleUpdateMode(value)}
-          >
-            {value.charAt(0).toUpperCase() + value.substring(1)}
-          </MenuItem>
-        ))}
+        {choices.map((value) => {
+          const prettyValue = `${value[0].toUpperCase()}${value.substring(1)}`;
+          return (
+            <MenuItem
+              key={value}
+              selected={mode === value}
+              onClick={() => {
+                handleUpdateMode(value);
+              }}
+            >
+              {prettyValue}
+            </MenuItem>
+          );
+        })}
       </Menu>
     </>
   );
@@ -67,7 +74,7 @@ export default function Header({
   isRunning,
 }: {
   viewMode: string;
-  updateViewMode: (value: string) => void;
+  updateViewMode: (mode: ViewMode) => void;
   runProgram: () => void;
   isRunning: boolean;
 }) {
@@ -82,7 +89,7 @@ export default function Header({
         >
           START
         </Typography>
-        <SettingsMenu
+        <SettingsMenu<ViewMode>
           option="view"
           mode={viewMode}
           updateMode={updateViewMode}

@@ -66,7 +66,7 @@ function usePromptForInput() {
 export default function App() {
   const editorRef = useRef<editor.ICodeEditor | null>(null);
 
-  const [viewMode, setViewMode] = useState('graphics');
+  const [viewMode, setViewMode] = useState<'graphics' | 'text'>('graphics');
   const [isRunning, setIsRunning] = useState(false);
 
   const forceRender = useForceRender();
@@ -80,6 +80,12 @@ export default function App() {
   interpreter.registerGlobals(graphicsGlobals);
   interpreter.registerGlobals({
     input: promptForInput,
+    mode(_, [mode]: [string]) {
+      if (mode !== 'graphics' && mode !== 'text') {
+        throw new Error(`invalid mode: ${mode}`);
+      }
+      setViewMode(mode);
+    },
     snapshot() {
       history.push();
     },
