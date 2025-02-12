@@ -10,7 +10,7 @@ export class Circle extends Shape {
     super(shapeProps);
   }
 
-  getElement() {
+  getSVGElement() {
     return (
       <circle cx={this.cx} cy={this.cy} r={this.r} {...this.getSVGProps()} />
     );

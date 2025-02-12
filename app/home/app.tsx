@@ -8,7 +8,7 @@ import {
   ThemeProvider,
   createTheme,
 } from '@mui/material';
-import { ChangeEvent, useCallback, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
 import { AppHost, graphicsGlobals } from '../../src/lang/ext/graphics.js';
 import { Interpreter } from '../../src/lang/interpreter.js';

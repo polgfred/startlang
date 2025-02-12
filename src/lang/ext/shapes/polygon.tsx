@@ -8,7 +8,7 @@ export class Polygon extends Shape {
     super(shapeProps);
   }
 
-  getElement() {
+  getSVGElement() {
     return (
       <polygon
         points={this.points.map(([x, y]) => `${x},${y}`).join(' ')}

@@ -11,7 +11,7 @@ export class Ellipse extends Shape {
     super(shapeProps);
   }
 
-  getElement() {
+  getSVGElement() {
     return (
       <ellipse
         cx={this.cx}

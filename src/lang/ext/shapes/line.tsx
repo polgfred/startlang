@@ -11,7 +11,7 @@ export class Line extends Shape {
     super(shapeProps);
   }
 
-  getElement() {
+  getSVGElement() {
     return (
       <line
         x1={this.x1}

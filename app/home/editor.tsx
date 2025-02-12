@@ -1,5 +1,3 @@
-'use client';
-
 import { type editor } from 'monaco-editor';
 import Monaco, { BeforeMount, OnMount } from '@monaco-editor/react';
 import { RefObject, useCallback } from 'react';

@@ -11,7 +11,7 @@ export class Rect extends Shape {
     super(shapeProps);
   }
 
-  getElement() {
+  getSVGElement() {
     return (
       <rect
         x={this.x}

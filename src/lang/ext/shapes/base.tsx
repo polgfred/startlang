@@ -22,7 +22,7 @@ export abstract class Shape {
 
   constructor(public readonly shapeProps: ShapeProps) {}
 
-  abstract getElement(): JSX.Element;
+  abstract getSVGElement(): JSX.Element;
 
   protected getSVGProps() {
     const { rotate, scalex, scaley, anchor, fill, stroke, opacity } =

@@ -26,7 +26,7 @@ export class Text extends Shape {
     return svgProps;
   }
 
-  getElement() {
+  getSVGElement() {
     return (
       <text x={this.x} y={this.y} {...this.getSVGProps()}>
         {this.text}

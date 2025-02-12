@@ -12,7 +12,7 @@ export default function Graphics({ shapes }: { shapes: readonly Shape[] }) {
     >
       <g>
         {shapes.map((shape, index) => (
-          <Fragment key={index}>{shape.getElement()}</Fragment>
+          <Fragment key={index}>{shape.getSVGElement()}</Fragment>
         ))}
       </g>
     </svg>
