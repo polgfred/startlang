@@ -1,8 +1,133 @@
 import Monaco, { BeforeMount, OnMount } from '@monaco-editor/react';
-import { type editor } from 'monaco-editor';
+import type { editor, languages } from 'monaco-editor';
 import { RefObject, useCallback } from 'react';
 
 import boxScript from '../../tests/box.start';
+
+const languageConfig: languages.LanguageConfiguration = {
+  comments: {
+    lineComment: ';',
+  },
+  brackets: [
+    ['(', ')'],
+    ['[', ']'],
+    ['{', '}'],
+  ],
+  autoClosingPairs: [
+    { open: '[', close: ']', notIn: ['string'] },
+    { open: '(', close: ')', notIn: ['string'] },
+    { open: '{', close: '}', notIn: ['string'] },
+    { open: '"', close: '"', notIn: ['string'] },
+  ],
+  folding: {
+    markers: {
+      start: /^\s*(do|then|else)\b/,
+      end: /^\s*end\b/,
+    },
+  },
+};
+
+const languageDefinition: languages.IMonarchLanguage = {
+  defaultToken: '',
+  keywords: [
+    'and',
+    'begin',
+    'break',
+    'by',
+    'do',
+    'else',
+    'end',
+    'exit',
+    'for',
+    'from',
+    'if',
+    'in',
+    'let',
+    'next',
+    'not',
+    'or',
+    'repeat',
+    'return',
+    'then',
+    'to',
+    'while',
+  ],
+  functions: [
+    // builtins
+    'abs',
+    'acos',
+    'asin',
+    'atan',
+    'bitand',
+    'bitnot',
+    'bitor',
+    'bitxor',
+    'cbrt',
+    'cos',
+    'exp',
+    'join',
+    'keys',
+    'len',
+    'len',
+    'len',
+    'log',
+    'num',
+    'rand',
+    'range',
+    'range',
+    'round',
+    'sin',
+    'split',
+    'sqrt',
+    'tan',
+    // graphics
+    'align',
+    'anchor',
+    'circle',
+    'color',
+    'ellipse',
+    'fill',
+    'font',
+    'line',
+    'polygon',
+    'opacity',
+    'rect',
+    'rotate',
+    'scale',
+    'stroke',
+    'text',
+  ],
+  tokenizer: {
+    root: [
+      [
+        /[a-zA-Z_][\w]*/,
+        {
+          cases: {
+            '@keywords': 'keyword',
+            '@functions': 'support.function',
+            '@default': 'identifier',
+          },
+        },
+      ],
+      [/[ \t\r\n]+/, 'white'],
+      [/;.*$/, 'comment'],
+      [/[,+\-*/%!=<>&|~]/, 'keyword.operator'],
+      [/\d+\.\d+([eE][-+]?\d+)?/, 'number.float'],
+      [/\d+/, 'number'],
+      [/"/, 'string', '@string'],
+    ],
+    string: [
+      [/""/, 'string'],
+      [/{{/, 'string'],
+      [/}}/, 'string'],
+      [/{}/, 'string'],
+      [/{/, { token: 'string', next: '@interp' }],
+      [/[^"{]+/, 'string'],
+      [/"/, 'string', '@pop'],
+    ],
+    interp: [[/}/, 'string', '@pop'], { include: 'root' }],
+  },
+};
 
 export default function Editor({
   editorRef,
@@ -11,129 +136,8 @@ export default function Editor({
 }) {
   const onBeforeMount: BeforeMount = useCallback((monaco) => {
     monaco.languages.register({ id: 'start' });
-    monaco.languages.setLanguageConfiguration('start', {
-      comments: {
-        lineComment: ';',
-      },
-      brackets: [
-        ['(', ')'],
-        ['[', ']'],
-        ['{', '}'],
-      ],
-      autoClosingPairs: [
-        { open: '[', close: ']', notIn: ['string'] },
-        { open: '(', close: ')', notIn: ['string'] },
-        { open: '{', close: '}', notIn: ['string'] },
-        { open: '"', close: '"', notIn: ['string'] },
-      ],
-      folding: {
-        markers: {
-          start: /^\s*(do|then|else)\b/,
-          end: /^\s*end\b/,
-        },
-      },
-    });
-    monaco.languages.setMonarchTokensProvider('start', {
-      defaultToken: '',
-      keywords: [
-        'and',
-        'begin',
-        'break',
-        'by',
-        'do',
-        'else',
-        'end',
-        'exit',
-        'for',
-        'from',
-        'if',
-        'in',
-        'let',
-        'next',
-        'not',
-        'or',
-        'repeat',
-        'return',
-        'then',
-        'to',
-        'while',
-      ],
-      functions: [
-        // builtins
-        'abs',
-        'acos',
-        'asin',
-        'atan',
-        'bitand',
-        'bitnot',
-        'bitor',
-        'bitxor',
-        'cbrt',
-        'cos',
-        'exp',
-        'join',
-        'keys',
-        'len',
-        'len',
-        'len',
-        'log',
-        'num',
-        'rand',
-        'range',
-        'range',
-        'round',
-        'sin',
-        'split',
-        'sqrt',
-        'tan',
-        // graphics
-        'align',
-        'anchor',
-        'circle',
-        'color',
-        'ellipse',
-        'fill',
-        'font',
-        'line',
-        'polygon',
-        'opacity',
-        'rect',
-        'rotate',
-        'scale',
-        'stroke',
-        'text',
-      ],
-      tokenizer: {
-        root: [
-          [
-            /[a-zA-Z_][\w]*/,
-            {
-              cases: {
-                '@keywords': 'keyword',
-                '@functions': 'support.function',
-                '@default': 'identifier',
-              },
-            },
-          ],
-          [/[ \t\r\n]+/, 'white'],
-          [/;.*$/, 'comment'],
-          [/[,+\-*/%!=<>&|~]/, 'keyword.operator'],
-          [/\d+\.\d+([eE][-+]?\d+)?/, 'number.float'],
-          [/\d+/, 'number'],
-          [/"/, 'string', '@string'],
-        ],
-        string: [
-          [/""/, 'string'],
-          [/{{/, 'string'],
-          [/}}/, 'string'],
-          [/{}/, 'string'],
-          [/{/, { token: 'string', next: '@interp' }],
-          [/[^"{]+/, 'string'],
-          [/"/, 'string', '@pop'],
-        ],
-        interp: [[/}/, 'string', '@pop'], { include: 'root' }],
-      },
-    });
+    monaco.languages.setLanguageConfiguration('start', languageConfig);
+    monaco.languages.setMonarchTokensProvider('start', languageDefinition);
   }, []);
 
   const onEditorMount: OnMount = useCallback(
