@@ -40,7 +40,15 @@ export class Interpreter {
   }
 
   run(node: Node) {
+    this.globalFunctions = emptyObject;
+    this.globalNamespace = emptyObject;
     this.topNamespace = rootNamespace;
+    this.topFrame = rootFrame.push(node.makeFrame());
+    this.lastResult = null;
+    return this.runLoop();
+  }
+
+  runIncremental(node: Node) {
     this.topFrame = rootFrame.push(node.makeFrame());
     this.lastResult = null;
     return this.runLoop();

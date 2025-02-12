@@ -58,7 +58,7 @@ async function main() {
 
     try {
       const node = parse(lines.join('\n') + '\n');
-      await interp.run(node);
+      await interp.runIncremental(node);
     } catch (err) {
       if (err instanceof SyntaxError) {
         // get more input
