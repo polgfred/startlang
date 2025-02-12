@@ -1,3 +1,4 @@
+import { produce } from 'immer';
 import { Interpreter } from '../interpreter.js';
 
 import {
@@ -12,14 +13,88 @@ import {
   Rect,
 } from './shapes/index.js';
 
-export interface AppHost {
-  shapes: readonly Shape[];
-  shapeProps: ShapeProps;
-  textProps: TextProps;
-  clearDisplay(): void;
-  updateShapeProps(props: Partial<ShapeProps>): void;
-  updateTextProps(props: Partial<TextProps>): void;
-  addShape(shape: Shape): void;
+type HistoryItem = Pick<
+  Interpreter,
+  | 'globalFunctions'
+  | 'globalNamespace'
+  | 'topFrame'
+  | 'topNamespace'
+  | 'lastResult'
+> &
+  Pick<AppHost, 'shapes' | 'shapeProps' | 'textProps'>;
+
+export class AppHost {
+  constructor(private readonly forceRender: () => void) {}
+
+  shapes: readonly Shape[] = [];
+
+  shapeProps: ShapeProps = {
+    fill: null,
+    stroke: null,
+    opacity: 1,
+    anchor: 'center',
+    rotate: 0,
+    scalex: 1,
+    scaley: 1,
+  };
+
+  textProps: TextProps = {
+    fontFamily: 'Helvetica',
+    fontSize: 36,
+    textAlign: 'start',
+  };
+
+  clearDisplay() {
+    this.shapes = [];
+    this.forceRender();
+  }
+
+  resetShapes(shapes: readonly Shape[]) {
+    this.shapes = shapes;
+    this.forceRender();
+  }
+
+  updateShapeProps(newProps: Partial<ShapeProps>) {
+    this.shapeProps = produce(this.shapeProps, (draft) => {
+      Object.assign(draft, newProps);
+    });
+  }
+
+  updateTextProps(newProps: Partial<TextProps>) {
+    this.textProps = produce(this.textProps, (draft) => {
+      Object.assign(draft, newProps);
+    });
+  }
+
+  addShape(shape: Shape) {
+    this.shapes = produce(this.shapes, (draft) => {
+      draft.push(shape);
+    });
+    this.forceRender();
+  }
+
+  history: HistoryItem[] = [];
+  historyIndex: number = 0;
+
+  clearHistory() {
+    this.history = [];
+    this.historyIndex = 0;
+  }
+
+  pushHistory(historyItem: HistoryItem) {
+    this.history.push(historyItem);
+    this.historyIndex = this.history.length - 1;
+  }
+
+  moveToHistoryIndex(index: number) {
+    this.historyIndex = index;
+
+    const historyItem = this.history[index];
+    this.shapes = historyItem.shapes;
+    this.shapeProps = historyItem.shapeProps;
+    this.textProps = historyItem.textProps;
+    return historyItem;
+  }
 }
 
 function waitForImmediate() {
@@ -29,12 +104,26 @@ function waitForImmediate() {
 }
 
 function getHost(interpreter: Interpreter) {
-  return interpreter.host as AppHost;
+  if (!(interpreter.host instanceof AppHost)) {
+    throw new Error('invalid host for interpreter');
+  }
+  return interpreter.host;
 }
 
 export const graphicsGlobals = {
+  snapshot(interpreter: Interpreter) {
+    const host = getHost(interpreter);
+    host.pushHistory({
+      ...interpreter.takeSnapshot(),
+      shapes: host.shapes,
+      shapeProps: host.shapeProps,
+      textProps: host.textProps,
+    });
+  },
+
   clear(interpreter: Interpreter) {
-    (interpreter.host as AppHost).clearDisplay();
+    const host = getHost(interpreter);
+    host.clearDisplay();
   },
 
   color(interpreter: Interpreter, [red, green, blue, alpha = 1]: number[]) {

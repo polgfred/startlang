@@ -10,7 +10,7 @@ import {
 } from '@mui/material';
 import { useCallback, useRef, useState } from 'react';
 
-import { graphicsGlobals } from '../../src/lang/ext/graphics.js';
+import { AppHost, graphicsGlobals } from '../../src/lang/ext/graphics.js';
 import { Interpreter } from '../../src/lang/interpreter.js';
 import { parse } from '../../src/lang/parser.peggy';
 
@@ -19,7 +19,6 @@ import Graphics from './graphics.jsx';
 import Header from './header.jsx';
 import Inspector from './inspector.jsx';
 import Term from './term.jsx';
-import { useAppHost } from './use-app-host.js';
 
 const theme = createTheme({
   palette: {
@@ -43,17 +42,10 @@ export default function App() {
     prompt: '',
     onInputComplete: () => {},
   });
-  const [{ hist, snap }, setHistory] = useState({
-    hist: [] as any[],
-    snap: 0,
-  });
 
-  const { current: appHost } = useAppHost(forceRender);
-
-  const refreshState = useCallback(() => {
-    setHistory({ hist: [], snap: 0 });
-    appHost.clearDisplay();
-  }, []);
+  const { current: appHost } = useRef(new AppHost(forceRender));
+  const { current: interp } = useRef(new Interpreter(appHost));
+  interp.registerGlobals(graphicsGlobals);
 
   const handleInput = useCallback(
     (input) => {
@@ -68,57 +60,31 @@ export default function App() {
     [onInputComplete]
   );
 
-  const updateSlider = useCallback(
-    (ev) => {
-      const snap = ev.target.value;
-      const current = hist[snap];
-      if (current) {
-        console.log(snap, current);
-        setHistory({ hist, snap });
-        appHost.resetShapes(current.gfx);
-        // setGfx(() => current.gfx);
-        // setBuf(() => current.buf);
-      }
-    },
-    [hist]
-  );
-
   const runProgram = useCallback(async () => {
-    refreshState();
-
-    const hist = [] as any[];
-
-    const interp = new Interpreter(appHost);
-    interp.registerGlobals(graphicsGlobals);
-    interp.registerGlobals({
-      snapshot() {
-        hist.push({
-          ...interp.snapshot(),
-          gfx: appHost.shapes,
-          // buf: buf.current,
-        });
-
-        setHistory({
-          hist,
-          snap: hist.length,
-        });
-      },
-    });
+    appHost.clearHistory();
+    appHost.clearDisplay();
+    forceRender();
 
     try {
       setIsRunning(true);
       const source = (editorRef.current?.getValue() ?? '') + '\n';
       const rootNode = parse(source);
       await interp.run(rootNode);
-    } catch (err) {
-      /* eslint-disable no-console */
-      console.log(err.stack);
-      console.log(interp.snapshot());
-      /* eslint-enable no-console */
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        // eslint-disable-next-line no-console
+        console.log(err.stack);
+      }
     } finally {
       setIsRunning(false);
     }
-  }, [refreshState]);
+  }, []);
+
+  const updateSlider = useCallback((ev) => {
+    const historyItem = appHost.moveToHistoryIndex(ev.target.value);
+    interp.restoreSnapshot(historyItem);
+    forceRender();
+  }, []);
 
   return (
     <ThemeProvider theme={theme}>
@@ -201,7 +167,11 @@ export default function App() {
                 padding: '10px',
               }}
             >
-              <Inspector hist={hist} snap={snap} updateSlider={updateSlider} />
+              <Inspector
+                hist={appHost.history}
+                snap={appHost.historyIndex}
+                updateSlider={updateSlider}
+              />
             </Paper>
           </Grid>
           <Grid

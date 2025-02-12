@@ -94,8 +94,8 @@ export default function Inspector({ hist, snap, updateSlider }) {
       >
         {current && (
           <>
-            <NamespaceInspector title="Global" ns={current.gns} />
-            <NamespaceInspector title="Local" ns={current.lns.head} />
+            <NamespaceInspector title="Global" ns={current.globalNamespace} />
+            <NamespaceInspector title="Local" ns={current.topNamespace.head} />
           </>
         )}
       </div>

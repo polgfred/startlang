@@ -215,21 +215,21 @@ export class Interpreter {
     this.lastResult = value;
   }
 
-  snapshot() {
+  takeSnapshot() {
     return {
-      gfn: this.globalFunctions,
-      gns: this.globalNamespace,
-      fra: this.topFrame,
-      lns: this.topNamespace,
-      res: this.lastResult,
+      globalFunctions: this.globalFunctions,
+      globalNamespace: this.globalNamespace,
+      topFrame: this.topFrame,
+      topNamespace: this.topNamespace,
+      lastResult: this.lastResult,
     };
   }
 
-  reset(snap: any) {
-    this.globalFunctions = snap.gfn;
-    this.globalNamespace = snap.gns;
-    this.topFrame = snap.fra;
-    this.topNamespace = snap.lns;
-    this.lastResult = snap.res;
+  restoreSnapshot(snapshot: any) {
+    this.globalFunctions = snapshot.globalFunctions;
+    this.globalNamespace = snapshot.globalNamespace;
+    this.topFrame = snapshot.topFrame;
+    this.topNamespace = snapshot.topNamespace;
+    this.lastResult = snapshot.lastResult;
   }
 }
