@@ -27,7 +27,7 @@ export class BrowserHost {
 
   shapes: readonly Shape[] = emptyArray;
 
-  shapeProps: ShapeProps = {
+  shapeProps: ShapeProps = Object.freeze({
     fill: null,
     stroke: null,
     opacity: 1,
@@ -35,13 +35,13 @@ export class BrowserHost {
     rotate: 0,
     scalex: 1,
     scaley: 1,
-  };
+  });
 
-  textProps: TextProps = {
+  textProps: TextProps = Object.freeze({
     fontFamily: 'Helvetica',
     fontSize: 36,
     textAlign: 'start',
-  };
+  });
 
   clearDisplay() {
     this.shapes = emptyArray;
