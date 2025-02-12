@@ -1,15 +1,15 @@
 import { Interpreter, Snapshot } from '../interpreter.js';
 
-import { AppHost, AppHostSnapshot } from './graphics.js';
+import { BrowserHost, BrowserSnapshot } from './browser.js';
 
 export class History {
   constructor(
     private readonly interpreter: Interpreter,
-    private readonly host: AppHost
+    private readonly host: BrowserHost
   ) {}
 
   private history: Snapshot[] = [];
-  private hostHistory: AppHostSnapshot[] = [];
+  private hostHistory: BrowserSnapshot[] = [];
   currentIndex = 0;
 
   isEmpty() {

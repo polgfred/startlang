@@ -10,7 +10,7 @@ import {
 } from '@mui/material';
 import { useCallback, useRef, useState } from 'react';
 
-import { AppHost, graphicsGlobals } from '../../src/lang/ext/graphics.js';
+import { BrowserHost, browserGlobals } from '../../src/lang/ext/browser.js';
 import { History } from '../../src/lang/ext/history.js';
 import { Interpreter } from '../../src/lang/interpreter.js';
 import { parse } from '../../src/lang/parser.peggy';
@@ -71,13 +71,13 @@ export default function App() {
 
   const forceRender = useForceRender();
 
-  const { current: appHost } = useRef(new AppHost(forceRender));
+  const { current: appHost } = useRef(new BrowserHost(forceRender));
   const { current: interpreter } = useRef(new Interpreter(appHost));
   const { current: history } = useRef(new History(interpreter, appHost));
 
   const { inputState, promptForInput } = usePromptForInput();
 
-  interpreter.registerGlobals(graphicsGlobals);
+  interpreter.registerGlobals(browserGlobals);
   interpreter.registerGlobals({
     input: promptForInput,
     mode(_, [mode]: [string]) {

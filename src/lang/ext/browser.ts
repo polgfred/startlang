@@ -14,7 +14,7 @@ import {
   Rect,
 } from './shapes/index.js';
 
-export interface AppHostSnapshot {
+export interface BrowserSnapshot {
   shapes: readonly Shape[];
   shapeProps: ShapeProps;
   textProps: TextProps;
@@ -22,7 +22,7 @@ export interface AppHostSnapshot {
 
 const emptyArray = Object.freeze([]);
 
-export class AppHost {
+export class BrowserHost {
   constructor(private readonly forceRender: () => void) {}
 
   shapes: readonly Shape[] = emptyArray;
@@ -84,7 +84,7 @@ export class AppHost {
     });
   }
 
-  takeSnapshot(): AppHostSnapshot {
+  takeSnapshot(): BrowserSnapshot {
     return {
       shapes: this.shapes,
       shapeProps: this.shapeProps,
@@ -92,7 +92,7 @@ export class AppHost {
     };
   }
 
-  restoreSnapshot(snapshot: AppHostSnapshot) {
+  restoreSnapshot(snapshot: BrowserSnapshot) {
     this.shapes = snapshot.shapes;
     this.shapeProps = snapshot.shapeProps;
     this.textProps = snapshot.textProps;
@@ -106,13 +106,13 @@ function waitForImmediate() {
 }
 
 function getHost(interpreter: Interpreter) {
-  if (!(interpreter.host instanceof AppHost)) {
+  if (!(interpreter.host instanceof BrowserHost)) {
     throw new Error('invalid host for interpreter');
   }
   return interpreter.host;
 }
 
-export const graphicsGlobals = {
+export const browserGlobals = {
   clear(interpreter: Interpreter) {
     const host = getHost(interpreter);
     host.clearDisplay();
