@@ -1,13 +1,14 @@
-import { Shape } from './base.jsx';
+import { Shape, ShapeProps } from './base.jsx';
 
 export class Rect extends Shape {
   constructor(
     public readonly x: number,
     public readonly y: number,
     public readonly width: number,
-    public readonly height: number
+    public readonly height: number,
+    shapeProps: ShapeProps
   ) {
-    super();
+    super(shapeProps);
   }
 
   getElement() {

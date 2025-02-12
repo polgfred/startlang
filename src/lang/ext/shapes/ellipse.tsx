@@ -1,13 +1,14 @@
-import { Shape } from './base.jsx';
+import { Shape, ShapeProps } from './base.jsx';
 
 export class Ellipse extends Shape {
   constructor(
     public readonly cx: number,
     public readonly cy: number,
     public readonly rx: number,
-    public readonly ry: number
+    public readonly ry: number,
+    shapeProps: ShapeProps
   ) {
-    super();
+    super(shapeProps);
   }
 
   getElement() {

@@ -1,12 +1,16 @@
 'use client';
 
+import { type editor } from 'monaco-editor';
 import Monaco, { BeforeMount, OnMount } from '@monaco-editor/react';
-import { useCallback } from 'react';
+import { RefObject, useCallback } from 'react';
 
-import { parse } from '../../src/lang/parser.peggy';
 import boxScript from '../../tests/box.start';
 
-export default function Editor({ setParser }) {
+export default function Editor({
+  editorRef,
+}: {
+  editorRef: RefObject<editor.ICodeEditor | null>;
+}) {
   const onBeforeMount: BeforeMount = useCallback((monaco) => {
     monaco.languages.register({ id: 'start' });
     monaco.languages.setLanguageConfiguration('start', {
@@ -135,18 +139,10 @@ export default function Editor({ setParser }) {
     });
   }, []);
 
-  const onEditorMount: OnMount = useCallback(
-    (editor) => {
-      editor.focus();
-
-      setParser((/* parser */) => {
-        return () => {
-          return parse(editor.getValue() + '\n');
-        };
-      });
-    },
-    [setParser]
-  );
+  const onEditorMount: OnMount = useCallback((editor) => {
+    editorRef.current = editor;
+    editor.focus();
+  }, []);
 
   return (
     <Monaco

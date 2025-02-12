@@ -1,8 +1,11 @@
-import { Shape } from './base.jsx';
+import { Shape, ShapeProps } from './base.jsx';
 
 export class Polygon extends Shape {
-  constructor(public readonly points: [number, number][]) {
-    super();
+  constructor(
+    public readonly points: [number, number][],
+    shapeProps: ShapeProps
+  ) {
+    super(shapeProps);
   }
 
   getElement() {

@@ -1,12 +1,8 @@
-import { produce } from 'immer';
-
 import { Interpreter } from '../interpreter.js';
 
 import {
   ShapeProps,
   TextProps,
-  shapeProps,
-  textProps,
   Shape,
   Text,
   Polygon,
@@ -16,21 +12,14 @@ import {
   Rect,
 } from './shapes/index.js';
 
-interface GraphicsProps {
+export interface AppHost {
   shapes: readonly Shape[];
   shapeProps: ShapeProps;
   textProps: TextProps;
-}
-
-export const graphicsProps: GraphicsProps = Object.freeze({
-  shapes: Object.freeze([]),
-  shapeProps,
-  textProps,
-});
-
-interface AppHost {
   clearDisplay(): void;
-  setGraphicsData(next: (props: GraphicsProps) => GraphicsProps): void;
+  updateShapeProps(props: Partial<ShapeProps>): void;
+  updateTextProps(props: Partial<TextProps>): void;
+  addShape(shape: Shape): void;
 }
 
 function waitForImmediate() {
@@ -39,30 +28,8 @@ function waitForImmediate() {
   });
 }
 
-function updateGraphicsProps(
-  interpreter: Interpreter,
-  shapePropsOverrides: Partial<ShapeProps> | null = null,
-  textPropsOverrides: Partial<TextProps> | null = null
-) {
-  (interpreter.host as AppHost).setGraphicsData((graphicsProps) =>
-    produce(graphicsProps, (draft) => {
-      Object.assign(draft.shapeProps, shapePropsOverrides);
-      Object.assign(draft.textProps, textPropsOverrides);
-    })
-  );
-}
-
-function addShape(interpreter: Interpreter, shape: Shape) {
-  (interpreter.host as AppHost).setGraphicsData((graphicsProps) =>
-    produce(graphicsProps, (draft) => {
-      draft.shapes.push(
-        produce(shape, (draft2) => {
-          draft2.shapeProps = graphicsProps.shapeProps;
-          draft2.textProps = graphicsProps.textProps;
-        })
-      );
-    })
-  );
+function getHost(interpreter: Interpreter) {
+  return interpreter.host as AppHost;
 }
 
 export const graphicsGlobals = {
@@ -83,65 +50,79 @@ export const graphicsGlobals = {
     }
   },
 
-  fill(interpreter: Interpreter, [color]: [string]) {
-    updateGraphicsProps(interpreter, { fill: color });
+  fill(interpreter: Interpreter, [color]: [string | null]) {
+    const host = getHost(interpreter);
+    host.updateShapeProps({ fill: color });
   },
 
-  stroke(interpreter: Interpreter, [color]: [string]) {
-    updateGraphicsProps(interpreter, { stroke: color });
+  stroke(interpreter: Interpreter, [color]: [string | null]) {
+    const host = getHost(interpreter);
+    host.updateShapeProps({ stroke: color });
   },
 
   opacity(interpreter: Interpreter, [value]: [number]) {
-    updateGraphicsProps(interpreter, { opacity: value });
+    const host = getHost(interpreter);
+    host.updateShapeProps({ opacity: value });
   },
 
   anchor(interpreter: Interpreter, [anchor]: [string]) {
-    updateGraphicsProps(interpreter, { anchor });
+    const host = getHost(interpreter);
+    host.updateShapeProps({ anchor });
   },
 
   rotate(interpreter: Interpreter, [angle]: [number]) {
-    updateGraphicsProps(interpreter, { rotate: angle });
+    const host = getHost(interpreter);
+    host.updateShapeProps({ rotate: angle });
   },
 
   scale(interpreter: Interpreter, [scalex, scaley = scalex]: number[]) {
-    updateGraphicsProps(interpreter, { scalex, scaley });
+    const host = getHost(interpreter);
+    host.updateShapeProps({ scalex, scaley });
   },
 
   font(interpreter: Interpreter, [fontFamily, fontSize]: [string, number]) {
-    updateGraphicsProps(interpreter, null, { fontFamily, fontSize });
+    const host = getHost(interpreter);
+    host.updateTextProps({ fontFamily, fontSize });
   },
 
   align(interpreter: Interpreter, [textAlign]: [string]) {
-    updateGraphicsProps(interpreter, null, { textAlign });
+    const host = getHost(interpreter);
+    host.updateTextProps({ textAlign });
   },
 
   rect(interpreter: Interpreter, [x, y, width, height]: number[]) {
-    addShape(interpreter, new Rect(x, y, width, height));
+    const host = getHost(interpreter);
+    host.addShape(new Rect(x, y, width, height, host.shapeProps));
     return waitForImmediate();
   },
 
   circle(interpreter: Interpreter, [cx, cy, radius]: number[]) {
-    addShape(interpreter, new Circle(cx, cy, radius));
+    const host = getHost(interpreter);
+    host.addShape(new Circle(cx, cy, radius, host.shapeProps));
     return waitForImmediate();
   },
 
   ellipse(interpreter: Interpreter, [cx, cy, rx, ry]: number[]) {
-    addShape(interpreter, new Ellipse(cx, cy, rx, ry));
+    const host = getHost(interpreter);
+    host.addShape(new Ellipse(cx, cy, rx, ry, host.shapeProps));
     return waitForImmediate();
   },
 
   line(interpreter: Interpreter, [x1, y1, x2, y2]: number[]) {
-    addShape(interpreter, new Line(x1, y1, x2, y2));
+    const host = getHost(interpreter);
+    host.addShape(new Line(x1, y1, x2, y2, host.shapeProps));
     return waitForImmediate();
   },
 
   polygon(interpreter: Interpreter, [points]: [[number, number][]]) {
-    addShape(interpreter, new Polygon(points));
+    const host = getHost(interpreter);
+    host.addShape(new Polygon(points, host.shapeProps));
     return waitForImmediate();
   },
 
   text(interpreter: Interpreter, [x, y, text]: [number, number, string]) {
-    addShape(interpreter, new Text(x, y, text));
+    const host = getHost(interpreter);
+    host.addShape(new Text(x, y, text, host.textProps, host.shapeProps));
     return waitForImmediate();
   },
 };

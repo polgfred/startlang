@@ -1,12 +1,13 @@
-import { Shape } from './base.jsx';
+import { Shape, ShapeProps } from './base.jsx';
 
 export class Circle extends Shape {
   constructor(
     public readonly cx: number,
     public readonly cy: number,
-    public readonly r: number
+    public readonly r: number,
+    shapeProps: ShapeProps
   ) {
-    super();
+    super(shapeProps);
   }
 
   getElement() {

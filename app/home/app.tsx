@@ -1,5 +1,6 @@
 'use client';
 
+import { type editor } from 'monaco-editor';
 import {
   Grid2 as Grid,
   Paper,
@@ -7,16 +8,18 @@ import {
   ThemeProvider,
   createTheme,
 } from '@mui/material';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
-import { graphicsGlobals, graphicsProps } from '../../src/lang/ext/graphics.js';
+import { graphicsGlobals } from '../../src/lang/ext/graphics.js';
 import { Interpreter } from '../../src/lang/interpreter.js';
+import { parse } from '../../src/lang/parser.peggy';
 
 import Editor from './editor.jsx';
 import Graphics from './graphics.jsx';
 import Header from './header.jsx';
 import Inspector from './inspector.jsx';
 import Term from './term.jsx';
+import { useAppHost } from './use-app-host.js';
 
 const theme = createTheme({
   palette: {
@@ -31,7 +34,7 @@ const theme = createTheme({
 
 export default function App() {
   const [viewMode, setViewMode] = useState('graphics');
-  const [parser, setParser] = useState(() => () => ({}) as any);
+  const editorRef = useRef<editor.ICodeEditor | null>(null);
   const [isRunning, setIsRunning] = useState(false);
   const [{ prompt, onInputComplete }, setInputState] = useState({
     prompt: '',
@@ -42,38 +45,12 @@ export default function App() {
     snap: 0,
   });
 
-  const [, setRenderCount] = useState(0);
-  const forceRerender = useCallback(() => {
-    setRenderCount((count) => count + 1);
-  }, []);
-
-  const gfx = useRef(graphicsProps);
-  const setGfx = useCallback(
-    (mut) => {
-      gfx.current = mut(gfx.current);
-      forceRerender();
-    },
-    [forceRerender]
-  );
-
-  const buf = useRef([]);
-  const setBuf = useCallback(
-    (mut) => {
-      buf.current = mut(buf.current);
-      forceRerender();
-    },
-    [forceRerender]
-  );
-
-  const clearDisplay = useCallback(() => {
-    setGfx(() => graphicsProps);
-    setBuf(() => []);
-  }, [setBuf, setGfx]);
+  const appHost = useAppHost();
 
   const refreshState = useCallback(() => {
     setHistory({ hist: [], snap: 0 });
-    clearDisplay();
-  }, [clearDisplay]);
+    appHost.clearDisplay();
+  }, []);
 
   const handleInput = useCallback(
     (input) => {
@@ -88,43 +65,29 @@ export default function App() {
     [onInputComplete]
   );
 
-  const updateSlider = useCallback(
-    (ev) => {
-      const snap = ev.target.value;
-      const current = hist[snap];
-
-      if (current) {
-        setHistory({ hist, snap });
-        setGfx(() => current.gfx);
-        setBuf(() => current.buf);
-      }
-    },
-    [hist, setBuf, setGfx]
-  );
-
-  const bindings = useMemo(
-    () => ({
-      clearDisplay,
-      setGraphicsData: setGfx,
-      setBuf,
-      setInputState,
-    }),
-    [clearDisplay, setBuf, setGfx]
-  );
+  const updateSlider = useCallback((ev) => {
+    // const snap = ev.target.value;
+    // const current = hist[snap];
+    // if (current) {
+    //   setHistory({ hist, snap });
+    //   setGfx(() => current.gfx);
+    //   setBuf(() => current.buf);
+    // }
+  }, []);
 
   const runProgram = useCallback(async () => {
     refreshState();
 
     const hist = [] as any[];
 
-    const interp = new Interpreter(bindings);
+    const interp = new Interpreter(appHost);
     interp.registerGlobals(graphicsGlobals);
     interp.registerGlobals({
       snapshot() {
         hist.push({
           ...interp.snapshot(),
-          gfx: gfx.current,
-          buf: buf.current,
+          // gfx: gfx.current,
+          // buf: buf.current,
         });
 
         setHistory({
@@ -136,7 +99,9 @@ export default function App() {
 
     try {
       setIsRunning(true);
-      await interp.run(parser());
+      const source = (editorRef.current?.getValue() ?? '') + '\n';
+      const rootNode = parse(source);
+      await interp.run(rootNode);
     } catch (err) {
       /* eslint-disable no-console */
       console.log(err.stack);
@@ -145,7 +110,7 @@ export default function App() {
     } finally {
       setIsRunning(false);
     }
-  }, [refreshState, bindings, gfx, buf, parser]);
+  }, [refreshState]);
 
   return (
     <ThemeProvider theme={theme}>
@@ -192,7 +157,7 @@ export default function App() {
                     flex: 3,
                   }}
                 >
-                  <Graphics shapes={gfx.current.shapes} />
+                  <Graphics shapes={appHost.shapes} />
                 </Paper>
               )}
               {viewMode === 'text' && (
@@ -245,7 +210,7 @@ export default function App() {
                 padding: '10px',
               }}
             >
-              <Editor setParser={setParser} />
+              <Editor editorRef={editorRef} />
             </Paper>
           </Grid>
         </Grid>
