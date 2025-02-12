@@ -1,5 +1,5 @@
-import { type editor } from 'monaco-editor';
 import Monaco, { BeforeMount, OnMount } from '@monaco-editor/react';
+import { type editor } from 'monaco-editor';
 import { RefObject, useCallback } from 'react';
 
 import boxScript from '../../tests/box.start';
@@ -137,10 +137,13 @@ export default function Editor({
     });
   }, []);
 
-  const onEditorMount: OnMount = useCallback((editor) => {
-    editorRef.current = editor;
-    editor.focus();
-  }, []);
+  const onEditorMount: OnMount = useCallback(
+    (editor) => {
+      editorRef.current = editor;
+      editor.focus();
+    },
+    [editorRef]
+  );
 
   return (
     <Monaco

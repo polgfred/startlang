@@ -45,6 +45,7 @@ export class LetIndexFrame extends Frame {
       case 2: {
         interpreter.swapFrame(this, 3);
         interpreter.pushFrame(value);
+        break;
       }
       case 3: {
         interpreter.setVariableIndex(

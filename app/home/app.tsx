@@ -1,6 +1,5 @@
 'use client';
 
-import { type editor } from 'monaco-editor';
 import {
   Grid2 as Grid,
   Paper,
@@ -8,6 +7,7 @@ import {
   ThemeProvider,
   createTheme,
 } from '@mui/material';
+import { type editor } from 'monaco-editor';
 import { useCallback, useRef, useState } from 'react';
 
 import { BrowserHost, browserGlobals } from '../../src/lang/ext/browser.js';
@@ -71,9 +71,9 @@ export default function App() {
 
   const forceRender = useForceRender();
 
-  const { current: appHost } = useRef(new BrowserHost(forceRender));
-  const { current: interpreter } = useRef(new Interpreter(appHost));
-  const { current: history } = useRef(new History(interpreter, appHost));
+  const { current: host } = useRef(new BrowserHost(forceRender));
+  const { current: interpreter } = useRef(new Interpreter(host));
+  const { current: history } = useRef(new History(interpreter, host));
 
   const { inputState, promptForInput } = usePromptForInput();
 
@@ -91,15 +91,18 @@ export default function App() {
     },
   });
 
-  const updateSlider = useCallback((index: number) => {
-    history.moveToIndex(index);
-    forceRender();
-  }, []);
+  const updateSlider = useCallback(
+    (index: number) => {
+      history.moveToIndex(index);
+      forceRender();
+    },
+    [forceRender, history]
+  );
 
   const runProgram = useCallback(async () => {
     history.clear();
-    appHost.clearDisplay();
-    appHost.clearTextBuffer();
+    host.clearDisplay();
+    host.clearTextBuffer();
     forceRender();
 
     try {
@@ -109,12 +112,13 @@ export default function App() {
       await interpreter.run(rootNode);
     } catch (err: unknown) {
       if (err instanceof Error) {
+        // eslint-disable-next-line no-console
         console.error(err.stack);
       }
     } finally {
       setIsRunning(false);
     }
-  }, []);
+  }, [forceRender, history, host, interpreter]);
 
   return (
     <ThemeProvider theme={theme}>
@@ -161,7 +165,7 @@ export default function App() {
                     flex: 3,
                   }}
                 >
-                  <Graphics shapes={appHost.shapes} />
+                  <Graphics shapes={host.shapes} />
                 </Paper>
               )}
               {viewMode === 'text' && (
@@ -174,10 +178,7 @@ export default function App() {
                     flex: 1,
                   }}
                 >
-                  <Term
-                    textBuffer={appHost.textBuffer}
-                    inputState={inputState}
-                  />
+                  <Term textBuffer={host.textBuffer} inputState={inputState} />
                 </Paper>
               )}
             </Stack>

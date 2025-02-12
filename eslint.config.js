@@ -1,15 +1,18 @@
-import js from '@eslint/js';
+import eslint from '@eslint/js';
+import tseslint from 'typescript-eslint';
 import importPlugin from 'eslint-plugin-import';
 import reactPlugin from 'eslint-plugin-react';
 import reactHooksPlugin from 'eslint-plugin-react-hooks';
 import globals from 'globals';
 
-export default [
-  js.configs.recommended,
+export default tseslint.config(
+  eslint.configs.recommended,
+  tseslint.configs.strict,
   {
-    files: ['app/**/*.js', 'app/**/*.jsx', 'src/**/*.js'],
+    files: ['app/**/*.{ts,tsx}', 'src/**/*.{ts,tsx}'],
 
     plugins: {
+      typescript: tseslint,
       import: importPlugin,
       react: reactPlugin,
       'react-hooks': reactHooksPlugin,
@@ -36,6 +39,7 @@ export default [
         node: {
           extensions: ['.js', '.jsx'],
         },
+        typescript: true,
       },
 
       react: {
@@ -45,6 +49,9 @@ export default [
 
     rules: {
       'no-console': 'warn',
+
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-unused-vars': 'off',
 
       'import/no-unresolved': 'error',
       'import/order': [
@@ -66,5 +73,5 @@ export default [
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
     },
-  },
-];
+  }
+);

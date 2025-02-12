@@ -31,6 +31,7 @@ export class ReturnValueFrame extends Frame {
     switch (this.state) {
       case 0: {
         interpreter.swapFrame(this, 1);
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         interpreter.pushFrame(this.node.result!);
         break;
       }

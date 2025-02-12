@@ -23,7 +23,7 @@ export default function Inspector({
     (ev: ChangeEvent<HTMLInputElement>) => {
       updateSlider(Number(ev.target.value));
     },
-    []
+    [updateSlider]
   );
 
   return (

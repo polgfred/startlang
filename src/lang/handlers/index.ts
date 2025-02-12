@@ -1,11 +1,11 @@
+import { Interpreter } from '../interpreter.js';
+
 import { BooleanHandler } from './boolean.js';
 import { ListHandler } from './list.js';
 import { NoneHandler } from './none.js';
 import { NumberHandler } from './number.js';
 import { StringHandler } from './string.js';
 import { TableHandler } from './table.js';
-
-import { Interpreter } from '../interpreter.js';
 
 export { DataHandler } from './base.js';
 
