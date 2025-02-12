@@ -99,7 +99,7 @@ export class BrowserHost {
   }
 }
 
-function waitForImmediate() {
+function waitForRepaint() {
   return new Promise((resolve) => {
     setTimeout(resolve, 0);
   });
@@ -174,37 +174,37 @@ export const browserGlobals = {
   rect(interpreter: Interpreter, [x, y, width, height]: number[]) {
     const host = getHost(interpreter);
     host.pushShape(new Rect(x, y, width, height, host.shapeProps));
-    return waitForImmediate();
+    return waitForRepaint();
   },
 
   circle(interpreter: Interpreter, [cx, cy, radius]: number[]) {
     const host = getHost(interpreter);
     host.pushShape(new Circle(cx, cy, radius, host.shapeProps));
-    return waitForImmediate();
+    return waitForRepaint();
   },
 
   ellipse(interpreter: Interpreter, [cx, cy, rx, ry]: number[]) {
     const host = getHost(interpreter);
     host.pushShape(new Ellipse(cx, cy, rx, ry, host.shapeProps));
-    return waitForImmediate();
+    return waitForRepaint();
   },
 
   line(interpreter: Interpreter, [x1, y1, x2, y2]: number[]) {
     const host = getHost(interpreter);
     host.pushShape(new Line(x1, y1, x2, y2, host.shapeProps));
-    return waitForImmediate();
+    return waitForRepaint();
   },
 
   polygon(interpreter: Interpreter, [points]: [[number, number][]]) {
     const host = getHost(interpreter);
     host.pushShape(new Polygon(points, host.shapeProps));
-    return waitForImmediate();
+    return waitForRepaint();
   },
 
   text(interpreter: Interpreter, [x, y, text]: [number, number, string]) {
     const host = getHost(interpreter);
     host.pushShape(new Text(x, y, text, host.textProps, host.shapeProps));
-    return waitForImmediate();
+    return waitForRepaint();
   },
 
   print(interpreter: Interpreter, [text]: [string]) {
