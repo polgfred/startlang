@@ -28,7 +28,7 @@ export interface Snapshot {
 
 export class Interpreter {
   dataHandlers: DataHandler[] = [];
-  systemFunctions: Record<string, RuntimeFunction> = emptyObject;
+  runtimeFunctions: Record<string, RuntimeFunction> = emptyObject;
   globalFunctions: Record<string, BeginNode> = emptyObject;
   globalNamespace: Record<string, any> = emptyObject;
   topNamespace = rootNamespace;
@@ -39,10 +39,20 @@ export class Interpreter {
     installHandlers(this);
   }
 
-  registerGlobals(funcs: Record<string, RuntimeFunction>) {
-    this.systemFunctions = produce(this.systemFunctions, (draft) => {
-      Object.assign(draft, funcs);
-    });
+  run(node: Node) {
+    this.topNamespace = rootNamespace;
+    this.topFrame = rootFrame.push(node.makeFrame());
+    this.lastResult = null;
+    return this.runLoop();
+  }
+
+  async runLoop() {
+    while (this.topFrame !== rootFrame) {
+      const result = this.topFrame.head.visit(this);
+      if (result instanceof Promise) {
+        await result;
+      }
+    }
   }
 
   registerHandler(handler: DataHandler) {
@@ -56,25 +66,19 @@ export class Interpreter {
         return handler;
       }
     }
-
     throw new Error(`could not determine type for ${value}`);
   }
 
-  run(node: Node) {
-    this.topNamespace = rootNamespace;
-    this.topFrame = rootFrame.push(node.makeFrame());
-    this.lastResult = null;
-
-    return this.runLoop();
+  registerGlobals(funcs: Record<string, RuntimeFunction>) {
+    this.runtimeFunctions = produce(this.runtimeFunctions, (draft) => {
+      Object.assign(draft, funcs);
+    });
   }
 
-  async runLoop() {
-    while (this.topFrame !== rootFrame) {
-      const result = this.topFrame.head.visit(this);
-      if (result instanceof Promise) {
-        await result;
-      }
-    }
+  defineGlobalFunction(node: BeginNode) {
+    this.globalFunctions = produce(this.globalFunctions, (draft) => {
+      draft[node.name] = node;
+    });
   }
 
   swapFrame<T extends Frame>(
@@ -201,12 +205,6 @@ export class Interpreter {
     return leftHandler.evalBinaryOp(op, left, right);
   }
 
-  installGlobalFunction(node: BeginNode) {
-    this.globalFunctions = produce(this.globalFunctions, (draft) => {
-      draft[node.name] = node;
-    });
-  }
-
   invokeRuntimeFunction(name: string, args: any[]) {
     if (args.length > 0) {
       const handler = this.getHandler(args[0]);
@@ -214,8 +212,8 @@ export class Interpreter {
         return handler.methods[name](this, args);
       }
     }
-    if (name in this.systemFunctions) {
-      return this.systemFunctions[name](this, args);
+    if (name in this.runtimeFunctions) {
+      return this.runtimeFunctions[name](this, args);
     }
     throw new Error(`object not found or not a function: ${name}`);
   }
