@@ -14,11 +14,9 @@ export default function Graphics({ shapes }: { shapes: readonly Shape[] }) {
         width: '100%',
       }}
     >
-      <g>
-        {shapes.map((shape, index) => (
-          <ShapeElement key={index} shape={shape} />
-        ))}
-      </g>
+      {shapes.map((shape, index) => (
+        <ShapeElement key={index} shape={shape} />
+      ))}
     </svg>
   );
 }
