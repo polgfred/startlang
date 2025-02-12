@@ -8,7 +8,7 @@ import {
   ThemeProvider,
   createTheme,
 } from '@mui/material';
-import { useCallback, useRef, useState } from 'react';
+import { ChangeEvent, useCallback, useRef, useState } from 'react';
 
 import { AppHost, graphicsGlobals } from '../../src/lang/ext/graphics.js';
 import { Interpreter } from '../../src/lang/interpreter.js';
@@ -80,8 +80,8 @@ export default function App() {
     }
   }, []);
 
-  const updateSlider = useCallback((ev) => {
-    const historyItem = appHost.moveToHistoryIndex(ev.target.value);
+  const updateSlider = useCallback((ev: ChangeEvent<HTMLInputElement>) => {
+    const historyItem = appHost.moveToHistoryIndex(Number(ev.target.value));
     interp.restoreSnapshot(historyItem);
     forceRender();
   }, []);
