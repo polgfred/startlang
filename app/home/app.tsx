@@ -221,7 +221,7 @@ export default function App() {
                 padding: '10px',
               }}
             >
-              <Editor editorRef={editorRef} />
+              <Editor editorRef={editorRef} runProgram={runProgram} />
             </Paper>
           </Grid>
         </Grid>

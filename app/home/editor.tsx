@@ -131,8 +131,10 @@ const languageDefinition: languages.IMonarchLanguage = {
 
 export default function Editor({
   editorRef,
+  runProgram,
 }: {
   editorRef: RefObject<editor.ICodeEditor | null>;
+  runProgram: () => void;
 }) {
   const onBeforeMount: BeforeMount = useCallback((monaco) => {
     monaco.languages.register({ id: 'start' });
@@ -143,9 +145,14 @@ export default function Editor({
   const onEditorMount: OnMount = useCallback(
     (editor) => {
       editorRef.current = editor;
+      editor.onKeyUp((ev) => {
+        if (ev.code === 'Enter' && ev.ctrlKey) {
+          runProgram();
+        }
+      });
       editor.focus();
     },
-    [editorRef]
+    [editorRef, runProgram]
   );
 
   return (
