@@ -12,25 +12,25 @@ import {
 import { Cons } from './utils/cons.js';
 
 export interface RuntimeFunction {
-  (interpreter: Interpreter, ...args: any[]): any;
+  (interpreter: Interpreter, ...args: any[]): void | Promise<void>;
 }
 
 const emptyObject = Object.freeze(Object.create(null));
-const rootNamespace: Cons<Record<string, any>> = new Cons(emptyObject);
+const rootNamespace: Cons<Record<string, unknown>> = new Cons(emptyObject);
 
 export interface Snapshot {
   globalFunctions: Record<string, BeginNode>;
-  globalNamespace: Record<string, any>;
-  topNamespace: Cons<Record<string, any>>;
+  globalNamespace: Record<string, unknown>;
+  topNamespace: Cons<Record<string, unknown>>;
   topFrame: Cons<Frame>;
-  lastResult: any;
+  lastResult: unknown;
 }
 
 export class Interpreter {
   dataHandlers: DataHandler[] = [];
   runtimeFunctions: Record<string, RuntimeFunction> = emptyObject;
   globalFunctions: Record<string, BeginNode> = emptyObject;
-  globalNamespace: Record<string, any> = emptyObject;
+  globalNamespace: Record<string, unknown> = emptyObject;
   topNamespace = rootNamespace;
   topFrame = rootFrame;
   lastResult: any = null;

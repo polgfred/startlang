@@ -100,7 +100,7 @@ export class BrowserHost {
 }
 
 function waitForRepaint() {
-  return new Promise((resolve) => {
+  return new Promise<void>((resolve) => {
     setTimeout(resolve, 0);
   });
 }
