@@ -20,7 +20,6 @@
   "author": "Frederick Polgardy <fred@polgardy.com>",
   "license": "ISC",
   "dependencies": {
-    "express": "^4.17.1",
     "next": "^15.1.5"
   },
   "devDependencies": {
