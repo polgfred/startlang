@@ -122,40 +122,40 @@ If
   = if _ cond:Value _ then _ tbody:Statement fbody:(_ else _ @Statement)? {
       return buildIfTree([[cond, tbody]], fbody);
     }
-  // multi-line if/then[/else if/...][/else]
+  // if/then[/else if/...][/else]
   / if _ cond:Value _ then EOL tbody:Block tests:(_ else _ if _ @Value _ then EOL @Block)* fbody:(_ else EOL @Block)? _ end {
       return buildIfTree([[cond, tbody], ...tests], fbody);
     }
 
 Repeat
   // repeat 10
-  = repeat _ times:Value _ do _ body:EndBody { return new RepeatNode(times, body); }
+  = repeat _ times:Value _ body:DoBody { return new RepeatNode(times, body); }
   // repeat (forever)
-  / repeat _ do _ body:EndBody { return new RepeatNode(null, body); }
+  / repeat _ body:DoBody { return new RepeatNode(null, body); }
 
 For
   // for i from a to b by c
-  = for _ name:Symbol _ from _ initial:Value _ to _ limit:Value _ step:(_ by _ @Value)?  _ do _ body:EndBody {
+  = for _ name:Symbol _ from _ initial:Value _ to _ limit:Value _ step:(_ by _ @Value)? _ body:DoBody {
       return new ForNode(name, initial, limit, step, body);
     }
   // for i in x
-  / for _ name:Symbol _ in _ iterable:Value _ do _ body:EndBody {
+  / for _ name:Symbol _ in _ iterable:Value _ body:DoBody {
       return new ForInNode(name, iterable, body);
     }
 
 While
-  = while _ condition:Value _ do _ body:EndBody {
+  = while _ condition:Value _ body:DoBody {
       return new WhileNode(condition, body);
     }
 
 Begin
-  = begin _ name:Symbol params:(_ "(" EOL? _ @Params? _ ")")? _ do _ body:EndBody {
+  = begin _ name:Symbol params:(_ "(" EOL? _ @Params? _ ")")? _ body:DoBody {
       return new BeginNode(name, params ?? [], body);
     }
 
-EndBody
-  = Statement
-  / EOL block:Block _ "end" { return block; }
+DoBody
+  = do _ statement:Statement { return statement; }
+  / do EOL block:Block _ "end" { return block; }
 
 Params
   = first:Symbol rest:(_ "," _ EOL? _ @Symbol)* { return [first, ...rest]; }
