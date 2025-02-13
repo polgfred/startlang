@@ -7,7 +7,7 @@ line 360, 40, 360, 760
 stroke "blue"
 
 ; count from -360 to 360 in 5 degree increments
-for x1 from -180 to 175 do
+for x1 = -180 to 175 do
   x2 = x1 + 5
 
   ; calculate the sin values for x1 and x2

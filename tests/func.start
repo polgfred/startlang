@@ -46,7 +46,7 @@ begin compare(first, second) do
   end
 end
 
-for x from 8 to 13 do
+for x = 8 to 13 do
   print "compare({x}, 10) is {compare(x, 10)}"
 end
 

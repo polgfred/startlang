@@ -18,7 +18,7 @@ while i <= upper do
 
   ; count from i^2 to the upper limit by i -
   ; this marks all multiples of i as non-prime
-  for j from exp(i, 2) to upper by i do marked[j] = true
+  for j = exp(i, 2) to upper by i do marked[j] = true
 
   ; skip over this i because it's prime
   i = i + 1

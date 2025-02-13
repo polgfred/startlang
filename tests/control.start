@@ -12,9 +12,9 @@ repeat 3 do
   print "hi"
 end
 
-for i from 1 to 5 do print i
+for i = 1 to 5 do print i
 
-for i from 1 to 5 do
+for i = 1 to 5 do
   print i
 end
 

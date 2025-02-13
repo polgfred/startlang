@@ -142,7 +142,7 @@ Range = @initial:Value _ to _ @limit:Value @step:(_ by _ @Value)?
 
 ForBlock
   // for i from a to b by c
-  = for _ name:Symbol _ from _ range:Range _ body:DoBody {
+  = for _ name:Symbol _ "=" _ range:Range _ body:DoBody {
       const [initial, limit, step] = range;
       return new ForNode(name, initial, limit, step, body);
     }

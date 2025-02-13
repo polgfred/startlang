@@ -13,7 +13,7 @@ begin random_color do
 end
 
 ; count from 0 to 360 in 3 degree increments
-for a from 0 to 360 by 5 do
+for a = 0 to 360 by 5 do
   fill random_color()
 
   ; set the rotation and scale factor
