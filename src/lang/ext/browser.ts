@@ -114,12 +114,12 @@ function getHost(interpreter: Interpreter) {
 }
 
 export const browserGlobals: RuntimeFunctions = {
-  clear(interpreter: Interpreter) {
+  clear(interpreter) {
     const host = getHost(interpreter);
     host.clearDisplay();
   },
 
-  color(interpreter: Interpreter, [red, green, blue, alpha = 1]: number[]) {
+  color(interpreter, [red, green, blue, alpha = 1]: number[]) {
     const r = `${Number((red * 100).toFixed(6))}%`;
     const g = `${Number((green * 100).toFixed(6))}%`;
     const b = `${Number((blue * 100).toFixed(6))}%`;
@@ -132,83 +132,83 @@ export const browserGlobals: RuntimeFunctions = {
     }
   },
 
-  fill(interpreter: Interpreter, [color]: [string | null]) {
+  fill(interpreter, [color]: [string | null]) {
     const host = getHost(interpreter);
     host.updateShapeProps({ fill: color });
   },
 
-  stroke(interpreter: Interpreter, [color]: [string | null]) {
+  stroke(interpreter, [color]: [string | null]) {
     const host = getHost(interpreter);
     host.updateShapeProps({ stroke: color });
   },
 
-  opacity(interpreter: Interpreter, [value]: [number]) {
+  opacity(interpreter, [value]: [number]) {
     const host = getHost(interpreter);
     host.updateShapeProps({ opacity: value });
   },
 
-  anchor(interpreter: Interpreter, [anchor]: [string]) {
+  anchor(interpreter, [anchor]: [string]) {
     const host = getHost(interpreter);
     host.updateShapeProps({ anchor });
   },
 
-  rotate(interpreter: Interpreter, [angle]: [number]) {
+  rotate(interpreter, [angle]: [number]) {
     const host = getHost(interpreter);
     host.updateShapeProps({ rotate: angle });
   },
 
-  scale(interpreter: Interpreter, [scalex, scaley = scalex]: number[]) {
+  scale(interpreter, [scalex, scaley = scalex]: number[]) {
     const host = getHost(interpreter);
     host.updateShapeProps({ scalex, scaley });
   },
 
-  font(interpreter: Interpreter, [fontFamily, fontSize]: [string, number]) {
+  font(interpreter, [fontFamily, fontSize]: [string, number]) {
     const host = getHost(interpreter);
     host.updateTextProps({ fontFamily, fontSize });
   },
 
-  align(interpreter: Interpreter, [textAlign]: [string]) {
+  align(interpreter, [textAlign]: [string]) {
     const host = getHost(interpreter);
     host.updateTextProps({ textAlign });
   },
 
-  rect(interpreter: Interpreter, [x, y, width, height]: number[]) {
+  rect(interpreter, [x, y, width, height]: number[]) {
     const host = getHost(interpreter);
     host.pushShape(new Rect(x, y, width, height, host.shapeProps));
     return waitForRepaint();
   },
 
-  circle(interpreter: Interpreter, [cx, cy, radius]: number[]) {
+  circle(interpreter, [cx, cy, radius]: number[]) {
     const host = getHost(interpreter);
     host.pushShape(new Circle(cx, cy, radius, host.shapeProps));
     return waitForRepaint();
   },
 
-  ellipse(interpreter: Interpreter, [cx, cy, rx, ry]: number[]) {
+  ellipse(interpreter, [cx, cy, rx, ry]: number[]) {
     const host = getHost(interpreter);
     host.pushShape(new Ellipse(cx, cy, rx, ry, host.shapeProps));
     return waitForRepaint();
   },
 
-  line(interpreter: Interpreter, [x1, y1, x2, y2]: number[]) {
+  line(interpreter, [x1, y1, x2, y2]: number[]) {
     const host = getHost(interpreter);
     host.pushShape(new Line(x1, y1, x2, y2, host.shapeProps));
     return waitForRepaint();
   },
 
-  polygon(interpreter: Interpreter, [points]: [[number, number][]]) {
+  polygon(interpreter, [points]: [[number, number][]]) {
     const host = getHost(interpreter);
     host.pushShape(new Polygon(points, host.shapeProps));
     return waitForRepaint();
   },
 
-  text(interpreter: Interpreter, [x, y, text]: [number, number, string]) {
+  text(interpreter, [x, y, text]: [number, number, string]) {
     const host = getHost(interpreter);
     host.pushShape(new Text(x, y, text, host.textProps, host.shapeProps));
     return waitForRepaint();
   },
 
-  print(interpreter: Interpreter, [text]: [string]) {
+  print(interpreter, [text]: [string]) {
     const host = getHost(interpreter);
     host.pushText(text);
   },

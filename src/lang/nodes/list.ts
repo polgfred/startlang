@@ -1,3 +1,4 @@
+import { emptyList } from '../handlers/list.js';
 import { Interpreter } from '../interpreter.js';
 
 import { Frame, Node } from './base.js';
@@ -11,8 +12,6 @@ export class ListNode extends Node {
     return new ListFrame(this);
   }
 }
-
-const emptyList: readonly unknown[] = Object.freeze([]);
 
 export class ListFrame extends Frame {
   declare node: ListNode;
