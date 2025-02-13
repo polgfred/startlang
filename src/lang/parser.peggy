@@ -97,7 +97,7 @@
 
 // Grammar
 
-start = EOL? block:Block { return block; }
+start = EOL? @block:Block
 
 // Top-level
 
@@ -117,7 +117,7 @@ ControlBlock
   / WhileBlock
   / BeginBlock
 
-IfBody = if _ cond:Value _ then EOL body:Block { return [cond, body]; }
+IfBody = if _ @cond:Value _ then EOL @body:Block
 
 IfBlock
   // one-line if/then[/else]
@@ -130,23 +130,19 @@ IfBlock
     }
 
 DoBody
-  = do _ statement:Statement { return statement; }
-  / do EOL body:Block _ end { return body; }
+  = do _ @statement:Statement
+  / do EOL @body:Block _ end
 
 RepeatBlock
-  // repeat 10
-  = repeat _ times:Value _ body:DoBody { return new RepeatNode(times, body); }
-  // repeat (forever)
-  / repeat _ body:DoBody { return new RepeatNode(null, body); }
-
-Range
-  = from _ initial:Value _ to _ limit:Value _ step:(_ by _ @Value)? {
-      return [initial, limit, step];
+  = repeat times:(_ @times:Value)? _ body:DoBody {
+      return new RepeatNode(times, body);
     }
+
+Range = @initial:Value _ to _ @limit:Value @step:(_ by _ @Value)?
 
 ForBlock
   // for i from a to b by c
-  = for _ name:Symbol _ range:Range _ body:DoBody {
+  = for _ name:Symbol _ from _ range:Range _ body:DoBody {
       const [initial, limit, step] = range;
       return new ForNode(name, initial, limit, step, body);
     }
@@ -162,7 +158,7 @@ Params
   = first:Symbol rest:(_ "," _ EOL? _ @Symbol)* { return [first, ...rest]; }
 
 BeginBlock
-  = begin _ name:Symbol params:(_ "(" EOL? _ @Params? _ ")")? _ body:DoBody {
+  = begin _ name:Symbol _ params:("(" EOL? _ @Params? _ ")")? _ body:DoBody {
       return new BeginNode(name, params ?? [], body);
     }
 
@@ -175,10 +171,10 @@ FlowStatement
   = exit { return new ExitNode(); }
   / break { return new BreakNode(); }
   / next { return new NextNode(); }
-  / return result:(_ @Value)? { return new ReturnNode(result ?? null); }
+  / return result:(_ @Value)? { return new ReturnNode(result); }
 
 LetStatement
-  = let? _ name:Symbol _ indexes:Indexes? _ "=" _ value:Value {
+  = (let _)? name:Symbol _ indexes:Indexes? _ "=" _ value:Value {
       return indexes
         ? buildIndex(name, indexes, value)
         : new LetNode(name, value);
@@ -192,7 +188,7 @@ CallStatement
   //  2- try to match zero or more parenthesized arguments
   //  3- match a bare call with no parens or args
   = name:Symbol _ args:Values { return new CallNode(name, args); }
-  / name:Symbol "(" _ EOL? _ args:Values? _ ")" {
+  / name:Symbol _ "(" _ EOL? _ args:Values? _ ")" {
       return new CallNode(name, args ?? []);
     }
   / name:Symbol { return new CallNode(name, []); }
@@ -211,14 +207,12 @@ ConjExpr
     }
 
 ConjOp
-  = and { return 'and'; }
-  / or { return 'or'; }
+  = and
+  / or
 
 NotExpr
-  = op:NotOp _ right:RelExpr { return new LogicalNotNode(right); }
+  = not _ right:RelExpr { return new LogicalNotNode(right); }
   / RelExpr
-
-NotOp = not { return 'not'; }
 
 RelExpr
   = left:ConcatExpr _ operator:RelOp _ right:ConcatExpr {
@@ -309,23 +303,23 @@ IndexExpr
   / PrimaryExpr
 
 Indexes
-  = first:IndexSegment rest:(_ @IndexSegment)* {
+  = segments:IndexSegment* & { return segments.length > 0; } {
       // flatten segments into a single chain of indexes
-      return [first, ...rest].flat();
+      return segments.flat();
     }
 
 IndexSegment
   // allow successive indexes separated by commas, e.g. lst[0,1,2]
   = "[" _ first:Value rest:(_ "," _ @Value)* _ "]" { return [first, ...rest]; }
-  / "." _ index:Digits { return [new LiteralNode(Number(index))]; }
-  / "." _ name:Symbol { return [new LiteralNode(name)]; }
+  / "." _ index:Digits { return new LiteralNode(Number(index)); }
+  / "." _ name:Symbol { return new LiteralNode(name); }
 
 // segment consisting of one literal node
 
 PrimaryExpr
   = String
   / Literal
-  / "(" _ val:Value _ ")" { return val; }
+  / "(" _ @val:Value _ ")"
 
 // Strings
 
@@ -334,7 +328,7 @@ String "a string"
 
 StringSegment
   = chars:Char+ { return new LiteralNode(chars.join('')); }
-  / "{" _ val:Value _ "}" { return val; }
+  / "{" _ @val:Value _ "}"
 
 // interpolation of value expressions
 
@@ -342,7 +336,7 @@ Char
   = "\"\"" { return '"'; }
   / "{{" { return '{' /*}*/; }
   / "}}" { return /*{*/ '}'; }
-  / "{}" { return '{}'; }
+  / "{}"
   / [^"{}]
 
 // Data
@@ -372,55 +366,55 @@ Symbol "a name" = $(!Reserved [a-z_]i [a-z0-9_]i*)
 
 // Keywords
 
-none = "none" WB
+none = @"none" WB
 
-true = "true" WB
+true = @"true" WB
 
-false = "false" WB
+false = @"false" WB
 
-infinity = "infinity" WB
+infinity = @"infinity" WB
 
-if = "if" WB
+if = @"if" WB
 
-then = "then" WB
+then = @"then" WB
 
-else = "else" WB
+else = @"else" WB
 
-end = "end" WB
+end = @"end" WB
 
-repeat = "repeat" WB
+repeat = @"repeat" WB
 
-do = "do" WB
+do = @"do" WB
 
-for = "for" WB
+for = @"for" WB
 
-from = "from" WB
+from = @"from" WB
 
-to = "to" WB
+to = @"to" WB
 
-by = "by" WB
+by = @"by" WB
 
-in = "in" WB
+in = @"in" WB
 
-while = "while" WB
+while = @"while" WB
 
-begin = "begin" WB
+begin = @"begin" WB
 
-exit = "exit" WB
+exit = @"exit" WB
 
-break = "break" WB
+break = @"break" WB
 
-next = "next" WB
+next = @"next" WB
 
-return = "return" WB
+return = @"return" WB
 
-let = "let" WB
+let = @"let" WB
 
-and = "and" WB
+and = @"and" WB
 
-or = "or" WB
+or = @"or" WB
 
-not = "not" WB
+not = @"not" WB
 
 Reserved
   = none
