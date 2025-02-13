@@ -350,6 +350,7 @@ IndexSegment
       // allow successive indexes separated by commas, e.g. lst[0,1,2]
       return [first, ...rest];
     }
+  / "." __ index:Digits { return [new LiteralNode(Number(index))]; }
   / "." __ name:Symbol { return [new LiteralNode(name)]; }
 
 // segment consisting of one literal node
