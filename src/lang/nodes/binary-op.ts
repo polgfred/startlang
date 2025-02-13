@@ -19,7 +19,7 @@ export class BinaryOpNode extends Node {
 export class BinaryOpFrame extends Frame {
   declare node: BinaryOpNode;
 
-  readonly left: any;
+  readonly left: unknown;
 
   visit(interpreter: Interpreter) {
     const { operator, left, right } = this.node;

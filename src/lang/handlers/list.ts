@@ -1,20 +1,24 @@
 import deepEqual from 'deep-equal';
+import { type WritableDraft } from 'immer';
 
 import { Interpreter } from '../interpreter.js';
+import type { ListType, RuntimeFunctions } from '../types.js';
 import { adjustIndex } from '../utils/index.js';
 
 import { DataHandler } from './base.js';
+
+export const emptyList: ListType = Object.freeze([]);
 
 export class ListHandler extends DataHandler {
   constructor(interpreter: Interpreter) {
     super(interpreter, {}, listMethods);
   }
 
-  shouldHandle(value: any) {
+  shouldHandle(value: unknown) {
     return Array.isArray(value);
   }
 
-  getPrettyValue(value: any[]) {
+  getPrettyValue(value: ListType) {
     const prettyValues = value.map((v) => {
       const handler = this.interpreter.getHandler(v);
       return handler.getPrettyValue(v);
@@ -22,21 +26,21 @@ export class ListHandler extends DataHandler {
     return `[${prettyValues.join(', ')}]`;
   }
 
-  getIndex(value: any[], index: number) {
+  getIndex(value: ListType, index: number) {
     index = adjustIndex(index, value.length);
     return value[index];
   }
 
-  setIndex(value: any[], index: number, element: any) {
+  setIndex(value: WritableDraft<ListType>, index: number, element: unknown) {
     index = adjustIndex(index, value.length);
     value[index] = element;
   }
 
-  getIterable(value: any): any[] {
+  getIterable(value: ListType) {
     return value;
   }
 
-  evalBinaryOp(op: string, left: any, right: any) {
+  evalBinaryOp(op: string, left: ListType, right: ListType) {
     switch (op) {
       case '::':
         return [...left, ...right];
@@ -50,21 +54,18 @@ export class ListHandler extends DataHandler {
   }
 }
 
-const listMethods = {
-  len(interpreter: Interpreter, [value]: [any[]]) {
+const listMethods: RuntimeFunctions = {
+  len(interpreter, [value]: [ListType]) {
     interpreter.setResult(value.length);
   },
 
-  range(
-    interpreter: Interpreter,
-    [value, start, end]: [any[], number, number]
-  ) {
+  range(interpreter, [value, start, end]: [ListType, number, number]) {
     start = adjustIndex(start, value.length);
     end = adjustIndex(end, value.length);
     interpreter.setResult(value.slice(start, end + 1));
   },
 
-  join(interpreter: Interpreter, [value, sep]: [any[], string]) {
+  join(interpreter, [value, sep]: [ListType, string]) {
     interpreter.setResult(value.join(sep));
   },
 };

@@ -1,4 +1,5 @@
 import { Interpreter } from '../interpreter.js';
+import type { RuntimeFunctions } from '../types.js';
 
 import { DataHandler } from './base.js';
 
@@ -7,7 +8,7 @@ export class NumberHandler extends DataHandler {
     super(interpreter, numberGlobals, numberMethods);
   }
 
-  shouldHandle(value: any) {
+  shouldHandle(value: unknown) {
     return typeof value === 'number';
   }
 
@@ -19,7 +20,7 @@ export class NumberHandler extends DataHandler {
     }
   }
 
-  evalUnaryOp(op: string, right: any) {
+  evalUnaryOp(op: string, right: number) {
     switch (op) {
       case '+':
         return right;
@@ -32,7 +33,7 @@ export class NumberHandler extends DataHandler {
     }
   }
 
-  evalBinaryOp(op: string, left: any, right: any) {
+  evalBinaryOp(op: string, left: number, right: number) {
     switch (op) {
       case '+':
         return left + right;
@@ -46,64 +47,72 @@ export class NumberHandler extends DataHandler {
         return left % right;
       case '^':
         return Math.pow(left, right);
+      case '<':
+        return left < right;
+      case '<=':
+        return left <= right;
+      case '>':
+        return left > right;
+      case '>=':
+        return left >= right;
       default:
         return super.evalBinaryOp(op, left, right);
     }
   }
 }
 
-const numberGlobals = {
-  rand(interpreter: Interpreter) {
+const numberGlobals: RuntimeFunctions = {
+  rand(interpreter) {
     interpreter.setResult(Math.random());
   },
 };
 
-const numberMethods = {
-  abs(interpreter: Interpreter, [value]: [number]) {
+const numberMethods: RuntimeFunctions = {
+  abs(interpreter, [value]: [number]) {
     interpreter.setResult(Math.abs(value));
   },
 
-  acos(interpreter: Interpreter, [n]: [number]) {
+  acos(interpreter, [n]: [number]) {
     interpreter.setResult((Math.acos(n) * 180) / Math.PI);
   },
 
-  asin(interpreter: Interpreter, [value]: [number]) {
+  asin(interpreter, [value]: [number]) {
     interpreter.setResult((Math.asin(value) * 180) / Math.PI);
   },
 
-  atan(interpreter: Interpreter, [value]: [number]) {
+  atan(interpreter, [value]: [number]) {
     interpreter.setResult((Math.atan(value) * 180) / Math.PI);
   },
 
-  bitand(interpreter: Interpreter, [left, right]: [number, number]) {
+  bitand(interpreter, [left, right]: [number, number]) {
     interpreter.setResult(left & right);
   },
 
-  bitnot(interpreter: Interpreter, [value]: [number]) {
+  bitnot(interpreter, [value]: [number]) {
     interpreter.setResult(~value);
   },
 
-  bitor(interpreter: Interpreter, [left, right]: [number, number]) {
+  bitor(interpreter, [left, right]: [number, number]) {
     interpreter.setResult(left | right);
   },
 
-  bitxor(interpreter: Interpreter, [left, right]: [number, number]) {
+  bitxor(interpreter, [left, right]: [number, number]) {
     interpreter.setResult(left ^ right);
   },
 
-  cbrt(interpreter: Interpreter, [value]: [number]) {
+  cbrt(interpreter, [value]: [number]) {
     interpreter.setResult(Math.cbrt(value));
   },
 
-  cos(interpreter: Interpreter, [value]: [number]) {
+  cos(interpreter, [value]: [number]) {
     interpreter.setResult(Math.cos((value * Math.PI) / 180));
   },
 
-  exp(interpreter: Interpreter, [value]: [number]) {
+  exp(interpreter, [value]: [number]) {
     interpreter.setResult(Math.exp(value));
   },
 
-  log(interpreter: Interpreter, [value, base]: [number, number?]) {
+  log(interpreter, [value, base]: [number, number?]) {
     if (base === undefined) {
       interpreter.setResult(Math.log(value));
     } else if (base === 10) {
@@ -113,23 +122,23 @@ const numberMethods = {
     }
   },
 
-  rand(interpreter: Interpreter, [lo, hi]: [number, number]) {
+  rand(interpreter, [lo, hi]: [number, number]) {
     interpreter.setResult(Math.floor(Math.random() * (hi - lo + 1)) + lo);
   },
 
-  round(interpreter: Interpreter, [value]: [number]) {
+  round(interpreter, [value]: [number]) {
     interpreter.setResult(Math.round(value));
   },
 
-  sin(interpreter: Interpreter, [value]: [number]) {
+  sin(interpreter, [value]: [number]) {
     interpreter.setResult(Math.sin((value * Math.PI) / 180));
   },
 
-  sqrt(interpreter: Interpreter, [value]: [number]) {
+  sqrt(interpreter, [value]: [number]) {
     interpreter.setResult(Math.sqrt(value));
   },
 
-  tan(interpreter: Interpreter, [value]: [number]) {
+  tan(interpreter, [value]: [number]) {
     interpreter.setResult(Math.tan((value * Math.PI) / 180));
   },
 };

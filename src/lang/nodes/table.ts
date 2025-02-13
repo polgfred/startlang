@@ -1,3 +1,4 @@
+import { emptyTable } from '../handlers/table.js';
 import { Interpreter } from '../interpreter.js';
 
 import { Frame, Node } from './base.js';
@@ -16,8 +17,6 @@ export class TableNode extends Node {
     return new TableFrame(this);
   }
 }
-
-const emptyTable: Record<string, any> = Object.freeze(Object.create(null));
 
 export class TableFrame extends Frame {
   declare node: TableNode;

@@ -3,7 +3,7 @@ import { Interpreter } from '../interpreter.js';
 import { Node, Frame } from './base.js';
 
 export class LiteralNode extends Node {
-  constructor(public readonly value: any) {
+  constructor(public readonly value: unknown) {
     super();
   }
 

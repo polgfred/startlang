@@ -12,7 +12,7 @@ export class ListNode extends Node {
   }
 }
 
-const emptyList: readonly any[] = Object.freeze([]);
+const emptyList: readonly unknown[] = Object.freeze([]);
 
 export class ListFrame extends Frame {
   declare node: ListNode;

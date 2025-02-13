@@ -1,4 +1,5 @@
 import { Interpreter } from '../interpreter.js';
+import type { RuntimeFunctions } from '../types.js';
 import { adjustIndex } from '../utils/index.js';
 
 import { DataHandler } from './base.js';
@@ -8,7 +9,7 @@ export class StringHandler extends DataHandler {
     super(interpreter, {}, stringMethods);
   }
 
-  shouldHandle(value: any) {
+  shouldHandle(value: unknown) {
     return typeof value === 'string';
   }
 
@@ -21,18 +22,26 @@ export class StringHandler extends DataHandler {
     return value.charAt(index);
   }
 
-  evalBinaryOp(op: string, left: any, right: any) {
+  evalBinaryOp(op: string, left: string, right: string) {
     switch (op) {
       case '::':
         return left + right;
+      case '<':
+        return left < right;
+      case '<=':
+        return left <= right;
+      case '>':
+        return left > right;
+      case '>=':
+        return left >= right;
       default:
         return super.evalBinaryOp(op, left, right);
     }
   }
 }
 
-const stringMethods = {
-  num(interpreter: Interpreter, [value]: [string]) {
+const stringMethods: RuntimeFunctions = {
+  num(interpreter, [value]: [string]) {
     const num = Number(value);
     if (isNaN(num)) {
       throw new Error(`cannot convert ${value} to number`);
@@ -41,20 +50,17 @@ const stringMethods = {
     }
   },
 
-  len(interpreter: Interpreter, [value]: [string]) {
+  len(interpreter, [value]: [string]) {
     interpreter.setResult(value.length);
   },
 
-  range(
-    interpreter: Interpreter,
-    [value, start, end]: [string, number, number]
-  ) {
+  range(interpreter, [value, start, end]: [string, number, number]) {
     start = adjustIndex(start, value.length);
     end = adjustIndex(end, value.length);
     interpreter.setResult(value.substring(start, end + 1));
   },
 
-  split(interpreter: Interpreter, [value, sep]: [string, string]) {
+  split(interpreter, [value, sep]: [string, string]) {
     interpreter.setResult(value.split(sep));
   },
 };

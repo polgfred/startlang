@@ -12,6 +12,11 @@ import {
 import { ChangeEvent, useCallback, useState } from 'react';
 
 import { History } from '../../src/lang/ext/history.js';
+import type {
+  ListType,
+  NamespaceType,
+  TableType,
+} from '../../src/lang/types.js';
 
 export default function Inspector({
   error,
@@ -117,7 +122,7 @@ function NamespaceInspector({
   namespace,
 }: {
   title: string;
-  namespace: Record<string, any>;
+  namespace: NamespaceType;
 }) {
   return (
     <Table
@@ -211,7 +216,7 @@ function ExpandableFooter({
   );
 }
 
-function ListInspector({ value }: { value: any[] }) {
+function ListInspector({ value }: { value: ListType }) {
   const [visible, setVisible] = useState(5);
 
   return (
@@ -249,7 +254,7 @@ function ListInspector({ value }: { value: any[] }) {
   );
 }
 
-function TableInspector({ value }: { value: Record<string, any> }) {
+function TableInspector({ value }: { value: TableType }) {
   const [visible, setVisible] = useState(5);
 
   return (
@@ -312,7 +317,7 @@ function inspectorFor(value: unknown) {
         if (Array.isArray(value)) {
           return <ListInspector value={value} />;
         } else {
-          return <TableInspector value={value} />;
+          return <TableInspector value={value as TableType} />;
         }
       default:
         throw new Error(`could not determine type for ${value}`);

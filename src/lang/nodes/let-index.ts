@@ -1,4 +1,5 @@
 import { Interpreter } from '../interpreter.js';
+import { IndexType } from '../types.js';
 
 import { Frame, Node } from './base.js';
 
@@ -16,11 +17,13 @@ export class LetIndexNode extends Node {
   }
 }
 
+const emptyList: readonly IndexType[] = Object.freeze([]);
+
 export class LetIndexFrame extends Frame {
   declare node: LetIndexNode;
 
   readonly count: number = 0;
-  readonly indexes: any[] = [];
+  readonly indexes = emptyList;
 
   visit(interpreter: Interpreter) {
     const { name, indexes, value } = this.node;
@@ -37,6 +40,12 @@ export class LetIndexFrame extends Frame {
       }
       case 1: {
         interpreter.swapFrame(this, 0, (draft) => {
+          if (
+            typeof interpreter.lastResult !== 'number' &&
+            typeof interpreter.lastResult !== 'string'
+          ) {
+            throw new Error(`invalid index: ${interpreter.lastResult}`);
+          }
           draft.indexes[this.count] = interpreter.lastResult;
           draft.count++;
         });

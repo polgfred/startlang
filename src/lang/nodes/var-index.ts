@@ -1,4 +1,5 @@
 import { Interpreter } from '../interpreter.js';
+import type { IndexType } from '../types.js';
 
 import { Frame, Node } from './base.js';
 
@@ -15,13 +16,13 @@ export class VarIndexNode extends Node {
   }
 }
 
-const emptyList: readonly any[] = Object.freeze([]);
+const emptyList: readonly IndexType[] = Object.freeze([]);
 
 export class VarIndexFrame extends Frame {
   declare node: VarIndexNode;
 
   readonly count: number = 0;
-  readonly indexes: readonly any[] = emptyList;
+  readonly indexes = emptyList;
 
   visit(interpreter: Interpreter) {
     const { name, indexes } = this.node;
@@ -38,6 +39,12 @@ export class VarIndexFrame extends Frame {
       }
       case 1: {
         interpreter.swapFrame(this, 0, (draft) => {
+          if (
+            typeof interpreter.lastResult !== 'number' &&
+            typeof interpreter.lastResult !== 'string'
+          ) {
+            throw new Error(`invalid index: ${interpreter.lastResult}`);
+          }
           draft.indexes[this.count] = interpreter.lastResult;
           draft.count++;
         });

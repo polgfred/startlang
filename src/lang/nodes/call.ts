@@ -19,7 +19,7 @@ export class CallFrame extends Frame {
   declare node: CallNode;
 
   readonly count: number = 0;
-  readonly args: any[] = [];
+  readonly args: unknown[] = [];
   readonly hasNamespace: boolean = false;
 
   visit(interpreter: Interpreter) {

@@ -36,7 +36,7 @@ export class ForFrame extends Frame {
       }
       case 1: {
         interpreter.swapFrame(this, 2, (draft) => {
-          draft.index = interpreter.lastResult;
+          draft.index = Number(interpreter.lastResult);
         });
         interpreter.pushFrame(limit);
         break;
@@ -44,19 +44,19 @@ export class ForFrame extends Frame {
       case 2: {
         if (step !== null) {
           interpreter.swapFrame(this, 3, (draft) => {
-            draft.limit = interpreter.lastResult;
+            draft.limit = Number(interpreter.lastResult);
           });
           interpreter.pushFrame(step);
         } else {
           interpreter.swapFrame(this, 4, (draft) => {
-            draft.limit = interpreter.lastResult;
+            draft.limit = Number(interpreter.lastResult);
           });
         }
         break;
       }
       case 3: {
         interpreter.swapFrame(this, 4, (draft) => {
-          draft.step = interpreter.lastResult;
+          draft.step = Number(interpreter.lastResult);
         });
         break;
       }

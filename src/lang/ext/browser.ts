@@ -1,6 +1,7 @@
 import { produce } from 'immer';
 
 import { Interpreter } from '../interpreter.js';
+import type { RuntimeFunctions } from '../types.js';
 
 import {
   ShapeProps,
@@ -112,7 +113,7 @@ function getHost(interpreter: Interpreter) {
   return interpreter.host;
 }
 
-export const browserGlobals = {
+export const browserGlobals: RuntimeFunctions = {
   clear(interpreter: Interpreter) {
     const host = getHost(interpreter);
     host.clearDisplay();

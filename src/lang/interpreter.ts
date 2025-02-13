@@ -9,31 +9,31 @@ import {
   VarNode,
   rootFrame,
 } from './nodes/index.js';
+import type { IndexType, NamespaceType, RuntimeFunctions } from './types.js';
 import { Cons } from './utils/cons.js';
 
-export interface RuntimeFunction {
-  (interpreter: Interpreter, ...args: any[]): void | Promise<void>;
-}
+type GlobalFunctions = Record<string, BeginNode>;
 
 const emptyObject = Object.freeze(Object.create(null));
-const rootNamespace: Cons<Record<string, unknown>> = new Cons(emptyObject);
+
+const rootNamespace: Cons<NamespaceType> = new Cons(emptyObject);
 
 export interface Snapshot {
-  globalFunctions: Record<string, BeginNode>;
-  globalNamespace: Record<string, unknown>;
-  topNamespace: Cons<Record<string, unknown>>;
+  globalFunctions: GlobalFunctions;
+  globalNamespace: NamespaceType;
+  topNamespace: Cons<NamespaceType>;
   topFrame: Cons<Frame>;
   lastResult: unknown;
 }
 
 export class Interpreter {
   dataHandlers: DataHandler[] = [];
-  runtimeFunctions: Record<string, RuntimeFunction> = emptyObject;
-  globalFunctions: Record<string, BeginNode> = emptyObject;
-  globalNamespace: Record<string, unknown> = emptyObject;
+  runtimeFunctions: RuntimeFunctions = emptyObject;
+  globalFunctions: GlobalFunctions = emptyObject;
+  globalNamespace: NamespaceType = emptyObject;
   topNamespace = rootNamespace;
   topFrame = rootFrame;
-  lastResult: any = null;
+  lastResult: unknown = null;
 
   constructor(public readonly host: unknown) {
     installHandlers(this);
@@ -68,7 +68,7 @@ export class Interpreter {
     this.registerGlobals(handler.globals);
   }
 
-  getHandler(value: any) {
+  getHandler(value: unknown) {
     for (const handler of this.dataHandlers) {
       if (handler.shouldHandle(value)) {
         return handler;
@@ -77,7 +77,7 @@ export class Interpreter {
     throw new Error(`could not determine type for ${value}`);
   }
 
-  registerGlobals(funcs: Record<string, RuntimeFunction>) {
+  registerGlobals(funcs: RuntimeFunctions) {
     this.runtimeFunctions = produce(this.runtimeFunctions, (draft) => {
       Object.assign(draft, funcs);
     });
@@ -161,7 +161,7 @@ export class Interpreter {
     }
   }
 
-  setVariable(name: string, value: any) {
+  setVariable(name: string, value: unknown) {
     if (this.topNamespace !== rootNamespace) {
       this.topNamespace = this.topNamespace.swap(
         produce(this.topNamespace.head, (draft) => {
@@ -175,18 +175,22 @@ export class Interpreter {
     }
   }
 
-  getVariableIndex(name: string, indexes: readonly any[]) {
+  getVariableIndex(name: string, indexes: readonly IndexType[]) {
     return indexes.reduce((value, index) => {
       const handler = this.getHandler(value);
       return handler.getIndex(value, index);
     }, this.getVariable(name));
   }
 
-  setVariableIndex(name: string, indexes: readonly any[], value: any) {
+  setVariableIndex(
+    name: string,
+    indexes: readonly IndexType[],
+    value: unknown
+  ) {
     const currentValue = this.getVariable(name);
     this.setVariable(
       name,
-      produce(currentValue, (draft: any) => {
+      produce(currentValue, (draft: unknown) => {
         indexes.reduce((draft, index, i) => {
           const handler = this.getHandler(original(draft));
           if (i === indexes.length - 1) {
@@ -199,12 +203,12 @@ export class Interpreter {
     );
   }
 
-  evalUnaryOp(op: string, right: any) {
+  evalUnaryOp(op: string, right: unknown) {
     const handler = this.getHandler(right);
     return handler.evalUnaryOp(op, right);
   }
 
-  evalBinaryOp(op: string, left: any, right: any) {
+  evalBinaryOp(op: string, left: unknown, right: unknown) {
     const leftHandler = this.getHandler(left);
     const rightHandler = this.getHandler(right);
     if (leftHandler !== rightHandler) {
@@ -213,7 +217,7 @@ export class Interpreter {
     return leftHandler.evalBinaryOp(op, left, right);
   }
 
-  invokeRuntimeFunction(name: string, args: any[]) {
+  invokeRuntimeFunction(name: string, args: unknown[]) {
     if (args.length > 0) {
       const handler = this.getHandler(args[0]);
       if (name in handler.methods) {
@@ -226,7 +230,7 @@ export class Interpreter {
     throw new Error(`object not found or not a function: ${name}`);
   }
 
-  setResult(value: any) {
+  setResult(value: unknown) {
     this.lastResult = value;
   }
 
