@@ -107,39 +107,44 @@ Block
     }
 
 BlockElement
-  = Control
+  = ControlBlock
   / Statement
 
-Control
-  = If
-  / Repeat
-  / For
-  / While
-  / Begin
+ControlBlock
+  = IfBlock
+  / RepeatBlock
+  / ForBlock
+  / WhileBlock
+  / BeginBlock
 
 IfBody = if _ cond:Value _ then EOL body:Block { return [cond, body]; }
 
-If
+IfBlock
   // one-line if/then[/else]
   = if _ cond:Value _ then _ tbody:Statement fbody:(_ else _ @Statement)? {
       return buildIfTree([[cond, tbody]], fbody);
     }
   // if/then[/else if/...][/else]
-  / first:IfBody tests:(_ else _ @IfBody)* fbody:(_ else EOL @Block)? _ end {
-      return buildIfTree([first, ...tests], fbody);
+  / first:IfBody rest:(_ else _ @IfBody)* fbody:(_ else EOL @Block)? _ end {
+      return buildIfTree([first, ...rest], fbody);
     }
 
 DoBody
   = do _ statement:Statement { return statement; }
   / do EOL body:Block _ end { return body; }
 
-Repeat
+RepeatBlock
   // repeat 10
   = repeat _ times:Value _ body:DoBody { return new RepeatNode(times, body); }
   // repeat (forever)
   / repeat _ body:DoBody { return new RepeatNode(null, body); }
 
-For
+Range
+  = from _ initial:Value _ to _ limit:Value _ step:(_ by _ @Value)? {
+      return [initial, limit, step];
+    }
+
+ForBlock
   // for i from a to b by c
   = for _ name:Symbol _ range:Range _ body:DoBody {
       const [initial, limit, step] = range;
@@ -150,40 +155,36 @@ For
       return new ForInNode(name, iterable, body);
     }
 
-Range
-  = from _ initial:Value _ to _ limit:Value _ step:(_ by _ @Value)? {
-      return [initial, limit, step];
-    }
-
-While = while _ cond:Value _ body:DoBody { return new WhileNode(cond, body); }
-
-Begin
-  = begin _ name:Symbol params:(_ "(" EOL? _ @Params? _ ")")? _ body:DoBody {
-      return new BeginNode(name, params ?? [], body);
-    }
+WhileBlock
+  = while _ cond:Value _ body:DoBody { return new WhileNode(cond, body); }
 
 Params
   = first:Symbol rest:(_ "," _ EOL? _ @Symbol)* { return [first, ...rest]; }
 
-Statement
-  = Flow
-  / Let
-  / Call
+BeginBlock
+  = begin _ name:Symbol params:(_ "(" EOL? _ @Params? _ ")")? _ body:DoBody {
+      return new BeginNode(name, params ?? [], body);
+    }
 
-Flow
+Statement
+  = FlowStatement
+  / LetStatement
+  / CallStatement
+
+FlowStatement
   = exit { return new ExitNode(); }
   / break { return new BreakNode(); }
   / next { return new NextNode(); }
   / return result:(_ @Value)? { return new ReturnNode(result ?? null); }
 
-Let
+LetStatement
   = let? _ name:Symbol _ indexes:Indexes? _ "=" _ value:Value {
       return indexes
         ? buildIndex(name, indexes, value)
         : new LetNode(name, value);
     }
 
-Call
+CallStatement
   // if we match non-parenthesized args optionally right away, it will
   // never get past the first rule, so...
   //  1- try to match one or more non-parenthesized arguments first
@@ -210,14 +211,14 @@ ConjExpr
     }
 
 ConjOp
-  = and
-  / or
+  = and { return 'and'; }
+  / or { return 'or'; }
 
 NotExpr
   = op:NotOp _ right:RelExpr { return new LogicalNotNode(right); }
   / RelExpr
 
-NotOp = not
+NotOp = not { return 'not'; }
 
 RelExpr
   = left:ConcatExpr _ operator:RelOp _ right:ConcatExpr {
