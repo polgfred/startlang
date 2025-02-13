@@ -117,15 +117,21 @@ Control
   / While
   / Begin
 
+IfBody = if _ cond:Value _ then EOL body:Block { return [cond, body]; }
+
 If
   // one-line if/then[/else]
   = if _ cond:Value _ then _ tbody:Statement fbody:(_ else _ @Statement)? {
       return buildIfTree([[cond, tbody]], fbody);
     }
   // if/then[/else if/...][/else]
-  / if _ cond:Value _ then EOL tbody:Block tests:(_ else _ if _ @Value _ then EOL @Block)* fbody:(_ else EOL @Block)? _ end {
-      return buildIfTree([[cond, tbody], ...tests], fbody);
+  / first:IfBody tests:(_ else _ @IfBody)* fbody:(_ else EOL @Block)? _ end {
+      return buildIfTree([first, ...tests], fbody);
     }
+
+DoBody
+  = do _ statement:Statement { return statement; }
+  / do EOL body:Block _ end { return body; }
 
 Repeat
   // repeat 10
@@ -135,7 +141,8 @@ Repeat
 
 For
   // for i from a to b by c
-  = for _ name:Symbol _ from _ initial:Value _ to _ limit:Value _ step:(_ by _ @Value)? _ body:DoBody {
+  = for _ name:Symbol _ range:Range _ body:DoBody {
+      const [initial, limit, step] = range;
       return new ForNode(name, initial, limit, step, body);
     }
   // for i in x
@@ -143,19 +150,17 @@ For
       return new ForInNode(name, iterable, body);
     }
 
-While
-  = while _ condition:Value _ body:DoBody {
-      return new WhileNode(condition, body);
+Range
+  = from _ initial:Value _ to _ limit:Value _ step:(_ by _ @Value)? {
+      return [initial, limit, step];
     }
+
+While = while _ cond:Value _ body:DoBody { return new WhileNode(cond, body); }
 
 Begin
   = begin _ name:Symbol params:(_ "(" EOL? _ @Params? _ ")")? _ body:DoBody {
       return new BeginNode(name, params ?? [], body);
     }
-
-DoBody
-  = do _ statement:Statement { return statement; }
-  / do EOL block:Block _ "end" { return block; }
 
 Params
   = first:Symbol rest:(_ "," _ EOL? _ @Symbol)* { return [first, ...rest]; }
@@ -205,14 +210,14 @@ ConjExpr
     }
 
 ConjOp
-  = and { return 'and'; }
-  / or { return 'or'; }
+  = and
+  / or
 
 NotExpr
   = op:NotOp _ right:RelExpr { return new LogicalNotNode(right); }
   / RelExpr
 
-NotOp = not { return 'not'; }
+NotOp = not
 
 RelExpr
   = left:ConcatExpr _ operator:RelOp _ right:ConcatExpr {
