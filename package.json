@@ -32,7 +32,6 @@
     "@pigment-css/nextjs-plugin": "^0.0.30",
     "@pigment-css/react": "^0.0.29",
     "@types/deep-equal": "^1.0.4",
-    "@types/theme-ui": "^0.6.0",
     "blockly": "^11.2.1",
     "classnames": "^2.5.1",
     "deep-equal": "^2.2.3",
