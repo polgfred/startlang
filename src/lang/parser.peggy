@@ -102,7 +102,7 @@ start = EOL? block:Block { return block; }
 // Top-level
 
 Block
-  = elems:(__ @BlockElement EOL)* {
+  = elems:(_ @BlockElement EOL)* {
       return elems.length === 1 ? elems[0] : new BlockNode(elems);
     }
 
@@ -119,82 +119,46 @@ Control
 
 If
   // one-line if/then[/else]
-  = "if"
-    WB
-    cond:Value
-    __
-    "then"
-    WB
-    tbody:Statement
-    fbody:(__ "else" WB @Statement)? {
+  = if _ cond:Value _ then _ tbody:Statement fbody:(_ else _ @Statement)? {
       return buildIfTree([[cond, tbody]], fbody);
     }
   // multi-line if/then[/else if/...][/else]
-  / "if"
-    WB
-    cond:Value
-    __
-    "then"
-    WB
-    EOL
-    tbody:Block
-    tests:(__ "else" WB "if" WB @Value __ "then" WB EOL @Block)*
-    fbody:(__ "else" WB EOL @Block)?
-    __
-    "end" { return buildIfTree([[cond, tbody], ...tests], fbody); }
+  / if _ cond:Value _ then EOL tbody:Block tests:(_ else _ if _ @Value _ then EOL @Block)* fbody:(_ else EOL @Block)? _ end {
+      return buildIfTree([[cond, tbody], ...tests], fbody);
+    }
 
 Repeat
   // repeat 10
-  = "repeat" WB times:Value __ "do" WB body:EndBody {
-      return new RepeatNode(times, body);
-    }
+  = repeat _ times:Value _ do _ body:EndBody { return new RepeatNode(times, body); }
   // repeat (forever)
-  / "repeat" WB "do" WB body:EndBody { return new RepeatNode(null, body); }
+  / repeat _ do _ body:EndBody { return new RepeatNode(null, body); }
 
 For
   // for i from a to b by c
-  = "for"
-    WB
-    name:Symbol
-    __
-    "from"
-    WB
-    initial:Value
-    __
-    "to"
-    WB
-    limit:Value
-    step:(__ "by" WB @Value)?
-    __
-    "do"
-    WB
-    body:EndBody { return new ForNode(name, initial, limit, step, body); }
+  = for _ name:Symbol _ from _ initial:Value _ to _ limit:Value _ step:(_ by _ @Value)?  _ do _ body:EndBody {
+      return new ForNode(name, initial, limit, step, body);
+    }
   // for i in x
-  / "for" WB name:Symbol __ "in" WB iterable:Value "do" WB body:EndBody {
+  / for _ name:Symbol _ in _ iterable:Value _ do _ body:EndBody {
       return new ForInNode(name, iterable, body);
     }
 
 While
-  = "while" WB condition:Value __ "do" WB body:EndBody {
+  = while _ condition:Value _ do _ body:EndBody {
       return new WhileNode(condition, body);
     }
 
 Begin
-  = "begin"
-    WB
-    name:Symbol
-    params:(__ "(" EOL? __ @Params? __ ")")?
-    __
-    "do"
-    WB
-    body:EndBody { return new BeginNode(name, params ?? [], body); }
+  = begin _ name:Symbol params:(_ "(" EOL? _ @Params? _ ")")? _ do _ body:EndBody {
+      return new BeginNode(name, params ?? [], body);
+    }
 
 EndBody
   = Statement
-  / EOL block:Block __ "end" { return block; }
+  / EOL block:Block _ "end" { return block; }
 
 Params
-  = first:Symbol rest:(__ "," __ EOL? __ @Symbol)* { return [first, ...rest]; }
+  = first:Symbol rest:(_ "," _ EOL? _ @Symbol)* { return [first, ...rest]; }
 
 Statement
   = Flow
@@ -202,13 +166,13 @@ Statement
   / Call
 
 Flow
-  = "exit" WB { return new ExitNode(); }
-  / "break" WB { return new BreakNode(); }
-  / "next" WB { return new NextNode(); }
-  / "return" WB result:(__ @Value)? { return new ReturnNode(result ?? null); }
+  = exit { return new ExitNode(); }
+  / break { return new BreakNode(); }
+  / next { return new NextNode(); }
+  / return result:(_ @Value)? { return new ReturnNode(result ?? null); }
 
 Let
-  = ("let" WB)? name:Symbol __ indexes:Indexes? __ "=" __ value:Value {
+  = let? _ name:Symbol _ indexes:Indexes? _ "=" _ value:Value {
       return indexes
         ? buildIndex(name, indexes, value)
         : new LetNode(name, value);
@@ -221,38 +185,37 @@ Call
   //      - this fixes the case of "print (1+2)/3"
   //  2- try to match zero or more parenthesized arguments
   //  3- match a bare call with no parens or args
-  = name:Symbol __ args:Values { return new CallNode(name, args); }
-  / name:Symbol __ "(" __ EOL? __ args:Values? __ ")" {
+  = name:Symbol _ args:Values { return new CallNode(name, args); }
+  / name:Symbol "(" _ EOL? _ args:Values? _ ")" {
       return new CallNode(name, args ?? []);
     }
   / name:Symbol { return new CallNode(name, []); }
 
 // Values
 
-Values
-  = first:Value rest:(__ "," __ EOL? __ @Value)* { return [first, ...rest]; }
+Values = first:Value rest:(_ "," _ EOL? _ @Value)* { return [first, ...rest]; }
 
 Value "a value" = ConjExpr
 
 // Conditions
 
 ConjExpr
-  = first:NotExpr rest:(__ @ConjOp __ @NotExpr)* {
+  = first:NotExpr rest:(_ @ConjOp _ @NotExpr)* {
       return buildLogicalExpr(first, rest);
     }
 
 ConjOp
-  = "and" WB { return 'and'; }
-  / "or" WB { return 'or'; }
+  = and { return 'and'; }
+  / or { return 'or'; }
 
 NotExpr
-  = op:NotOp __ right:RelExpr { return new LogicalNotNode(right); }
+  = op:NotOp _ right:RelExpr { return new LogicalNotNode(right); }
   / RelExpr
 
-NotOp = "not" WB { return 'not'; }
+NotOp = not { return 'not'; }
 
 RelExpr
-  = left:ConcatExpr __ operator:RelOp __ right:ConcatExpr {
+  = left:ConcatExpr _ operator:RelOp _ right:ConcatExpr {
       return new BinaryOpNode(operator, left, right);
     }
   / ConcatExpr
@@ -268,7 +231,7 @@ RelOp
 // Concatenation
 
 ConcatExpr
-  = first:AddExpr rest:(__ @ConcatOp __ @AddExpr)* {
+  = first:AddExpr rest:(_ @ConcatOp _ @AddExpr)* {
       return buildBinaryExpr(first, rest);
     }
 
@@ -277,7 +240,7 @@ ConcatOp = "::"
 // Math
 
 AddExpr
-  = first:MultExpr rest:(__ @AddOp __ @MultExpr)* {
+  = first:MultExpr rest:(_ @AddOp _ @MultExpr)* {
       return buildBinaryExpr(first, rest);
     }
 
@@ -286,7 +249,7 @@ AddOp
   / "-"
 
 MultExpr
-  = first:PowExpr rest:(__ @MultOp __ @PowExpr)* {
+  = first:PowExpr rest:(_ @MultOp _ @PowExpr)* {
       return buildBinaryExpr(first, rest);
     }
 
@@ -296,14 +259,14 @@ MultOp
   / "%"
 
 PowExpr
-  = first:UnaryExpr rest:(__ @PowOp __ @UnaryExpr)* {
+  = first:UnaryExpr rest:(_ @PowOp _ @UnaryExpr)* {
       return buildBinaryExpr(first, rest);
     }
 
 PowOp = "^"
 
 UnaryExpr
-  = ops:(__ @UnaryOp)* __ right:ListExpr { return buildUnaryExpr(ops, right); }
+  = ops:(_ @UnaryOp)* _ right:ListExpr { return buildUnaryExpr(ops, right); }
 
 UnaryOp
   = "+"
@@ -312,21 +275,21 @@ UnaryOp
 // Lists and Tables
 
 ListExpr
-  = "[" __ values:Values? __ "]" { return new ListNode(values ?? []); }
+  = "[" _ values:Values? _ "]" { return new ListNode(values ?? []); }
   / TableExpr
 
-Pair = key:Symbol __ "=" __ value:Value { return { key, value }; }
+Pair = key:Symbol _ "=" _ value:Value { return { key, value }; }
 
-Pairs = first:Pair rest:(__ "," __ EOL? __ @Pair)* { return [first, ...rest]; }
+Pairs = first:Pair rest:(_ "," _ EOL? _ @Pair)* { return [first, ...rest]; }
 
 TableExpr
-  = "{" __ pairs:Pairs? __ "}" { return new TableNode(pairs ?? []); }
+  = "{" _ pairs:Pairs? _ "}" { return new TableNode(pairs ?? []); }
   / CallExpr
 
 // Invocation
 
 CallExpr
-  = name:Symbol __ "(" __ EOL? __ args:Values? __ ")" {
+  = name:Symbol _ "(" _ EOL? _ args:Values? _ ")" {
       return new CallNode(name, args ?? []);
     }
   / IndexExpr
@@ -334,31 +297,29 @@ CallExpr
 // Indexes
 
 IndexExpr
-  = name:Symbol __ indexes:Indexes? {
+  = name:Symbol _ indexes:Indexes? {
       return indexes ? buildIndex(name, indexes) : new VarNode(name);
     }
   / PrimaryExpr
 
 Indexes
-  = first:IndexSegment rest:(__ @IndexSegment)* {
+  = first:IndexSegment rest:(_ @IndexSegment)* {
       // flatten segments into a single chain of indexes
       return [first, ...rest].flat();
     }
 
 IndexSegment
-  = "[" __ first:Value rest:(__ "," __ @Value)* __ "]" {
-      // allow successive indexes separated by commas, e.g. lst[0,1,2]
-      return [first, ...rest];
-    }
-  / "." __ index:Digits { return [new LiteralNode(Number(index))]; }
-  / "." __ name:Symbol { return [new LiteralNode(name)]; }
+  // allow successive indexes separated by commas, e.g. lst[0,1,2]
+  = "[" _ first:Value rest:(_ "," _ @Value)* _ "]" { return [first, ...rest]; }
+  / "." _ index:Digits { return [new LiteralNode(Number(index))]; }
+  / "." _ name:Symbol { return [new LiteralNode(name)]; }
 
 // segment consisting of one literal node
 
 PrimaryExpr
   = String
   / Literal
-  / "(" __ val:Value __ ")" { return val; }
+  / "(" _ val:Value _ ")" { return val; }
 
 // Strings
 
@@ -367,7 +328,7 @@ String "a string"
 
 StringSegment
   = chars:Char+ { return new LiteralNode(chars.join('')); }
-  / "{" __ val:Value __ "}" { return val; }
+  / "{" _ val:Value _ "}" { return val; }
 
 // interpolation of value expressions
 
@@ -385,14 +346,14 @@ Literal
   / Boolean
   / Number
 
-None = "none" WB { return new LiteralNode(null); }
+None = none { return new LiteralNode(null); }
 
 Boolean
-  = "true" WB { return new LiteralNode(true); }
-  / "false" WB { return new LiteralNode(false); }
+  = true { return new LiteralNode(true); }
+  / false { return new LiteralNode(false); }
 
 Number "a number"
-  = "infinity" WB { return new LiteralNode(Infinity); }
+  = infinity { return new LiteralNode(Infinity); }
   / num:NumberFormat { return new LiteralNode(parseFloat(num)); }
 
 NumberFormat = $(Digits ("." Digits)? ([eE] [-+]? Digits)?)
@@ -403,37 +364,89 @@ Digits = $[0-9]+
 
 Symbol "a name" = $(!Reserved [a-z_]i [a-z0-9_]i*)
 
+// Keywords
+
+none = "none" WB
+
+true = "true" WB
+
+false = "false" WB
+
+infinity = "infinity" WB
+
+if = "if" WB
+
+then = "then" WB
+
+else = "else" WB
+
+end = "end" WB
+
+repeat = "repeat" WB
+
+do = "do" WB
+
+for = "for" WB
+
+from = "from" WB
+
+to = "to" WB
+
+by = "by" WB
+
+in = "in" WB
+
+while = "while" WB
+
+begin = "begin" WB
+
+exit = "exit" WB
+
+break = "break" WB
+
+next = "next" WB
+
+return = "return" WB
+
+let = "let" WB
+
+and = "and" WB
+
+or = "or" WB
+
+not = "not" WB
+
 Reserved
-  = "none" WB
-  / "true" WB
-  / "false" WB
-  / "infinity" WB
-  / "if" WB
-  / "then" WB
-  / "else" WB
-  / "end" WB
-  / "repeat" WB
-  / "do" WB
-  / "for" WB
-  / "from" WB
-  / "to" WB
-  / "by" WB
-  / "in" WB
-  / "while" WB
-  / "begin" WB
-  / "exit" WB
-  / "break" WB
-  / "next" WB
-  / "return" WB
-  / "let" WB
-  / "and" WB
-  / "or" WB
-  / "not" WB
+  = none
+  / true
+  / false
+  / infinity
+  / if
+  / then
+  / else
+  / end
+  / repeat
+  / do
+  / for
+  / from
+  / to
+  / by
+  / in
+  / while
+  / begin
+  / exit
+  / break
+  / next
+  / return
+  / let
+  / and
+  / or
+  / not
 
 // Whitespace
 
-WB = ![a-z_]i __
+WB = ![a-z_]i
 
-__ "whitespace" = [ \t]* (";" [^\n]*)?
+_ "whitespace" = [ \t]* (";" [^\n]*)?
 
-EOL "end of line" = (__ "\n")+
+EOL "end of line" = (_ "\n")+
