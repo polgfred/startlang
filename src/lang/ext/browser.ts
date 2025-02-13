@@ -83,6 +83,7 @@ export class BrowserHost {
     this.textBuffer = produce(this.textBuffer, (draft) => {
       draft.push(text);
     });
+    this.forceRender();
   }
 
   takeSnapshot(): BrowserSnapshot {
@@ -211,5 +212,6 @@ export const browserGlobals: RuntimeFunctions = {
   print(interpreter, [text]: [string]) {
     const host = getHost(interpreter);
     host.pushText(text);
+    return waitForRepaint();
   },
 };

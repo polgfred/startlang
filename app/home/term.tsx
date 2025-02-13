@@ -47,9 +47,7 @@ export default function Term({
 
   const scrollRef = useRef<HTMLDivElement | null>(null);
   useLayoutEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
+    scrollRef.current?.scrollIntoView({ block: 'end' });
   });
 
   return (
@@ -101,7 +99,15 @@ export default function Term({
         }}
       >
         {textBuffer.map((line, index) => (
-          <p key={index}>{line}</p>
+          <p
+            key={index}
+            sx={{
+              padding: 1,
+              borderBottom: '1px solid #dddddd',
+            }}
+          >
+            {line}
+          </p>
         ))}
       </div>
     </div>
