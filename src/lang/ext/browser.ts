@@ -209,9 +209,12 @@ export const browserGlobals: RuntimeFunctions = {
     return waitForRepaint();
   },
 
-  print(interpreter, [text]: [string]) {
+  print(interpreter, values: readonly unknown[]) {
     const host = getHost(interpreter);
-    host.pushText(text);
+    for (const value of values) {
+      const handler = interpreter.getHandler(value);
+      host.pushText(handler.getPrettyValue(value));
+    }
     return waitForRepaint();
   },
 };
