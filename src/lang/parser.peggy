@@ -188,7 +188,7 @@ CallStatement
   //  2- try to match zero or more parenthesized arguments
   //  3- match a bare call with no parens or args
   = name:Symbol _ args:Values { return new CallNode(name, args); }
-  / name:Symbol _ "(" _ EOL? _ args:Values? _ ")" {
+  / name:Symbol _ "(" EOL? _ args:Values? EOL? _ ")" {
       return new CallNode(name, args ?? []);
     }
   / name:Symbol { return new CallNode(name, []); }
@@ -275,7 +275,7 @@ UnaryOp
 // Lists and Tables
 
 ListExpr
-  = "[" _ values:Values? _ "]" { return new ListNode(values ?? []); }
+  = "[" EOL? _ values:Values? EOL? _ "]" { return new ListNode(values ?? []); }
   / TableExpr
 
 Pair = key:Symbol _ "=" _ value:Value { return { key, value }; }
@@ -283,13 +283,13 @@ Pair = key:Symbol _ "=" _ value:Value { return { key, value }; }
 Pairs = first:Pair rest:(_ "," _ EOL? _ @Pair)* { return [first, ...rest]; }
 
 TableExpr
-  = "{" _ pairs:Pairs? _ "}" { return new TableNode(pairs ?? []); }
+  = "{" EOL? _ pairs:Pairs? EOL? _ "}" { return new TableNode(pairs ?? []); }
   / CallExpr
 
 // Invocation
 
 CallExpr
-  = name:Symbol _ "(" _ EOL? _ args:Values? _ ")" {
+  = name:Symbol _ "(" EOL? _ args:Values? EOL? _ ")" {
       return new CallNode(name, args ?? []);
     }
   / IndexExpr
