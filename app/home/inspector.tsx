@@ -9,7 +9,7 @@ import {
   TableRow,
   Typography,
 } from '@mui/material';
-import { ChangeEvent, useCallback, useState } from 'react';
+import { ChangeEvent, JSX, useCallback, useState } from 'react';
 
 import { History } from '../../src/lang/ext/history.js';
 import type {
@@ -198,18 +198,36 @@ function StringInspector({ value }: { value: string }) {
 }
 
 function ExpandableFooter({
-  onShowLess,
-  onShowMore,
+  total,
+  visible,
+  setVisible,
 }: {
-  onShowLess: () => void;
-  onShowMore: () => void;
+  total: number;
+  visible: number;
+  setVisible: (visible: number) => void;
 }) {
   return (
     <TableFooter>
       <TableRow key="trunc">
         <TableCell colSpan={2}>
-          <Button onClick={onShowLess}>Less</Button>
-          <Button onClick={onShowMore}>More</Button>
+          {visible > 5 && (
+            <Button
+              onClick={() => {
+                setVisible(visible - 5);
+              }}
+            >
+              Less
+            </Button>
+          )}
+          {visible < total && (
+            <Button
+              onClick={() => {
+                setVisible(visible + 5);
+              }}
+            >
+              More
+            </Button>
+          )}
         </TableCell>
       </TableRow>
     </TableFooter>
@@ -218,6 +236,15 @@ function ExpandableFooter({
 
 function ListInspector({ value }: { value: ListType }) {
   const [visible, setVisible] = useState(5);
+
+  const rows: JSX.Element[] = [];
+  for (let i = 0; i < Math.min(visible, value.length); i++) {
+    rows.push(
+      <TableRow key={i}>
+        <TableCell>{inspectorFor(value[i])}</TableCell>
+      </TableRow>
+    );
+  }
 
   return (
     <Table
@@ -237,25 +264,29 @@ function ListInspector({ value }: { value: ListType }) {
           </TableCell>
         </TableRow>
       </TableHead>
-      <TableBody>
-        {value.slice(0, visible).map((item, index) => (
-          <TableRow key={index}>
-            <TableCell>{inspectorFor(item)}</TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-      {value.length > visible && (
-        <ExpandableFooter
-          onShowLess={() => setVisible(visible - 5)}
-          onShowMore={() => setVisible(visible + 5)}
-        />
-      )}
+      <TableBody>{rows}</TableBody>
+      <ExpandableFooter
+        total={value.length}
+        visible={visible}
+        setVisible={setVisible}
+      />
     </Table>
   );
 }
 
 function TableInspector({ value }: { value: TableType }) {
   const [visible, setVisible] = useState(5);
+
+  const keys = Object.keys(value);
+  const rows: JSX.Element[] = [];
+  for (let i = 0; i < Math.min(visible, keys.length); i++) {
+    rows.push(
+      <TableRow key={i}>
+        <TableCell>{inspectorFor(keys[i])}</TableCell>
+        <TableCell>{inspectorFor(value[keys[i]])}</TableCell>
+      </TableRow>
+    );
+  }
 
   return (
     <Table
@@ -282,22 +313,12 @@ function TableInspector({ value }: { value: TableType }) {
           </TableCell>
         </TableRow>
       </TableHead>
-      <TableBody>
-        {Object.entries(value)
-          .slice(0, visible)
-          .map(([key, value]) => (
-            <TableRow key={key}>
-              <TableCell>{inspectorFor(key)}</TableCell>
-              <TableCell>{inspectorFor(value)}</TableCell>
-            </TableRow>
-          ))}
-      </TableBody>
-      {Object.keys(value).length > visible && (
-        <ExpandableFooter
-          onShowLess={() => setVisible(visible - 5)}
-          onShowMore={() => setVisible(visible + 5)}
-        />
-      )}
+      <TableBody>{rows}</TableBody>
+      <ExpandableFooter
+        total={keys.length}
+        visible={visible}
+        setVisible={setVisible}
+      />
     </Table>
   );
 }
