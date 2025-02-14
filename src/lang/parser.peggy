@@ -125,8 +125,8 @@ IfBlock
       return buildIfTree([[cond, tbody]], fbody);
     }
   // if/then[/else if/...][/else]
-  / first:IfBody rest:(_ else _ @IfBody)* fbody:(_ else EOL @Block)? _ end {
-      return buildIfTree([first, ...rest], fbody);
+  / cases:IfBody|1.., (_ else _)| fbody:(_ else EOL @Block)? _ end {
+      return buildIfTree(cases, fbody);
     }
 
 DoBody
@@ -154,11 +154,10 @@ ForBlock
 WhileBlock
   = while _ cond:Value _ body:DoBody { return new WhileNode(cond, body); }
 
-Params
-  = first:Symbol rest:(_ "," _ EOL? _ @Symbol)* { return [first, ...rest]; }
+Params = Symbol|.., (_ "," EOL? _)|
 
 BeginBlock
-  = begin _ name:Symbol _ params:("(" EOL? _ @Params? _ ")")? _ body:DoBody {
+  = begin _ name:Symbol _ params:("(" EOL? _ @Params EOL? ")")? _ body:DoBody {
       return new BeginNode(name, params ?? [], body);
     }
 
@@ -174,8 +173,8 @@ FlowStatement
   / return result:(_ @Value)? { return new ReturnNode(result); }
 
 LetStatement
-  = (let _)? name:Symbol _ indexes:Indexes? _ "=" _ value:Value {
-      return indexes
+  = (let _)? name:Symbol _ indexes:Indexes _ "=" _ value:Value {
+      return indexes.length > 0
         ? buildIndex(name, indexes, value)
         : new LetNode(name, value);
     }
@@ -187,15 +186,17 @@ CallStatement
   //      - this fixes the case of "print (1+2)/3"
   //  2- try to match zero or more parenthesized arguments
   //  3- match a bare call with no parens or args
-  = name:Symbol _ args:Values { return new CallNode(name, args); }
-  / name:Symbol _ "(" EOL? _ args:Values? EOL? _ ")" {
-      return new CallNode(name, args ?? []);
+  = name:Symbol _ args:Values & { return args.length > 0; } {
+      return new CallNode(name, args);
+    }
+  / name:Symbol _ "(" EOL? _ args:Values EOL? _ ")" {
+      return new CallNode(name, args);
     }
   / name:Symbol { return new CallNode(name, []); }
 
 // Values
 
-Values = first:Value rest:(_ "," _ EOL? _ @Value)* { return [first, ...rest]; }
+Values = Value|.., (_ "," EOL? _)|
 
 Value "a value" = ConjExpr
 
@@ -266,7 +267,7 @@ PowExpr
 PowOp = "^"
 
 UnaryExpr
-  = ops:(_ @UnaryOp)* _ right:ListExpr { return buildUnaryExpr(ops, right); }
+  = ops:UnaryOp|.., _| _ right:ListExpr { return buildUnaryExpr(ops, right); }
 
 UnaryOp
   = "+"
@@ -275,42 +276,42 @@ UnaryOp
 // Lists and Tables
 
 ListExpr
-  = "[" EOL? _ values:Values? EOL? _ "]" { return new ListNode(values ?? []); }
+  = "[" EOL? _ values:Values EOL? _ "]" { return new ListNode(values); }
   / TableExpr
 
 Pair = key:Symbol _ "=" _ value:Value { return { key, value }; }
 
-Pairs = first:Pair rest:(_ "," _ EOL? _ @Pair)* { return [first, ...rest]; }
+Pairs = Pair|.., (_ "," EOL? _)|
 
 TableExpr
-  = "{" EOL? _ pairs:Pairs? EOL? _ "}" { return new TableNode(pairs ?? []); }
+  = "{" EOL? _ pairs:Pairs EOL? _ "}" { return new TableNode(pairs); }
   / CallExpr
 
 // Invocation
 
 CallExpr
-  = name:Symbol _ "(" EOL? _ args:Values? EOL? _ ")" {
-      return new CallNode(name, args ?? []);
+  = name:Symbol _ "(" EOL? _ args:Values EOL? _ ")" {
+      return new CallNode(name, args);
     }
   / IndexExpr
 
 // Indexes
 
 IndexExpr
-  = name:Symbol _ indexes:Indexes? {
-      return indexes ? buildIndex(name, indexes) : new VarNode(name);
+  = name:Symbol _ indexes:Indexes {
+      return indexes.length > 0 ? buildIndex(name, indexes) : new VarNode(name);
     }
   / PrimaryExpr
 
 Indexes
-  = segments:IndexSegment* & { return segments.length > 0; } {
+  = segments:IndexSegment* {
       // flatten segments into a single chain of indexes
       return segments.flat();
     }
 
 IndexSegment
   // allow successive indexes separated by commas, e.g. lst[0,1,2]
-  = "[" _ first:Value rest:(_ "," _ @Value)* _ "]" { return [first, ...rest]; }
+  = "[" _ @Value|.., (_ "," _)| _ "]"
   / "." _ index:Digits { return new LiteralNode(Number(index)); }
   / "." _ name:Symbol { return new LiteralNode(name); }
 
