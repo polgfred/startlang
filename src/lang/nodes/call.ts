@@ -63,7 +63,7 @@ export class CallFrame extends Frame {
           throw new Error(`function ${name} does not support do-blocks`);
         }
         interpreter.swapFrame(this, 4);
-        return func(interpreter, this.args);
+        return func(interpreter, this.args, false);
       }
       case 4: {
         if (body) {

@@ -2,22 +2,29 @@ import { Button, Stack, TextField } from '@mui/material';
 import {
   ChangeEvent,
   KeyboardEvent,
+  memo,
   useCallback,
   useLayoutEffect,
   useRef,
   useState,
 } from 'react';
 
+import { Cell } from '../../src/lang/ext/cells/index.js';
+
 interface InputState {
   prompt: string;
   onInputComplete: (value: string) => void;
 }
 
+const CellElement = memo(function CellElement({ cell }: { cell: Cell }) {
+  return cell.getHTMLElement();
+});
+
 export default function Term({
-  textBuffer,
+  outputBuffer,
   inputState,
 }: {
-  textBuffer: readonly string[];
+  outputBuffer: Cell;
   inputState: InputState | null;
 }) {
   const [input, setInput] = useState('');
@@ -98,17 +105,7 @@ export default function Term({
           fontSize: '14px',
         }}
       >
-        {textBuffer.map((line, index) => (
-          <p
-            key={index}
-            sx={{
-              padding: 1,
-              borderBottom: '1px solid #dddddd',
-            }}
-          >
-            {line}
-          </p>
-        ))}
+        <CellElement cell={outputBuffer} />
       </div>
     </div>
   );

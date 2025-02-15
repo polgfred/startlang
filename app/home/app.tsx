@@ -104,7 +104,7 @@ export default function App() {
     setError(null);
     history.clear();
     host.clearDisplay();
-    host.clearTextBuffer();
+    host.clearOutputBuffer();
     forceRender();
 
     try {
@@ -181,7 +181,10 @@ export default function App() {
                     flex: 1,
                   }}
                 >
-                  <Term textBuffer={host.textBuffer} inputState={inputState} />
+                  <Term
+                    outputBuffer={host.outputBuffer}
+                    inputState={inputState}
+                  />
                 </Paper>
               )}
             </Stack>

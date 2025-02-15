@@ -2,7 +2,9 @@ import { produce } from 'immer';
 
 import { Interpreter } from '../interpreter.js';
 import type { RuntimeFunctions } from '../types.js';
+import { Cons } from '../utils/cons.js';
 
+import { Cell, StackCell, ValueCell } from './cells/index.js';
 import {
   ShapeProps,
   TextProps,
@@ -73,17 +75,36 @@ export class BrowserHost {
     this.forceRender();
   }
 
-  textBuffer: readonly string[] = emptyArray;
+  outputBuffer = new StackCell('column');
+  currentCell: Cons<Cell> = new Cons(null);
 
-  clearTextBuffer() {
-    this.textBuffer = emptyArray;
+  clearOutputBuffer() {
+    this.outputBuffer = new StackCell('column');
   }
 
-  pushText(text: string) {
-    this.textBuffer = produce(this.textBuffer, (draft) => {
-      draft.push(text);
-    });
-    this.forceRender();
+  pushCell(cell: Cell) {
+    this.currentCell = this.currentCell.push(cell);
+  }
+
+  addCell(cell: Cell) {
+    if (this.currentCell.head === null) {
+      this.outputBuffer = this.outputBuffer.addChild(cell);
+    } else {
+      this.currentCell = this.currentCell.swap(
+        this.currentCell.head.addChild(cell)
+      );
+    }
+  }
+
+  popCell() {
+    const cell = this.currentCell.head;
+    this.currentCell = this.currentCell.pop();
+    if (this.currentCell.head === null) {
+      this.outputBuffer = this.outputBuffer.addChild(cell);
+      this.forceRender();
+    } else {
+      this.addCell(cell);
+    }
   }
 
   takeSnapshot(): BrowserSnapshot {
@@ -209,11 +230,20 @@ export const browserGlobals: RuntimeFunctions = {
     return waitForRepaint();
   },
 
-  print(interpreter, values: readonly unknown[]) {
+  cell(interpreter, [value]: [unknown]) {
     const host = getHost(interpreter);
-    for (const value of values) {
-      const handler = interpreter.getHandler(value);
-      host.pushText(handler.getPrettyValue(value));
+    const handler = interpreter.getHandler(value);
+    host.addCell(new ValueCell(handler.getPrettyValue(value)));
+    // TODO: only do this when at the top level
+    return waitForRepaint();
+  },
+
+  stack(interpreter, [direction = 'column']: [string], finalize) {
+    const host = getHost(interpreter);
+    if (!finalize) {
+      host.pushCell(new StackCell(direction));
+    } else {
+      host.popCell();
     }
     return waitForRepaint();
   },
