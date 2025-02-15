@@ -1,8 +1,11 @@
 import type { Interpreter } from './interpreter';
 
 export interface RuntimeFunction {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (interpreter: Interpreter, ...args: any[]): void | Promise<void>;
+  (
+    interpreter: Interpreter,
+    args: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    finalize?: boolean
+  ): void | Promise<void>;
 }
 
 export type RuntimeFunctions = Readonly<Record<string, RuntimeFunction>>;

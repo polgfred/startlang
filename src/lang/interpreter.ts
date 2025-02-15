@@ -217,17 +217,17 @@ export class Interpreter {
     return leftHandler.evalBinaryOp(op, left, right);
   }
 
-  invokeRuntimeFunction(name: string, args: unknown[]) {
+  getRuntimeFunction(name: string, args: unknown[]) {
     if (args.length > 0) {
       const handler = this.getHandler(args[0]);
       if (name in handler.methods) {
-        return handler.methods[name](this, args);
+        return handler.methods[name];
       }
     }
     if (name in this.runtimeFunctions) {
-      return this.runtimeFunctions[name](this, args);
+      return this.runtimeFunctions[name];
     }
-    throw new Error(`object not found or not a function: ${name}`);
+    throw new Error(`function ${name} not found`);
   }
 
   setResult(value: unknown) {

@@ -186,13 +186,13 @@ CallStatement
   //      - this fixes the case of "print (1+2)/3"
   //  2- try to match zero or more parenthesized arguments
   //  3- match a bare call with no parens or args
-  = name:Symbol _ args:Values & { return args.length > 0; } {
-      return new CallNode(name, args);
+  = name:Symbol _ args:Values & { return args.length > 0; } body:(_ @DoBody)? {
+      return new CallNode(name, args, body);
     }
-  / name:Symbol _ "(" EOL? _ args:Values EOL? _ ")" {
-      return new CallNode(name, args);
+  / name:Symbol _ "(" EOL? _ args:Values EOL? _ ")" body:(_ @DoBody)? {
+      return new CallNode(name, args, body);
     }
-  / name:Symbol { return new CallNode(name, []); }
+  / name:Symbol body:(_ @DoBody)? { return new CallNode(name, [], body); }
 
 // Values
 
@@ -291,7 +291,7 @@ TableExpr
 
 CallExpr
   = name:Symbol _ "(" EOL? _ args:Values EOL? _ ")" {
-      return new CallNode(name, args);
+      return new CallNode(name, args, null);
     }
   / IndexExpr
 
