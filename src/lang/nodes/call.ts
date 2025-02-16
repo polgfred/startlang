@@ -21,20 +21,17 @@ export class CallFrame extends Frame {
 
   readonly count: number = 0;
   readonly args: unknown[] = [];
-  readonly hasNamespace: boolean = false;
 
   visit(interpreter: Interpreter) {
-    const { name, args, body } = this.node;
+    const { name, args } = this.node;
 
     switch (this.state) {
       case 0: {
         if (this.count < args.length) {
           interpreter.swapFrame(this, 1);
           interpreter.pushFrame(args[this.count]);
-        } else if (name in interpreter.globalFunctions) {
-          interpreter.swapFrame(this, 2);
         } else {
-          interpreter.swapFrame(this, 3);
+          interpreter.swapFrame(this, 2);
         }
         break;
       }
@@ -46,40 +43,38 @@ export class CallFrame extends Frame {
         break;
       }
       case 2: {
+        const frame =
+          name in interpreter.globalFunctions
+            ? new CallGlobalFrame(this.node)
+            : new CallRuntimeFrame(this.node);
+        interpreter.swapFrame(frame, null, (draft) => {
+          draft.args = this.args;
+        });
+      }
+    }
+  }
+
+  isFlowBoundary(flow: 'loop' | 'call') {
+    return true;
+  }
+}
+
+class CallGlobalFrame extends CallFrame {
+  visit(interpreter: Interpreter) {
+    const { name } = this.node;
+
+    switch (this.state) {
+      case 0: {
         const func = interpreter.globalFunctions[name];
         interpreter.pushNamespace();
         for (let i = 0; i < func.params.length; i++) {
           interpreter.setVariable(func.params[i], this.args[i]);
         }
-        interpreter.swapFrame(this, 6, (draft) => {
-          draft.hasNamespace = true;
-        });
+        interpreter.swapFrame(this, 1);
         interpreter.pushFrame(func.body);
         break;
       }
-      case 3: {
-        const func = interpreter.getRuntimeFunction(name, this.args);
-        if (body && func.length < 3) {
-          throw new Error(`function ${name} does not support do-blocks`);
-        }
-        interpreter.swapFrame(this, 4);
-        return func(interpreter, this.args, false);
-      }
-      case 4: {
-        if (body) {
-          interpreter.swapFrame(this, 5);
-          interpreter.pushFrame(body);
-        } else {
-          interpreter.swapFrame(this, 6);
-        }
-        break;
-      }
-      case 5: {
-        const func = interpreter.getRuntimeFunction(name, this.args);
-        interpreter.swapFrame(this, 6);
-        return func(interpreter, this.args, true);
-      }
-      case 6: {
+      case 1: {
         interpreter.popFrame();
         break;
       }
@@ -87,12 +82,41 @@ export class CallFrame extends Frame {
   }
 
   dispose(interpreter: Interpreter) {
-    if (this.hasNamespace) {
-      interpreter.popNamespace();
-    }
+    interpreter.popNamespace();
   }
+}
 
-  isFlowBoundary(flow: 'loop' | 'call') {
-    return true;
+class CallRuntimeFrame extends CallFrame {
+  visit(interpreter: Interpreter) {
+    const { name, body } = this.node;
+
+    const func = interpreter.getRuntimeFunction(name, this.args);
+
+    switch (this.state) {
+      case 0: {
+        if (body && func.length < 3) {
+          throw new Error(`function ${name} does not support do-blocks`);
+        }
+        interpreter.swapFrame(this, 1);
+        return func(interpreter, this.args, false);
+      }
+      case 1: {
+        if (body) {
+          interpreter.swapFrame(this, 2);
+          interpreter.pushFrame(body);
+        } else {
+          interpreter.swapFrame(this, 3);
+        }
+        break;
+      }
+      case 2: {
+        interpreter.swapFrame(this, 3);
+        return func(interpreter, this.args, true);
+      }
+      case 3: {
+        interpreter.popFrame();
+        break;
+      }
+    }
   }
 }
