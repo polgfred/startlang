@@ -234,8 +234,9 @@ export const browserGlobals: RuntimeFunctions = {
     const host = getHost(interpreter);
     const handler = interpreter.getHandler(value);
     host.addCell(new ValueCell(handler.getPrettyValue(value)));
-    // TODO: only do this when at the top level
-    return waitForRepaint();
+    if (host.currentCell.head === rootCell) {
+      return waitForRepaint();
+    }
   },
 
   column(interpreter, [justify]: [string], finalize) {
@@ -245,8 +246,9 @@ export const browserGlobals: RuntimeFunctions = {
     } else {
       host.popCell();
     }
-    // TODO: only do this when at the top level
-    return waitForRepaint();
+    if (host.currentCell.head === rootCell) {
+      return waitForRepaint();
+    }
   },
 
   row(interpreter, [justify]: [string], finalize) {
@@ -256,7 +258,8 @@ export const browserGlobals: RuntimeFunctions = {
     } else {
       host.popCell();
     }
-    // TODO: only do this when at the top level
-    return waitForRepaint();
+    if (host.currentCell.head === rootCell) {
+      return waitForRepaint();
+    }
   },
 };
