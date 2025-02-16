@@ -21,6 +21,8 @@ export interface BrowserSnapshot {
   shapes: readonly Shape[];
   shapeProps: ShapeProps;
   textProps: TextProps;
+  outputBuffer: StackCell;
+  currentCell: Cons<Cell>;
 }
 
 const emptyArray = Object.freeze([]);
@@ -80,6 +82,7 @@ export class BrowserHost {
 
   clearOutputBuffer() {
     this.outputBuffer = new StackCell('column');
+    this.currentCell = new Cons(rootCell);
   }
 
   pushCell(cell: Cell) {
@@ -112,6 +115,8 @@ export class BrowserHost {
       shapes: this.shapes,
       shapeProps: this.shapeProps,
       textProps: this.textProps,
+      outputBuffer: this.outputBuffer,
+      currentCell: this.currentCell,
     };
   }
 
@@ -119,6 +124,8 @@ export class BrowserHost {
     this.shapes = snapshot.shapes;
     this.shapeProps = snapshot.shapeProps;
     this.textProps = snapshot.textProps;
+    this.outputBuffer = snapshot.outputBuffer;
+    this.currentCell = snapshot.currentCell;
   }
 }
 
