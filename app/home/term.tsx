@@ -9,16 +9,12 @@ import {
   useState,
 } from 'react';
 
-import { Cell } from '../../src/lang/ext/cells/index.js';
+import { Cell, CellElement } from '../../src/lang/ext/cells/index.js';
 
 interface InputState {
   prompt: string;
   onInputComplete: (value: string) => void;
 }
-
-const CellElement = memo(function CellElement({ cell }: { cell: Cell }) {
-  return cell.getHTMLElement();
-});
 
 export default function Term({
   outputBuffer,
@@ -102,7 +98,8 @@ export default function Term({
         ref={scrollRef}
         sx={{
           fontFamily: 'Roboto',
-          fontSize: '14px',
+          fontSize: 14,
+          padding: 2,
         }}
       >
         <CellElement cell={outputBuffer} />

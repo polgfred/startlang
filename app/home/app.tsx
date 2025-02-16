@@ -22,6 +22,13 @@ import Inspector from './inspector.jsx';
 import Term from './term.jsx';
 
 const theme = createTheme({
+  components: {
+    MuiStack: {
+      defaultProps: {
+        useFlexGap: true,
+      },
+    },
+  },
   palette: {
     primary: {
       main: '#6b9da0',

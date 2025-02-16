@@ -1,14 +1,11 @@
-import { Stack } from '@mui/material';
+import { Divider, Stack } from '@mui/material';
 import { produce } from 'immer';
-import { Fragment } from 'react';
 
-import { Cell } from './base.jsx';
+import { Cell, CellElement } from './base.jsx';
 
 export class StackCell extends Cell {
-  readonly direction: 'row' | 'column';
-
   constructor(
-    direction: string,
+    readonly direction: 'row' | 'column',
     readonly children: Cell[] = []
   ) {
     if (direction !== 'row' && direction !== 'column') {
@@ -26,9 +23,20 @@ export class StackCell extends Cell {
 
   getHTMLElement() {
     return (
-      <Stack direction={this.direction}>
+      <Stack
+        direction={this.direction}
+        gap={2}
+        divider={
+          <Divider
+            flexItem
+            orientation={
+              this.direction === 'column' ? 'horizontal' : 'vertical'
+            }
+          />
+        }
+      >
         {this.children.map((child, i) => (
-          <Fragment key={i}>{child.getHTMLElement()}</Fragment>
+          <CellElement key={i} cell={child} />
         ))}
       </Stack>
     );
