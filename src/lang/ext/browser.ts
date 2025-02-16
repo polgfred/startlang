@@ -4,7 +4,15 @@ import { Interpreter } from '../interpreter.js';
 import type { RuntimeFunctions } from '../types.js';
 import { Cons } from '../utils/cons.js';
 
-import { Cell, StackCell, ValueCell, rootCell } from './cells/index.js';
+import {
+  Cell,
+  GridCell,
+  GridHeaderRowCell,
+  GridRowCell,
+  StackCell,
+  ValueCell,
+  rootCell,
+} from './cells/index.js';
 import {
   ShapeProps,
   TextProps,
@@ -85,13 +93,11 @@ export class BrowserHost {
     this.currentCell = new Cons(rootCell);
   }
 
-  pushCell(cell: Cell) {
-    this.currentCell = this.currentCell.push(cell);
-  }
-
   addCell(cell: Cell) {
     if (this.currentCell.head === rootCell) {
       this.outputBuffer = this.outputBuffer.addChild(cell);
+      this.forceRender();
+      return waitForRepaint();
     } else {
       this.currentCell = this.currentCell.swap(
         this.currentCell.head.addChild(cell)
@@ -99,13 +105,12 @@ export class BrowserHost {
     }
   }
 
-  popCell() {
-    const cell = this.currentCell.head;
-    this.currentCell = this.currentCell.pop();
-    if (this.currentCell.head === rootCell) {
-      this.outputBuffer = this.outputBuffer.addChild(cell);
-      this.forceRender();
+  handleCellLifecycle(cell: Cell, finalize: boolean) {
+    if (!finalize) {
+      this.currentCell = this.currentCell.push(cell);
     } else {
+      const cell = this.currentCell.head;
+      this.currentCell = this.currentCell.pop();
       this.addCell(cell);
     }
   }
@@ -237,36 +242,37 @@ export const browserGlobals: RuntimeFunctions = {
     return waitForRepaint();
   },
 
-  print(interpreter, [value]: [unknown]) {
+  print(interpreter, [value, variant = 'body1']: [unknown, string]) {
     const host = getHost(interpreter);
     const handler = interpreter.getHandler(value);
-    host.addCell(new ValueCell(handler.getPrettyValue(value)));
+    host.addCell(new ValueCell(handler.getPrettyValue(value), variant));
     if (host.currentCell.head === rootCell) {
       return waitForRepaint();
     }
   },
 
-  column(interpreter, [justify]: [string], finalize) {
+  stack(interpreter, [justify]: [string], finalize) {
     const host = getHost(interpreter);
-    if (!finalize) {
-      host.pushCell(new StackCell('column', justify));
-    } else {
-      host.popCell();
-    }
-    if (host.currentCell.head === rootCell) {
-      return waitForRepaint();
-    }
+    host.handleCellLifecycle(new StackCell('column', justify), finalize);
   },
 
-  row(interpreter, [justify]: [string], finalize) {
+  hstack(interpreter, [justify]: [string], finalize) {
     const host = getHost(interpreter);
-    if (!finalize) {
-      host.pushCell(new StackCell('row', justify));
-    } else {
-      host.popCell();
-    }
-    if (host.currentCell.head === rootCell) {
-      return waitForRepaint();
-    }
+    host.handleCellLifecycle(new StackCell('row', justify), finalize);
+  },
+
+  grid(interpreter, args: [], finalize) {
+    const host = getHost(interpreter);
+    host.handleCellLifecycle(new GridCell(), finalize);
+  },
+
+  header(interpreter, args: [], finalize) {
+    const host = getHost(interpreter);
+    host.handleCellLifecycle(new GridHeaderRowCell(), finalize);
+  },
+
+  row(interpreter, args: [], finalize) {
+    const host = getHost(interpreter);
+    host.handleCellLifecycle(new GridRowCell(), finalize);
   },
 };

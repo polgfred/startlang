@@ -4,7 +4,7 @@ export interface RuntimeFunction {
   (
     interpreter: Interpreter,
     args: any, // eslint-disable-line @typescript-eslint/no-explicit-any
-    finalize?: boolean
+    finalize: boolean
   ): void | Promise<void>;
 }
 

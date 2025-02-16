@@ -56,7 +56,6 @@ export class StackCell extends Cell {
         }
         sx={{
           width: '100%',
-          height: '100%',
         }}
       >
         {this.children.map((child, i) => (
