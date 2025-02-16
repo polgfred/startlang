@@ -238,10 +238,10 @@ export const browserGlobals: RuntimeFunctions = {
     return waitForRepaint();
   },
 
-  column(interpreter, args: [], finalize) {
+  column(interpreter, [justify]: [string], finalize) {
     const host = getHost(interpreter);
     if (!finalize) {
-      host.pushCell(new StackCell('column'));
+      host.pushCell(new StackCell('column', justify));
     } else {
       host.popCell();
     }
@@ -249,10 +249,10 @@ export const browserGlobals: RuntimeFunctions = {
     return waitForRepaint();
   },
 
-  row(interpreter, args: [], finalize) {
+  row(interpreter, [justify]: [string], finalize) {
     const host = getHost(interpreter);
     if (!finalize) {
-      host.pushCell(new StackCell('row'));
+      host.pushCell(new StackCell('row', justify));
     } else {
       host.popCell();
     }
