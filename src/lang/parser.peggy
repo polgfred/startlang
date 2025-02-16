@@ -16,9 +16,9 @@
     LogicalOpNode,
     LogicalNotNode,
     NextNode,
+    RecordNode,
     RepeatNode,
     ReturnNode,
-    TableNode,
     TemplateStringNode,
     UnaryOpNode,
     VarIndexNode,
@@ -273,18 +273,18 @@ UnaryOp
   = "+"
   / "-"
 
-// Lists and Tables
+// Lists and Records
 
 ListExpr
   = "[" EOL? _ values:Values EOL? _ "]" { return new ListNode(values); }
-  / TableExpr
+  / RecordExpr
 
 Pair = key:Symbol _ "=" _ value:Value { return { key, value }; }
 
 Pairs = Pair|.., (_ "," EOL? _)|
 
-TableExpr
-  = "{" EOL? _ pairs:Pairs EOL? _ "}" { return new TableNode(pairs); }
+RecordExpr
+  = "{" EOL? _ pairs:Pairs EOL? _ "}" { return new RecordNode(pairs); }
   / CallExpr
 
 // Invocation

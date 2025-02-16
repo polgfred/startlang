@@ -16,4 +16,4 @@ export type IndexType = number | string;
 
 export type ListType = readonly unknown[];
 
-export type TableType = Readonly<Record<string, unknown>>;
+export type RecordType = Readonly<Record<string, unknown>>;

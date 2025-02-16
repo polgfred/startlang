@@ -1,9 +1,9 @@
-import { emptyTable } from '../handlers/table.js';
+import { emptyRecord } from '../handlers/record.js';
 import { Interpreter } from '../interpreter.js';
 
 import { Frame, Node } from './base.js';
 
-export class TableNode extends Node {
+export class RecordNode extends Node {
   constructor(
     public readonly pairs: {
       readonly key: string;
@@ -14,15 +14,15 @@ export class TableNode extends Node {
   }
 
   makeFrame(): Frame {
-    return new TableFrame(this);
+    return new RecordFrame(this);
   }
 }
 
-export class TableFrame extends Frame {
-  declare node: TableNode;
+export class RecordFrame extends Frame {
+  declare node: RecordNode;
 
   readonly count: number = 0;
-  readonly items = emptyTable;
+  readonly items = emptyRecord;
 
   visit(interpreter: Interpreter) {
     const { pairs } = this.node;

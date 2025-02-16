@@ -15,7 +15,7 @@ import { History } from '../../src/lang/ext/history.js';
 import type {
   ListType,
   NamespaceType,
-  TableType,
+  RecordType,
 } from '../../src/lang/types.js';
 
 export default function Inspector({
@@ -274,7 +274,7 @@ function ListInspector({ value }: { value: ListType }) {
   );
 }
 
-function TableInspector({ value }: { value: TableType }) {
+function RecordInspector({ value }: { value: RecordType }) {
   const [visible, setVisible] = useState(5);
 
   const keys = Object.keys(value);
@@ -338,7 +338,7 @@ function inspectorFor(value: unknown) {
         if (Array.isArray(value)) {
           return <ListInspector value={value} />;
         } else {
-          return <TableInspector value={value as TableType} />;
+          return <RecordInspector value={value as RecordType} />;
         }
       default:
         throw new Error(`could not determine type for ${value}`);

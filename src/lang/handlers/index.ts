@@ -4,8 +4,8 @@ import { BooleanHandler } from './boolean.js';
 import { ListHandler } from './list.js';
 import { NoneHandler } from './none.js';
 import { NumberHandler } from './number.js';
+import { RecordHandler } from './record.js';
 import { StringHandler } from './string.js';
-import { TableHandler } from './table.js';
 
 export { DataHandler } from './base.js';
 
@@ -15,5 +15,5 @@ export function installHandlers(interpreter: Interpreter) {
   interpreter.registerHandler(new NumberHandler(interpreter));
   interpreter.registerHandler(new StringHandler(interpreter));
   interpreter.registerHandler(new ListHandler(interpreter));
-  interpreter.registerHandler(new TableHandler(interpreter));
+  interpreter.registerHandler(new RecordHandler(interpreter));
 }

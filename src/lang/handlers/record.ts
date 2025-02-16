@@ -2,13 +2,13 @@ import deepEqual from 'deep-equal';
 import { type WritableDraft } from 'immer';
 
 import { Interpreter } from '../interpreter.js';
-import type { RuntimeFunctions, TableType } from '../types.js';
+import type { RuntimeFunctions, RecordType } from '../types.js';
 
 import { DataHandler } from './base.js';
 
-export const emptyTable: TableType = Object.freeze(Object.create(null));
+export const emptyRecord: RecordType = Object.freeze(Object.create(null));
 
-export class TableHandler extends DataHandler {
+export class RecordHandler extends DataHandler {
   constructor(interpreter: Interpreter) {
     super(interpreter, {}, tableMethods);
   }
@@ -17,7 +17,7 @@ export class TableHandler extends DataHandler {
     return typeof value === 'object' && value !== null && !Array.isArray(value);
   }
 
-  getPrettyValue(value: TableType) {
+  getPrettyValue(value: RecordType) {
     const prettyValues = Object.entries(value).map(([key, v]) => {
       const handler = this.interpreter.getHandler(v);
       return `${key}=${handler.getPrettyValue(v)}`;
@@ -25,19 +25,19 @@ export class TableHandler extends DataHandler {
     return `{${prettyValues.join(', ')}}`;
   }
 
-  getIndex(value: TableType, index: string) {
+  getIndex(value: RecordType, index: string) {
     return value[index];
   }
 
-  setIndex(value: WritableDraft<TableType>, index: string, element: unknown) {
+  setIndex(value: WritableDraft<RecordType>, index: string, element: unknown) {
     value[index] = element;
   }
 
-  getIterable(value: TableType) {
+  getIterable(value: RecordType) {
     return Object.keys(value);
   }
 
-  evalBinaryOp(op: string, left: TableType, right: TableType) {
+  evalBinaryOp(op: string, left: RecordType, right: RecordType) {
     switch (op) {
       case '::':
         return { ...left, ...right };
@@ -52,11 +52,11 @@ export class TableHandler extends DataHandler {
 }
 
 const tableMethods: RuntimeFunctions = {
-  len(interpreter, [value]: [TableType]) {
+  len(interpreter, [value]: [RecordType]) {
     interpreter.setResult(Object.keys(value).length);
   },
 
-  keys(interpreter, [value]: [TableType]) {
+  keys(interpreter, [value]: [RecordType]) {
     interpreter.setResult(Object.keys(value));
   },
 };
