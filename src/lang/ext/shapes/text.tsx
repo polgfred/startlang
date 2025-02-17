@@ -1,6 +1,15 @@
 import { Shape, ShapeProps, TextProps } from './base.jsx';
 
 export class Text extends Shape {
+  static alignTypes = Object.freeze([
+    'start',
+    'end',
+    'left',
+    'right',
+    'center',
+    'justify',
+  ] as const);
+
   constructor(
     public readonly x: number,
     public readonly y: number,
@@ -14,10 +23,10 @@ export class Text extends Shape {
   protected getSVGProps() {
     const svgProps = super.getSVGProps();
 
-    const { fontFamily, fontSize } = this.textProps;
+    const { ['font.name']: fontName, ['font.size']: fontSize } = this.textProps;
 
-    if (fontFamily) {
-      svgProps.style.fontFamily = fontFamily;
+    if (fontName) {
+      svgProps.style.fontFamily = fontName;
     }
     if (fontSize) {
       svgProps.style.fontSize = fontSize;

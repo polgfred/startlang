@@ -48,6 +48,7 @@ const languageDefinition: languages.IMonarchLanguage = {
     'or',
     'repeat',
     'return',
+    'set',
     'then',
     'to',
     'while',

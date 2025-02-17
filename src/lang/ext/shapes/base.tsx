@@ -12,9 +12,8 @@ export interface ShapeProps {
 }
 
 export interface TextProps {
-  fontFamily: string;
-  fontSize: number;
-  textAlign: string;
+  ['font.name']: string;
+  ['font.size']: number;
 }
 
 export abstract class Shape {

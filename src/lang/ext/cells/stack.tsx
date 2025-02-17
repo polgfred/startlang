@@ -3,41 +3,11 @@ import { produce } from 'immer';
 
 import { Cell, CellElement } from './base.jsx';
 
-type DirectionType = (typeof directionTypes)[number];
+type DirectionType = (typeof StackCell.directionTypes)[number];
 
-const directionTypes = Object.freeze(['row', 'column'] as const);
+type AlignType = (typeof StackCell.alignTypes)[number];
 
-type AlignType = (typeof alignTypes)[number];
-
-const alignTypes = Object.freeze([
-  'normal',
-  'stretch',
-  'center',
-  'start',
-  'end',
-  'flex-start',
-  'flex-end',
-  'self-start',
-  'self-end',
-  'anchor-center',
-] as const);
-
-type JustifyType = (typeof justifyTypes)[number];
-
-const justifyTypes = Object.freeze([
-  'normal',
-  'center',
-  'start',
-  'end',
-  'flex-start',
-  'flex-end',
-  'left',
-  'right',
-  'space-between',
-  'space-around',
-  'space-evenly',
-  'stretch',
-] as const);
+type JustifyType = (typeof StackCell.justifyTypes)[number];
 
 export interface StackProps {
   direction: DirectionType;
@@ -46,6 +16,36 @@ export interface StackProps {
 }
 
 export class StackCell extends Cell {
+  static directionTypes = Object.freeze(['row', 'column'] as const);
+
+  static alignTypes = Object.freeze([
+    'normal',
+    'stretch',
+    'center',
+    'start',
+    'end',
+    'flex-start',
+    'flex-end',
+    'self-start',
+    'self-end',
+    'anchor-center',
+  ] as const);
+
+  static justifyTypes = Object.freeze([
+    'normal',
+    'center',
+    'start',
+    'end',
+    'flex-start',
+    'flex-end',
+    'left',
+    'right',
+    'space-between',
+    'space-around',
+    'space-evenly',
+    'stretch',
+  ] as const);
+
   readonly children: readonly Cell[] = Object.freeze([]);
   readonly stackProps: StackProps = Object.freeze({
     direction: 'column',
@@ -59,24 +59,38 @@ export class StackCell extends Cell {
     });
   }
 
-  updateProps(props: UncheckedProps<StackProps>) {
+  updateProp(name: string, value: unknown) {
     return produce(this, (draft) => {
-      if (
-        props.direction &&
-        !directionTypes.includes(props.direction as DirectionType)
-      ) {
-        throw new Error(`invalid value for direction: ${props.direction}`);
+      switch (name) {
+        case 'direction': {
+          if (!StackCell.directionTypes.includes(value as DirectionType)) {
+            throw new Error(`invalid value for direction: ${value}`);
+          }
+          // @ts-expect-error we just checked it
+          draft.stackProps.direction = value;
+          break;
+        }
+
+        case 'align': {
+          if (!StackCell.alignTypes.includes(value as AlignType)) {
+            throw new Error(`invalid value for align: ${value}`);
+          }
+          // @ts-expect-error we just checked it
+          draft.stackProps.align = value;
+          break;
+        }
+        case 'justify': {
+          if (!StackCell.justifyTypes.includes(value as JustifyType)) {
+            throw new Error(`invalid value for justify: ${value}`);
+          }
+          // @ts-expect-error we just checked it
+          draft.stackProps.justify = value;
+          break;
+        }
+        default: {
+          throw new Error(`invalid prop: ${name}`);
+        }
       }
-      if (props.align && !alignTypes.includes(props.align as AlignType)) {
-        throw new Error(`invalid value for align: ${props.align}`);
-      }
-      if (
-        props.justify &&
-        !justifyTypes.includes(props.justify as JustifyType)
-      ) {
-        throw new Error(`invalid value for justify: ${props.justify}`);
-      }
-      Object.assign(draft.stackProps, props);
     });
   }
 

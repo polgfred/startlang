@@ -11,7 +11,6 @@ import {
   GridHeaderRowCell,
   GridRowCell,
   StackCell,
-  StackProps,
   ValueCell,
   rootCell,
 } from './cells/index.js';
@@ -53,9 +52,8 @@ export class BrowserHost {
   });
 
   textProps: TextProps = Object.freeze({
-    fontFamily: 'Helvetica',
-    fontSize: 36,
-    textAlign: 'start',
+    ['font.name']: 'Helvetica',
+    ['font.size']: 36,
   });
 
   clearDisplay() {
@@ -66,18 +64,6 @@ export class BrowserHost {
   resetShapes(shapes: readonly Shape[]) {
     this.shapes = shapes;
     this.forceRender();
-  }
-
-  updateShapeProps(newProps: UncheckedProps<ShapeProps>) {
-    this.shapeProps = produce(this.shapeProps, (draft) => {
-      Object.assign(draft, newProps);
-    });
-  }
-
-  updateTextProps(newProps: UncheckedProps<TextProps>) {
-    this.textProps = produce(this.textProps, (draft) => {
-      Object.assign(draft, newProps);
-    });
   }
 
   pushShape(shape: Shape) {
@@ -93,18 +79,6 @@ export class BrowserHost {
   clearOutputBuffer() {
     this.outputBuffer = new StackCell();
     this.currentCell = new Cons(rootCell);
-  }
-
-  updateStackProps(newProps: UncheckedProps<StackProps>) {
-    if (this.currentCell.head === rootCell) {
-      this.outputBuffer = this.outputBuffer.updateProps(newProps);
-    } else {
-      const cell = this.currentCell.head;
-      if (!(cell instanceof StackCell)) {
-        throw new Error('not currently in a stack');
-      }
-      this.swapCell(cell.updateProps(newProps));
-    }
   }
 
   swapCell(cell: Cell) {
@@ -128,6 +102,30 @@ export class BrowserHost {
       return waitForRepaint();
     } else {
       this.swapCell(this.currentCell.head.addChild(cell));
+    }
+  }
+
+  setConfiguration(name: string, value: unknown) {
+    if (this.currentCell.head !== rootCell) {
+      const cell = this.currentCell.head;
+      if (!(cell instanceof StackCell)) {
+        throw new Error('could not set configuration on non-stack cell');
+      }
+      this.swapCell(cell.updateProp(name, value));
+    } else if (name in this.outputBuffer.stackProps) {
+      this.outputBuffer = this.outputBuffer.updateProp(name, value);
+    } else if (name in this.shapeProps) {
+      this.shapeProps = produce(this.shapeProps, (draft) => {
+        // @ts-expect-error TODO: validate this
+        draft[name] = value;
+      });
+    } else if (name in this.textProps) {
+      this.textProps = produce(this.textProps, (draft) => {
+        // @ts-expect-error TODO: validate this
+        draft[name] = value;
+      });
+    } else {
+      throw new Error(`could not set configuration option: ${name}`);
     }
   }
 
@@ -217,46 +215,6 @@ export const browserGlobals: RuntimeFunctions = {
     }
   },
 
-  fill(interpreter, [color]: [string | null]) {
-    const host = getHost(interpreter);
-    host.updateShapeProps({ fill: color });
-  },
-
-  stroke(interpreter, [color]: [string | null]) {
-    const host = getHost(interpreter);
-    host.updateShapeProps({ stroke: color });
-  },
-
-  opacity(interpreter, [value]: [number]) {
-    const host = getHost(interpreter);
-    host.updateShapeProps({ opacity: value });
-  },
-
-  anchor(interpreter, [anchor]: [string]) {
-    const host = getHost(interpreter);
-    host.updateShapeProps({ anchor });
-  },
-
-  rotate(interpreter, [angle]: [number]) {
-    const host = getHost(interpreter);
-    host.updateShapeProps({ rotate: angle });
-  },
-
-  scale(interpreter, [scalex, scaley = scalex]: number[]) {
-    const host = getHost(interpreter);
-    host.updateShapeProps({ scalex, scaley });
-  },
-
-  font(interpreter, [fontFamily, fontSize]: [string, number]) {
-    const host = getHost(interpreter);
-    host.updateTextProps({ fontFamily, fontSize });
-  },
-
-  align(interpreter, [textAlign]: [string]) {
-    const host = getHost(interpreter);
-    host.updateTextProps({ textAlign });
-  },
-
   rect(interpreter, [x, y, width, height]: number[]) {
     const host = getHost(interpreter);
     host.pushShape(new Rect(x, y, width, height, host.shapeProps));
@@ -309,11 +267,6 @@ export const browserGlobals: RuntimeFunctions = {
 
   stack(interpreter, args, node) {
     return new BuildCellFrame(node, new StackCell());
-  },
-
-  direction(interpreter, [direction]: [string]) {
-    const host = getHost(interpreter);
-    host.updateStackProps({ direction });
   },
 
   table(interpreter, args, node) {

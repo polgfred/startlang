@@ -19,6 +19,7 @@
     RecordNode,
     RepeatNode,
     ReturnNode,
+    SetNode,
     TemplateStringNode,
     UnaryOpNode,
     VarIndexNode,
@@ -162,9 +163,17 @@ BeginBlock
     }
 
 Statement
-  = FlowStatement
+  = SetStatement
+  / FlowStatement
   / LetStatement
   / CallStatement
+
+ConfigOption = $(!Reserved [a-z]i+)|.., "."|
+
+SetStatement
+  = set _ option:ConfigOption _ "=" _ value:Value {
+      return new SetNode(option, value);
+    }
 
 FlowStatement
   = exit { return new ExitNode(); }
@@ -401,6 +410,8 @@ while = @"while" WB
 
 begin = @"begin" WB
 
+set = @"set" WB
+
 exit = @"exit" WB
 
 break = @"break" WB
@@ -435,6 +446,7 @@ Reserved
   / in
   / while
   / begin
+  / set
   / exit
   / break
   / next
