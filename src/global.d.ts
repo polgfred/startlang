@@ -1,5 +1,5 @@
 declare module '*.peggy' {
-  import { Node } from '../lang/nodes/base.js';
+  import { Node } from './lang/nodes/base.js';
   export function parse(source: string): Node;
 }
 
