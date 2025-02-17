@@ -300,7 +300,7 @@ export const browserGlobals: RuntimeFunctions = {
     return new BuildCellFrame(node, new StackCell('row', justify));
   },
 
-  grid(interpreter, args, node) {
+  table(interpreter, args, node) {
     return new BuildCellFrame(node, new GridCell());
   },
 

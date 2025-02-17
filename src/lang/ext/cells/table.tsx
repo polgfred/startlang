@@ -68,7 +68,13 @@ export class GridRowCell extends Cell {
 
   getHTMLElement() {
     return (
-      <TableRow>
+      <TableRow
+        sx={{
+          '&:last-child td': {
+            borderBottom: 0,
+          },
+        }}
+      >
         {this.children.map((child, i) => (
           <TableCell key={i}>
             <CellElement key={i} cell={child} />
@@ -85,6 +91,9 @@ export class GridHeaderRowCell extends GridRowCell {
       <TableRow
         sx={(theme) => ({
           backgroundColor: theme.palette.grey[800],
+          '&:last-child th': {
+            borderBottom: 0,
+          },
         })}
       >
         {this.children.map((child, i) => (

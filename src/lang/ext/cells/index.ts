@@ -1,5 +1,5 @@
 export * from './base.jsx';
 
-export * from './grid.jsx';
 export * from './stack.jsx';
+export * from './table.jsx';
 export * from './value.jsx';
