@@ -91,7 +91,7 @@ export class Interpreter {
 
   swapFrame<T extends Frame>(
     frame: T,
-    state: number | null,
+    state: number | null = null,
     updater?: (draft: Draft<T>) => void
   ) {
     this.topFrame = this.topFrame.swap(

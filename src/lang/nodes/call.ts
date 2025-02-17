@@ -96,7 +96,7 @@ class CallRuntimeFrame extends CallFrame {
       case 0: {
         const result = func(interpreter, this.args, this.node);
         if (result instanceof Frame) {
-          interpreter.swapFrame(result, 0);
+          interpreter.swapFrame(result);
         } else {
           interpreter.swapFrame(this, 1);
           return result;
