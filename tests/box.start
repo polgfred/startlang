@@ -1,5 +1,5 @@
 ; draw shapes see-thru
-opacity 1/4
+set opacity = 1/4
 
 begin random_color do
   ; randomly generate a fill color
@@ -14,12 +14,13 @@ end
 
 ; count from 0 to 360 in 3 degree increments
 for a = 0 to 360 by 5 do
-  fill random_color()
+  set fill = random_color()
 
   ; set the rotation and scale factor
-  rotate a
-  scale a/60
+  set rotate = a
+  set scalex = a/60
+  set scaley = a/60
 
-  ; draw a 60x40 box
-  rect a, a, 60, 40
+  ; draw a 60x60 box
+  rect a, a, 60, 60
 end
