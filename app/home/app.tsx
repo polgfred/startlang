@@ -111,6 +111,7 @@ export default function App() {
 
     try {
       setIsRunning(true);
+      host.restoreOriginalSettings();
       const source = (editorRef.current?.getValue() ?? '') + '\n';
       const rootNode = parse(source);
       await interpreter.run(rootNode);

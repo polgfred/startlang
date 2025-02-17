@@ -36,34 +36,42 @@ export interface BrowserSnapshot {
 
 const emptyArray = Object.freeze([]);
 
+const initialShapeProps: ShapeProps = Object.freeze({
+  fill: null,
+  stroke: null,
+  ['stroke.width']: 1,
+  opacity: 1,
+  anchor: 'center',
+  rotate: 0,
+  scalex: 1,
+  scaley: 1,
+});
+
+const initialTextProps: TextProps = Object.freeze({
+  ['font.name']: 'Helvetica',
+  ['font.size']: 36,
+});
+
 export class BrowserHost {
   constructor(private readonly forceRender: () => void) {}
 
   shapes: readonly Shape[] = emptyArray;
+  shapeProps: ShapeProps = initialShapeProps;
+  textProps: TextProps = initialTextProps;
 
-  shapeProps: ShapeProps = Object.freeze({
-    fill: null,
-    stroke: null,
-    ['stroke.width']: 1,
-    opacity: 1,
-    anchor: 'center',
-    rotate: 0,
-    scalex: 1,
-    scaley: 1,
-  });
+  outputBuffer = new StackCell();
+  currentCell: Cons<Cell> = new Cons(rootCell);
 
-  textProps: TextProps = Object.freeze({
-    ['font.name']: 'Helvetica',
-    ['font.size']: 36,
-  });
+  restoreOriginalSettings() {
+    this.shapes = emptyArray;
+    this.shapeProps = initialShapeProps;
+    this.textProps = initialTextProps;
+    this.outputBuffer = new StackCell();
+    this.currentCell = new Cons(rootCell);
+  }
 
   clearDisplay() {
     this.shapes = emptyArray;
-    this.forceRender();
-  }
-
-  resetShapes(shapes: readonly Shape[]) {
-    this.shapes = shapes;
     this.forceRender();
   }
 
@@ -74,12 +82,9 @@ export class BrowserHost {
     this.forceRender();
   }
 
-  outputBuffer = new StackCell();
-  currentCell: Cons<Cell> = new Cons(rootCell);
-
   clearOutputBuffer() {
     this.outputBuffer = new StackCell();
-    this.currentCell = new Cons(rootCell);
+    this.forceRender();
   }
 
   swapCell(cell: Cell) {
