@@ -3,14 +3,12 @@ import { Typography } from '@mui/material';
 import { Cell } from './base.jsx';
 
 const variantMap = Object.freeze({
-  heading1: 'h1',
-  heading2: 'h2',
-  heading3: 'h3',
-  heading4: 'h4',
-  heading5: 'h5',
-  heading6: 'h6',
-  subtitle1: 'subtitle1',
-  subtitle2: 'subtitle2',
+  h1: 'h1',
+  h2: 'h2',
+  h3: 'h3',
+  h4: 'h4',
+  h5: 'h5',
+  h6: 'h6',
   body1: 'body1',
   body2: 'body2',
 });

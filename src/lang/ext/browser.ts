@@ -242,10 +242,19 @@ export const browserGlobals: RuntimeFunctions = {
     return waitForRepaint();
   },
 
-  print(interpreter, [value, variant = 'body1']: [unknown, string]) {
+  heading(interpreter, [value, level = 1]: [unknown, number]) {
     const host = getHost(interpreter);
     const handler = interpreter.getHandler(value);
-    host.addCell(new ValueCell(handler.getPrettyValue(value), variant));
+    host.addCell(new ValueCell(handler.getPrettyValue(value), `h${level}`));
+    if (host.currentCell.head === rootCell) {
+      return waitForRepaint();
+    }
+  },
+
+  print(interpreter, [value]: [unknown]) {
+    const host = getHost(interpreter);
+    const handler = interpreter.getHandler(value);
+    host.addCell(new ValueCell(handler.getPrettyValue(value)));
     if (host.currentCell.head === rootCell) {
       return waitForRepaint();
     }
