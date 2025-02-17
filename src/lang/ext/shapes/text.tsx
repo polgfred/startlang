@@ -1,4 +1,9 @@
-import { Shape, ShapeProps, TextProps } from './base.jsx';
+import { Shape, ShapeProps } from './base.jsx';
+
+export interface TextProps {
+  ['font.name']: string;
+  ['font.size']: number;
+}
 
 export class Text extends Shape {
   static alignTypes = Object.freeze([

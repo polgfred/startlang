@@ -4,16 +4,12 @@ import { JSX, CSSProperties } from 'react';
 export interface ShapeProps {
   fill: string | null;
   stroke: string | null;
+  ['stroke.width']: number;
   opacity: number;
   anchor: string;
   rotate: number;
   scalex: number;
   scaley: number;
-}
-
-export interface TextProps {
-  ['font.name']: string;
-  ['font.size']: number;
 }
 
 export abstract class Shape {
@@ -24,8 +20,16 @@ export abstract class Shape {
   abstract getSVGElement(): JSX.Element;
 
   protected getSVGProps() {
-    const { rotate, scalex, scaley, anchor, fill, stroke, opacity } =
-      this.shapeProps;
+    const {
+      fill,
+      stroke,
+      ['stroke.width']: strokeWidth,
+      opacity,
+      anchor,
+      rotate,
+      scalex,
+      scaley,
+    } = this.shapeProps;
 
     const svgProps: { style: CSSProperties; transform: string } = {
       style: {},
@@ -47,6 +51,9 @@ export abstract class Shape {
     }
     if (stroke) {
       svgProps.style.stroke = stroke;
+    }
+    if (strokeWidth) {
+      svgProps.style.strokeWidth = strokeWidth;
     }
     if (opacity !== null && opacity >= 0 && opacity < 1) {
       svgProps.style.opacity = opacity;

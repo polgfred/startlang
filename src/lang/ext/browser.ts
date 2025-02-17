@@ -44,6 +44,7 @@ export class BrowserHost {
   shapeProps: ShapeProps = Object.freeze({
     fill: null,
     stroke: null,
+    ['stroke.width']: 1,
     opacity: 1,
     anchor: 'center',
     rotate: 0,
