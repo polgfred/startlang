@@ -209,10 +209,10 @@ export const browserGlobals: RuntimeFunctions = {
   },
 
   color(interpreter, [red, green, blue, alpha = 1]: number[]) {
-    const r = `${Number((red * 100).toFixed(6))}%`;
-    const g = `${Number((green * 100).toFixed(6))}%`;
-    const b = `${Number((blue * 100).toFixed(6))}%`;
-    const a = `${Number((alpha * 100).toFixed(6))}%`;
+    const r = `${Number((red * 100).toFixed(3))}%`;
+    const g = `${Number((green * 100).toFixed(3))}%`;
+    const b = `${Number((blue * 100).toFixed(3))}%`;
+    const a = `${Number((alpha * 100).toFixed(3))}%`;
 
     if (alpha === 1) {
       interpreter.setResult(`rgb(${r} ${g} ${b})`);
