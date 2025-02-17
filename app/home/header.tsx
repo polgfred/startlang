@@ -1,6 +1,7 @@
 import {
   AppBar,
   Button,
+  Divider,
   Menu,
   MenuItem,
   Toolbar,
@@ -10,16 +11,20 @@ import { MouseEvent, useCallback, useState } from 'react';
 
 type ViewMode = 'graphics' | 'text';
 
-function SettingsMenu<T extends string>({
-  option,
-  mode,
-  choices,
-  updateMode,
+export default function Header({
+  viewMode,
+  updateViewMode,
+  showInspector,
+  setShowInspector,
+  runProgram,
+  isRunning,
 }: {
-  option: string;
-  choices: readonly T[];
-  mode: string;
-  updateMode: (value: T) => void;
+  viewMode: string;
+  updateViewMode: (mode: ViewMode) => void;
+  showInspector: boolean;
+  setShowInspector: (value: boolean) => void;
+  runProgram: () => void;
+  isRunning: boolean;
 }) {
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
 
@@ -35,51 +40,23 @@ function SettingsMenu<T extends string>({
   }, [setAnchor]);
 
   const handleUpdateMode = useCallback(
-    (value: T) => {
-      updateMode(value);
+    (value: ViewMode) => {
+      updateViewMode(value);
       closeMenu();
     },
-    [updateMode, closeMenu]
+    [updateViewMode, closeMenu]
+  );
+
+  const handleToggleInspector = useCallback(
+    (showInspector: boolean) => {
+      setShowInspector(showInspector);
+      closeMenu();
+    },
+    [setShowInspector, closeMenu]
   );
 
   return (
-    <>
-      <Button variant="text" color="secondary" onClick={openMenu}>
-        {option}
-      </Button>
-      <Menu open={anchor !== null} anchorEl={anchor} onClose={closeMenu}>
-        {choices.map((value) => {
-          const prettyValue = `${value[0].toUpperCase()}${value.substring(1)}`;
-          return (
-            <MenuItem
-              key={value}
-              selected={mode === value}
-              onClick={() => {
-                handleUpdateMode(value);
-              }}
-            >
-              {prettyValue}
-            </MenuItem>
-          );
-        })}
-      </Menu>
-    </>
-  );
-}
-
-export default function Header({
-  viewMode,
-  updateViewMode,
-  runProgram,
-  isRunning,
-}: {
-  viewMode: string;
-  updateViewMode: (mode: ViewMode) => void;
-  runProgram: () => void;
-  isRunning: boolean;
-}) {
-  return (
-    <AppBar>
+    <AppBar position="static">
       <Toolbar color="light">
         <Typography
           variant="body1"
@@ -89,12 +66,36 @@ export default function Header({
         >
           START
         </Typography>
-        <SettingsMenu<ViewMode>
-          option="view"
-          mode={viewMode}
-          updateMode={updateViewMode}
-          choices={['graphics', 'text']}
-        />
+        <Button variant="text" color="secondary" onClick={openMenu}>
+          View
+        </Button>
+        <Menu open={anchor !== null} anchorEl={anchor} onClose={closeMenu}>
+          <MenuItem
+            selected={viewMode === 'graphics'}
+            onClick={() => {
+              handleUpdateMode('graphics');
+            }}
+          >
+            Graphics
+          </MenuItem>
+          <MenuItem
+            selected={viewMode === 'text'}
+            onClick={() => {
+              handleUpdateMode('text');
+            }}
+          >
+            Text
+          </MenuItem>
+          <Divider />
+          <MenuItem
+            selected={showInspector}
+            onClick={() => {
+              handleToggleInspector(!showInspector);
+            }}
+          >
+            Inspector
+          </MenuItem>
+        </Menu>
         <Button
           variant="contained"
           disabled={isRunning}

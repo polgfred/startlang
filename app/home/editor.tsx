@@ -1,6 +1,6 @@
 import Monaco, { BeforeMount, OnMount } from '@monaco-editor/react';
-import type { editor, languages } from 'monaco-editor';
-import { RefObject, useCallback } from 'react';
+import { editor, languages } from 'monaco-editor';
+import { RefObject, useCallback, useLayoutEffect } from 'react';
 
 import boxScript from '../../tests/box.start';
 
@@ -131,9 +131,11 @@ const languageDefinition: languages.IMonarchLanguage = {
 
 export default function Editor({
   editorRef,
+  showInspector,
   runProgram,
 }: {
   editorRef: RefObject<editor.ICodeEditor | null>;
+  showInspector: boolean;
   runProgram: () => void;
 }) {
   const onBeforeMount: BeforeMount = useCallback((monaco) => {
@@ -154,6 +156,28 @@ export default function Editor({
     },
     [editorRef, runProgram]
   );
+
+  const updateLayout = useCallback(() => {
+    if (editorRef.current) {
+      editorRef.current.layout({
+        // @ts-expect-error 'auto' is allowed
+        width: 'auto',
+        // @ts-expect-error 'auto' is allowed
+        height: 'auto',
+      });
+    }
+  }, [editorRef]);
+
+  useLayoutEffect(() => {
+    updateLayout();
+  }, [showInspector, updateLayout]);
+
+  useLayoutEffect(() => {
+    window.addEventListener('resize', updateLayout, false);
+    return () => {
+      window.removeEventListener('resize', updateLayout, false);
+    };
+  }, [editorRef, updateLayout]);
 
   return (
     <Monaco

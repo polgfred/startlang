@@ -1,13 +1,7 @@
 'use client';
 
-import {
-  Grid2 as Grid,
-  Paper,
-  Stack,
-  ThemeProvider,
-  createTheme,
-} from '@mui/material';
-import { type editor } from 'monaco-editor';
+import { Paper, Stack, ThemeProvider, createTheme } from '@mui/material';
+import { editor } from 'monaco-editor';
 import { useCallback, useRef, useState } from 'react';
 
 import { BrowserHost, browserGlobals } from '../../src/lang/ext/browser.js';
@@ -74,6 +68,7 @@ export default function App() {
   const editorRef = useRef<editor.ICodeEditor | null>(null);
 
   const [viewMode, setViewMode] = useState<'graphics' | 'text'>('graphics');
+  const [showInspector, setShowInspector] = useState(true);
   const [isRunning, setIsRunning] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
@@ -136,105 +131,107 @@ export default function App() {
         direction="column"
         sx={(theme) => ({
           backgroundColor: theme.palette.background.default,
-          width: '100vw',
-          height: '100vh',
+          width: '100%',
+          height: '100%',
         })}
       >
         <Header
           viewMode={viewMode}
           updateViewMode={setViewMode}
+          showInspector={showInspector}
+          setShowInspector={setShowInspector}
           runProgram={runProgram}
           isRunning={isRunning}
         />
-        <Grid
-          container
+        <Stack
+          direction="row"
           sx={{
-            height: 'calc(100% - 65px)',
-            marginTop: '65px',
+            height: 'calc(100% - 66px)',
           }}
         >
-          <Grid
-            size={4}
+          <Stack
             sx={{
               height: '100%',
+              flex: 1,
             }}
           >
-            <Stack
-              direction="column"
+            <Paper
+              elevation={3}
               sx={{
                 height: '100%',
-              }}
-            >
-              {viewMode === 'graphics' && (
-                <Paper
-                  elevation={3}
-                  sx={{
-                    height: 'calc(100% - 30px)',
-                    margin: '5px',
-                    padding: '10px',
-                    flex: 3,
-                  }}
-                >
-                  <Graphics shapes={host.shapes} />
-                </Paper>
-              )}
-              {viewMode === 'text' && (
-                <Paper
-                  elevation={3}
-                  sx={{
-                    height: 'calc(100% - 30px)',
-                    margin: '5px',
-                    padding: '10px',
-                    flex: 1,
-                  }}
-                >
-                  <Term
-                    outputBuffer={host.outputBuffer}
-                    inputState={inputState}
-                  />
-                </Paper>
-              )}
-            </Stack>
-          </Grid>
-          <Grid
-            size={4}
-            sx={{
-              height: '100%',
-            }}
-          >
-            <Paper
-              elevation={3}
-              sx={{
-                height: 'calc(100% - 30px)',
                 margin: '5px',
                 padding: '10px',
               }}
             >
-              <Inspector
-                error={error}
-                history={history}
-                updateSlider={updateSlider}
+              <Editor
+                editorRef={editorRef}
+                showInspector={showInspector}
+                runProgram={runProgram}
               />
             </Paper>
-          </Grid>
-          <Grid
-            size={4}
+          </Stack>
+          <Stack
             sx={{
               height: '100%',
+              flex: 1,
             }}
           >
-            <Paper
-              elevation={3}
+            {viewMode === 'graphics' && (
+              <Paper
+                elevation={3}
+                sx={{
+                  height: '100%',
+                  margin: '5px',
+                  padding: '10px',
+                  overflow: 'scroll',
+                  flex: 1,
+                }}
+              >
+                <Graphics shapes={host.shapes} />
+              </Paper>
+            )}
+            {viewMode === 'text' && (
+              <Paper
+                elevation={3}
+                sx={{
+                  height: '100%',
+                  margin: '5px',
+                  padding: '10px',
+                  overflow: 'scroll',
+                  flex: 1,
+                }}
+              >
+                <Term
+                  outputBuffer={host.outputBuffer}
+                  inputState={inputState}
+                />
+              </Paper>
+            )}
+          </Stack>
+          {showInspector && (
+            <Stack
               sx={{
-                height: 'calc(100% - 30px)',
-                margin: '5px',
-                padding: '10px',
+                height: '100%',
+                flex: 1,
               }}
             >
-              <Editor editorRef={editorRef} runProgram={runProgram} />
-            </Paper>
-          </Grid>
-        </Grid>
+              <Paper
+                elevation={3}
+                sx={{
+                  height: '100%',
+                  margin: '5px',
+                  padding: '10px',
+                }}
+              >
+                <Inspector
+                  error={error}
+                  history={history}
+                  updateSlider={updateSlider}
+                />
+              </Paper>
+            </Stack>
+          )}
+        </Stack>
       </Stack>
     </ThemeProvider>
   );
