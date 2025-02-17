@@ -1,11 +1,12 @@
 import type { Interpreter } from './interpreter';
+import { CallFrame, CallNode } from './nodes';
 
 export interface RuntimeFunction {
   (
     interpreter: Interpreter,
     args: any, // eslint-disable-line @typescript-eslint/no-explicit-any
-    finalize: boolean
-  ): void | Promise<void>;
+    node: CallNode
+  ): void | Promise<void> | CallFrame;
 }
 
 export type RuntimeFunctions = Readonly<Record<string, RuntimeFunction>>;

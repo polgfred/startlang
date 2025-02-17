@@ -1,6 +1,7 @@
 import { produce } from 'immer';
 
 import { Interpreter } from '../interpreter.js';
+import { CallFrame, CallNode } from '../nodes/index.js';
 import type { RuntimeFunctions } from '../types.js';
 import { Cons } from '../utils/cons.js';
 
@@ -93,6 +94,16 @@ export class BrowserHost {
     this.currentCell = new Cons(rootCell);
   }
 
+  pushCell(cell: Cell) {
+    this.currentCell = this.currentCell.push(cell);
+  }
+
+  popCell() {
+    const cell = this.currentCell.head;
+    this.currentCell = this.currentCell.pop();
+    return cell;
+  }
+
   addCell(cell: Cell) {
     if (this.currentCell.head === rootCell) {
       this.outputBuffer = this.outputBuffer.addChild(cell);
@@ -102,16 +113,6 @@ export class BrowserHost {
       this.currentCell = this.currentCell.swap(
         this.currentCell.head.addChild(cell)
       );
-    }
-  }
-
-  handleCellLifecycle(cell: Cell, finalize: boolean) {
-    if (!finalize) {
-      this.currentCell = this.currentCell.push(cell);
-    } else {
-      const cell = this.currentCell.head;
-      this.currentCell = this.currentCell.pop();
-      this.addCell(cell);
     }
   }
 
@@ -145,6 +146,41 @@ function getHost(interpreter: Interpreter) {
     throw new Error('invalid host for interpreter');
   }
   return interpreter.host;
+}
+
+class BuildCellFrame extends CallFrame {
+  constructor(
+    node: CallNode,
+    readonly cell: Cell
+  ) {
+    super(node);
+  }
+
+  visit(interpreter: Interpreter) {
+    const host = getHost(interpreter);
+    const { body } = this.node;
+
+    switch (this.state) {
+      case 0: {
+        if (body) {
+          host.pushCell(this.cell);
+          interpreter.swapFrame(this, 1);
+          interpreter.pushFrame(body);
+        } else {
+          interpreter.popFrame();
+        }
+        break;
+      }
+      case 1: {
+        interpreter.swapFrame(this, 2);
+        return host.addCell(host.popCell());
+      }
+      case 2: {
+        interpreter.popFrame();
+        break;
+      }
+    }
+  }
 }
 
 export const browserGlobals: RuntimeFunctions = {
@@ -245,43 +281,34 @@ export const browserGlobals: RuntimeFunctions = {
   heading(interpreter, [value, level = 1]: [unknown, number]) {
     const host = getHost(interpreter);
     const handler = interpreter.getHandler(value);
-    host.addCell(new ValueCell(handler.getPrettyValue(value), `h${level}`));
-    if (host.currentCell.head === rootCell) {
-      return waitForRepaint();
-    }
+    return host.addCell(
+      new ValueCell(handler.getPrettyValue(value), `h${level}`)
+    );
   },
 
   print(interpreter, [value]: [unknown]) {
     const host = getHost(interpreter);
     const handler = interpreter.getHandler(value);
-    host.addCell(new ValueCell(handler.getPrettyValue(value)));
-    if (host.currentCell.head === rootCell) {
-      return waitForRepaint();
-    }
+    return host.addCell(new ValueCell(handler.getPrettyValue(value)));
   },
 
-  stack(interpreter, [justify]: [string], finalize) {
-    const host = getHost(interpreter);
-    host.handleCellLifecycle(new StackCell('column', justify), finalize);
+  vstack(interpreter, [justify]: [string], node) {
+    return new BuildCellFrame(node, new StackCell('column', justify));
   },
 
-  hstack(interpreter, [justify]: [string], finalize) {
-    const host = getHost(interpreter);
-    host.handleCellLifecycle(new StackCell('row', justify), finalize);
+  hstack(interpreter, [justify]: [string], node) {
+    return new BuildCellFrame(node, new StackCell('row', justify));
   },
 
-  grid(interpreter, args: [], finalize) {
-    const host = getHost(interpreter);
-    host.handleCellLifecycle(new GridCell(), finalize);
+  grid(interpreter, args, node) {
+    return new BuildCellFrame(node, new GridCell());
   },
 
-  header(interpreter, args: [], finalize) {
-    const host = getHost(interpreter);
-    host.handleCellLifecycle(new GridHeaderRowCell(), finalize);
+  header(interpreter, args, node) {
+    return new BuildCellFrame(node, new GridHeaderRowCell());
   },
 
-  row(interpreter, args: [], finalize) {
-    const host = getHost(interpreter);
-    host.handleCellLifecycle(new GridRowCell(), finalize);
+  row(interpreter, args, node) {
+    return new BuildCellFrame(node, new GridRowCell());
   },
 };

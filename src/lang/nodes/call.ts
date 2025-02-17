@@ -88,32 +88,22 @@ class CallGlobalFrame extends CallFrame {
 
 class CallRuntimeFrame extends CallFrame {
   visit(interpreter: Interpreter) {
-    const { name, body } = this.node;
+    const { name } = this.node;
 
     const func = interpreter.getRuntimeFunction(name, this.args);
 
     switch (this.state) {
       case 0: {
-        if (body && func.length < 3) {
-          throw new Error(`function ${name} does not support do-blocks`);
-        }
-        interpreter.swapFrame(this, 1);
-        return func(interpreter, this.args, false);
-      }
-      case 1: {
-        if (body) {
-          interpreter.swapFrame(this, 2);
-          interpreter.pushFrame(body);
+        const result = func(interpreter, this.args, this.node);
+        if (result instanceof Frame) {
+          interpreter.swapFrame(result, 0);
         } else {
-          interpreter.swapFrame(this, 3);
+          interpreter.swapFrame(this, 1);
+          return result;
         }
         break;
       }
-      case 2: {
-        interpreter.swapFrame(this, 3);
-        return func(interpreter, this.args, true);
-      }
-      case 3: {
+      case 1: {
         interpreter.popFrame();
         break;
       }

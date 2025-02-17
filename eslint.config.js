@@ -51,6 +51,7 @@ export default tseslint.config(
       'no-console': 'warn',
 
       '@typescript-eslint/no-unused-vars': 'off',
+      '@typescript-eslint/no-invalid-void-type': 'off',
 
       'import/no-unresolved': 'error',
       'import/order': [
