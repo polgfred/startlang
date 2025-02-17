@@ -208,7 +208,13 @@ function ExpandableFooter({
 }) {
   return (
     <TableFooter>
-      <TableRow key="trunc">
+      <TableRow
+        sx={{
+          '&:last-child td': {
+            borderBottom: 0,
+          },
+        }}
+      >
         <TableCell colSpan={2}>
           {visible > 5 && (
             <Button
@@ -254,7 +260,13 @@ function ListInspector({ value }: { value: ListType }) {
       }}
     >
       <TableHead>
-        <TableRow>
+        <TableRow
+          sx={{
+            '&:last-child td': {
+              borderBottom: 0,
+            },
+          }}
+        >
           <TableCell
             sx={{
               width: '75%',
@@ -296,7 +308,13 @@ function RecordInspector({ value }: { value: RecordType }) {
       }}
     >
       <TableHead>
-        <TableRow>
+        <TableRow
+          sx={{
+            '&:last-child td': {
+              borderBottom: 0,
+            },
+          }}
+        >
           <TableCell
             sx={{
               width: '25%',
