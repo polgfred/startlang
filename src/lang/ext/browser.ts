@@ -11,6 +11,7 @@ import {
   GridHeaderRowCell,
   GridRowCell,
   StackCell,
+  StackProps,
   ValueCell,
   rootCell,
 } from './cells/index.js';
@@ -67,13 +68,13 @@ export class BrowserHost {
     this.forceRender();
   }
 
-  updateShapeProps(newProps: Partial<ShapeProps>) {
+  updateShapeProps(newProps: UncheckedProps<ShapeProps>) {
     this.shapeProps = produce(this.shapeProps, (draft) => {
       Object.assign(draft, newProps);
     });
   }
 
-  updateTextProps(newProps: Partial<TextProps>) {
+  updateTextProps(newProps: UncheckedProps<TextProps>) {
     this.textProps = produce(this.textProps, (draft) => {
       Object.assign(draft, newProps);
     });
@@ -86,12 +87,28 @@ export class BrowserHost {
     this.forceRender();
   }
 
-  outputBuffer = new StackCell('column');
+  outputBuffer = new StackCell();
   currentCell: Cons<Cell> = new Cons(rootCell);
 
   clearOutputBuffer() {
-    this.outputBuffer = new StackCell('column');
+    this.outputBuffer = new StackCell();
     this.currentCell = new Cons(rootCell);
+  }
+
+  updateStackProps(newProps: UncheckedProps<StackProps>) {
+    if (this.currentCell.head === rootCell) {
+      this.outputBuffer = this.outputBuffer.updateProps(newProps);
+    } else {
+      const cell = this.currentCell.head;
+      if (!(cell instanceof StackCell)) {
+        throw new Error('not currently in a stack');
+      }
+      this.swapCell(cell.updateProps(newProps));
+    }
+  }
+
+  swapCell(cell: Cell) {
+    this.currentCell = this.currentCell.swap(cell);
   }
 
   pushCell(cell: Cell) {
@@ -110,9 +127,7 @@ export class BrowserHost {
       this.forceRender();
       return waitForRepaint();
     } else {
-      this.currentCell = this.currentCell.swap(
-        this.currentCell.head.addChild(cell)
-      );
+      this.swapCell(this.currentCell.head.addChild(cell));
     }
   }
 
@@ -292,12 +307,13 @@ export const browserGlobals: RuntimeFunctions = {
     return host.addCell(new ValueCell(handler.getPrettyValue(value)));
   },
 
-  vstack(interpreter, [justify]: [string], node) {
-    return new BuildCellFrame(node, new StackCell('column', justify));
+  stack(interpreter, args, node) {
+    return new BuildCellFrame(node, new StackCell());
   },
 
-  hstack(interpreter, [justify]: [string], node) {
-    return new BuildCellFrame(node, new StackCell('row', justify));
+  direction(interpreter, [direction]: [string]) {
+    const host = getHost(interpreter);
+    host.updateStackProps({ direction });
   },
 
   table(interpreter, args, node) {

@@ -3,36 +3,55 @@ import { produce } from 'immer';
 
 import { Cell, CellElement } from './base.jsx';
 
-const justifyContentMap = Object.freeze({
-  start: 'flex-start',
-  center: 'center',
-  end: 'flex-end',
-  stretch: 'stretch',
-  around: 'space-around',
-  between: 'space-between',
-  evenly: 'space-evenly',
-});
+type DirectionType = (typeof directionTypes)[number];
+
+const directionTypes = Object.freeze(['row', 'column'] as const);
+
+type AlignType = (typeof alignTypes)[number];
+
+const alignTypes = Object.freeze([
+  'normal',
+  'stretch',
+  'center',
+  'start',
+  'end',
+  'flex-start',
+  'flex-end',
+  'self-start',
+  'self-end',
+  'anchor-center',
+] as const);
+
+type JustifyType = (typeof justifyTypes)[number];
+
+const justifyTypes = Object.freeze([
+  'normal',
+  'center',
+  'start',
+  'end',
+  'flex-start',
+  'flex-end',
+  'left',
+  'right',
+  'space-between',
+  'space-around',
+  'space-evenly',
+  'stretch',
+] as const);
+
+export interface StackProps {
+  direction: DirectionType;
+  align: AlignType;
+  justify: JustifyType;
+}
 
 export class StackCell extends Cell {
-  readonly direction: 'row' | 'column';
-  readonly justify: keyof typeof justifyContentMap;
-
-  constructor(
-    direction: string,
-    justify: string = 'start',
-    readonly children: readonly Cell[] = Object.freeze([])
-  ) {
-    if (direction !== 'row' && direction !== 'column') {
-      throw new Error(`invalid direction: ${direction}`);
-    }
-    if (!(justify in justifyContentMap)) {
-      throw new Error(`invalid justify: ${justify}`);
-    }
-    super();
-    this.direction = direction;
-    // @ts-expect-error we just checked it
-    this.justify = justify;
-  }
+  readonly children: readonly Cell[] = Object.freeze([]);
+  readonly stackProps: StackProps = Object.freeze({
+    direction: 'column',
+    align: 'normal',
+    justify: 'normal',
+  });
 
   addChild(child: Cell) {
     return produce(this, (draft) => {
@@ -40,17 +59,39 @@ export class StackCell extends Cell {
     });
   }
 
+  updateProps(props: UncheckedProps<StackProps>) {
+    return produce(this, (draft) => {
+      if (
+        props.direction &&
+        !directionTypes.includes(props.direction as DirectionType)
+      ) {
+        throw new Error(`invalid value for direction: ${props.direction}`);
+      }
+      if (props.align && !alignTypes.includes(props.align as AlignType)) {
+        throw new Error(`invalid value for align: ${props.align}`);
+      }
+      if (
+        props.justify &&
+        !justifyTypes.includes(props.justify as JustifyType)
+      ) {
+        throw new Error(`invalid value for justify: ${props.justify}`);
+      }
+      Object.assign(draft.stackProps, props);
+    });
+  }
+
   getHTMLElement() {
     return (
       <Stack
         gap={2}
-        direction={this.direction}
-        justifyContent={justifyContentMap[this.justify]}
+        direction={this.stackProps.direction}
+        alignItems={this.stackProps.align}
+        justifyContent={this.stackProps.justify}
         divider={
           <Divider
             flexItem
             orientation={
-              this.direction === 'column' ? 'horizontal' : 'vertical'
+              this.stackProps.direction === 'column' ? 'horizontal' : 'vertical'
             }
           />
         }
