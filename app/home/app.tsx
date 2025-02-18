@@ -183,7 +183,6 @@ export default function App() {
                   height: '100%',
                   margin: '5px',
                   padding: '10px',
-                  overflow: 'scroll',
                   flex: 1,
                 }}
               >
