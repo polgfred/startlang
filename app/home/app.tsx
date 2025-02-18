@@ -44,16 +44,21 @@ function useForceRender() {
 function usePromptForInput() {
   const [inputState, setInputState] = useState<{
     prompt: string;
+    initial: string;
     onInputComplete: (value: string) => void;
   } | null>(null);
 
   return {
     inputState,
 
-    promptForInput(interpreter: Interpreter, [prompt]: [string]) {
+    promptForInput(
+      interpreter: Interpreter,
+      [prompt, initial = '']: [string, string]
+    ) {
       return new Promise<void>((resolve) => {
         setInputState({
           prompt,
+          initial,
           onInputComplete(value: string) {
             setInputState(null);
             interpreter.setResult(value);
