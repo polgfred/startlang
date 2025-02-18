@@ -8,6 +8,8 @@ import {
   Typography,
 } from '@mui/material';
 import { editor } from 'monaco-editor';
+import Image from 'next/image';
+import Link from 'next/link';
 import { MouseEvent, RefObject, useCallback, useState } from 'react';
 
 import boxScript from '../../tests/box.start';
@@ -185,12 +187,22 @@ export default function Header({
   editorRef: RefObject<editor.ICodeEditor | null>;
 }) {
   return (
-    <AppBar position="static">
-      <Toolbar color="light">
+    <AppBar
+      position="static"
+      sx={{
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+      }}
+    >
+      <Toolbar
+        sx={{
+          gap: 1,
+        }}
+      >
         <Typography
           variant="body1"
           sx={{
-            marginRight: '24px',
+            marginRight: 2,
           }}
         >
           START
@@ -208,12 +220,24 @@ export default function Header({
           onClick={runProgram}
           sx={{
             marginLeft: 2,
-            backgroundColor: '#cccccc',
+            backgroundColor: '#dddddd',
             color: '#222222',
           }}
         >
           Run
         </Button>
+      </Toolbar>
+      <Toolbar
+        sx={{
+          gap: 1,
+        }}
+      >
+        <Link href="https://linkedin.com/in/polgfred" target="_blank">
+          <Image src="/linkedin-logo.svg" alt="logo" width="32" height="32" />
+        </Link>
+        <Link href="https://github.com/polgfred/startlang" target="_blank">
+          <Image src="/github-logo.svg" alt="logo" width="32" height="32" />
+        </Link>
       </Toolbar>
     </AppBar>
   );
