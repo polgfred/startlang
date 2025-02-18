@@ -206,6 +206,7 @@ export const browserGlobals: RuntimeFunctions = {
   clear(interpreter) {
     const host = getHost(interpreter);
     host.clearDisplay();
+    host.clearOutputBuffer();
   },
 
   color(interpreter, [red, green, blue, alpha = 1]: number[]) {
