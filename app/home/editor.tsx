@@ -185,6 +185,7 @@ export default function Editor({
       onMount={onEditorMount}
       options={{
         minimap: { enabled: false },
+        scrollBeyondLastLine: false,
       }}
     />
   );
