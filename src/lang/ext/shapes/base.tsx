@@ -2,14 +2,14 @@ import { immerable } from 'immer';
 import { JSX, CSSProperties } from 'react';
 
 export interface ShapeProps {
-  fill: string | null;
-  stroke: string | null;
-  ['stroke.width']: number;
   opacity: number;
   anchor: string;
   rotate: number;
-  scalex: number;
-  scaley: number;
+  ['fill.color']: string | null;
+  ['stroke.color']: string | null;
+  ['stroke.width']: number;
+  ['scale.x']: number;
+  ['scale.y']: number;
 }
 
 export abstract class Shape {
@@ -21,14 +21,14 @@ export abstract class Shape {
 
   protected getSVGProps() {
     const {
-      fill,
-      stroke,
-      ['stroke.width']: strokeWidth,
       opacity,
       anchor,
       rotate,
-      scalex,
-      scaley,
+      ['fill.color']: fill,
+      ['stroke.color']: stroke,
+      ['stroke.width']: strokeWidth,
+      ['scale.x']: scalex,
+      ['scale.y']: scaley,
     } = this.shapeProps;
 
     const svgProps: { style: CSSProperties; transform: string } = {
