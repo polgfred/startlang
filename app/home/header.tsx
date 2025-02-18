@@ -7,25 +7,19 @@ import {
   Toolbar,
   Typography,
 } from '@mui/material';
-import { MouseEvent, useCallback, useState } from 'react';
+import { editor } from 'monaco-editor';
+import { MouseEvent, RefObject, useCallback, useState } from 'react';
+
+import boxScript from '../../tests/box.start';
+import investScript from '../../tests/invest.start';
+import numguessScript from '../../tests/numguess.start';
+import sieveScript from '../../tests/sieve.start';
+import sineScript from '../../tests/sine.start';
+import victorScript from '../../tests/victor.start';
 
 type ViewMode = 'graphics' | 'text';
 
-export default function Header({
-  viewMode,
-  updateViewMode,
-  showInspector,
-  setShowInspector,
-  runProgram,
-  isRunning,
-}: {
-  viewMode: string;
-  updateViewMode: (mode: ViewMode) => void;
-  showInspector: boolean;
-  setShowInspector: (value: boolean) => void;
-  runProgram: () => void;
-  isRunning: boolean;
-}) {
+function useMenu() {
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
 
   const openMenu = useCallback(
@@ -39,22 +33,157 @@ export default function Header({
     setAnchor(null);
   }, [setAnchor]);
 
-  const handleUpdateMode = useCallback(
-    (value: ViewMode) => {
-      updateViewMode(value);
-      closeMenu();
+  return { anchor, openMenu, closeMenu };
+}
+
+function ViewMenu({
+  viewMode,
+  updateViewMode,
+  showInspector,
+  setShowInspector,
+}: {
+  viewMode: ViewMode;
+  updateViewMode: (value: ViewMode) => void;
+  showInspector: boolean;
+  setShowInspector: (value: boolean) => void;
+}) {
+  const { anchor, openMenu, closeMenu } = useMenu();
+
+  return (
+    <>
+      <Button variant="text" color="secondary" onClick={openMenu}>
+        View
+      </Button>
+      <Menu open={anchor !== null} anchorEl={anchor} onClose={closeMenu}>
+        <MenuItem
+          selected={viewMode === 'graphics'}
+          onClick={() => {
+            updateViewMode('graphics');
+            closeMenu();
+          }}
+        >
+          Graphics
+        </MenuItem>
+        <MenuItem
+          selected={viewMode === 'text'}
+          onClick={() => {
+            updateViewMode('text');
+            closeMenu();
+          }}
+        >
+          Text
+        </MenuItem>
+        <Divider />
+        <MenuItem
+          selected={showInspector}
+          onClick={() => {
+            setShowInspector(!showInspector);
+            closeMenu();
+          }}
+        >
+          Inspector
+        </MenuItem>
+      </Menu>
+    </>
+  );
+}
+
+const exampleScripts = [
+  {
+    name: 'Stacking Boxes',
+    script: boxScript,
+  },
+  {
+    name: 'Compound Interest Calculator',
+    script: investScript,
+  },
+  {
+    name: 'Number Guessing Game',
+    script: numguessScript,
+  },
+  {
+    name: 'Sieve of Eratosthenes',
+    script: sieveScript,
+  },
+  {
+    name: 'Sine Curve Plot',
+    script: sineScript,
+  },
+  {
+    name: 'Victor Wireframe Plot',
+    script: victorScript,
+  },
+];
+
+function CodeMenu({
+  editorRef,
+  runProgram,
+}: {
+  editorRef: RefObject<editor.ICodeEditor | null>;
+  runProgram: () => void;
+}) {
+  const { anchor, openMenu, closeMenu } = useMenu();
+
+  const loadScript = useCallback(
+    (script: string) => {
+      if (editorRef.current) {
+        editorRef.current.setValue(script);
+        closeMenu();
+        runProgram();
+      }
     },
-    [updateViewMode, closeMenu]
+    [closeMenu, editorRef, runProgram]
   );
 
-  const handleToggleInspector = useCallback(
-    (showInspector: boolean) => {
-      setShowInspector(showInspector);
-      closeMenu();
-    },
-    [setShowInspector, closeMenu]
+  return (
+    <>
+      <Button variant="text" color="secondary" onClick={openMenu}>
+        Examples
+      </Button>
+      <Menu open={anchor !== null} anchorEl={anchor} onClose={closeMenu}>
+        {exampleScripts.map(({ name, script }) => (
+          <MenuItem
+            key={name}
+            onClick={() => {
+              loadScript(script);
+            }}
+          >
+            {name}
+          </MenuItem>
+        ))}
+        <Divider />
+        <MenuItem
+          onClick={() => {
+            if (editorRef.current) {
+              editorRef.current.setValue('');
+              closeMenu();
+            }
+          }}
+        >
+          New
+        </MenuItem>
+      </Menu>
+    </>
   );
+}
 
+export default function Header({
+  isRunning,
+  viewMode,
+  updateViewMode,
+  showInspector,
+  setShowInspector,
+  runProgram,
+  editorRef,
+}: {
+  isRunning: boolean;
+  viewMode: ViewMode;
+  updateViewMode: (mode: ViewMode) => void;
+  showInspector: boolean;
+  setShowInspector: (value: boolean) => void;
+  runProgram: () => void;
+  editorRef: RefObject<editor.ICodeEditor | null>;
+}) {
   return (
     <AppBar position="static">
       <Toolbar color="light">
@@ -66,36 +195,13 @@ export default function Header({
         >
           START
         </Typography>
-        <Button variant="text" color="secondary" onClick={openMenu}>
-          View
-        </Button>
-        <Menu open={anchor !== null} anchorEl={anchor} onClose={closeMenu}>
-          <MenuItem
-            selected={viewMode === 'graphics'}
-            onClick={() => {
-              handleUpdateMode('graphics');
-            }}
-          >
-            Graphics
-          </MenuItem>
-          <MenuItem
-            selected={viewMode === 'text'}
-            onClick={() => {
-              handleUpdateMode('text');
-            }}
-          >
-            Text
-          </MenuItem>
-          <Divider />
-          <MenuItem
-            selected={showInspector}
-            onClick={() => {
-              handleToggleInspector(!showInspector);
-            }}
-          >
-            Inspector
-          </MenuItem>
-        </Menu>
+        <ViewMenu
+          viewMode={viewMode}
+          updateViewMode={updateViewMode}
+          showInspector={showInspector}
+          setShowInspector={setShowInspector}
+        />
+        <CodeMenu editorRef={editorRef} runProgram={runProgram} />
         <Button
           variant="contained"
           disabled={isRunning}

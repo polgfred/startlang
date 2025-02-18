@@ -1,10 +1,12 @@
 ;
-; Classic number guessing game
+; Number Guessing Game
+;
+; Try to guess a number between 1 and 100.
 ;
 
 mode "text"
 
-; pick a random number between 1 and 100
+; pick a random number
 let number = rand(1, 100)
 
 print "Your guesses:"
@@ -37,7 +39,7 @@ repeat 10 do
     end
   end
 
-  ; don't keep guessing
+  ; exit the program after you guess it
   if guess = number then exit
 end
 

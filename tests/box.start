@@ -1,5 +1,11 @@
 ;
-; Rotating box visualization
+; Stacking Boxes
+;
+; Generates a stack of randomly colored boxes of increasing
+; size and angular rotation.
+;
+; Make sure the inspector is turned on so you can see the
+; visualization over time.
 ;
 
 mode "graphics"

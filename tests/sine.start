@@ -1,5 +1,11 @@
 ;
-; Sine curve generation
+; Sine Curve Plot
+;
+; Plots a series of small line segments on an X-Y coordinate
+; graph, to show the shape of a sine curve.
+;
+; Make sure the inspector is turned on so you can see the values
+; of the coordinates over time.
 ;
 
 mode "graphics"
