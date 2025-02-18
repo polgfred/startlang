@@ -1,4 +1,4 @@
-mode "text"
+set mode = "text"
 
 bands = [
   {

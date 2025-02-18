@@ -5,7 +5,7 @@
 ; over time.
 ;
 
-mode "text"
+set mode = "text"
 
 ; ask for the principal, rate, and time
 principal = num(input("How much to invest?", "100000"))

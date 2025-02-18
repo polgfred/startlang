@@ -12,14 +12,13 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { MouseEvent, RefObject, useCallback, useState } from 'react';
 
+import { type ViewMode } from '../../src/lang/ext/browser';
 import boxScript from '../../tests/box.start';
 import investScript from '../../tests/invest.start';
 import numguessScript from '../../tests/numguess.start';
 import sieveScript from '../../tests/sieve.start';
 import sineScript from '../../tests/sine.start';
 import victorScript from '../../tests/victor.start';
-
-type ViewMode = 'graphics' | 'text';
 
 function useMenu() {
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);

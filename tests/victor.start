@@ -7,7 +7,7 @@
 ; of the 'shift' variable over time.
 ;
 
-mode "graphics"
+set mode = "graphics"
 
 ; draw lines in black
 set stroke.color = "black"

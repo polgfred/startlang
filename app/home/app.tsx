@@ -73,7 +73,6 @@ function usePromptForInput() {
 export default function App() {
   const editorRef = useRef<editor.ICodeEditor | null>(null);
 
-  const [viewMode, setViewMode] = useState<'graphics' | 'text'>('graphics');
   const [showInspector, setShowInspector] = useState(true);
   const [isRunning, setIsRunning] = useState(false);
   const [error, setError] = useState<Error | null>(null);
@@ -89,12 +88,6 @@ export default function App() {
   interpreter.registerGlobals(browserGlobals);
   interpreter.registerGlobals({
     input: promptForInput,
-    mode(_, [mode]: [string]) {
-      if (mode !== 'graphics' && mode !== 'text') {
-        throw new Error(`invalid mode: ${mode}`);
-      }
-      setViewMode(mode);
-    },
     snapshot() {
       history.push();
     },
@@ -144,8 +137,8 @@ export default function App() {
       >
         <Header
           isRunning={isRunning}
-          viewMode={viewMode}
-          updateViewMode={setViewMode}
+          viewMode={host.viewMode}
+          updateViewMode={host.setViewMode}
           showInspector={showInspector}
           setShowInspector={setShowInspector}
           editorRef={editorRef}
@@ -184,7 +177,7 @@ export default function App() {
               flex: 1,
             }}
           >
-            {viewMode === 'graphics' && (
+            {host.viewMode === 'graphics' && (
               <Paper
                 elevation={3}
                 sx={{
@@ -198,7 +191,7 @@ export default function App() {
                 <Graphics shapes={host.shapes} />
               </Paper>
             )}
-            {viewMode === 'text' && (
+            {host.viewMode === 'text' && (
               <Paper
                 elevation={3}
                 sx={{
