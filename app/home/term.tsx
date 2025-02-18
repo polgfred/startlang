@@ -2,8 +2,8 @@ import { Button, Stack, TextField } from '@mui/material';
 import {
   ChangeEvent,
   KeyboardEvent,
-  memo,
   useCallback,
+  useEffect,
   useLayoutEffect,
   useRef,
   useState,
@@ -13,6 +13,7 @@ import { Cell, CellElement } from '../../src/lang/ext/cells/index.js';
 
 interface InputState {
   prompt: string;
+  initial: string;
   onInputComplete: (value: string) => void;
 }
 
@@ -24,6 +25,12 @@ export default function Term({
   inputState: InputState | null;
 }) {
   const [input, setInput] = useState('');
+
+  useEffect(() => {
+    if (inputState) {
+      setInput(inputState.initial);
+    }
+  }, [inputState]);
 
   const handleAccept = useCallback(() => {
     if (inputState) {

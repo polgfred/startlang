@@ -10,7 +10,7 @@
 mode "text"
 
 ; ask for the upper limit
-upper = num(input("Upper limit:"))
+upper = num(input("Upper limit:", "100"))
 
 ; create a list to mark composite (non-prime) numbers
 composite = []
