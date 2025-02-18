@@ -1,5 +1,12 @@
+;
+; Nested Data Layout
+;
+; Arrange structured data into nested layouts!
+;
+
 set mode = "text"
 
+; define a list of data records
 bands = [
   {
     name = "The Beatles",
@@ -23,6 +30,8 @@ bands = [
   }
 ]
 
+; render a table layout
+; tables and stacks are fully nestable!
 table do
   header do
     print "Band"
