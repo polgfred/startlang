@@ -20,11 +20,11 @@ i = 2
 
 ; count from i until we hit the upper limit
 while i <= upper do
-  ; the value i has not been marked as non-prime
+  ; the value i has not been marked as composite
   print "{i} is prime"
 
   ; count from i^2 to the upper limit in multiples of i
-  ; (this marks all multiples of i as non-prime)
+  ; (this marks all multiples of i as composite)
   for j = i^2 to upper by i do composite[j] = true
 
   ; skip over the current i because it's prime

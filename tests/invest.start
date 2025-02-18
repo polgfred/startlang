@@ -7,10 +7,12 @@
 
 mode "text"
 
+; ask for the principal, rate, and time
 principal = num(input("How much to invest?"))
 rate = num(input("What percent interest each year?"))
 years = num(input("How many years?"))
 
+; draw a data table
 table do
   header do
     print "Years"
@@ -18,17 +20,23 @@ table do
     print "Total"
   end
 
+  ; display a row for year 0
   row do
     print 0
     print 0
     print format(principal, "currency")
   end
 
+  ; start calculating the total from the principal value
   total = principal
+
+  ; count up for each year
   for year = 1 to years do
+    ; calculate the interest for this year
     interest = total * rate / 100
     total = total + interest
 
+    ; display a row for this year
     row do
       print year
       print format(interest, "currency")
@@ -37,11 +45,12 @@ table do
   end
 end
 
+; display the total value
 principal_fmt = format(principal, "currency")
 rate_fmt = format(rate / 100, "percent")
 growth_fmt = format(total - principal, "currency")
-
 print "In {years} years, your investment of {principal_fmt} at {rate_fmt} APR has grown by {growth_fmt}!"
 
+; display the percent of growth
 growth_pct = format(total / principal - 1, "percent")
 print "That's a total growth of {growth_pct}!"
