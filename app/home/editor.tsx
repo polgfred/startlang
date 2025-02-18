@@ -154,18 +154,15 @@ export default function Editor({
         }
       });
       editor.focus();
+      runProgram();
     },
     [editorRef, runProgram]
   );
 
   const updateLayout = useCallback(() => {
     if (editorRef.current) {
-      editorRef.current.layout({
-        // @ts-expect-error 'auto' is allowed
-        width: 'auto',
-        // @ts-expect-error 'auto' is allowed
-        height: 'auto',
-      });
+      // @ts-expect-error 'auto' is allowed
+      editorRef.current.layout({ width: 'auto', height: 'auto' });
     }
   }, [editorRef]);
 

@@ -35,9 +35,10 @@ const theme = createTheme({
 
 function useForceRender() {
   const [, setTick] = useState(0);
-  return () => {
+
+  return useCallback(() => {
     setTick((tick) => tick + 1);
-  };
+  }, []);
 }
 
 function usePromptForInput() {
