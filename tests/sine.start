@@ -9,8 +9,8 @@ line 360, 40, 360, 760
 set stroke = "blue"
 set stroke.width = 3
 
-; count from -360 to 360 in 5 degree increments
-for x1 = -180 to 175 do
+; count from -180 to 180 in 5 degree increments
+for x1 = -180 to 175 by 5 do
   x2 = x1 + 5
 
   ; calculate the sin values for x1 and x2
@@ -21,5 +21,5 @@ for x1 = -180 to 175 do
   ; (play with these numbers and see what happens!)
   line 360 + x1*2, 400 - y1*2, 360 + x2*2, 400 - y2*2
 
-  ; snapshot
+  snapshot
 end

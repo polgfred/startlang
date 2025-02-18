@@ -1,0 +1,44 @@
+mode "text"
+
+bands = [
+  {
+    name = "The Beatles",
+    year = 1960,
+    members = ["John", "Paul", "George", "Ringo"]
+  },
+  {
+    name = "The Rolling Stones",
+    year = 1962,
+    members = ["Mick", "Keith", "Charlie", "Ronnie"]
+  },
+  {
+    name = "Pink Floyd",
+    year = 1965,
+    members = ["Syd", "Roger", "David", "Richard", "Nick"]
+  },
+  {
+    name = "Led Zeppelin",
+    year = 1968,
+    members = ["Robert", "Jimmy", "John", "John"]
+  }
+]
+
+table do
+  header do
+    print "Band"
+    print "Founded"
+    print "Members"
+  end
+
+  for band in bands do
+    row do
+      print band.name
+      print band.year
+      stack do
+        for member in band.members do
+          print member
+        end
+      end
+    end
+  end
+end
