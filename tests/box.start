@@ -1,3 +1,7 @@
+;
+; Rotating box visualization
+;
+
 mode "graphics"
 
 ; draw shapes see-thru

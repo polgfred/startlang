@@ -1,45 +1,43 @@
-mode "text"
-
 ;
 ; Classic number guessing game
 ;
 
+mode "text"
+
 ; pick a random number between 1 and 100
 let number = rand(1, 100)
 
-; collect your guesses so we can show them as you go
-let guesses = []
+print "Your guesses:"
 
 repeat 10 do
   ; ask for a guess
-  let guess = num(input("Guess a number between 1 and 100: "))
+  let guess = input("Guess a number between 1 and 100:")
 
-  ; add it to the list of guesses
-  ; (one past the length of the list)
-  guesses[len(guesses) + 1] = guess
+  ; if you didn't enter anything, just quit
+  if guess = "" then
+    print "Goodbye!"
+    exit
+  end
 
-  ; clear the text window
-  clear
+  ; convert the guess to a number
+  guess = num(guess)
 
-  print "Your guesses:"
+  stack do
+    set direction = "row"
 
-  ; show your guesses in a table
-  table do
-    for g in guesses do
-      row do
-        print g
-        if g = number then
-          print "You guessed it!"
-        else if g < number then
-          print "Too low."
-        else if g > number then
-          print "Too high."
-        end
-      end
+    print guess
+
+    ; check if it was too low or too high
+    if guess = number then
+      print "You guessed it!"
+    else if guess < number then
+      print "Too low."
+    else if guess > number then
+      print "Too high."
     end
   end
 
-  ; if you guessed the number, quit the program
+  ; don't keep guessing
   if guess = number then exit
 end
 
