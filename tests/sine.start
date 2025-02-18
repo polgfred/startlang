@@ -8,7 +8,7 @@
 ; of the coordinates over time.
 ;
 
-mode "graphics"
+set mode = "graphics"
 
 ; draw the x and y axes in grey
 set stroke.color = "lightgrey"

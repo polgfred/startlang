@@ -52,8 +52,12 @@ const initialTextProps: TextProps = Object.freeze({
   ['font.size']: 36,
 });
 
+export type ViewMode = 'graphics' | 'text';
+
 export class BrowserHost {
   constructor(private readonly forceRender: () => void) {}
+
+  viewMode: ViewMode = 'graphics';
 
   shapes: readonly Shape[] = emptyArray;
   shapeProps: ShapeProps = initialShapeProps;
@@ -68,6 +72,11 @@ export class BrowserHost {
     this.textProps = initialTextProps;
     this.outputBuffer = new StackCell();
     this.currentCell = new Cons(rootCell);
+  }
+
+  setViewMode(mode: ViewMode) {
+    this.viewMode = mode;
+    this.forceRender();
   }
 
   clearDisplay() {
@@ -112,14 +121,11 @@ export class BrowserHost {
   }
 
   setConfiguration(name: string, value: unknown) {
-    if (this.currentCell.head !== rootCell) {
-      const cell = this.currentCell.head;
-      if (!(cell instanceof StackCell)) {
-        throw new Error('could not set configuration on non-stack cell');
+    if (name === 'mode') {
+      if (value !== 'graphics' && value !== 'text') {
+        throw new Error(`invalid mode: ${value}`);
       }
-      this.swapCell(cell.updateProp(name, value));
-    } else if (name in this.outputBuffer.stackProps) {
-      this.outputBuffer = this.outputBuffer.updateProp(name, value);
+      this.setViewMode(value);
     } else if (name in this.shapeProps) {
       this.shapeProps = produce(this.shapeProps, (draft) => {
         // @ts-expect-error TODO: validate this
@@ -130,6 +136,14 @@ export class BrowserHost {
         // @ts-expect-error TODO: validate this
         draft[name] = value;
       });
+    } else if (this.currentCell.head !== rootCell) {
+      const cell = this.currentCell.head;
+      if (!(cell instanceof StackCell)) {
+        throw new Error('could not set configuration on non-stack cell');
+      }
+      this.swapCell(cell.updateProp(name, value));
+    } else if (name in this.outputBuffer.stackProps) {
+      this.outputBuffer = this.outputBuffer.updateProp(name, value);
     } else {
       throw new Error(`could not set configuration option: ${name}`);
     }
