@@ -130,6 +130,36 @@ const numberMethods: RuntimeFunctions = {
     interpreter.setResult(Math.round(value));
   },
 
+  format(interpreter, [value, style]: [number, string]) {
+    switch (style) {
+      case 'decimal': {
+        const formatter = new Intl.NumberFormat(undefined, {
+          style: 'decimal',
+        });
+        interpreter.setResult(formatter.format(value));
+        break;
+      }
+      case 'percent': {
+        const formatter = new Intl.NumberFormat(undefined, {
+          style: 'percent',
+        });
+        interpreter.setResult(formatter.format(value));
+        break;
+      }
+      case 'currency': {
+        const formatter = new Intl.NumberFormat(undefined, {
+          style: 'currency',
+          currency: 'USD',
+        });
+        interpreter.setResult(formatter.format(value));
+        break;
+      }
+      default: {
+        throw new Error(`invalid format: ${style}`);
+      }
+    }
+  },
+
   sin(interpreter, [value]: [number]) {
     interpreter.setResult(Math.sin((value * Math.PI) / 180));
   },
