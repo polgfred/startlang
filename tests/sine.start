@@ -11,12 +11,12 @@
 mode "graphics"
 
 ; draw the x and y axes in grey
-set stroke = "lightgrey"
+set stroke.color = "lightgrey"
 line 0, 400, 720, 400
 line 360, 40, 360, 760
 
 ; set the main drawing color to blue
-set stroke = "blue"
+set stroke.color = "blue"
 set stroke.width = 3
 
 ; count from -180 to 180 in 5 degree increments

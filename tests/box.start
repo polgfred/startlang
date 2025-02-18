@@ -24,12 +24,12 @@ end
 
 ; count from 0 to 360 in 3 degree increments
 for a = 0 to 360 by 5 do
-  set fill = random_color()
+  set fill.color = random_color()
 
   ; set the rotation and scale factor
   set rotate = a
-  set scalex = a/60
-  set scaley = a/60
+  set scale.x = a/60
+  set scale.y = a/60
 
   ; draw a 60x60 box
   rect a, a, 60, 60

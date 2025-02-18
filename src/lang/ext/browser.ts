@@ -37,14 +37,14 @@ export interface BrowserSnapshot {
 const emptyArray = Object.freeze([]);
 
 const initialShapeProps: ShapeProps = Object.freeze({
-  fill: null,
-  stroke: null,
-  ['stroke.width']: 1,
   opacity: 1,
   anchor: 'center',
   rotate: 0,
-  scalex: 1,
-  scaley: 1,
+  ['fill.color']: null,
+  ['stroke.color']: null,
+  ['stroke.width']: 1,
+  ['scale.x']: 1,
+  ['scale.y']: 1,
 });
 
 const initialTextProps: TextProps = Object.freeze({
