@@ -1,3 +1,5 @@
+mode "graphics"
+
 ; draw shapes see-thru
 set opacity = 1/4
 
