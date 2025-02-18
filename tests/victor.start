@@ -1,8 +1,9 @@
-mode "graphics"
+;
+; Wireframe visualization
+; (from https://worrydream.com/LearnableProgramming/)
+;
 
-;
-; Visualization from https://worrydream.com/LearnableProgramming/
-;
+mode "graphics"
 
 ; draw lines in black
 set stroke = "black"

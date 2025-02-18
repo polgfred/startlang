@@ -1,0 +1,41 @@
+;
+; Compound interest investment calculator
+;
+
+mode "text"
+
+principal = num(input("How much to invest?"))
+rate = num(input("What percent interest each year?"))
+years = num(input("How many years?"))
+
+table do
+  header do
+    print "Years"
+    print "Interest"
+    print "Total"
+  end
+
+  row do
+    print 0
+    print 0
+    print format(principal, "currency")
+  end
+
+  total = principal
+  for year = 1 to years do
+    interest = total * rate / 100
+    total = total + interest
+
+    row do
+      print year
+      print format(interest, "currency")
+      print format(total, "currency")
+    end
+  end
+end
+
+principal_fmt = format(principal, "currency")
+rate_fmt = format(rate / 100, "percent")
+growth_fmt = format(total - principal, "currency")
+
+print "In {years} years, your investment of {principal_fmt} at {rate_fmt} APR has grown by {growth_fmt}!"

@@ -1,3 +1,7 @@
+;
+; Sine curve generation
+;
+
 mode "graphics"
 
 ; draw the x and y axes in grey

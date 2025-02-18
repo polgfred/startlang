@@ -1,11 +1,11 @@
-mode "text"
-
 ;
 ; Eratosthenes' sieve for prime numbers
 ;
 
+mode "text"
+
 ; ask for the upper limit
-upper = num(input("How high? "))
+upper = num(input("How high to search for primes?"))
 
 ; create a list to mark non-primes
 marked = []
