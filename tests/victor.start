@@ -1,6 +1,10 @@
 ;
-; Wireframe visualization
+; Bret Victor Wireframe Plot
+;
 ; (from https://worrydream.com/LearnableProgramming/)
+;
+; Make sure the inspector is turned on so you can see the value
+; of the 'shift' variable over time.
 ;
 
 mode "graphics"

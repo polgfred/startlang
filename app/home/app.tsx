@@ -138,12 +138,13 @@ export default function App() {
         })}
       >
         <Header
+          isRunning={isRunning}
           viewMode={viewMode}
           updateViewMode={setViewMode}
           showInspector={showInspector}
           setShowInspector={setShowInspector}
+          editorRef={editorRef}
           runProgram={runProgram}
-          isRunning={isRunning}
         />
         <Stack
           direction="row"

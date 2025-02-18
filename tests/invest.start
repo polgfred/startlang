@@ -1,5 +1,8 @@
 ;
-; Compound interest investment calculator
+; Compound Interest Calculator
+;
+; Calculates the compound interest of a principal amount
+; over time.
 ;
 
 mode "text"
@@ -39,3 +42,6 @@ rate_fmt = format(rate / 100, "percent")
 growth_fmt = format(total - principal, "currency")
 
 print "In {years} years, your investment of {principal_fmt} at {rate_fmt} APR has grown by {growth_fmt}!"
+
+growth_pct = format(total / principal - 1, "percent")
+print "That's a total growth of {growth_pct}!"

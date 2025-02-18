@@ -1,14 +1,19 @@
 ;
-; Eratosthenes' sieve for prime numbers
+; Sieve of Eratosthenes
+;
+; A Greek mathematician in the 3rd century BCE came up with this
+; algorithm to test for prime numbers up to a given limit.
+;
+; https://en.wikipedia.org/wiki/Sieve_of_Eratosthenes
 ;
 
 mode "text"
 
 ; ask for the upper limit
-upper = num(input("How high to search for primes?"))
+upper = num(input("Upper limit:"))
 
-; create a list to mark non-primes
-marked = []
+; create a list to mark composite (non-prime) numbers
+composite = []
 
 ; start at 2 (the first prime number)
 i = 2
@@ -20,12 +25,11 @@ while i <= upper do
 
   ; count from i^2 to the upper limit in multiples of i
   ; (this marks all multiples of i as non-prime)
-  ; (bonus: why can we start at i^2 instead of i?)
-  for j = i^2 to upper by i do marked[j] = true
+  for j = i^2 to upper by i do composite[j] = true
 
   ; skip over the current i because it's prime
   i = i + 1
 
-  ; skip over everything that has been marked as non-prime
-  while marked[i] do i = i + 1
+  ; skip over everything that has been marked as composite
+  while composite[i] do i = i + 1
 end
