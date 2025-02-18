@@ -16,20 +16,10 @@ How to build and run it yourself, if you're so inclined.
 
 - Install [NodeJS](https://nodejs.org/)
 - Clone the repository to your machine
-- Install packages and run the app:
-
-```console
-$ npm install
-$ npm run dev
-```
-
-## Devcontainers
-
-- Install [VSCode](https://visualstudio.microsoft.com/)
-- Install the [VSCode Devcontainers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) from Microsoft
-- Clone the repository to your machine
-- Open the repository in VSCode
-- Click `Reopen in Container` when prompted
+- [Optional: If you want to use Devcontainers]
+  - Install the [VSCode Devcontainers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) from Microsoft
+  - Open the repository in VSCode
+  - Click `Reopen in Container` when prompted
 - Install packages and run the app:
 
 ```console
