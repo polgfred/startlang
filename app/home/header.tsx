@@ -15,6 +15,7 @@ import { MouseEvent, RefObject, useCallback, useState } from 'react';
 import { type ViewMode } from '../../src/lang/ext/browser';
 import boxScript from '../../tests/box.start';
 import investScript from '../../tests/invest.start';
+import layoutScript from '../../tests/layout.start';
 import numguessScript from '../../tests/numguess.start';
 import sieveScript from '../../tests/sieve.start';
 import sineScript from '../../tests/sine.start';
@@ -113,6 +114,10 @@ const exampleScripts = [
   {
     name: 'Victor Wireframe Plot',
     script: victorScript,
+  },
+  {
+    name: 'Nested Data Layout',
+    script: layoutScript,
   },
 ];
 
