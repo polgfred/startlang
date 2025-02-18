@@ -136,9 +136,8 @@ export default function App() {
         })}
       >
         <Header
+          host={host}
           isRunning={isRunning}
-          viewMode={host.viewMode}
-          updateViewMode={host.setViewMode}
           showInspector={showInspector}
           setShowInspector={setShowInspector}
           editorRef={editorRef}

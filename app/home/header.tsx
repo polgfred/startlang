@@ -12,7 +12,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { MouseEvent, RefObject, useCallback, useState } from 'react';
 
-import { type ViewMode } from '../../src/lang/ext/browser';
+import { type BrowserHost, type ViewMode } from '../../src/lang/ext/browser';
 import boxScript from '../../tests/box.start';
 import investScript from '../../tests/invest.start';
 import layoutScript from '../../tests/layout.start';
@@ -39,13 +39,11 @@ function useMenu() {
 }
 
 function ViewMenu({
-  viewMode,
-  updateViewMode,
+  host,
   showInspector,
   setShowInspector,
 }: {
-  viewMode: ViewMode;
-  updateViewMode: (value: ViewMode) => void;
+  host: BrowserHost;
   showInspector: boolean;
   setShowInspector: (value: boolean) => void;
 }) {
@@ -58,18 +56,18 @@ function ViewMenu({
       </Button>
       <Menu open={anchor !== null} anchorEl={anchor} onClose={closeMenu}>
         <MenuItem
-          selected={viewMode === 'graphics'}
+          selected={host.viewMode === 'graphics'}
           onClick={() => {
-            updateViewMode('graphics');
+            host.setViewMode('graphics');
             closeMenu();
           }}
         >
           Graphics
         </MenuItem>
         <MenuItem
-          selected={viewMode === 'text'}
+          selected={host.viewMode === 'text'}
           onClick={() => {
-            updateViewMode('text');
+            host.setViewMode('text');
             closeMenu();
           }}
         >
@@ -174,17 +172,15 @@ function CodeMenu({
 }
 
 export default function Header({
+  host,
   isRunning,
-  viewMode,
-  updateViewMode,
   showInspector,
   setShowInspector,
   runProgram,
   editorRef,
 }: {
+  host: BrowserHost;
   isRunning: boolean;
-  viewMode: ViewMode;
-  updateViewMode: (mode: ViewMode) => void;
   showInspector: boolean;
   setShowInspector: (value: boolean) => void;
   runProgram: () => void;
@@ -212,8 +208,7 @@ export default function Header({
           START
         </Typography>
         <ViewMenu
-          viewMode={viewMode}
-          updateViewMode={updateViewMode}
+          host={host}
           showInspector={showInspector}
           setShowInspector={setShowInspector}
         />
