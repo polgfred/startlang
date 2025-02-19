@@ -34,6 +34,7 @@ export class Interpreter {
   topNamespace = rootNamespace;
   topFrame = rootFrame;
   lastResult: unknown = null;
+  isRunning: boolean = false;
 
   constructor(public readonly host: unknown) {
     installHandlers(this);
@@ -55,11 +56,17 @@ export class Interpreter {
   }
 
   async runLoop() {
-    while (this.topFrame !== rootFrame) {
-      const result = this.topFrame.head.visit(this);
-      if (result instanceof Promise) {
-        await result;
+    this.isRunning = true;
+
+    try {
+      while (this.topFrame !== rootFrame) {
+        const result = this.topFrame.head.visit(this);
+        if (result instanceof Promise) {
+          await result;
+        }
       }
+    } finally {
+      this.isRunning = false;
     }
   }
 

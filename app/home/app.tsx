@@ -74,7 +74,6 @@ export default function App() {
   const editorRef = useRef<editor.ICodeEditor | null>(null);
 
   const [showInspector, setShowInspector] = useState(true);
-  const [isRunning, setIsRunning] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
   const forceRender = useForceRender();
@@ -106,10 +105,8 @@ export default function App() {
     history.clear();
     host.clearDisplay();
     host.clearOutputBuffer();
-    forceRender();
 
     try {
-      setIsRunning(true);
       host.restoreOriginalSettings();
       const source = (editorRef.current?.getValue() ?? '') + '\n';
       const rootNode = parse(source);
@@ -121,7 +118,7 @@ export default function App() {
         console.error(err.stack);
       }
     } finally {
-      setIsRunning(false);
+      forceRender();
     }
   }, [forceRender, history, host, interpreter]);
 
@@ -137,7 +134,7 @@ export default function App() {
       >
         <Header
           host={host}
-          isRunning={isRunning}
+          isRunning={interpreter.isRunning}
           showInspector={showInspector}
           setShowInspector={setShowInspector}
           editorRef={editorRef}
