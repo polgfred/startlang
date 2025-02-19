@@ -11,12 +11,8 @@ import {
 } from '@mui/material';
 import { ChangeEvent, JSX, useCallback, useState } from 'react';
 
-import { History } from '../../src/lang/ext/history.js';
-import type {
-  ListType,
-  NamespaceType,
-  RecordType,
-} from '../../src/lang/types.js';
+import { History } from '../src/lang/ext/history.js';
+import type { ListType, NamespaceType, RecordType } from '../src/lang/types.js';
 
 export default function Inspector({
   error,

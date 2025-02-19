@@ -2,7 +2,7 @@ import Monaco, { BeforeMount, OnMount } from '@monaco-editor/react';
 import { editor, languages } from 'monaco-editor';
 import { RefObject, useCallback, useLayoutEffect } from 'react';
 
-import boxScript from '../../tests/box.start';
+import boxScript from '../tests/box.start';
 
 const languageConfig: languages.LanguageConfiguration = {
   comments: {

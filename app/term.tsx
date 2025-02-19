@@ -9,7 +9,7 @@ import {
   useState,
 } from 'react';
 
-import { Cell, CellElement } from '../../src/lang/ext/cells/index.js';
+import { Cell, CellElement } from '../src/lang/ext/cells/index.js';
 
 interface InputState {
   prompt: string;

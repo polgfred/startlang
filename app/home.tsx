@@ -4,10 +4,10 @@ import { Paper, Stack, ThemeProvider, createTheme } from '@mui/material';
 import { editor } from 'monaco-editor';
 import { useCallback, useRef, useState } from 'react';
 
-import { BrowserHost, browserGlobals } from '../../src/lang/ext/browser.js';
-import { History } from '../../src/lang/ext/history.js';
-import { Interpreter } from '../../src/lang/interpreter.js';
-import { parse } from '../../src/lang/parser.peggy';
+import { BrowserHost, browserGlobals } from '../src/lang/ext/browser.js';
+import { History } from '../src/lang/ext/history.js';
+import { Interpreter } from '../src/lang/interpreter.js';
+import { parse } from '../src/lang/parser.peggy';
 
 import Editor from './editor.jsx';
 import Graphics from './graphics.jsx';
@@ -70,7 +70,7 @@ function usePromptForInput() {
   };
 }
 
-export default function App() {
+export default function Home() {
   const editorRef = useRef<editor.ICodeEditor | null>(null);
 
   const [showInspector, setShowInspector] = useState(true);
