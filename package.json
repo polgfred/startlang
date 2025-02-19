@@ -20,6 +20,7 @@
   "author": "Frederick Polgardy <fred@polgardy.com>",
   "license": "ISC",
   "dependencies": {
+    "@vercel/analytics": "^1.5.0",
     "next": "^15.1.7"
   },
   "devDependencies": {

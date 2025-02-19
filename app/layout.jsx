@@ -1,11 +1,12 @@
 import '@mui/material-pigment-css/styles.css';
+import { Analytics } from '@vercel/analytics/next';
+
+import '@mui/material-pigment-css/styles.css';
+import './layout.css';
 
 export const metadata = {
   title: 'Home',
 };
-
-import '@mui/material-pigment-css/styles.css';
-import './layout.css';
 
 export default function RootLayout({ children }) {
   return (
@@ -32,6 +33,7 @@ export default function RootLayout({ children }) {
         }}
       >
         {children}
+        <Analytics />
       </body>
     </html>
   );
