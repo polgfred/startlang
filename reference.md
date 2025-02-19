@@ -53,7 +53,7 @@ rand(1, 100) -> 42 (maybe!)
 
 ## Variables
 
-The `let` statement assigns variables to values. The word _let_ is optional.
+The `let` statement assigns values to variables. The word _let_ is optional.
 
 ```
 let x = 1
@@ -175,7 +175,7 @@ greet
 (the 123 is ignored)
 ```
 
-Within the body of a function, any assigned variables (including parameters) take on a _temporary_ value for the duration of that function, overriding whatever value it might have outside (called its _global_ value). This is referred to as the function's _scope_, and it prevents functions from tempering with outside data, and creating hard-to-track-down bugs.
+Within the body of a function, any assigned variables (including parameters) take on a _temporary_ value for the duration of that function, overriding whatever value it might have outside (called its _global_ value). This is referred to as the function's _scope_, and it prevents functions from tampering with outside data, and creating hard-to-track-down bugs.
 
 ```
 a = 10
