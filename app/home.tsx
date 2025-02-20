@@ -217,6 +217,7 @@ export default function Home() {
                   height: '100%',
                   margin: '5px',
                   padding: '10px',
+                  overflow: 'scroll',
                 }}
               >
                 <Inspector
