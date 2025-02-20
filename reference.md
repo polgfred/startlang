@@ -124,13 +124,15 @@ rect 10, 10, 100, 100 -> draws a 100x100 rectangle on the screen at (10, 10)
 
 ## Loops
 
-The `repeat`, `while`, and `for` statements execute a statement or code block multiple times, based on different criteria:
+The `repeat`, `while`, and `for` statements execute a statement or code block (called the body) multiple times, based on different criteria:
 
 - `repeat` executes the body a given number of times, or forever if no value is provided
 - `while` executes the body as long as some condition is true; if the condition is initially false, the body will never be executed
 - `for` works in two different ways:
   - with `=`, it executes the code for each number in a numeric sequence
   - with `in`, it executes the code for each member of a list or record
+
+If the loop body is a single short statement, it can be placed on the same line after `do`. For most cases, the `do`/`end` form is preferable.
 
 ```
 repeat 10 do print "Hello, world!"
@@ -152,7 +154,7 @@ for i = 1 to 10 by 2 do
 end
 
 crew = ["Kirk", "Spock", "Bones", "Uhura", "Scotty", "Chekov", "Sulu"]
-for i in crew
+for i in crew do
   print "i is " :: i
 end
 ```
