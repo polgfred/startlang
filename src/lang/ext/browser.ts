@@ -1,3 +1,5 @@
+import { EventEmitter } from 'events';
+
 import { produce } from 'immer';
 
 import { Interpreter, type SupportsSnapshots } from '../interpreter.js';
@@ -55,7 +57,7 @@ const initialTextProps: TextProps = Object.freeze({
 export type ViewMode = 'graphics' | 'text';
 
 export class BrowserHost implements SupportsSnapshots<BrowserSnapshot> {
-  constructor(private readonly forceRender: () => void) {}
+  events = new EventEmitter();
 
   viewMode: ViewMode = 'graphics';
 
@@ -76,24 +78,24 @@ export class BrowserHost implements SupportsSnapshots<BrowserSnapshot> {
 
   setViewMode(mode: ViewMode) {
     this.viewMode = mode;
-    this.forceRender();
+    this.events.emit('repaint');
   }
 
   clearDisplay() {
     this.shapes = emptyArray;
-    this.forceRender();
+    this.events.emit('repaint');
   }
 
   pushShape(shape: Shape) {
     this.shapes = produce(this.shapes, (draft) => {
       draft.push(shape);
     });
-    this.forceRender();
+    this.events.emit('repaint');
   }
 
   clearOutputBuffer() {
     this.outputBuffer = new StackCell();
-    this.forceRender();
+    this.events.emit('repaint');
   }
 
   swapCell(cell: Cell) {
@@ -113,7 +115,7 @@ export class BrowserHost implements SupportsSnapshots<BrowserSnapshot> {
   addCell(cell: Cell) {
     if (this.currentCell.head === rootCell) {
       this.outputBuffer = this.outputBuffer.addChild(cell);
-      this.forceRender();
+      this.events.emit('repaint');
       return waitForRepaint();
     } else {
       this.swapCell(this.currentCell.head.addChild(cell));

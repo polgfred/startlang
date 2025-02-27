@@ -2,7 +2,7 @@
 
 import { Paper, Stack, ThemeProvider, createTheme } from '@mui/material';
 import { editor } from 'monaco-editor';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { BrowserHost, browserGlobals } from '../src/lang/ext/browser.js';
 import { Interpreter } from '../src/lang/interpreter.js';
@@ -77,8 +77,12 @@ export default function Home() {
 
   const forceRender = useForceRender();
 
-  const { current: host } = useRef(new BrowserHost(forceRender));
+  const { current: host } = useRef(new BrowserHost());
   const { current: interpreter } = useRef(new Interpreter(host));
+
+  useEffect(() => {
+    host.events.on('repaint', forceRender);
+  }, [forceRender, host]);
 
   const { inputState, promptForInput } = usePromptForInput();
 
