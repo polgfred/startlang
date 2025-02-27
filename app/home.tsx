@@ -5,7 +5,6 @@ import { editor } from 'monaco-editor';
 import { useCallback, useRef, useState } from 'react';
 
 import { BrowserHost, browserGlobals } from '../src/lang/ext/browser.js';
-import { History } from '../src/lang/ext/history.js';
 import { Interpreter } from '../src/lang/interpreter.js';
 import { parse } from '../src/lang/parser.peggy';
 
@@ -80,29 +79,25 @@ export default function Home() {
 
   const { current: host } = useRef(new BrowserHost(forceRender));
   const { current: interpreter } = useRef(new Interpreter(host));
-  const { current: history } = useRef(new History(interpreter, host));
 
   const { inputState, promptForInput } = usePromptForInput();
 
   interpreter.registerGlobals(browserGlobals);
   interpreter.registerGlobals({
     input: promptForInput,
-    snapshot() {
-      history.push();
-    },
   });
 
   const updateSlider = useCallback(
     (index: number) => {
-      history.moveToIndex(index);
+      interpreter.moveToSnapshot(index);
       forceRender();
     },
-    [forceRender, history]
+    [forceRender, interpreter]
   );
 
   const runProgram = useCallback(async () => {
     setError(null);
-    history.clear();
+    interpreter.clearHistory();
     host.clearDisplay();
     host.clearOutputBuffer();
 
@@ -120,7 +115,7 @@ export default function Home() {
     } finally {
       forceRender();
     }
-  }, [forceRender, history, host, interpreter]);
+  }, [forceRender, host, interpreter]);
 
   return (
     <ThemeProvider theme={theme}>
@@ -222,7 +217,7 @@ export default function Home() {
               >
                 <Inspector
                   error={error}
-                  history={history}
+                  interpreter={interpreter}
                   updateSlider={updateSlider}
                 />
               </Paper>

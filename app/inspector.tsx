@@ -11,16 +11,16 @@ import {
 } from '@mui/material';
 import { ChangeEvent, JSX, useCallback, useState } from 'react';
 
-import { History } from '../src/lang/ext/history.js';
+import { Interpreter } from '../src/lang/interpreter.js';
 import type { ListType, NamespaceType, RecordType } from '../src/lang/types.js';
 
 export default function Inspector({
   error,
-  history,
+  interpreter,
   updateSlider,
 }: {
   error: Error | null;
-  history: History;
+  interpreter: Interpreter;
   updateSlider: (index: number) => void;
 }) {
   const handleSliderChange = useCallback(
@@ -44,8 +44,8 @@ export default function Inspector({
       <input
         type="range"
         min={0}
-        max={history.length - 1}
-        value={history.currentIndex}
+        max={interpreter.history.length - 1}
+        value={interpreter.snapshotIndex}
         onChange={handleSliderChange}
         sx={{
           margin: 1,
@@ -53,15 +53,15 @@ export default function Inspector({
         }}
       />
       {error && <ErrorInspector error={error} />}
-      {!history.isEmpty() && (
+      {interpreter.history.length > 0 && (
         <>
           <NamespaceInspector
             title="Global"
-            namespace={history.current.globalNamespace}
+            namespace={interpreter.globalNamespace}
           />
           <NamespaceInspector
             title="Local"
-            namespace={history.current.topNamespace.head}
+            namespace={interpreter.topNamespace.head}
           />
         </>
       )}

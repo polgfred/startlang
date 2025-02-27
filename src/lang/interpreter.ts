@@ -18,12 +18,18 @@ const emptyObject = Object.freeze(Object.create(null));
 
 const rootNamespace: Cons<NamespaceType> = new Cons(emptyObject);
 
+export interface SupportsSnapshots<T = unknown> {
+  takeSnapshot(): T;
+  restoreSnapshot(snapshot: T): void;
+}
+
 export interface Snapshot {
   globalFunctions: GlobalFunctions;
   globalNamespace: NamespaceType;
   topNamespace: Cons<NamespaceType>;
   topFrame: Cons<Frame>;
   lastResult: unknown;
+  hostSnapshot: unknown;
 }
 
 export class Interpreter {
@@ -35,9 +41,16 @@ export class Interpreter {
   topFrame = rootFrame;
   lastResult: unknown = null;
   isRunning: boolean = false;
+  history: Snapshot[] = [];
+  snapshotIndex: number = 0;
 
-  constructor(public readonly host: unknown) {
+  constructor(public readonly host: SupportsSnapshots) {
     installHandlers(this);
+    this.registerGlobals({
+      snapshot(interpreter) {
+        interpreter.takeSnapshot();
+      },
+    });
   }
 
   run(node: Node) {
@@ -241,21 +254,30 @@ export class Interpreter {
     this.lastResult = value;
   }
 
-  takeSnapshot(): Snapshot {
-    return {
+  clearHistory() {
+    this.history = [];
+  }
+
+  takeSnapshot() {
+    this.history.push({
       globalFunctions: this.globalFunctions,
       globalNamespace: this.globalNamespace,
       topNamespace: this.topNamespace,
       topFrame: this.topFrame,
       lastResult: this.lastResult,
-    };
+      hostSnapshot: this.host.takeSnapshot(),
+    });
+    this.snapshotIndex = this.history.length - 1;
   }
 
-  restoreSnapshot(snapshot: Snapshot) {
+  moveToSnapshot(index: number) {
+    const snapshot = this.history[index];
     this.globalFunctions = snapshot.globalFunctions;
     this.globalNamespace = snapshot.globalNamespace;
     this.topNamespace = snapshot.topNamespace;
     this.topFrame = snapshot.topFrame;
     this.lastResult = snapshot.lastResult;
+    this.host.restoreSnapshot(snapshot.hostSnapshot);
+    this.snapshotIndex = index;
   }
 }

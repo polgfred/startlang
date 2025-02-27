@@ -1,6 +1,6 @@
 import { produce } from 'immer';
 
-import { Interpreter } from '../interpreter.js';
+import { Interpreter, type SupportsSnapshots } from '../interpreter.js';
 import { CallFrame, CallNode } from '../nodes/index.js';
 import type { RuntimeFunctions } from '../types.js';
 import { Cons } from '../utils/cons.js';
@@ -54,7 +54,7 @@ const initialTextProps: TextProps = Object.freeze({
 
 export type ViewMode = 'graphics' | 'text';
 
-export class BrowserHost {
+export class BrowserHost implements SupportsSnapshots<BrowserSnapshot> {
   constructor(private readonly forceRender: () => void) {}
 
   viewMode: ViewMode = 'graphics';
