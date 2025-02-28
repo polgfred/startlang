@@ -1,12 +1,10 @@
 /* eslint-disable @typescript-eslint/no-empty-object-type */
 
+import type { Theme, SxProps } from '@mui/material/styles';
 import React from 'react';
 
-interface SxProps {
-  sx?:
-    | React.CSSProperties
-    | ((theme) => React.CSSProperties)
-    | ReadonlyArray<React.CSSProperties | ((theme) => React.CSSProperties)>;
+interface WithSxProps {
+  sx?: SxProps<Theme>;
 }
 
 // Add the sx prop to all HTML and SVG elements:
@@ -14,7 +12,7 @@ interface SxProps {
 
 declare global {
   namespace React {
-    interface HTMLAttributes<T> extends SxProps {}
-    interface SVGProps<T> extends SxProps {}
+    interface HTMLAttributes<T> extends WithSxProps {}
+    interface SVGProps<T> extends WithSxProps {}
   }
 }
