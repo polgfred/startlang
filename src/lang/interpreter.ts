@@ -1,4 +1,4 @@
-import { Draft, original, produce } from 'immer';
+import { castDraft, original, produce, type Draft } from 'immer';
 
 import { DataHandler, installHandlers } from './handlers/index.js';
 import {
@@ -105,7 +105,7 @@ export class Interpreter {
 
   defineGlobalFunction(node: BeginNode) {
     this.globalFunctions = produce(this.globalFunctions, (draft) => {
-      draft[node.name] = node;
+      draft[node.name] = castDraft(node);
     });
   }
 

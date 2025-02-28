@@ -6,10 +6,10 @@ import { Frame, Node, SourceLocation } from './base.js';
 export class RecordNode extends Node {
   constructor(
     location: SourceLocation,
-    public readonly pairs: {
+    public readonly pairs: ReadonlyArray<{
       readonly key: string;
       readonly value: Node;
-    }[]
+    }>
   ) {
     super(location);
   }

@@ -5,7 +5,7 @@ import { Frame, Node, SourceLocation } from './base.js';
 export class BlockNode extends Node {
   constructor(
     location: SourceLocation,
-    public elems: Node[]
+    public elems: readonly Node[]
   ) {
     super(location);
   }

@@ -6,7 +6,7 @@ export class LogicalOpNode extends Node {
   constructor(
     location: SourceLocation,
     public readonly operator: 'and' | 'or',
-    public readonly values: Node[]
+    public readonly values: readonly Node[]
   ) {
     super(location);
   }

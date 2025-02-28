@@ -5,7 +5,7 @@ import { Frame, Node, SourceLocation } from './base.js';
 export class TemplateStringNode extends Node {
   constructor(
     location: SourceLocation,
-    public readonly segments: Node[]
+    public readonly segments: readonly Node[]
   ) {
     super(location);
   }

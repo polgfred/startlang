@@ -6,7 +6,7 @@ export class BeginNode extends Node {
   constructor(
     location: SourceLocation,
     public readonly name: string,
-    public readonly params: string[],
+    public readonly params: readonly string[],
     public readonly body: Node
   ) {
     super(location);

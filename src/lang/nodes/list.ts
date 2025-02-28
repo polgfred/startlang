@@ -6,7 +6,7 @@ import { Frame, Node, SourceLocation } from './base.js';
 export class ListNode extends Node {
   constructor(
     location: SourceLocation,
-    public readonly items: Node[]
+    public readonly items: readonly Node[]
   ) {
     super(location);
   }

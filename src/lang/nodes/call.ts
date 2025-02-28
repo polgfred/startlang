@@ -6,7 +6,7 @@ export class CallNode extends Node {
   constructor(
     location: SourceLocation,
     public readonly name: string,
-    public readonly args: Node[],
+    public readonly args: readonly Node[],
     public readonly body: Node | null
   ) {
     super(location);

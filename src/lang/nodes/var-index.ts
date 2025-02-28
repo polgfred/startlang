@@ -7,7 +7,7 @@ export class VarIndexNode extends Node {
   constructor(
     location: SourceLocation,
     public readonly name: string,
-    public readonly indexes: Node[]
+    public readonly indexes: readonly Node[]
   ) {
     super(location);
   }
