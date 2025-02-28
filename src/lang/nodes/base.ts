@@ -3,13 +3,16 @@ import { immerable } from 'immer';
 import { Interpreter } from '../interpreter.js';
 import { Cons } from '../utils/cons.js';
 
-export interface SourceLocation {
+interface SourceOffset {
   offset: number;
   line: number;
   column: number;
 }
 
-const nullLocation: SourceLocation = { offset: 0, line: 0, column: 0 };
+export interface SourceLocation {
+  start: SourceOffset;
+  end: SourceOffset;
+}
 
 export abstract class Node {
   constructor(public readonly location: SourceLocation) {}
@@ -43,6 +46,11 @@ class RootFrame extends Frame {
     // this is just here as a sentinel frame
   }
 }
+
+const nullLocation: SourceLocation = {
+  start: { offset: 0, line: 0, column: 0 },
+  end: { offset: 0, line: 0, column: 0 },
+};
 
 export const rootFrame: Cons<Frame> = new Cons(
   new RootNode(nullLocation).makeFrame()
