@@ -103,9 +103,7 @@ start = EOL? @block:Block
 // Top-level
 
 Block
-  = elems:(_ @BlockElement EOL)* {
-      return elems.length === 1 ? elems[0] : new BlockNode(location(), elems);
-    }
+  = elems:(_ @BlockElement EOL)* { return new BlockNode(location(), elems); }
 
 BlockElement
   = ControlBlock
