@@ -136,12 +136,9 @@ const languageDefinition: lang.IMonarchLanguage = {
 
 type MarkerType = 'breakpoint' | 'snapshot';
 
-function setupLineMarkers(
-  editor: ed.ICodeEditor,
-  markers: Map<number, MarkerType>
-) {
+function setupLineMarkers(editor: ed.ICodeEditor, markers: MarkerType[]) {
   const decorations = editor.createDecorationsCollection([]);
-  markers.clear();
+  markers.length = 0;
 
   editor.onMouseMove((ev) => {
     if (ev.target.type === ed.MouseTargetType.GUTTER_GLYPH_MARGIN) {
@@ -155,22 +152,29 @@ function setupLineMarkers(
   editor.onMouseDown((ev) => {
     if (ev.target.type === ed.MouseTargetType.GUTTER_GLYPH_MARGIN) {
       const { lineNumber } = ev.target.position;
-      if (!markers.has(lineNumber)) {
-        markers.set(lineNumber, 'breakpoint');
-      } else if (markers.get(lineNumber) === 'breakpoint') {
-        markers.set(lineNumber, 'snapshot');
+      if (!markers[lineNumber]) {
+        markers[lineNumber] = 'breakpoint';
+      } else if (markers[lineNumber] === 'breakpoint') {
+        markers[lineNumber] = 'snapshot';
       } else {
-        markers.delete(lineNumber);
+        // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+        delete markers[lineNumber];
       }
 
       decorations.set(
-        [...markers].map(([lineNumber, marker]) => ({
-          range: new Range(lineNumber, 1, lineNumber, 1),
-          options: {
-            isWholeLine: true,
-            glyphMarginClassName: marker,
+        markers.reduce<ed.IModelDeltaDecoration[]>(
+          (acc, marker, lineNumber) => {
+            acc.push({
+              range: new Range(lineNumber, 1, lineNumber, 1),
+              options: {
+                isWholeLine: true,
+                glyphMarginClassName: marker,
+              },
+            });
+            return acc;
           },
-        }))
+          []
+        )
       );
     }
   });
@@ -185,7 +189,7 @@ export default function Editor({
   showInspector: boolean;
   runProgram: () => void;
 }) {
-  const { current: markers } = useRef(new Map<number, MarkerType>());
+  const { current: markers } = useRef<MarkerType[]>([]);
 
   const onBeforeMount: BeforeMount = useCallback((monaco) => {
     monaco.languages.register({ id: 'start' });
