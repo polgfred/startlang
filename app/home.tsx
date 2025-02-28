@@ -1,18 +1,21 @@
 'use client';
 
 import { Paper, Stack, ThemeProvider, createTheme } from '@mui/material';
-import { editor } from 'monaco-editor';
+import { editor as ed } from 'monaco-editor';
+import dynamic from 'next/dynamic';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { BrowserHost, browserGlobals } from '../src/lang/ext/browser.js';
 import { Interpreter } from '../src/lang/interpreter.js';
 import { parse } from '../src/lang/parser.peggy';
 
-import Editor from './editor.jsx';
 import Graphics from './graphics.jsx';
 import Header from './header.jsx';
 import Inspector from './inspector.jsx';
 import Term from './term.jsx';
+
+// editor component loads vscode monaco internally, so it can't be server-side rendered
+const Editor = dynamic(() => import('./editor.jsx'), { ssr: false });
 
 const theme = createTheme({
   components: {
@@ -70,7 +73,7 @@ function usePromptForInput() {
 }
 
 export default function Home() {
-  const editorRef = useRef<editor.ICodeEditor | null>(null);
+  const editorRef = useRef<ed.ICodeEditor | null>(null);
 
   const [showInspector, setShowInspector] = useState(true);
   const [error, setError] = useState<Error | null>(null);
