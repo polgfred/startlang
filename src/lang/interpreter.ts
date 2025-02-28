@@ -49,7 +49,7 @@ export class Interpreter {
   isRunning: boolean = false;
   history: Snapshot[] = [];
   snapshotIndex: number = 0;
-  markersMap: Map<Node, MarkerType> = new Map();
+  markersMap: WeakMap<Node, MarkerType> = new WeakMap();
 
   constructor(public readonly host: SupportsSnapshots) {
     installHandlers(this);
@@ -80,11 +80,15 @@ export class Interpreter {
 
     try {
       while (this.topFrame !== rootFrame) {
-        const marker = this.markersMap.get(this.topFrame.head.node);
-        if (marker === 'snapshot') {
+        const { head } = this.topFrame;
+        const marker = this.markersMap.get(head.node);
+        if (marker) {
           this.takeSnapshot();
+          if (marker === 'breakpoint') {
+            break;
+          }
         }
-        const result = this.topFrame.head.visit(this);
+        const result = head.visit(this);
         if (result instanceof Promise) {
           await result;
         }
@@ -293,7 +297,7 @@ export class Interpreter {
   }
 
   clearMarkers() {
-    this.markersMap = new Map();
+    this.markersMap = new WeakMap();
   }
 
   setMarkers(node: Node, markers: readonly MarkerType[]) {

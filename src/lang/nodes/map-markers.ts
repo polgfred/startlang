@@ -15,7 +15,7 @@ export function mapMarkers(node: Node, markers: readonly MarkerType[]) {
   const markersCopy = markers.slice();
 
   // build a map from program nodes to markers (either 'breakpoint' or 'snapshot')
-  const nodeToMarker = new Map<Node, MarkerType>();
+  const nodeToMarker = new WeakMap<Node, MarkerType>();
 
   function visit(node: Node | null) {
     if (!(node instanceof BlockNode)) {
