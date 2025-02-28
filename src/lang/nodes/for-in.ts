@@ -3,15 +3,16 @@ import { castDraft } from 'immer';
 import { emptyList } from '../handlers/list.js';
 import { Interpreter } from '../interpreter.js';
 
-import { Frame, Node } from './base.js';
+import { Frame, Node, SourceLocation } from './base.js';
 
 export class ForInNode extends Node {
   constructor(
+    location: SourceLocation,
     public readonly name: string,
     public readonly iterable: Node,
     public readonly body: Node
   ) {
-    super();
+    super(location);
   }
 
   makeFrame() {

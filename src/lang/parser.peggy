@@ -36,7 +36,7 @@
       // insert the next-level tree into the false slot
       elseBody = buildIfTree(tests, elseBody);
     }
-    return new IfNode(condition, thenBody, elseBody);
+    return new IfNode(location(), condition, thenBody, elseBody);
   }
 
   // take a chain of equal-precedence exprs and construct a left-folding tree
@@ -45,7 +45,7 @@
       return left;
     } else {
       const [operator, right] = rest.shift();
-      const node = new BinaryOpNode(operator, left, right);
+      const node = new BinaryOpNode(location(), operator, left, right);
       return buildBinaryExpr(node, rest);
     }
   }
@@ -55,7 +55,7 @@
       return left;
     } else {
       const [operator, right] = rest.shift();
-      const node = new LogicalOpNode(operator, [left, right]);
+      const node = new LogicalOpNode(location(), operator, [left, right]);
       return buildLogicalExpr(node, rest);
     }
   }
@@ -66,7 +66,7 @@
       return right;
     } else {
       const operator = ops.pop();
-      const node = new UnaryOpNode(operator, right);
+      const node = new UnaryOpNode(location(), operator, right);
       return buildUnaryExpr(ops, node);
     }
   }
@@ -81,7 +81,7 @@
     ) {
       return segments[0];
     } else {
-      return new TemplateStringNode(segments);
+      return new TemplateStringNode(location(), segments);
     }
   }
 
@@ -89,9 +89,9 @@
   // var-index or let-index node
   function buildIndex(name, indexes, value) {
     if (value === undefined) {
-      return new VarIndexNode(name, indexes);
+      return new VarIndexNode(location(), name, indexes);
     } else {
-      return new LetIndexNode(name, indexes, value);
+      return new LetIndexNode(location(), name, indexes, value);
     }
   }
 }
@@ -104,7 +104,7 @@ start = EOL? @block:Block
 
 Block
   = elems:(_ @BlockElement EOL)* {
-      return elems.length === 1 ? elems[0] : new BlockNode(elems);
+      return elems.length === 1 ? elems[0] : new BlockNode(location(), elems);
     }
 
 BlockElement
@@ -136,7 +136,7 @@ DoBody
 
 RepeatBlock
   = repeat times:(_ @times:Value)? _ body:DoBody {
-      return new RepeatNode(times, body);
+      return new RepeatNode(location(), times, body);
     }
 
 Range = @initial:Value _ to _ @limit:Value @step:(_ by _ @Value)?
@@ -145,21 +145,23 @@ ForBlock
   // for i from a to b by c
   = for _ name:Symbol _ "=" _ range:Range _ body:DoBody {
       const [initial, limit, step] = range;
-      return new ForNode(name, initial, limit, step, body);
+      return new ForNode(location(), name, initial, limit, step, body);
     }
   // for i in x
   / for _ name:Symbol _ in _ iterable:Value _ body:DoBody {
-      return new ForInNode(name, iterable, body);
+      return new ForInNode(location(), name, iterable, body);
     }
 
 WhileBlock
-  = while _ cond:Value _ body:DoBody { return new WhileNode(cond, body); }
+  = while _ cond:Value _ body:DoBody {
+      return new WhileNode(location(), cond, body);
+    }
 
 Params = Symbol|.., (_ "," EOL? _)|
 
 BeginBlock
   = begin _ name:Symbol _ params:("(" EOL? _ @Params EOL? ")")? _ body:DoBody {
-      return new BeginNode(name, params ?? [], body);
+      return new BeginNode(location(), name, params ?? [], body);
     }
 
 Statement
@@ -172,20 +174,20 @@ ConfigOption = $(!Reserved [a-z]i+)|.., "."|
 
 SetStatement
   = set _ option:ConfigOption _ "=" _ value:Value {
-      return new SetNode(option, value);
+      return new SetNode(location(), option, value);
     }
 
 FlowStatement
-  = exit { return new ExitNode(); }
-  / break { return new BreakNode(); }
-  / next { return new NextNode(); }
-  / return result:(_ @Value)? { return new ReturnNode(result); }
+  = exit { return new ExitNode(location()); }
+  / break { return new BreakNode(location()); }
+  / next { return new NextNode(location()); }
+  / return result:(_ @Value)? { return new ReturnNode(location(), result); }
 
 LetStatement
   = (let _)? name:Symbol _ indexes:Indexes _ "=" _ value:Value {
       return indexes.length > 0
         ? buildIndex(name, indexes, value)
-        : new LetNode(name, value);
+        : new LetNode(location(), name, value);
     }
 
 CallStatement
@@ -196,12 +198,14 @@ CallStatement
   //  2- try to match zero or more parenthesized arguments
   //  3- match a bare call with no parens or args
   = name:Symbol _ args:Values & { return args.length > 0; } body:(_ @DoBody)? {
-      return new CallNode(name, args, body);
+      return new CallNode(location(), name, args, body);
     }
   / name:Symbol _ "(" EOL? _ args:Values EOL? _ ")" body:(_ @DoBody)? {
-      return new CallNode(name, args, body);
+      return new CallNode(location(), name, args, body);
     }
-  / name:Symbol body:(_ @DoBody)? { return new CallNode(name, [], body); }
+  / name:Symbol body:(_ @DoBody)? {
+      return new CallNode(location(), name, [], body);
+    }
 
 // Values
 
@@ -221,12 +225,12 @@ ConjOp
   / or
 
 NotExpr
-  = not _ right:RelExpr { return new LogicalNotNode(right); }
+  = not _ right:RelExpr { return new LogicalNotNode(location(), right); }
   / RelExpr
 
 RelExpr
   = left:ConcatExpr _ operator:RelOp _ right:ConcatExpr {
-      return new BinaryOpNode(operator, left, right);
+      return new BinaryOpNode(location(), operator, left, right);
     }
   / ConcatExpr
 
@@ -285,7 +289,9 @@ UnaryOp
 // Lists and Records
 
 ListExpr
-  = "[" EOL? _ values:Values EOL? _ "]" { return new ListNode(values); }
+  = "[" EOL? _ values:Values EOL? _ "]" {
+      return new ListNode(location(), values);
+    }
   / RecordExpr
 
 Pair = key:Symbol _ "=" _ value:Value { return { key, value }; }
@@ -293,14 +299,16 @@ Pair = key:Symbol _ "=" _ value:Value { return { key, value }; }
 Pairs = Pair|.., (_ "," EOL? _)|
 
 RecordExpr
-  = "{" EOL? _ pairs:Pairs EOL? _ "}" { return new RecordNode(pairs); }
+  = "{" EOL? _ pairs:Pairs EOL? _ "}" {
+      return new RecordNode(location(), pairs);
+    }
   / CallExpr
 
 // Invocation
 
 CallExpr
   = name:Symbol _ "(" EOL? _ args:Values EOL? _ ")" {
-      return new CallNode(name, args, null);
+      return new CallNode(location(), name, args, null);
     }
   / IndexExpr
 
@@ -308,7 +316,9 @@ CallExpr
 
 IndexExpr
   = name:Symbol _ indexes:Indexes {
-      return indexes.length > 0 ? buildIndex(name, indexes) : new VarNode(name);
+      return indexes.length > 0
+        ? buildIndex(name, indexes)
+        : new VarNode(location(), name);
     }
   / PrimaryExpr
 
@@ -321,8 +331,8 @@ Indexes
 IndexSegment
   // allow successive indexes separated by commas, e.g. lst[0,1,2]
   = "[" _ @Value|.., (_ "," _)| _ "]"
-  / "." _ index:Digits { return new LiteralNode(Number(index)); }
-  / "." _ name:Symbol { return new LiteralNode(name); }
+  / "." _ index:Digits { return new LiteralNode(location(), Number(index)); }
+  / "." _ name:Symbol { return new LiteralNode(location(), name); }
 
 // segment consisting of one literal node
 
@@ -337,7 +347,7 @@ String "a string"
   = "\"" segments:StringSegment* "\"" { return buildString(segments); }
 
 StringSegment
-  = chars:Char+ { return new LiteralNode(chars.join('')); }
+  = chars:Char+ { return new LiteralNode(location(), chars.join('')); }
   / "{" _ @val:Value _ "}"
 
 // interpolation of value expressions
@@ -356,15 +366,15 @@ Literal
   / Boolean
   / Number
 
-None = none { return new LiteralNode(null); }
+None = none { return new LiteralNode(location(), null); }
 
 Boolean
-  = true { return new LiteralNode(true); }
-  / false { return new LiteralNode(false); }
+  = true { return new LiteralNode(location(), true); }
+  / false { return new LiteralNode(location(), false); }
 
 Number "a number"
-  = infinity { return new LiteralNode(Infinity); }
-  / num:NumberFormat { return new LiteralNode(parseFloat(num)); }
+  = infinity { return new LiteralNode(location(), Infinity); }
+  / num:NumberFormat { return new LiteralNode(location(), parseFloat(num)); }
 
 NumberFormat = $(Digits ("." Digits)? ([eE] [-+]? Digits)?)
 

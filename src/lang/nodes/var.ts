@@ -1,10 +1,13 @@
 import { Interpreter } from '../interpreter.js';
 
-import { Frame, Node } from './base.js';
+import { Frame, Node, SourceLocation } from './base.js';
 
 export class VarNode extends Node {
-  constructor(public readonly name: string) {
-    super();
+  constructor(
+    location: SourceLocation,
+    public readonly name: string
+  ) {
+    super(location);
   }
 
   makeFrame() {

@@ -1,10 +1,13 @@
 import { Interpreter } from '../interpreter.js';
 
-import { Frame, Node } from './base.js';
+import { Frame, Node, SourceLocation } from './base.js';
 
 export class BlockNode extends Node {
-  constructor(public elems: Node[]) {
-    super();
+  constructor(
+    location: SourceLocation,
+    public elems: Node[]
+  ) {
+    super(location);
   }
 
   makeFrame() {

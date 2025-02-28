@@ -1,13 +1,14 @@
 import { Interpreter } from '../interpreter.js';
 
-import { Frame, Node } from './base.js';
+import { Frame, Node, SourceLocation } from './base.js';
 
 export class LogicalOpNode extends Node {
   constructor(
+    location: SourceLocation,
     public readonly operator: 'and' | 'or',
     public readonly values: Node[]
   ) {
-    super();
+    super(location);
   }
 
   makeFrame() {
@@ -21,8 +22,11 @@ export class LogicalOpNode extends Node {
 }
 
 export class LogicalNotNode extends Node {
-  constructor(public readonly value: Node) {
-    super();
+  constructor(
+    location: SourceLocation,
+    public readonly value: Node
+  ) {
+    super(location);
   }
 
   makeFrame() {

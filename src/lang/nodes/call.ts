@@ -1,14 +1,15 @@
 import { Interpreter } from '../interpreter.js';
 
-import { Frame, Node } from './base.js';
+import { Frame, Node, SourceLocation } from './base.js';
 
 export class CallNode extends Node {
   constructor(
+    location: SourceLocation,
     public readonly name: string,
     public readonly args: Node[],
     public readonly body: Node | null
   ) {
-    super();
+    super(location);
   }
 
   makeFrame() {
