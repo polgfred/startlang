@@ -9,7 +9,13 @@ import {
   VarNode,
   rootFrame,
 } from './nodes/index.js';
-import type { IndexType, NamespaceType, RuntimeFunctions } from './types.js';
+import { mapMarkers } from './nodes/map-markers.js';
+import type {
+  IndexType,
+  MarkerType,
+  NamespaceType,
+  RuntimeFunctions,
+} from './types.js';
 import { Cons } from './utils/cons.js';
 
 type GlobalFunctions = Record<string, BeginNode>;
@@ -43,6 +49,7 @@ export class Interpreter {
   isRunning: boolean = false;
   history: Snapshot[] = [];
   snapshotIndex: number = 0;
+  markersMap: Map<Node, MarkerType> = new Map();
 
   constructor(public readonly host: SupportsSnapshots) {
     installHandlers(this);
@@ -73,6 +80,10 @@ export class Interpreter {
 
     try {
       while (this.topFrame !== rootFrame) {
+        const marker = this.markersMap.get(this.topFrame.head.node);
+        if (marker === 'snapshot') {
+          this.takeSnapshot();
+        }
         const result = this.topFrame.head.visit(this);
         if (result instanceof Promise) {
           await result;
@@ -279,5 +290,13 @@ export class Interpreter {
     this.lastResult = snapshot.lastResult;
     this.host.restoreSnapshot(snapshot.hostSnapshot);
     this.snapshotIndex = index;
+  }
+
+  clearMarkers() {
+    this.markersMap = new Map();
+  }
+
+  setMarkers(node: Node, markers: readonly MarkerType[]) {
+    this.markersMap = mapMarkers(node, markers);
   }
 }

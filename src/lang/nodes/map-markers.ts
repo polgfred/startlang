@@ -10,9 +10,9 @@ import { WhileNode } from './while';
 
 type MarkerType = 'breakpoint' | 'snapshot';
 
-export function mapMarkers(node: BlockNode, markers: MarkerType[]) {
+export function mapMarkers(node: Node, markers: readonly MarkerType[]) {
   // we're going to remove these as we find them, so don't modify the original
-  markers = markers.slice();
+  const markersCopy = markers.slice();
 
   // build a map from program nodes to markers (either 'breakpoint' or 'snapshot')
   const nodeToMarker = new Map<Node, MarkerType>();
@@ -44,10 +44,10 @@ export function mapMarkers(node: BlockNode, markers: MarkerType[]) {
         }
 
         // if we have a marker for this line, assign it to this node
-        if (markers[index]) {
-          nodeToMarker.set(child, markers[index]);
+        if (markersCopy[index]) {
+          nodeToMarker.set(child, markersCopy[index]);
           // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-          delete markers[index];
+          delete markersCopy[index];
         }
       }
     }

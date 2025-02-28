@@ -8,6 +8,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { BrowserHost, browserGlobals } from '../src/lang/ext/browser.js';
 import { Interpreter } from '../src/lang/interpreter.js';
 import { parse } from '../src/lang/parser.peggy';
+import type { MarkerType } from '../src/lang/types.js';
 
 import Graphics from './graphics.jsx';
 import Header from './header.jsx';
@@ -74,6 +75,7 @@ function usePromptForInput() {
 
 export default function Home() {
   const editorRef = useRef<ed.ICodeEditor | null>(null);
+  const { current: markers } = useRef<MarkerType[]>([]);
 
   const [showInspector, setShowInspector] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -112,6 +114,7 @@ export default function Home() {
       host.restoreOriginalSettings();
       const source = (editorRef.current?.getValue() ?? '') + '\n';
       const rootNode = parse(source);
+      interpreter.setMarkers(rootNode, markers);
       await interpreter.run(rootNode);
     } catch (err: unknown) {
       if (err instanceof Error) {
@@ -122,7 +125,7 @@ export default function Home() {
     } finally {
       forceRender();
     }
-  }, [forceRender, host, interpreter]);
+  }, [forceRender, host, interpreter, markers]);
 
   return (
     <ThemeProvider theme={theme}>
@@ -164,6 +167,7 @@ export default function Home() {
             >
               <Editor
                 editorRef={editorRef}
+                markers={markers}
                 showInspector={showInspector}
                 runProgram={runProgram}
               />

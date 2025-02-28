@@ -1,13 +1,8 @@
 import Monaco, { type BeforeMount, type OnMount } from '@monaco-editor/react';
 import { editor as ed, languages as lang, Range } from 'monaco-editor';
-import {
-  type RefObject,
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-} from 'react';
+import { type RefObject, useCallback, useLayoutEffect } from 'react';
 
+import { MarkerType } from '../src/lang/types';
 import boxScript from '../tests/box.start';
 
 const languageConfig: lang.LanguageConfiguration = {
@@ -134,8 +129,6 @@ const languageDefinition: lang.IMonarchLanguage = {
   },
 };
 
-type MarkerType = 'breakpoint' | 'snapshot';
-
 function setupLineMarkers(editor: ed.ICodeEditor, markers: MarkerType[]) {
   const decorations = editor.createDecorationsCollection([]);
   markers.length = 0;
@@ -182,15 +175,15 @@ function setupLineMarkers(editor: ed.ICodeEditor, markers: MarkerType[]) {
 
 export default function Editor({
   editorRef,
+  markers,
   showInspector,
   runProgram,
 }: {
   editorRef: RefObject<ed.ICodeEditor | null>;
+  markers: MarkerType[];
   showInspector: boolean;
   runProgram: () => void;
 }) {
-  const { current: markers } = useRef<MarkerType[]>([]);
-
   const onBeforeMount: BeforeMount = useCallback((monaco) => {
     monaco.languages.register({ id: 'start' });
     monaco.languages.setLanguageConfiguration('start', languageConfig);
