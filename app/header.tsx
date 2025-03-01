@@ -10,9 +10,8 @@ import {
 import { editor } from 'monaco-editor';
 import Image from 'next/image';
 import Link from 'next/link';
-import { MouseEvent, RefObject, useCallback, useState } from 'react';
+import { MouseEvent, RefObject, useCallback, useId, useState } from 'react';
 
-import { type BrowserHost } from '../src/lang/ext/browser';
 import boxScript from '../tests/box.start';
 import investScript from '../tests/invest.start';
 import layoutScript from '../tests/layout.start';
@@ -20,6 +19,8 @@ import numguessScript from '../tests/numguess.start';
 import sieveScript from '../tests/sieve.start';
 import sineScript from '../tests/sine.start';
 import victorScript from '../tests/victor.start';
+
+import { useInterpreter } from './interpreter-context';
 
 function useMenu() {
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
@@ -39,14 +40,14 @@ function useMenu() {
 }
 
 function ViewMenu({
-  host,
   showInspector,
   setShowInspector,
 }: {
-  host: BrowserHost;
   showInspector: boolean;
   setShowInspector: (value: boolean) => void;
 }) {
+  const { host } = useInterpreter();
+
   const { anchor, openMenu, closeMenu } = useMenu();
 
   return (
@@ -172,20 +173,18 @@ function CodeMenu({
 }
 
 export default function Header({
-  host,
-  isRunning,
   showInspector,
   setShowInspector,
   runProgram,
   editorRef,
 }: {
-  host: BrowserHost;
-  isRunning: boolean;
   showInspector: boolean;
   setShowInspector: (value: boolean) => void;
   runProgram: () => void;
   editorRef: RefObject<editor.ICodeEditor | null>;
 }) {
+  const { interpreter } = useInterpreter();
+
   return (
     <AppBar
       position="static"
@@ -208,23 +207,46 @@ export default function Header({
           START
         </Typography>
         <ViewMenu
-          host={host}
           showInspector={showInspector}
           setShowInspector={setShowInspector}
         />
         <CodeMenu editorRef={editorRef} runProgram={runProgram} />
-        <Button
-          variant="contained"
-          disabled={isRunning}
-          onClick={runProgram}
-          sx={{
-            marginLeft: 2,
-            backgroundColor: '#dddddd',
-            color: '#222222',
-          }}
-        >
-          Run
-        </Button>
+        {interpreter.isRunning ? (
+          <>
+            <Button
+              variant="contained"
+              sx={{
+                marginLeft: 2,
+                backgroundColor: '#dddddd',
+                color: '#222222',
+              }}
+            >
+              Stop
+            </Button>
+            <Button
+              variant="contained"
+              sx={{
+                marginLeft: 2,
+                backgroundColor: '#dddddd',
+                color: '#222222',
+              }}
+            >
+              Continue
+            </Button>
+          </>
+        ) : (
+          <Button
+            variant="contained"
+            onClick={runProgram}
+            sx={{
+              marginLeft: 2,
+              backgroundColor: '#dddddd',
+              color: '#222222',
+            }}
+          >
+            Run
+          </Button>
+        )}
       </Toolbar>
       <Toolbar
         sx={{

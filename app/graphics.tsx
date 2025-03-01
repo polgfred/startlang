@@ -2,11 +2,17 @@ import { memo } from 'react';
 
 import { Shape } from '../src/lang/ext/shapes/index.js';
 
+import { useInterpreter } from './interpreter-context.jsx';
+
 const ShapeElement = memo(function ShapeElement({ shape }: { shape: Shape }) {
   return shape.getSVGElement();
 });
 
-export default function Graphics({ shapes }: { shapes: readonly Shape[] }) {
+export default function Graphics() {
+  const {
+    host: { shapes },
+  } = useInterpreter();
+
   return (
     <svg
       sx={{

@@ -11,18 +11,19 @@ import {
 } from '@mui/material';
 import { ChangeEvent, JSX, useCallback, useState } from 'react';
 
-import { Interpreter } from '../src/lang/interpreter.js';
 import type { ListType, NamespaceType, RecordType } from '../src/lang/types.js';
+
+import { useInterpreter } from './interpreter-context.jsx';
 
 export default function Inspector({
   error,
-  interpreter,
   updateSlider,
 }: {
   error: Error | null;
-  interpreter: Interpreter;
   updateSlider: (index: number) => void;
 }) {
+  const { interpreter } = useInterpreter();
+
   const handleSliderChange = useCallback(
     (ev: ChangeEvent<HTMLInputElement>) => {
       updateSlider(Number(ev.target.value));

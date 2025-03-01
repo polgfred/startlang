@@ -13,6 +13,7 @@ import type { MarkerType } from '../src/lang/types.js';
 import Graphics from './graphics.jsx';
 import Header from './header.jsx';
 import Inspector from './inspector.jsx';
+import InterpreterProvider from './interpreter-context.jsx';
 import Term from './term.jsx';
 
 // editor component loads vscode monaco internally, so it can't be server-side rendered
@@ -137,80 +138,19 @@ export default function Home() {
           height: '100%',
         })}
       >
-        <Header
-          host={host}
-          isRunning={interpreter.isRunning}
-          showInspector={showInspector}
-          setShowInspector={setShowInspector}
-          editorRef={editorRef}
-          runProgram={runProgram}
-        />
-        <Stack
-          direction="row"
-          sx={{
-            height: 'calc(100% - 66px)',
-          }}
-        >
+        <InterpreterProvider interpreter={interpreter}>
+          <Header
+            showInspector={showInspector}
+            setShowInspector={setShowInspector}
+            editorRef={editorRef}
+            runProgram={runProgram}
+          />
           <Stack
+            direction="row"
             sx={{
-              height: '100%',
-              flex: 1,
+              height: 'calc(100% - 66px)',
             }}
           >
-            <Paper
-              elevation={3}
-              sx={{
-                height: '100%',
-                margin: '5px',
-                padding: '10px',
-              }}
-            >
-              <Editor
-                editorRef={editorRef}
-                markers={markers}
-                showInspector={showInspector}
-                runProgram={runProgram}
-              />
-            </Paper>
-          </Stack>
-          <Stack
-            sx={{
-              height: '100%',
-              flex: 1,
-            }}
-          >
-            {host.viewMode === 'graphics' && (
-              <Paper
-                elevation={3}
-                sx={{
-                  height: '100%',
-                  margin: '5px',
-                  padding: '10px',
-                  flex: 1,
-                }}
-              >
-                <Graphics shapes={host.shapes} />
-              </Paper>
-            )}
-            {host.viewMode === 'text' && (
-              <Paper
-                elevation={3}
-                sx={{
-                  height: '100%',
-                  margin: '5px',
-                  padding: '10px',
-                  overflow: 'scroll',
-                  flex: 1,
-                }}
-              >
-                <Term
-                  outputBuffer={host.outputBuffer}
-                  inputState={inputState}
-                />
-              </Paper>
-            )}
-          </Stack>
-          {showInspector && (
             <Stack
               sx={{
                 height: '100%',
@@ -223,18 +163,72 @@ export default function Home() {
                   height: '100%',
                   margin: '5px',
                   padding: '10px',
-                  overflow: 'scroll',
                 }}
               >
-                <Inspector
-                  error={error}
-                  interpreter={interpreter}
-                  updateSlider={updateSlider}
+                <Editor
+                  editorRef={editorRef}
+                  markers={markers}
+                  showInspector={showInspector}
+                  runProgram={runProgram}
                 />
               </Paper>
             </Stack>
-          )}
-        </Stack>
+            <Stack
+              sx={{
+                height: '100%',
+                flex: 1,
+              }}
+            >
+              {host.viewMode === 'graphics' && (
+                <Paper
+                  elevation={3}
+                  sx={{
+                    height: '100%',
+                    margin: '5px',
+                    padding: '10px',
+                    flex: 1,
+                  }}
+                >
+                  <Graphics />
+                </Paper>
+              )}
+              {host.viewMode === 'text' && (
+                <Paper
+                  elevation={3}
+                  sx={{
+                    height: '100%',
+                    margin: '5px',
+                    padding: '10px',
+                    overflow: 'scroll',
+                    flex: 1,
+                  }}
+                >
+                  <Term inputState={inputState} />
+                </Paper>
+              )}
+            </Stack>
+            {showInspector && (
+              <Stack
+                sx={{
+                  height: '100%',
+                  flex: 1,
+                }}
+              >
+                <Paper
+                  elevation={3}
+                  sx={{
+                    height: '100%',
+                    margin: '5px',
+                    padding: '10px',
+                    overflow: 'scroll',
+                  }}
+                >
+                  <Inspector error={error} updateSlider={updateSlider} />
+                </Paper>
+              </Stack>
+            )}
+          </Stack>
+        </InterpreterProvider>
       </Stack>
     </ThemeProvider>
   );

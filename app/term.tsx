@@ -9,7 +9,9 @@ import {
   useState,
 } from 'react';
 
-import { Cell, CellElement } from '../src/lang/ext/cells/index.js';
+import { CellElement } from '../src/lang/ext/cells/index.js';
+
+import { useInterpreter } from './interpreter-context.jsx';
 
 interface InputState {
   prompt: string;
@@ -18,12 +20,14 @@ interface InputState {
 }
 
 export default function Term({
-  outputBuffer,
   inputState,
 }: {
-  outputBuffer: Cell;
   inputState: InputState | null;
 }) {
+  const {
+    host: { outputBuffer },
+  } = useInterpreter();
+
   const [input, setInput] = useState('');
 
   useEffect(() => {
