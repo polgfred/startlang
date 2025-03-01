@@ -233,18 +233,20 @@ export default function Editor({
       sx={{
         width: '100%',
         height: '100%',
-        '& .glyph-margin-widgets > .codicon': {
-          marginTop: '-3px',
-          '&::before': {
+        '& .glyph-margin-widgets': {
+          '& > .codicon': {
+            marginTop: '-3px',
+          },
+          '& > .breakpoint::before': {
+            color: 'red',
             content: '"\u2022"',
             fontSize: 40,
           },
-        },
-        '& .glyph-margin-widgets > .breakpoint::before': {
-          color: 'red',
-        },
-        '& .glyph-margin-widgets > .snapshot::before': {
-          color: 'green',
+          '& > .snapshot::before': {
+            color: 'green',
+            content: '"\u2022"',
+            fontSize: 40,
+          },
         },
       }}
     >
