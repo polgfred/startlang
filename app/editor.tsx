@@ -5,6 +5,8 @@ import { type RefObject, useCallback, useLayoutEffect } from 'react';
 import { MarkerType } from '../src/lang/types';
 import boxScript from '../tests/box.start';
 
+import { useEnvironment } from './environment';
+
 const languageConfig: lang.LanguageConfiguration = {
   comments: {
     lineComment: ';',
@@ -177,13 +179,13 @@ export default function Editor({
   editorRef,
   markers,
   showInspector,
-  runProgram,
 }: {
   editorRef: RefObject<ed.ICodeEditor | null>;
   markers: MarkerType[];
   showInspector: boolean;
-  runProgram: () => void;
 }) {
+  const { runProgram } = useEnvironment();
+
   const onBeforeMount: BeforeMount = useCallback((monaco) => {
     monaco.languages.register({ id: 'start' });
     monaco.languages.setLanguageConfiguration('start', languageConfig);

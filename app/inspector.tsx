@@ -13,22 +13,16 @@ import { ChangeEvent, JSX, useCallback, useState } from 'react';
 
 import type { ListType, NamespaceType, RecordType } from '../src/lang/types.js';
 
-import { useInterpreter } from './interpreter-context.jsx';
+import { useEnvironment } from './environment.jsx';
 
-export default function Inspector({
-  error,
-  updateSlider,
-}: {
-  error: Error | null;
-  updateSlider: (index: number) => void;
-}) {
-  const { interpreter } = useInterpreter();
+export default function Inspector({ error }: { error: Error | null }) {
+  const { interpreter } = useEnvironment();
 
   const handleSliderChange = useCallback(
     (ev: ChangeEvent<HTMLInputElement>) => {
-      updateSlider(Number(ev.target.value));
+      interpreter.moveToSnapshot(Number(ev.target.value));
     },
-    [updateSlider]
+    [interpreter]
   );
 
   return (

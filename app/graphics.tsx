@@ -2,7 +2,7 @@ import { memo } from 'react';
 
 import { Shape } from '../src/lang/ext/shapes/index.js';
 
-import { useInterpreter } from './interpreter-context.jsx';
+import { useEnvironment } from './environment.jsx';
 
 const ShapeElement = memo(function ShapeElement({ shape }: { shape: Shape }) {
   return shape.getSVGElement();
@@ -11,7 +11,7 @@ const ShapeElement = memo(function ShapeElement({ shape }: { shape: Shape }) {
 export default function Graphics() {
   const {
     host: { shapes },
-  } = useInterpreter();
+  } = useEnvironment();
 
   return (
     <svg

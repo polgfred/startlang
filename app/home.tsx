@@ -10,11 +10,11 @@ import { Interpreter } from '../src/lang/interpreter.js';
 import { parse } from '../src/lang/parser.peggy';
 import type { MarkerType } from '../src/lang/types.js';
 
+import EnvironmentProvider from './environment.jsx';
 import { useForceRender } from './force-render.js';
 import Graphics from './graphics.jsx';
 import Header from './header.jsx';
 import Inspector from './inspector.jsx';
-import InterpreterProvider from './interpreter-context.jsx';
 import Term from './term.jsx';
 
 // editor component loads vscode monaco internally, so it can't be server-side rendered
@@ -80,8 +80,12 @@ export default function Home() {
   const { current: interpreter } = useRef(new Interpreter(host));
 
   useEffect(() => {
+    interpreter.events.on('run', forceRender);
+    interpreter.events.on('restore', forceRender);
+    interpreter.events.on('break', forceRender);
+    interpreter.events.on('exit', forceRender);
     host.events.on('repaint', forceRender);
-  }, [forceRender, host]);
+  }, [forceRender, host, interpreter]);
 
   const { inputState, promptForInput } = usePromptForInput();
 
@@ -89,14 +93,6 @@ export default function Home() {
   interpreter.registerGlobals({
     input: promptForInput,
   });
-
-  const updateSlider = useCallback(
-    (index: number) => {
-      interpreter.moveToSnapshot(index);
-      forceRender();
-    },
-    [forceRender, interpreter]
-  );
 
   const runProgram = useCallback(async () => {
     setError(null);
@@ -116,10 +112,8 @@ export default function Home() {
         // eslint-disable-next-line no-console
         console.error(err.stack);
       }
-    } finally {
-      forceRender();
     }
-  }, [forceRender, host, interpreter, markers]);
+  }, [host, interpreter, markers]);
 
   return (
     <ThemeProvider theme={theme}>
@@ -131,12 +125,15 @@ export default function Home() {
           height: '100%',
         })}
       >
-        <InterpreterProvider interpreter={interpreter}>
+        <EnvironmentProvider
+          interpreter={interpreter}
+          host={host}
+          runProgram={runProgram}
+        >
           <Header
             showInspector={showInspector}
             setShowInspector={setShowInspector}
             editorRef={editorRef}
-            runProgram={runProgram}
           />
           <Stack
             direction="row"
@@ -162,7 +159,6 @@ export default function Home() {
                   editorRef={editorRef}
                   markers={markers}
                   showInspector={showInspector}
-                  runProgram={runProgram}
                 />
               </Paper>
             </Stack>
@@ -216,12 +212,12 @@ export default function Home() {
                     overflow: 'scroll',
                   }}
                 >
-                  <Inspector error={error} updateSlider={updateSlider} />
+                  <Inspector error={error} />
                 </Paper>
               </Stack>
             )}
           </Stack>
-        </InterpreterProvider>
+        </EnvironmentProvider>
       </Stack>
     </ThemeProvider>
   );

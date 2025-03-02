@@ -10,7 +10,7 @@ import {
 import { editor as ed } from 'monaco-editor';
 import Image from 'next/image';
 import Link from 'next/link';
-import { MouseEvent, RefObject, useCallback, useEffect, useState } from 'react';
+import { MouseEvent, RefObject, useCallback, useState } from 'react';
 
 import boxScript from '../tests/box.start';
 import investScript from '../tests/invest.start';
@@ -20,8 +20,7 @@ import sieveScript from '../tests/sieve.start';
 import sineScript from '../tests/sine.start';
 import victorScript from '../tests/victor.start';
 
-import { useForceRender } from './force-render';
-import { useInterpreter } from './interpreter-context';
+import { useEnvironment } from './environment';
 
 function useMenu() {
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
@@ -47,7 +46,7 @@ function ViewMenu({
   showInspector: boolean;
   setShowInspector: (value: boolean) => void;
 }) {
-  const { host } = useInterpreter();
+  const { host } = useEnvironment();
 
   const { anchor, openMenu, closeMenu } = useMenu();
 
@@ -123,12 +122,12 @@ const exampleScripts = [
 
 function CodeMenu({
   editorRef,
-  runProgram,
 }: {
   editorRef: RefObject<ed.ICodeEditor | null>;
-  runProgram: () => void;
 }) {
   const { anchor, openMenu, closeMenu } = useMenu();
+
+  const { runProgram } = useEnvironment();
 
   const loadScript = useCallback(
     (script: string) => {
@@ -176,23 +175,13 @@ function CodeMenu({
 export default function Header({
   showInspector,
   setShowInspector,
-  runProgram,
   editorRef,
 }: {
   showInspector: boolean;
   setShowInspector: (value: boolean) => void;
-  runProgram: () => void;
   editorRef: RefObject<ed.ICodeEditor | null>;
 }) {
-  const forceRender = useForceRender();
-
-  const { interpreter } = useInterpreter();
-
-  useEffect(() => {
-    interpreter.events.on('lifecycle', () => {
-      forceRender();
-    });
-  }, [forceRender, interpreter]);
+  const { interpreter, runProgram } = useEnvironment();
 
   return (
     <AppBar
@@ -219,7 +208,7 @@ export default function Header({
           showInspector={showInspector}
           setShowInspector={setShowInspector}
         />
-        <CodeMenu editorRef={editorRef} runProgram={runProgram} />
+        <CodeMenu editorRef={editorRef} />
         {interpreter.isRunning ? (
           <>
             <Button

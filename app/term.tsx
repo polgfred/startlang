@@ -11,7 +11,7 @@ import {
 
 import { CellElement } from '../src/lang/ext/cells/index.js';
 
-import { useInterpreter } from './interpreter-context.jsx';
+import { useEnvironment } from './environment.jsx';
 
 interface InputState {
   prompt: string;
@@ -26,7 +26,7 @@ export default function Term({
 }) {
   const {
     host: { outputBuffer },
-  } = useInterpreter();
+  } = useEnvironment();
 
   const [input, setInput] = useState('');
 

@@ -1,3 +1,5 @@
+import { EventEmitter } from 'events';
+
 import { castDraft, original, produce, type Draft } from 'immer';
 
 import { DataHandler, installHandlers } from './handlers/index.js';
@@ -39,6 +41,8 @@ export interface Snapshot {
 }
 
 export class Interpreter {
+  events = new EventEmitter();
+
   dataHandlers: DataHandler[] = [];
   runtimeFunctions: RuntimeFunctions = emptyObject;
   globalFunctions: GlobalFunctions = emptyObject;
@@ -47,6 +51,7 @@ export class Interpreter {
   topFrame = rootFrame;
   lastResult: unknown = null;
   isRunning: boolean = false;
+  isPaused: boolean = false;
   history: Snapshot[] = [];
   snapshotIndex: number = 0;
   markersMap: WeakMap<Node, MarkerType> = new WeakMap();
@@ -66,35 +71,24 @@ export class Interpreter {
     this.topNamespace = rootNamespace;
     this.topFrame = rootFrame.push(node.makeFrame());
     this.lastResult = null;
+    this.isRunning = true;
     return this.runLoop();
   }
 
   runIncremental(node: Node) {
     this.topFrame = rootFrame.push(node.makeFrame());
     this.lastResult = null;
+    this.isRunning = true;
     return this.runLoop();
   }
 
   async runLoop() {
-    this.isRunning = true;
-
-    try {
-      while (this.topFrame !== rootFrame) {
-        const { head } = this.topFrame;
-        const marker = this.markersMap.get(head.node);
-        if (marker) {
-          this.takeSnapshot();
-          if (marker === 'breakpoint') {
-            break;
-          }
-        }
-        const result = head.visit(this);
-        if (result instanceof Promise) {
-          await result;
-        }
+    this.isPaused = false;
+    while (!this.isPaused && this.topFrame !== rootFrame) {
+      const result = this.topFrame.head.visit(this);
+      if (result instanceof Promise) {
+        await result;
       }
-    } finally {
-      this.isRunning = false;
     }
   }
 
@@ -142,18 +136,36 @@ export class Interpreter {
   }
 
   pushFrame(node: Node) {
+    // optimize literals and vars to avoid pushing on a new frame
     if (node instanceof LiteralNode) {
       this.lastResult = node.value;
+      return;
     } else if (node instanceof VarNode) {
       this.lastResult = this.getVariable(node.name);
-    } else {
-      this.topFrame = this.topFrame.push(node.makeFrame());
+      return;
+    }
+
+    this.topFrame = this.topFrame.push(node.makeFrame());
+    const { head } = this.topFrame;
+    if (this.markersMap.has(head.node)) {
+      const marker = this.markersMap.get(head.node);
+      this.takeSnapshot();
+      if (marker === 'breakpoint') {
+        this.isPaused = true;
+        this.events.emit('break');
+      }
     }
   }
 
   popFrame() {
     this.topFrame.head.dispose(this);
     this.topFrame = this.topFrame.pop();
+
+    if (this.topFrame === rootFrame) {
+      this.isRunning = false;
+      this.takeSnapshot();
+      this.events.emit('exit');
+    }
   }
 
   popOut() {
@@ -274,6 +286,7 @@ export class Interpreter {
   }
 
   takeSnapshot() {
+    this.history.splice(this.snapshotIndex + 1);
     this.history.push({
       globalFunctions: this.globalFunctions,
       globalNamespace: this.globalNamespace,
@@ -282,7 +295,8 @@ export class Interpreter {
       lastResult: this.lastResult,
       hostSnapshot: this.host.takeSnapshot(),
     });
-    this.snapshotIndex = this.history.length - 1;
+    ++this.snapshotIndex;
+    this.events.emit('snapshot');
   }
 
   moveToSnapshot(index: number) {
@@ -294,6 +308,9 @@ export class Interpreter {
     this.lastResult = snapshot.lastResult;
     this.host.restoreSnapshot(snapshot.hostSnapshot);
     this.snapshotIndex = index;
+    this.isRunning = this.topFrame !== rootFrame;
+    this.isPaused = true;
+    this.events.emit('restore');
   }
 
   clearMarkers() {
