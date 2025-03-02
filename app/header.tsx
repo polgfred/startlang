@@ -7,10 +7,10 @@ import {
   Toolbar,
   Typography,
 } from '@mui/material';
-import { editor } from 'monaco-editor';
+import { editor as ed } from 'monaco-editor';
 import Image from 'next/image';
 import Link from 'next/link';
-import { MouseEvent, RefObject, useCallback, useId, useState } from 'react';
+import { MouseEvent, RefObject, useCallback, useEffect, useState } from 'react';
 
 import boxScript from '../tests/box.start';
 import investScript from '../tests/invest.start';
@@ -20,6 +20,7 @@ import sieveScript from '../tests/sieve.start';
 import sineScript from '../tests/sine.start';
 import victorScript from '../tests/victor.start';
 
+import { useForceRender } from './force-render';
 import { useInterpreter } from './interpreter-context';
 
 function useMenu() {
@@ -124,7 +125,7 @@ function CodeMenu({
   editorRef,
   runProgram,
 }: {
-  editorRef: RefObject<editor.ICodeEditor | null>;
+  editorRef: RefObject<ed.ICodeEditor | null>;
   runProgram: () => void;
 }) {
   const { anchor, openMenu, closeMenu } = useMenu();
@@ -181,9 +182,17 @@ export default function Header({
   showInspector: boolean;
   setShowInspector: (value: boolean) => void;
   runProgram: () => void;
-  editorRef: RefObject<editor.ICodeEditor | null>;
+  editorRef: RefObject<ed.ICodeEditor | null>;
 }) {
+  const forceRender = useForceRender();
+
   const { interpreter } = useInterpreter();
+
+  useEffect(() => {
+    interpreter.events.on('lifecycle', () => {
+      forceRender();
+    });
+  }, [forceRender, interpreter]);
 
   return (
     <AppBar
@@ -225,6 +234,9 @@ export default function Header({
             </Button>
             <Button
               variant="contained"
+              onClick={() => {
+                interpreter.runLoop();
+              }}
               sx={{
                 marginLeft: 2,
                 backgroundColor: '#dddddd',

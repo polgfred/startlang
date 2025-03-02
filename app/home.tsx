@@ -10,6 +10,7 @@ import { Interpreter } from '../src/lang/interpreter.js';
 import { parse } from '../src/lang/parser.peggy';
 import type { MarkerType } from '../src/lang/types.js';
 
+import { useForceRender } from './force-render.js';
 import Graphics from './graphics.jsx';
 import Header from './header.jsx';
 import Inspector from './inspector.jsx';
@@ -36,14 +37,6 @@ const theme = createTheme({
     },
   },
 });
-
-function useForceRender() {
-  const [, setTick] = useState(0);
-
-  return useCallback(() => {
-    setTick((tick) => tick + 1);
-  }, []);
-}
 
 function usePromptForInput() {
   const [inputState, setInputState] = useState<{

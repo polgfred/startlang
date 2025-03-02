@@ -251,8 +251,8 @@ export default function Editor({
       }}
     >
       <Monaco
-        defaultValue={boxScript}
         language="start"
+        defaultValue={boxScript}
         beforeMount={onBeforeMount}
         onMount={onEditorMount}
         options={{
