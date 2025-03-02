@@ -92,31 +92,31 @@ function ViewMenu({
 const exampleScripts = [
   {
     name: 'Stacking Boxes',
-    script: boxScript,
+    source: boxScript,
   },
   {
     name: 'Compound Interest Calculator',
-    script: investScript,
+    source: investScript,
   },
   {
     name: 'Number Guessing Game',
-    script: numguessScript,
+    source: numguessScript,
   },
   {
     name: 'Sieve of Eratosthenes',
-    script: sieveScript,
+    source: sieveScript,
   },
   {
     name: 'Sine Curve Plot',
-    script: sineScript,
+    source: sineScript,
   },
   {
     name: 'Victor Wireframe Plot',
-    script: victorScript,
+    source: victorScript,
   },
   {
     name: 'Nested Data Layout',
-    script: layoutScript,
+    source: layoutScript,
   },
 ];
 
@@ -127,18 +127,7 @@ function CodeMenu({
 }) {
   const { anchor, openMenu, closeMenu } = useMenu();
 
-  const { runProgram } = useEnvironment();
-
-  const loadScript = useCallback(
-    (script: string) => {
-      if (editorRef.current) {
-        editorRef.current.setValue(script);
-        closeMenu();
-        runProgram();
-      }
-    },
-    [closeMenu, editorRef, runProgram]
-  );
+  const { loadProgram } = useEnvironment();
 
   return (
     <>
@@ -146,11 +135,12 @@ function CodeMenu({
         Examples
       </Button>
       <Menu open={anchor !== null} anchorEl={anchor} onClose={closeMenu}>
-        {exampleScripts.map(({ name, script }) => (
+        {exampleScripts.map(({ name, source }) => (
           <MenuItem
             key={name}
             onClick={() => {
-              loadScript(script);
+              closeMenu();
+              loadProgram(source);
             }}
           >
             {name}
@@ -160,8 +150,8 @@ function CodeMenu({
         <MenuItem
           onClick={() => {
             if (editorRef.current) {
-              editorRef.current.setValue('');
               closeMenu();
+              loadProgram(null);
             }
           }}
         >

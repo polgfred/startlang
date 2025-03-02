@@ -7,6 +7,7 @@ const EnvironmentContext = createContext<{
   interpreter: Interpreter;
   host: BrowserHost;
   runProgram: () => Promise<void>;
+  loadProgram: (source: string | null) => void;
 } | null>(null);
 
 export function useEnvironment() {
@@ -21,15 +22,19 @@ export default function EnvironmentProvider({
   interpreter,
   host,
   runProgram,
+  loadProgram,
   children,
 }: {
   interpreter: Interpreter;
   host: BrowserHost;
   runProgram: () => Promise<void>;
+  loadProgram: (source: string | null) => void;
   children: ReactNode;
 }) {
   return (
-    <EnvironmentContext.Provider value={{ interpreter, host, runProgram }}>
+    <EnvironmentContext.Provider
+      value={{ interpreter, host, runProgram, loadProgram }}
+    >
       {children}
     </EnvironmentContext.Provider>
   );

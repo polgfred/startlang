@@ -115,6 +115,18 @@ export default function Home() {
     }
   }, [host, interpreter, markers]);
 
+  const loadProgram = useCallback(
+    (source: string | null) => {
+      if (editorRef.current) {
+        editorRef.current.setValue(source ?? '');
+        if (source) {
+          runProgram();
+        }
+      }
+    },
+    [editorRef, runProgram]
+  );
+
   return (
     <ThemeProvider theme={theme}>
       <Stack
@@ -129,6 +141,7 @@ export default function Home() {
           interpreter={interpreter}
           host={host}
           runProgram={runProgram}
+          loadProgram={loadProgram}
         >
           <Header
             showInspector={showInspector}
