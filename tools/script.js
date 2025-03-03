@@ -5,6 +5,7 @@ import readline from 'node:readline';
 import { inspect } from 'node:util';
 
 import { Interpreter } from '../src/lang/interpreter.js';
+import { mapMarkers } from '../src/lang/nodes/map-markers.js';
 import { parse } from '../src/lang/parser.peggy';
 
 const options = {};
@@ -23,9 +24,15 @@ if (process.argv.indexOf('--ns') != -1) {
   options.ns = true;
 }
 
-if (process.argv.indexOf('--meta') != -1) {
+if (process.argv.indexOf('--mark') != -1) {
   options.ast = true;
-  parserOptions.ast = parserOptions.meta = true;
+  options.mark = process.argv[process.argv.indexOf('--mark') + 1]
+    .split(',')
+    .reduce((acc, m) => {
+      acc[Number(m)] = 'breakpoint';
+      return acc;
+    }, []);
+  parserOptions.ast = true;
 }
 
 async function main() {
@@ -49,6 +56,11 @@ async function main() {
 
   if (options.ast) {
     output(node);
+    if (options.mark) {
+      console.log(
+        inspect(mapMarkers(node, options.mark), { colors: true, depth: 2 })
+      );
+    }
     process.exit();
   }
 

@@ -203,6 +203,7 @@ export default function Header({
           <>
             <Button
               variant="contained"
+              disabled={!interpreter.isPaused}
               sx={{
                 marginLeft: 2,
                 backgroundColor: '#dddddd',
@@ -213,11 +214,11 @@ export default function Header({
             </Button>
             <Button
               variant="contained"
+              disabled={!interpreter.isPaused}
               onClick={() => {
                 interpreter.runLoop();
               }}
               sx={{
-                marginLeft: 2,
                 backgroundColor: '#dddddd',
                 color: '#222222',
               }}

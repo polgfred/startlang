@@ -33,6 +33,4 @@ for a = 0 to 360 by 5 do
 
   ; draw a 60x60 box
   rect a, a, 60, 60
-
-  snapshot
 end
