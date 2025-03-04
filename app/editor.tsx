@@ -1,194 +1,23 @@
 import Monaco, { type BeforeMount, type OnMount } from '@monaco-editor/react';
-import { editor as ed, languages as lang, Range } from 'monaco-editor';
 import { useCallback, useLayoutEffect } from 'react';
 
-import { MarkerType } from '../src/lang/types';
 import boxScript from '../tests/box.start';
 
 import { useEnvironment } from './environment.jsx';
-import { useEditor } from './monaco.jsx';
-
-const languageConfig: lang.LanguageConfiguration = {
-  comments: {
-    lineComment: ';',
-  },
-  brackets: [
-    ['(', ')'],
-    ['[', ']'],
-    ['{', '}'],
-  ],
-  autoClosingPairs: [
-    { open: '[', close: ']', notIn: ['string'] },
-    { open: '(', close: ')', notIn: ['string'] },
-    { open: '{', close: '}', notIn: ['string'] },
-    { open: '"', close: '"', notIn: ['string'] },
-  ],
-  folding: {
-    markers: {
-      start: /^\s*(do|then|else)\b/,
-      end: /^\s*end\b/,
-    },
-  },
-};
-
-const languageDefinition: lang.IMonarchLanguage = {
-  defaultToken: '',
-  keywords: [
-    'and',
-    'begin',
-    'break',
-    'by',
-    'do',
-    'else',
-    'end',
-    'exit',
-    'for',
-    'from',
-    'if',
-    'in',
-    'let',
-    'next',
-    'not',
-    'or',
-    'repeat',
-    'return',
-    'set',
-    'then',
-    'to',
-    'while',
-  ],
-  functions: [
-    // builtins
-    'abs',
-    'acos',
-    'asin',
-    'atan',
-    'bitand',
-    'bitnot',
-    'bitor',
-    'bitxor',
-    'cbrt',
-    'cos',
-    'exp',
-    'format',
-    'join',
-    'keys',
-    'len',
-    'log',
-    'num',
-    'rand',
-    'range',
-    'round',
-    'sin',
-    'snapshot',
-    'split',
-    'sqrt',
-    'tan',
-    // graphics
-    'circle',
-    'clear',
-    'color',
-    'ellipse',
-    'header',
-    'heading',
-    'line',
-    'polygon',
-    'print',
-    'rect',
-    'row',
-    'stack',
-    'table',
-    'text',
-  ],
-  tokenizer: {
-    root: [
-      [
-        /[a-zA-Z_][\w]*/,
-        {
-          cases: {
-            '@keywords': 'keyword',
-            '@functions': 'support.function',
-            '@default': 'identifier',
-          },
-        },
-      ],
-      [/[ \t\r\n]+/, 'white'],
-      [/;.*$/, 'comment'],
-      [/[,+\-*/%!=<>&|~]/, 'keyword.operator'],
-      [/\d+\.\d+([eE][-+]?\d+)?/, 'number.float'],
-      [/\d+/, 'number'],
-      [/"/, 'string', '@string'],
-    ],
-    string: [
-      [/""/, 'string'],
-      [/{{/, 'string'],
-      [/}}/, 'string'],
-      [/{}/, 'string'],
-      [/{/, { token: 'string', next: '@interp' }],
-      [/[^"{]+/, 'string'],
-      [/"/, 'string', '@pop'],
-    ],
-    interp: [[/}/, 'string', '@pop'], { include: 'root' }],
-  },
-};
-
-function setupLineMarkers(editor: ed.ICodeEditor, markers: MarkerType[]) {
-  const decorations = editor.createDecorationsCollection([]);
-  markers.length = 0;
-
-  editor.onMouseMove((ev) => {
-    if (ev.target.type === ed.MouseTargetType.GUTTER_GLYPH_MARGIN) {
-      const node = editor.getDomNode();
-      if (node) {
-        node.style.cursor = 'pointer';
-      }
-    }
-  });
-
-  editor.onMouseDown((ev) => {
-    if (ev.target.type === ed.MouseTargetType.GUTTER_GLYPH_MARGIN) {
-      const { lineNumber } = ev.target.position;
-      if (!markers[lineNumber]) {
-        markers[lineNumber] = 'breakpoint';
-      } else if (markers[lineNumber] === 'breakpoint') {
-        markers[lineNumber] = 'snapshot';
-      } else {
-        // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-        delete markers[lineNumber];
-      }
-
-      decorations.set(
-        markers.reduce<ed.IModelDeltaDecoration[]>(
-          (acc, marker, lineNumber) => {
-            acc.push({
-              range: new Range(lineNumber, 1, lineNumber, 1),
-              options: {
-                isWholeLine: true,
-                glyphMarginClassName: marker,
-              },
-            });
-            return acc;
-          },
-          []
-        )
-      );
-    }
-  });
-}
+import { setupLanguage, useEditor } from './monaco.jsx';
 
 export default function Editor({ showInspector }: { showInspector: boolean }) {
-  const { autoLayout, getMarkers, setEditor } = useEditor();
+  const { autoLayout, initEditor, requireEditor, toggleMarker } = useEditor();
+
   const { runProgram } = useEnvironment();
 
   const onBeforeMount: BeforeMount = useCallback((monaco) => {
-    monaco.languages.register({ id: 'start' });
-    monaco.languages.setLanguageConfiguration('start', languageConfig);
-    monaco.languages.setMonarchTokensProvider('start', languageDefinition);
+    setupLanguage(monaco);
   }, []);
 
   const onEditorMount: OnMount = useCallback(
     (editor) => {
-      setEditor(editor);
+      initEditor(editor);
 
       editor.onKeyUp((ev) => {
         if (ev.code === 'Enter' && ev.ctrlKey) {
@@ -196,12 +25,29 @@ export default function Editor({ showInspector }: { showInspector: boolean }) {
         }
       });
 
-      setupLineMarkers(editor, getMarkers());
+      editor.onMouseMove((ev) => {
+        // 2 = GUTTER_GLYPH_MARGIN
+        // (using a constant so we don't have to import monaco-editor)
+        if (ev.target.type === 2) {
+          const node = requireEditor().getDomNode();
+          if (node) {
+            node.style.cursor = 'pointer';
+          }
+        }
+      });
+
+      editor.onMouseDown((ev) => {
+        // 2 = GUTTER_GLYPH_MARGIN
+        if (ev.target.type === 2) {
+          const { lineNumber } = ev.target.position;
+          toggleMarker(lineNumber);
+        }
+      });
 
       editor.focus();
       runProgram();
     },
-    [getMarkers, runProgram, setEditor]
+    [requireEditor, runProgram, initEditor, toggleMarker]
   );
 
   // showInspector is a dependency because we want the editor to resize when
