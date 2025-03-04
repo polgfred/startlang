@@ -7,10 +7,9 @@ import {
   Toolbar,
   Typography,
 } from '@mui/material';
-import { editor as ed } from 'monaco-editor';
 import Image from 'next/image';
 import Link from 'next/link';
-import { MouseEvent, RefObject, useCallback, useState } from 'react';
+import { MouseEvent, useCallback, useState } from 'react';
 
 import boxScript from '../tests/box.start';
 import investScript from '../tests/invest.start';
@@ -20,7 +19,7 @@ import sieveScript from '../tests/sieve.start';
 import sineScript from '../tests/sine.start';
 import victorScript from '../tests/victor.start';
 
-import { useEnvironment } from './environment';
+import { useEnvironment } from './environment.jsx';
 
 function useMenu() {
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
@@ -120,11 +119,7 @@ const exampleScripts = [
   },
 ];
 
-function CodeMenu({
-  editorRef,
-}: {
-  editorRef: RefObject<ed.ICodeEditor | null>;
-}) {
+function CodeMenu() {
   const { anchor, openMenu, closeMenu } = useMenu();
 
   const { loadProgram } = useEnvironment();
@@ -149,10 +144,8 @@ function CodeMenu({
         <Divider />
         <MenuItem
           onClick={() => {
-            if (editorRef.current) {
-              closeMenu();
-              loadProgram(null);
-            }
+            closeMenu();
+            loadProgram(null);
           }}
         >
           New
@@ -165,11 +158,9 @@ function CodeMenu({
 export default function Header({
   showInspector,
   setShowInspector,
-  editorRef,
 }: {
   showInspector: boolean;
   setShowInspector: (value: boolean) => void;
-  editorRef: RefObject<ed.ICodeEditor | null>;
 }) {
   const { interpreter, runProgram } = useEnvironment();
 
@@ -198,7 +189,7 @@ export default function Header({
           showInspector={showInspector}
           setShowInspector={setShowInspector}
         />
-        <CodeMenu editorRef={editorRef} />
+        <CodeMenu />
         {interpreter.isRunning ? (
           <>
             <Button

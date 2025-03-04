@@ -1,16 +1,12 @@
 'use client';
 
 import { Paper, Stack, ThemeProvider, createTheme } from '@mui/material';
-import { editor as ed } from 'monaco-editor';
 import dynamic from 'next/dynamic';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 
-import { BrowserHost, browserGlobals } from '../src/lang/ext/browser.js';
 import { Interpreter } from '../src/lang/interpreter.js';
-import { parse } from '../src/lang/parser.peggy';
-import type { MarkerType } from '../src/lang/types.js';
 
-import EnvironmentProvider from './environment.jsx';
+import { useEnvironment } from './environment.jsx';
 import { useForceRender } from './force-render.js';
 import Graphics from './graphics.jsx';
 import Header from './header.jsx';
@@ -68,64 +64,32 @@ function usePromptForInput() {
 }
 
 export default function Home() {
-  const editorRef = useRef<ed.ICodeEditor | null>(null);
-  const { current: markers } = useRef<MarkerType[]>([]);
-
-  const [showInspector, setShowInspector] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-
   const forceRender = useForceRender();
 
-  const { current: host } = useRef(new BrowserHost());
-  const { current: interpreter } = useRef(new Interpreter(host));
+  const [showInspector, setShowInspector] = useState(true);
+
+  const { interpreter, host } = useEnvironment();
 
   useEffect(() => {
     interpreter.events.on('run', forceRender);
-    interpreter.events.on('restore', forceRender);
-    interpreter.events.on('break', forceRender);
     interpreter.events.on('exit', forceRender);
+    interpreter.events.on('break', forceRender);
+    interpreter.events.on('restore', forceRender);
+    interpreter.events.on('error', forceRender);
+
+    interpreter.events.on('error', (err) => {
+      // eslint-disable-next-line no-console
+      console.error(err.stack);
+    });
+
     host.events.on('repaint', forceRender);
   }, [forceRender, host, interpreter]);
 
   const { inputState, promptForInput } = usePromptForInput();
 
-  interpreter.registerGlobals(browserGlobals);
   interpreter.registerGlobals({
     input: promptForInput,
   });
-
-  const runProgram = useCallback(async () => {
-    setError(null);
-    interpreter.clearHistory();
-    host.clearDisplay();
-    host.clearOutputBuffer();
-
-    try {
-      host.restoreOriginalSettings();
-      const source = (editorRef.current?.getValue() ?? '') + '\n';
-      const rootNode = parse(source);
-      interpreter.setMarkers(rootNode, markers);
-      await interpreter.run(rootNode);
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err);
-        // eslint-disable-next-line no-console
-        console.error(err.stack);
-      }
-    }
-  }, [host, interpreter, markers]);
-
-  const loadProgram = useCallback(
-    (source: string | null) => {
-      if (editorRef.current) {
-        editorRef.current.setValue(source ?? '');
-        if (source) {
-          runProgram();
-        }
-      }
-    },
-    [editorRef, runProgram]
-  );
 
   return (
     <ThemeProvider theme={theme}>
@@ -137,23 +101,68 @@ export default function Home() {
           height: '100%',
         })}
       >
-        <EnvironmentProvider
-          interpreter={interpreter}
-          host={host}
-          runProgram={runProgram}
-          loadProgram={loadProgram}
+        <Header
+          showInspector={showInspector}
+          setShowInspector={setShowInspector}
+        />
+        <Stack
+          direction="row"
+          sx={{
+            height: 'calc(100% - 66px)',
+          }}
         >
-          <Header
-            showInspector={showInspector}
-            setShowInspector={setShowInspector}
-            editorRef={editorRef}
-          />
           <Stack
-            direction="row"
             sx={{
-              height: 'calc(100% - 66px)',
+              height: '100%',
+              flex: 1,
             }}
           >
+            <Paper
+              elevation={3}
+              sx={{
+                height: '100%',
+                margin: '5px',
+                padding: '10px',
+              }}
+            >
+              <Editor showInspector={showInspector} />
+            </Paper>
+          </Stack>
+          <Stack
+            sx={{
+              height: '100%',
+              flex: 1,
+            }}
+          >
+            {host.viewMode === 'graphics' && (
+              <Paper
+                elevation={3}
+                sx={{
+                  height: '100%',
+                  margin: '5px',
+                  padding: '10px',
+                  flex: 1,
+                }}
+              >
+                <Graphics />
+              </Paper>
+            )}
+            {host.viewMode === 'text' && (
+              <Paper
+                elevation={3}
+                sx={{
+                  height: '100%',
+                  margin: '5px',
+                  padding: '10px',
+                  overflow: 'scroll',
+                  flex: 1,
+                }}
+              >
+                <Term inputState={inputState} />
+              </Paper>
+            )}
+          </Stack>
+          {showInspector && (
             <Stack
               sx={{
                 height: '100%',
@@ -166,71 +175,14 @@ export default function Home() {
                   height: '100%',
                   margin: '5px',
                   padding: '10px',
+                  overflow: 'scroll',
                 }}
               >
-                <Editor
-                  editorRef={editorRef}
-                  markers={markers}
-                  showInspector={showInspector}
-                />
+                <Inspector />
               </Paper>
             </Stack>
-            <Stack
-              sx={{
-                height: '100%',
-                flex: 1,
-              }}
-            >
-              {host.viewMode === 'graphics' && (
-                <Paper
-                  elevation={3}
-                  sx={{
-                    height: '100%',
-                    margin: '5px',
-                    padding: '10px',
-                    flex: 1,
-                  }}
-                >
-                  <Graphics />
-                </Paper>
-              )}
-              {host.viewMode === 'text' && (
-                <Paper
-                  elevation={3}
-                  sx={{
-                    height: '100%',
-                    margin: '5px',
-                    padding: '10px',
-                    overflow: 'scroll',
-                    flex: 1,
-                  }}
-                >
-                  <Term inputState={inputState} />
-                </Paper>
-              )}
-            </Stack>
-            {showInspector && (
-              <Stack
-                sx={{
-                  height: '100%',
-                  flex: 1,
-                }}
-              >
-                <Paper
-                  elevation={3}
-                  sx={{
-                    height: '100%',
-                    margin: '5px',
-                    padding: '10px',
-                    overflow: 'scroll',
-                  }}
-                >
-                  <Inspector error={error} />
-                </Paper>
-              </Stack>
-            )}
-          </Stack>
-        </EnvironmentProvider>
+          )}
+        </Stack>
       </Stack>
     </ThemeProvider>
   );

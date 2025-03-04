@@ -1,11 +1,12 @@
 import Monaco, { type BeforeMount, type OnMount } from '@monaco-editor/react';
 import { editor as ed, languages as lang, Range } from 'monaco-editor';
-import { type RefObject, useCallback, useLayoutEffect } from 'react';
+import { useCallback, useLayoutEffect } from 'react';
 
 import { MarkerType } from '../src/lang/types';
 import boxScript from '../tests/box.start';
 
-import { useEnvironment } from './environment';
+import { useEnvironment } from './environment.jsx';
+import { useEditor } from './monaco.jsx';
 
 const languageConfig: lang.LanguageConfiguration = {
   comments: {
@@ -175,15 +176,8 @@ function setupLineMarkers(editor: ed.ICodeEditor, markers: MarkerType[]) {
   });
 }
 
-export default function Editor({
-  editorRef,
-  markers,
-  showInspector,
-}: {
-  editorRef: RefObject<ed.ICodeEditor | null>;
-  markers: MarkerType[];
-  showInspector: boolean;
-}) {
+export default function Editor({ showInspector }: { showInspector: boolean }) {
+  const { autoLayout, getMarkers, setEditor } = useEditor();
   const { runProgram } = useEnvironment();
 
   const onBeforeMount: BeforeMount = useCallback((monaco) => {
@@ -194,7 +188,7 @@ export default function Editor({
 
   const onEditorMount: OnMount = useCallback(
     (editor) => {
-      editorRef.current = editor;
+      setEditor(editor);
 
       editor.onKeyUp((ev) => {
         if (ev.code === 'Enter' && ev.ctrlKey) {
@@ -202,33 +196,26 @@ export default function Editor({
         }
       });
 
-      setupLineMarkers(editor, markers);
+      setupLineMarkers(editor, getMarkers());
 
       editor.focus();
       runProgram();
     },
-    [editorRef, runProgram, markers]
+    [getMarkers, runProgram, setEditor]
   );
-
-  const updateLayout = useCallback(() => {
-    if (editorRef.current) {
-      // @ts-expect-error 'auto' is allowed
-      editorRef.current.layout({ width: 'auto', height: 'auto' });
-    }
-  }, [editorRef]);
 
   // showInspector is a dependency because we want the editor to resize when
   // the inspector is toggled
   useLayoutEffect(() => {
-    updateLayout();
-  }, [showInspector, updateLayout]);
+    autoLayout();
+  }, [autoLayout, showInspector]);
 
   useLayoutEffect(() => {
-    window.addEventListener('resize', updateLayout, false);
+    window.addEventListener('resize', autoLayout, false);
     return () => {
-      window.removeEventListener('resize', updateLayout, false);
+      window.removeEventListener('resize', autoLayout, false);
     };
-  }, [editorRef, updateLayout]);
+  }, [autoLayout]);
 
   return (
     <div

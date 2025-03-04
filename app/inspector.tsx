@@ -15,7 +15,7 @@ import type { ListType, NamespaceType, RecordType } from '../src/lang/types.js';
 
 import { useEnvironment } from './environment.jsx';
 
-export default function Inspector({ error }: { error: Error | null }) {
+export default function Inspector() {
   const { interpreter } = useEnvironment();
 
   const handleSliderChange = useCallback(
@@ -47,7 +47,9 @@ export default function Inspector({ error }: { error: Error | null }) {
           width: 'calc(100% - 20px)',
         }}
       />
-      {error && <ErrorInspector error={error} />}
+      {interpreter.lastError && (
+        <ErrorInspector error={interpreter.lastError} />
+      )}
       {interpreter.history.length > 0 && (
         <>
           <NamespaceInspector
