@@ -10,6 +10,7 @@ interface EditorContext {
   initEditor(editor: ed.IStandaloneCodeEditor): void;
   getMarkers(): MarkerType[];
   toggleMarker(lineNumber: number): void;
+  highlightNode(node: Node | null): void;
   getEditor(): ed.IStandaloneCodeEditor | null;
   requireEditor(): ed.IStandaloneCodeEditor;
   getValue(): string;
@@ -162,6 +163,7 @@ export function EditorProvider({ children }: { children: ReactNode }) {
   const editorRef = useRef<ed.IStandaloneCodeEditor | null>(null);
   const decorationsRef = useRef<ed.IEditorDecorationsCollection | null>(null);
   const markersRef = useRef<MarkerType[]>([]);
+  const nodeRef = useRef<Node | null>(null);
 
   function requireEditor() {
     if (!editorRef.current) {
@@ -170,21 +172,32 @@ export function EditorProvider({ children }: { children: ReactNode }) {
     return editorRef.current;
   }
 
-  function toggleMarker(lineNumber: number) {
+  function updateDecorations() {
     const { current: decorations } = decorationsRef;
     const { current: markers } = markersRef;
+    const { current: node } = nodeRef;
 
     if (!decorations) {
       throw new Error('Decorations not found');
     }
 
-    if (!markers[lineNumber]) {
-      markers[lineNumber] = 'breakpoint';
-    } else if (markers[lineNumber] === 'breakpoint') {
-      markers[lineNumber] = 'snapshot';
-    } else {
-      delete markers[lineNumber];
-    }
+    const initialDecorations =
+      node === null
+        ? []
+        : [
+            {
+              range: {
+                startLineNumber: node.location.start.line,
+                startColumn: node.location.start.column,
+                endLineNumber: node.location.end.line,
+                endColumn: node.location.end.column,
+              },
+              options: {
+                isWholeLine: true,
+                linesDecorationsClassName: 'highlight',
+              },
+            },
+          ];
 
     decorations.set(
       markers.reduce<ed.IModelDeltaDecoration[]>((acc, marker, lineNumber) => {
@@ -201,8 +214,20 @@ export function EditorProvider({ children }: { children: ReactNode }) {
           },
         });
         return acc;
-      }, [])
+      }, initialDecorations)
     );
+  }
+
+  function toggleMarker(lineNumber: number) {
+    const { current: markers } = markersRef;
+
+    if (!markers[lineNumber]) {
+      markers[lineNumber] = 'breakpoint';
+    } else if (markers[lineNumber] === 'breakpoint') {
+      markers[lineNumber] = 'snapshot';
+    } else {
+      delete markers[lineNumber];
+    }
   }
 
   return (
@@ -217,6 +242,11 @@ export function EditorProvider({ children }: { children: ReactNode }) {
         },
         toggleMarker(lineNumber: number) {
           toggleMarker(lineNumber);
+          updateDecorations();
+        },
+        highlightNode(node: Node | null) {
+          nodeRef.current = node;
+          updateDecorations();
         },
         getEditor() {
           return editorRef.current;

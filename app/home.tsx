@@ -11,6 +11,7 @@ import { useForceRender } from './force-render.js';
 import Graphics from './graphics.jsx';
 import Header from './header.jsx';
 import Inspector from './inspector.jsx';
+import { useEditor } from './monaco.jsx';
 import Term from './term.jsx';
 
 const theme = createTheme({
@@ -65,22 +66,32 @@ export default function Home() {
 
   const [showInspector, setShowInspector] = useState(true);
 
+  const { highlightNode } = useEditor();
+
   const { interpreter, host } = useEnvironment();
 
   useEffect(() => {
     interpreter.events.on('run', forceRender);
     interpreter.events.on('exit', forceRender);
-    interpreter.events.on('break', forceRender);
-    interpreter.events.on('restore', forceRender);
-    interpreter.events.on('error', forceRender);
+
+    interpreter.events.on('restore', () => {
+      highlightNode(interpreter.topFrame.head.node);
+      forceRender();
+    });
+
+    interpreter.events.on('break', () => {
+      highlightNode(interpreter.topFrame.head.node);
+      forceRender();
+    });
 
     interpreter.events.on('error', (err) => {
       // eslint-disable-next-line no-console
       console.error(err.stack);
+      forceRender();
     });
 
     host.events.on('repaint', forceRender);
-  }, [forceRender, host, interpreter]);
+  }, [forceRender, highlightNode, host, interpreter]);
 
   const { inputState, promptForInput } = usePromptForInput();
 

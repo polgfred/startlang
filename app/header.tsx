@@ -20,6 +20,7 @@ import sineScript from '../tests/sine.start';
 import victorScript from '../tests/victor.start';
 
 import { useEnvironment } from './environment.jsx';
+import { useEditor } from './monaco.jsx';
 
 function useMenu() {
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
@@ -162,6 +163,8 @@ export default function Header({
   showInspector: boolean;
   setShowInspector: (value: boolean) => void;
 }) {
+  const { highlightNode } = useEditor();
+
   const { interpreter, runProgram } = useEnvironment();
 
   return (
@@ -207,6 +210,7 @@ export default function Header({
               variant="contained"
               disabled={!interpreter.isPaused}
               onClick={() => {
+                highlightNode(null);
                 interpreter.runLoop();
               }}
               sx={{

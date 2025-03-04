@@ -83,6 +83,11 @@ export default function Editor({ showInspector }: { showInspector: boolean }) {
             fontSize: 40,
           },
         },
+        '& .highlight': {
+          backgroundColor: '#6b9da080',
+          width: '5px !important',
+          marginLeft: '12px',
+        },
       }}
     >
       <Monaco
