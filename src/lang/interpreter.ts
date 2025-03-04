@@ -37,6 +37,7 @@ export interface Snapshot {
   topNamespace: Cons<NamespaceType>;
   topFrame: Cons<Frame>;
   lastResult: unknown;
+  lastError: Error | null;
   hostSnapshot: unknown;
 }
 
@@ -50,6 +51,7 @@ export class Interpreter {
   topNamespace = rootNamespace;
   topFrame = rootFrame;
   lastResult: unknown = null;
+  lastError: Error | null = null;
   isRunning: boolean = false;
   isPaused: boolean = false;
   history: Snapshot[] = [];
@@ -84,10 +86,17 @@ export class Interpreter {
 
   async runLoop() {
     this.isPaused = false;
-    while (!this.isPaused && this.topFrame !== rootFrame) {
-      const result = this.topFrame.head.visit(this);
-      if (result instanceof Promise) {
-        await result;
+    try {
+      while (!this.isPaused && this.topFrame !== rootFrame) {
+        const result = this.topFrame.head.visit(this);
+        if (result instanceof Promise) {
+          await result;
+        }
+      }
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        this.lastError = err;
+        this.events.emit('error', err);
       }
     }
   }
@@ -293,6 +302,7 @@ export class Interpreter {
       topNamespace: this.topNamespace,
       topFrame: this.topFrame,
       lastResult: this.lastResult,
+      lastError: this.lastError,
       hostSnapshot: this.host.takeSnapshot(),
     });
     ++this.snapshotIndex;
@@ -306,6 +316,7 @@ export class Interpreter {
     this.topNamespace = snapshot.topNamespace;
     this.topFrame = snapshot.topFrame;
     this.lastResult = snapshot.lastResult;
+    this.lastError = snapshot.lastError;
     this.host.restoreSnapshot(snapshot.hostSnapshot);
     this.snapshotIndex = index;
     this.isRunning = this.topFrame !== rootFrame;
