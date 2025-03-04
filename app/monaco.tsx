@@ -1,12 +1,6 @@
 import { type Monaco } from '@monaco-editor/react';
 import type { editor as ed, languages as lang } from 'monaco-editor';
-import {
-  createContext,
-  ReactNode,
-  useCallback,
-  useContext,
-  useRef,
-} from 'react';
+import { createContext, useContext, useRef, type ReactNode } from 'react';
 
 import { Node } from '../src/lang/nodes/index.js';
 import { parse } from '../src/lang/parser.peggy';
@@ -169,14 +163,14 @@ export function EditorProvider({ children }: { children: ReactNode }) {
   const decorationsRef = useRef<ed.IEditorDecorationsCollection | null>(null);
   const markersRef = useRef<MarkerType[]>([]);
 
-  const requireEditor = useCallback(() => {
+  function requireEditor() {
     if (!editorRef.current) {
       throw new Error('Editor not found');
     }
     return editorRef.current;
-  }, []);
+  }
 
-  const toggleMarker = useCallback((lineNumber: number) => {
+  function toggleMarker(lineNumber: number) {
     const { current: decorations } = decorationsRef;
     const { current: markers } = markersRef;
 
@@ -209,7 +203,7 @@ export function EditorProvider({ children }: { children: ReactNode }) {
         return acc;
       }, [])
     );
-  }, []);
+  }
 
   return (
     <EditorContext.Provider

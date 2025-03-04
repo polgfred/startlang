@@ -1,10 +1,4 @@
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useRef,
-  type ReactNode,
-} from 'react';
+import { createContext, useContext, useRef, type ReactNode } from 'react';
 
 import { browserGlobals, BrowserHost } from '../src/lang/ext/browser.js';
 import { Interpreter } from '../src/lang/interpreter.js';
@@ -38,7 +32,7 @@ export default function EnvironmentProvider({
 
   interpreter.registerGlobals(browserGlobals);
 
-  const runProgram = useCallback(() => {
+  function runProgram() {
     interpreter.clearHistory();
     interpreter.lastResult = null;
     interpreter.lastError = null;
@@ -50,17 +44,14 @@ export default function EnvironmentProvider({
     const rootNode = parseValue();
     interpreter.setMarkers(rootNode, getMarkers());
     interpreter.run(rootNode);
-  }, [getMarkers, host, interpreter, parseValue]);
+  }
 
-  const loadProgram = useCallback(
-    (source: string | null) => {
-      setValue(source);
-      if (source) {
-        runProgram();
-      }
-    },
-    [runProgram, setValue]
-  );
+  function loadProgram(source: string | null) {
+    setValue(source);
+    if (source) {
+      runProgram();
+    }
+  }
 
   return (
     <EnvironmentContext.Provider
