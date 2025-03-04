@@ -46,7 +46,6 @@ export function mapMarkers(node: Node, markers: readonly MarkerType[]) {
         // if we have a marker for this line, assign it to this node
         if (markersCopy[index]) {
           nodeToMarker.set(child, markersCopy[index]);
-          // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
           delete markersCopy[index];
         }
       }

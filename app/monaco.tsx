@@ -189,7 +189,6 @@ export function EditorProvider({ children }: { children: ReactNode }) {
     } else if (markers[lineNumber] === 'breakpoint') {
       markers[lineNumber] = 'snapshot';
     } else {
-      // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
       delete markers[lineNumber];
     }
 

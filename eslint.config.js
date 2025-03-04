@@ -52,6 +52,7 @@ export default tseslint.config(
 
       '@typescript-eslint/no-unused-vars': 'off',
       '@typescript-eslint/no-invalid-void-type': 'off',
+      '@typescript-eslint/no-dynamic-delete': 'off',
 
       'import/no-unresolved': 'error',
       'import/order': [
