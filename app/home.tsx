@@ -1,20 +1,17 @@
 'use client';
 
 import { Paper, Stack, ThemeProvider, createTheme } from '@mui/material';
-import dynamic from 'next/dynamic';
 import { useEffect, useState } from 'react';
 
 import { Interpreter } from '../src/lang/interpreter.js';
 
+import Editor from './editor.jsx';
 import { useEnvironment } from './environment.jsx';
 import { useForceRender } from './force-render.js';
 import Graphics from './graphics.jsx';
 import Header from './header.jsx';
 import Inspector from './inspector.jsx';
 import Term from './term.jsx';
-
-// editor component loads vscode monaco internally, so it can't be server-side rendered
-const Editor = dynamic(() => import('./editor.jsx'), { ssr: false });
 
 const theme = createTheme({
   components: {

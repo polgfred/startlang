@@ -47,7 +47,7 @@ export default function Editor({ showInspector }: { showInspector: boolean }) {
       editor.focus();
       runProgram();
     },
-    [requireEditor, runProgram, initEditor, toggleMarker]
+    [initEditor, requireEditor, runProgram, toggleMarker]
   );
 
   // showInspector is a dependency because we want the editor to resize when
