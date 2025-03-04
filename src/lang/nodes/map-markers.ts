@@ -1,12 +1,12 @@
-import { Node } from './base';
-import { BeginNode } from './begin';
-import { BlockNode } from './block';
-import { CallNode } from './call';
-import { ForNode } from './for';
-import { ForInNode } from './for-in';
-import { IfNode } from './if';
-import { RepeatNode } from './repeat';
-import { WhileNode } from './while';
+import { Node } from './base.js';
+import { BeginNode } from './begin.js';
+import { BlockNode } from './block.js';
+import { CallNode } from './call.js';
+import { ForInNode } from './for-in.js';
+import { ForNode } from './for.js';
+import { IfNode } from './if.js';
+import { RepeatNode } from './repeat.js';
+import { WhileNode } from './while.js';
 
 type MarkerType = 'breakpoint' | 'snapshot';
 

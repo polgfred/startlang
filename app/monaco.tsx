@@ -4,13 +4,12 @@ import {
   ReactNode,
   useCallback,
   useContext,
-  useMemo,
   useRef,
 } from 'react';
 
-import { Node } from '../src/lang/nodes';
+import { Node } from '../src/lang/nodes/index.js';
 import { parse } from '../src/lang/parser.peggy';
-import { MarkerType } from '../src/lang/types';
+import { MarkerType } from '../src/lang/types.js';
 
 interface EditorContext {
   getMarkers(): MarkerType[];
@@ -43,35 +42,34 @@ export function EditorProvider({ children }: { children: ReactNode }) {
     return editorRef.current;
   }, []);
 
-  const context: EditorContext = useMemo(
-    () => ({
-      getMarkers() {
-        return markersRef.current;
-      },
-      getEditor() {
-        return editorRef.current;
-      },
-      setEditor(editor) {
-        editorRef.current = editor;
-      },
-      getValue() {
-        return requireEditor().getValue() + '\n';
-      },
-      setValue(value: string | null) {
-        requireEditor().setValue(value ?? '\n');
-      },
-      parseValue() {
-        return parse(requireEditor().getValue() + '\n');
-      },
-      autoLayout() {
-        // @ts-expect-error 'auto' is allowed
-        editorRef.current?.layout({ width: 'auto', height: 'auto' });
-      },
-    }),
-    [requireEditor, markersRef]
-  );
-
   return (
-    <EditorContext.Provider value={context}>{children}</EditorContext.Provider>
+    <EditorContext.Provider
+      value={{
+        getMarkers() {
+          return markersRef.current;
+        },
+        getEditor() {
+          return editorRef.current;
+        },
+        setEditor(editor) {
+          editorRef.current = editor;
+        },
+        getValue() {
+          return requireEditor().getValue() + '\n';
+        },
+        setValue(value: string | null) {
+          requireEditor().setValue(value ?? '\n');
+        },
+        parseValue() {
+          return parse(requireEditor().getValue() + '\n');
+        },
+        autoLayout() {
+          // @ts-expect-error 'auto' is allowed
+          editorRef.current?.layout({ width: 'auto', height: 'auto' });
+        },
+      }}
+    >
+      {children}
+    </EditorContext.Provider>
   );
 }

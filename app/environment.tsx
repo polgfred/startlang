@@ -6,10 +6,10 @@ import {
   type ReactNode,
 } from 'react';
 
-import { browserGlobals, BrowserHost } from '../src/lang/ext/browser';
-import { Interpreter } from '../src/lang/interpreter';
+import { browserGlobals, BrowserHost } from '../src/lang/ext/browser.js';
+import { Interpreter } from '../src/lang/interpreter.js';
 
-import { useEditor } from './monaco';
+import { useEditor } from './monaco.jsx';
 
 const EnvironmentContext = createContext<{
   interpreter: Interpreter;
