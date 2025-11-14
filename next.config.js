@@ -5,7 +5,7 @@ import { createTheme } from '@mui/material';
 
 export default withPigment(
   {
-    output: 'standalone',
+    output: 'export',
     webpack(config) {
       config.resolve.extensionAlias = {
         '.js': ['.ts', '.js'],
