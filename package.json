@@ -21,7 +21,7 @@
   "license": "ISC",
   "dependencies": {
     "@vercel/analytics": "^1.5.0",
-    "next": "^15.1.7"
+    "next": "^15.1.11"
   },
   "devDependencies": {
     "@blockly/field-angle": "^5.0.12",
