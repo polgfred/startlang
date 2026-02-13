@@ -1,4 +1,15 @@
-import { Button, Stack, TextField } from '@mui/material';
+import {
+  Button,
+  Divider,
+  Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+  TextField,
+  Typography,
+} from '@mui/material';
 import {
   ChangeEvent,
   KeyboardEvent,
@@ -9,9 +20,9 @@ import {
   useState,
 } from 'react';
 
-import { Cell, CellElement } from '../src/lang/ext/cells/index.js';
+import { CellSnapshot } from '../src/desktop/types.js';
 
-interface InputState {
+export interface InputState {
   prompt: string;
   initial: string;
   onInputComplete: (value: string) => void;
@@ -21,7 +32,7 @@ export default function Term({
   outputBuffer,
   inputState,
 }: {
-  outputBuffer: Cell;
+  outputBuffer: CellSnapshot | null;
   inputState: InputState | null;
 }) {
   const [input, setInput] = useState('');
@@ -109,8 +120,89 @@ export default function Term({
           padding: 2,
         }}
       >
-        <CellElement cell={outputBuffer} />
+        {outputBuffer && <CellSnapshotElement cell={outputBuffer} />}
       </div>
     </div>
   );
+}
+
+function CellSnapshotElement({ cell }: { cell: CellSnapshot }) {
+  switch (cell.kind) {
+    case 'value':
+      return <Typography variant={cell.variant}>{cell.value}</Typography>;
+    case 'stack':
+      return (
+        <Stack
+          gap={2}
+          direction={cell.direction}
+          alignItems={cell.align}
+          justifyContent={cell.justify}
+          divider={
+            <Divider
+              flexItem
+              orientation={cell.direction === 'column' ? 'horizontal' : 'vertical'}
+            />
+          }
+          sx={{
+            width: '100%',
+          }}
+        >
+          {cell.children.map((child, index) => (
+            <CellSnapshotElement key={index} cell={child} />
+          ))}
+        </Stack>
+      );
+    case 'grid':
+      return (
+        <Table
+          sx={{
+            width: '100%',
+          }}
+        >
+          <TableHead>
+            {cell.headers.map((row, index) => (
+              <CellSnapshotElement key={`head-${index}`} cell={row} />
+            ))}
+          </TableHead>
+          <TableBody>
+            {cell.rows.map((row, index) => (
+              <CellSnapshotElement key={`row-${index}`} cell={row} />
+            ))}
+          </TableBody>
+        </Table>
+      );
+    case 'row':
+      return (
+        <TableRow
+          sx={{
+            '&:last-child td, &:last-child th': {
+              borderBottom: 0,
+            },
+          }}
+        >
+          {cell.cells.map((entry, index) => {
+            if (cell.isHeader) {
+              return (
+                <TableCell
+                  key={index}
+                  sx={(theme) => ({
+                    color: theme.palette.common.white,
+                    backgroundColor: theme.palette.grey[800],
+                  })}
+                >
+                  <CellSnapshotElement cell={entry} />
+                </TableCell>
+              );
+            }
+            return (
+              <TableCell key={index}>
+                <CellSnapshotElement cell={entry} />
+              </TableCell>
+            );
+          })}
+        </TableRow>
+      );
+    default:
+      return null;
+  }
 }

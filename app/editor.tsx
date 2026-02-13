@@ -137,7 +137,7 @@ export default function Editor({
 }: {
   editorRef: RefObject<editor.ICodeEditor | null>;
   showInspector: boolean;
-  runProgram: () => void;
+  runProgram: () => void | Promise<void>;
 }) {
   const onBeforeMount: BeforeMount = useCallback((monaco) => {
     monaco.languages.register({ id: 'start' });

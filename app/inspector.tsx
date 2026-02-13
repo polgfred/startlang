@@ -11,16 +11,16 @@ import {
 } from '@mui/material';
 import { ChangeEvent, JSX, useCallback, useState } from 'react';
 
-import { Interpreter } from '../src/lang/interpreter.js';
+import type { EngineSnapshotState } from '../src/desktop/types.js';
 import type { ListType, NamespaceType, RecordType } from '../src/lang/types.js';
 
 export default function Inspector({
   error,
-  interpreter,
+  state,
   updateSlider,
 }: {
   error: Error | null;
-  interpreter: Interpreter;
+  state: EngineSnapshotState | null;
   updateSlider: (index: number) => void;
 }) {
   const handleSliderChange = useCallback(
@@ -44,8 +44,8 @@ export default function Inspector({
       <input
         type="range"
         min={0}
-        max={interpreter.history.length - 1}
-        value={interpreter.snapshotIndex}
+        max={Math.max((state?.snapshotCount ?? 0) - 1, 0)}
+        value={state?.snapshotIndex ?? 0}
         onChange={handleSliderChange}
         sx={{
           margin: 1,
@@ -53,16 +53,13 @@ export default function Inspector({
         }}
       />
       {error && <ErrorInspector error={error} />}
-      {interpreter.history.length > 0 && (
+      {state && state.snapshotCount > 0 && (
         <>
           <NamespaceInspector
             title="Global"
-            namespace={interpreter.globalNamespace}
+            namespace={state.globalNamespace}
           />
-          <NamespaceInspector
-            title="Local"
-            namespace={interpreter.topNamespace.head}
-          />
+          <NamespaceInspector title="Local" namespace={state.localNamespace} />
         </>
       )}
     </Stack>

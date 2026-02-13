@@ -1,25 +1,15 @@
-import {
-  AppBar,
-  Button,
-  Divider,
-  Menu,
-  MenuItem,
-  Toolbar,
-  Typography,
-} from '@mui/material';
+import { Button, Divider, Menu, MenuItem } from '@mui/material';
 import { editor } from 'monaco-editor';
-import Image from 'next/image';
-import Link from 'next/link';
 import { MouseEvent, RefObject, useCallback, useState } from 'react';
 
-import { type BrowserHost } from '../src/lang/ext/browser';
-import boxScript from '../tests/box.start';
-import investScript from '../tests/invest.start';
-import layoutScript from '../tests/layout.start';
-import numguessScript from '../tests/numguess.start';
-import sieveScript from '../tests/sieve.start';
-import sineScript from '../tests/sine.start';
-import victorScript from '../tests/victor.start';
+import type { ViewMode } from '../../src/desktop/types.js';
+import boxScript from '../../tests/box.start';
+import investScript from '../../tests/invest.start';
+import layoutScript from '../../tests/layout.start';
+import numguessScript from '../../tests/numguess.start';
+import sieveScript from '../../tests/sieve.start';
+import sineScript from '../../tests/sine.start';
+import victorScript from '../../tests/victor.start';
 
 function useMenu() {
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
@@ -38,12 +28,14 @@ function useMenu() {
   return { anchor, openMenu, closeMenu };
 }
 
-function ViewMenu({
-  host,
+export function ViewMenu({
+  viewMode,
+  setViewMode,
   showInspector,
   setShowInspector,
 }: {
-  host: BrowserHost;
+  viewMode: ViewMode;
+  setViewMode: (mode: ViewMode) => void;
   showInspector: boolean;
   setShowInspector: (value: boolean) => void;
 }) {
@@ -56,18 +48,18 @@ function ViewMenu({
       </Button>
       <Menu open={anchor !== null} anchorEl={anchor} onClose={closeMenu}>
         <MenuItem
-          selected={host.viewMode === 'graphics'}
+          selected={viewMode === 'graphics'}
           onClick={() => {
-            host.setViewMode('graphics');
+            setViewMode('graphics');
             closeMenu();
           }}
         >
           Graphics
         </MenuItem>
         <MenuItem
-          selected={host.viewMode === 'text'}
+          selected={viewMode === 'text'}
           onClick={() => {
-            host.setViewMode('text');
+            setViewMode('text');
             closeMenu();
           }}
         >
@@ -119,12 +111,12 @@ const exampleScripts = [
   },
 ];
 
-function CodeMenu({
+export function CodeMenu({
   editorRef,
   runProgram,
 }: {
   editorRef: RefObject<editor.ICodeEditor | null>;
-  runProgram: () => void;
+  runProgram: () => void | Promise<void>;
 }) {
   const { anchor, openMenu, closeMenu } = useMenu();
 
@@ -133,7 +125,7 @@ function CodeMenu({
       if (editorRef.current) {
         editorRef.current.setValue(script);
         closeMenu();
-        runProgram();
+        void runProgram();
       }
     },
     [closeMenu, editorRef, runProgram]
@@ -168,76 +160,5 @@ function CodeMenu({
         </MenuItem>
       </Menu>
     </>
-  );
-}
-
-export default function Header({
-  host,
-  isRunning,
-  showInspector,
-  setShowInspector,
-  runProgram,
-  editorRef,
-}: {
-  host: BrowserHost;
-  isRunning: boolean;
-  showInspector: boolean;
-  setShowInspector: (value: boolean) => void;
-  runProgram: () => void;
-  editorRef: RefObject<editor.ICodeEditor | null>;
-}) {
-  return (
-    <AppBar
-      position="static"
-      sx={{
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-      }}
-    >
-      <Toolbar
-        sx={{
-          gap: 1,
-        }}
-      >
-        <Typography
-          variant="body1"
-          sx={{
-            marginRight: 2,
-          }}
-        >
-          START
-        </Typography>
-        <ViewMenu
-          host={host}
-          showInspector={showInspector}
-          setShowInspector={setShowInspector}
-        />
-        <CodeMenu editorRef={editorRef} runProgram={runProgram} />
-        <Button
-          variant="contained"
-          disabled={isRunning}
-          onClick={runProgram}
-          sx={{
-            marginLeft: 2,
-            backgroundColor: '#dddddd',
-            color: '#222222',
-          }}
-        >
-          Run
-        </Button>
-      </Toolbar>
-      <Toolbar
-        sx={{
-          gap: 1,
-        }}
-      >
-        <Link href="https://linkedin.com/in/polgfred" target="_blank">
-          <Image src="/linkedin-logo.svg" alt="logo" width="32" height="32" />
-        </Link>
-        <Link href="https://github.com/polgfred/startlang" target="_blank">
-          <Image src="/github-logo.svg" alt="logo" width="32" height="32" />
-        </Link>
-      </Toolbar>
-    </AppBar>
   );
 }
