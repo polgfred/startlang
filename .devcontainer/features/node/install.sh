@@ -2,7 +2,7 @@
 
 set -e
 
-VERSION=${VERSION:-22.6.0}
+VERSION=${VERSION:-24.13.1}
 
 MAJOR=$(echo $VERSION | cut -d. -f1)
 

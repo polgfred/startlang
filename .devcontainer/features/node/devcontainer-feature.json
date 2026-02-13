@@ -6,7 +6,7 @@
 	"options": {
 		"version": {
 			"type": "string",
-			"default": "22.6.0",
+			"default": "24.13.1",
 			"description": "Node version to install"
 		}
 	}
