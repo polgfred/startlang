@@ -7,6 +7,9 @@
   "scripts": {
     "build": "NODE_ENV=production next build",
     "dev": "NODE_ENV=development next dev",
+    "electron": "electron ./electron/main.mjs",
+    "dev:desktop": "node ./tools/electron-dev.mjs",
+    "start:desktop": "node ./tools/electron-prod.mjs",
     "repl": "tsx --import ./tools/hooks.js ./tools/repl.js",
     "script": "tsx --import ./tools/hooks.js ./tools/script.js",
     "format": "prettier --write ./src/**/*.[jt]s",
@@ -36,6 +39,7 @@
     "blockly": "^11.2.1",
     "classnames": "^2.5.1",
     "deep-equal": "^2.2.3",
+    "electron": "^34.3.0",
     "esbuild-loader": "^4.2.2",
     "esbuild-runner": "^2.2.2",
     "eslint": "^9.20.1",
