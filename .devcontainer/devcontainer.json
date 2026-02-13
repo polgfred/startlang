@@ -15,7 +15,8 @@
 				"dbaeumer.vscode-eslint",
 				"esbenp.prettier-vscode",
 				"ms-vscode.vscode-typescript-next",
-				"PeggyJS.peggy-language"
+				"PeggyJS.peggy-language",
+				"openai.chatgpt"
 			]
 		}
 	}
