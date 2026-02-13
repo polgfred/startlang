@@ -1,8 +1,6 @@
 {
 	"name": "Startlang",
-	"service": "workspace",
-	"workspaceFolder": "/workspaces/startlang",
-	"dockerComposeFile": "docker-compose.yml",
+	"image": "mcr.microsoft.com/devcontainers/cpp:1-ubuntu-22.04",
 	"remoteUser": "vscode",
 	"features": {
 		"./features/node": {}
