@@ -1,4 +1,5 @@
 import {
+  Box,
   Button,
   Slider,
   Stack,
@@ -17,6 +18,20 @@ import type {
   RecordType,
 } from '@startlang/lang-core/types';
 import { JSX, useCallback, useState } from 'react';
+
+const compactTableSx = {
+  width: '100%',
+  marginBottom: '10px',
+  '& .MuiTableCell-root': {
+    padding: '8px 10px',
+    borderColor: 'rgba(0, 0, 0, 0.08)',
+    fontSize: 13,
+    lineHeight: 1.35,
+  },
+  '& .MuiTableHead-root .MuiTableCell-root': {
+    fontWeight: 700,
+  },
+};
 
 export default function Inspector({
   error,
@@ -42,9 +57,9 @@ export default function Inspector({
         width: '100%',
         height: '100%',
         fontFamily: 'Roboto',
-        fontSize: 14,
-        marginTop: 1,
+        fontSize: 13,
         overflow: 'auto',
+        padding: '8px',
       }}
     >
       <Slider
@@ -54,22 +69,32 @@ export default function Inspector({
         value={interpreter.snapshotIndex}
         onChange={handleSliderChange}
         sx={{
-          margin: 1,
-          width: 'calc(100% - 20px)',
+          margin: '0 8px 4px',
+          width: 'calc(100% - 32px)',
         }}
       />
       {error && <ErrorInspector error={error} />}
       {interpreter.history.length > 0 && (
-        <>
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: {
+              xs: '1fr',
+              md: 'minmax(0, 1fr) minmax(0, 1fr)',
+            },
+            gap: 2,
+            alignItems: 'start',
+          }}
+        >
           <NamespaceInspector
-            title="Global"
+            title="Globals"
             namespace={interpreter.globalNamespace}
           />
           <NamespaceInspector
-            title="Local"
+            title="Locals"
             namespace={interpreter.topNamespace.head}
           />
-        </>
+        </Box>
       )}
     </Stack>
   );
@@ -77,12 +102,7 @@ export default function Inspector({
 
 function ErrorInspector({ error }: { error: Error }) {
   return (
-    <Table
-      sx={{
-        marginBottom: '10px',
-        width: '100%',
-      }}
-    >
+    <Table size="small" sx={compactTableSx}>
       <TableHead>
         <TableRow>
           <TableCell
@@ -91,7 +111,7 @@ function ErrorInspector({ error }: { error: Error }) {
               fontWeight: 'bold',
             }}
           >
-            <Typography variant="h6">Error</Typography>
+            <Typography variant="subtitle2">Error</Typography>
           </TableCell>
         </TableRow>
       </TableHead>
@@ -127,12 +147,7 @@ function NamespaceInspector({
   namespace: NamespaceType;
 }) {
   return (
-    <Table
-      sx={{
-        marginBottom: '10px',
-        width: '100%',
-      }}
-    >
+    <Table size="small" sx={compactTableSx}>
       <TableHead>
         <TableRow>
           <TableCell
@@ -141,25 +156,7 @@ function NamespaceInspector({
               fontWeight: 'bold',
             }}
           >
-            <Typography variant="h6">{title}</Typography>
-          </TableCell>
-        </TableRow>
-        <TableRow>
-          <TableCell
-            sx={{
-              width: '25%',
-              fontWeight: 'bold',
-            }}
-          >
-            Variable
-          </TableCell>
-          <TableCell
-            sx={{
-              width: '75%',
-              fontWeight: 'bold',
-            }}
-          >
-            Value
+            <Typography variant="subtitle2">{title}</Typography>
           </TableCell>
         </TableRow>
       </TableHead>
@@ -220,6 +217,7 @@ function ExpandableFooter({
         <TableCell colSpan={2}>
           {visible > 5 && (
             <Button
+              size="small"
               onClick={() => {
                 setVisible(visible - 5);
               }}
@@ -229,6 +227,7 @@ function ExpandableFooter({
           )}
           {visible < total && (
             <Button
+              size="small"
               onClick={() => {
                 setVisible(visible + 5);
               }}
@@ -255,12 +254,7 @@ function ListInspector({ value }: { value: ListType }) {
   }
 
   return (
-    <Table
-      sx={{
-        marginBottom: '10px',
-        width: '100%',
-      }}
-    >
+    <Table size="small" sx={compactTableSx}>
       <TableHead>
         <TableRow
           sx={{
@@ -303,12 +297,7 @@ function RecordInspector({ value }: { value: RecordType }) {
   }
 
   return (
-    <Table
-      sx={{
-        marginBottom: '10px',
-        width: '100%',
-      }}
-    >
+    <Table size="small" sx={compactTableSx}>
       <TableHead>
         <TableRow
           sx={{

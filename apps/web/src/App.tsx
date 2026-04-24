@@ -258,7 +258,7 @@ export default function App() {
                 sx={{
                   height: '100%',
                   margin: '5px',
-                  padding: '10px',
+                  padding: '4px 8px',
                   overflow: 'scroll',
                 }}
               >
