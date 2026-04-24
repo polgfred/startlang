@@ -26,7 +26,7 @@ import {
   Rect,
 } from './shapes/index.js';
 
-export interface BrowserSnapshot {
+export interface BrowserPresentationSnapshot {
   shapes: readonly Shape[];
   shapeProps: ShapeProps;
   textProps: TextProps;
@@ -52,7 +52,9 @@ const initialTextProps: TextProps = Object.freeze({
   ['font.size']: 36,
 });
 
-export class BrowserHost implements PresentationHost<BrowserSnapshot> {
+export class BrowserPresentationHost
+  implements PresentationHost<BrowserPresentationSnapshot>
+{
   events = new EventTarget();
 
   shapes: readonly Shape[] = emptyArray;
@@ -135,7 +137,7 @@ export class BrowserHost implements PresentationHost<BrowserSnapshot> {
     }
   }
 
-  takeSnapshot(): BrowserSnapshot {
+  takeSnapshot(): BrowserPresentationSnapshot {
     return {
       shapes: this.shapes,
       shapeProps: this.shapeProps,
@@ -145,7 +147,7 @@ export class BrowserHost implements PresentationHost<BrowserSnapshot> {
     };
   }
 
-  restoreSnapshot(snapshot: BrowserSnapshot) {
+  restoreSnapshot(snapshot: BrowserPresentationSnapshot) {
     this.shapes = snapshot.shapes;
     this.shapeProps = snapshot.shapeProps;
     this.textProps = snapshot.textProps;
@@ -161,7 +163,7 @@ function waitForRepaint() {
 }
 
 function getPresentationHost(interpreter: Interpreter) {
-  if (!(interpreter.host instanceof BrowserHost)) {
+  if (!(interpreter.host instanceof BrowserPresentationHost)) {
     throw new Error('invalid presentation host for interpreter');
   }
   return interpreter.host;
@@ -288,5 +290,3 @@ export const browserPresentationGlobals: RuntimeFunctions = {
     return new BuildCellFrame(node, new GridRowCell());
   },
 };
-
-export const browserGlobals = browserPresentationGlobals;

@@ -1,6 +1,6 @@
 import { Paper, Stack, ThemeProvider, createTheme } from '@mui/material';
 import {
-  BrowserHost,
+  BrowserPresentationHost,
   browserPresentationGlobals,
 } from '@startlang/lang-browser/browser';
 import { Interpreter } from '@startlang/lang-core/interpreter';
@@ -77,7 +77,7 @@ export default function App() {
 
   const forceRender = useForceRender();
 
-  const { current: host } = useRef(new BrowserHost());
+  const { current: host } = useRef(new BrowserPresentationHost());
   const { current: interpreter } = useRef(new Interpreter(host));
 
   useEffect(() => {
