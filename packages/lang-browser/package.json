@@ -8,7 +8,8 @@
     "./shapes": "./src/shapes/index.ts"
   },
   "scripts": {
-    "lint": "eslint src",
+    "lint": "eslint src tests vitest.config.ts",
+    "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -16,5 +17,9 @@
     "@startlang/lang-core": "*",
     "immer": "^10.1.1",
     "react": "^19.0.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^6.0.1",
+    "vitest": "^4.1.5"
   }
 }
