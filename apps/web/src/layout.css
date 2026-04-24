@@ -1,2 +1,15 @@
 @import url('https://fonts.googleapis.com/css?family=Roboto+Mono:400,700&subset=latin,latin-ext');
 @import url('https://fonts.googleapis.com/css?family=Roboto:400&subset=latin,latin-ext');
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}

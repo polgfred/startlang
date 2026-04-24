@@ -36,6 +36,16 @@ const theme = createTheme({
   },
 });
 
+const appGap = 1.25;
+
+const panelSx = {
+  display: 'flex',
+  flexDirection: 'column',
+  flex: 1,
+  minHeight: 0,
+  p: 2,
+};
+
 function useForceRender() {
   const [, setTick] = useState(0);
 
@@ -167,6 +177,7 @@ export default function App() {
           backgroundColor: theme.palette.background.default,
           width: '100%',
           height: '100%',
+          minHeight: 0,
         })}
       >
         <Header
@@ -183,8 +194,10 @@ export default function App() {
         <Stack
           direction="column"
           sx={{
-            height: 'calc(100% - 66px)',
+            flex: 1,
             minHeight: 0,
+            p: 0.625,
+            gap: appGap,
           }}
         >
           <Stack
@@ -192,22 +205,19 @@ export default function App() {
             sx={{
               flex: 1,
               minHeight: 0,
+              gap: appGap,
             }}
           >
             <Stack
               sx={{
-                height: '100%',
                 flex: 1,
                 minWidth: 0,
+                minHeight: 0,
               }}
             >
               <Paper
                 elevation={3}
-                sx={{
-                  height: '100%',
-                  margin: '5px',
-                  padding: '10px',
-                }}
+                sx={panelSx}
               >
                 <Editor
                   editorRef={editorRef}
@@ -218,7 +228,6 @@ export default function App() {
             </Stack>
             <Stack
               sx={{
-                height: '100%',
                 flex: 1,
                 minWidth: 0,
                 minHeight: 0,
@@ -227,11 +236,7 @@ export default function App() {
               <Paper
                 elevation={3}
                 sx={{
-                  height: '100%',
-                  margin: '5px',
-                  padding: '10px',
-                  flex: 1,
-                  minHeight: 0,
+                  ...panelSx,
                   overflow: outputTab === 'text' ? 'scroll' : 'hidden',
                 }}
               >
@@ -251,15 +256,14 @@ export default function App() {
                 height: '32%',
                 minHeight: 180,
                 maxHeight: 360,
+                minWidth: 0,
               }}
             >
               <Paper
                 elevation={3}
                 sx={{
-                  height: '100%',
-                  margin: '5px',
-                  padding: '4px 8px',
-                  overflow: 'scroll',
+                  ...panelSx,
+                  overflow: 'hidden',
                 }}
               >
                 <Inspector

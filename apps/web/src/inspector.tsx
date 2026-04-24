@@ -59,7 +59,6 @@ export default function Inspector({
         fontFamily: 'Roboto',
         fontSize: 13,
         overflow: 'auto',
-        padding: '8px',
       }}
     >
       <Slider
@@ -69,8 +68,12 @@ export default function Inspector({
         value={interpreter.snapshotIndex}
         onChange={handleSliderChange}
         sx={{
-          margin: '0 8px 4px',
-          width: 'calc(100% - 32px)',
+          width: 'auto',
+          mx: 3,
+          my: 0.5,
+          '& .MuiSlider-thumb.Mui-active': {
+            boxShadow: '0 0 0 8px rgba(107, 157, 160, 0.16)',
+          },
         }}
       />
       {error && <ErrorInspector error={error} />}
