@@ -10,6 +10,7 @@ import {
   VarNode,
   rootFrame,
 } from './nodes/index.js';
+import { isRuntimeSuspension, type RuntimeSuspension } from './suspension.js';
 import type { IndexType, NamespaceType, RuntimeFunctions } from './types.js';
 import { Cons } from './utils/cons.js';
 
@@ -28,7 +29,12 @@ export interface Snapshot {
   topFrame: Cons<Frame>;
   lastResult: unknown;
   hostSnapshot: unknown;
+  suspension: RuntimeSuspension | null;
 }
+
+export type RunResult =
+  | { status: 'completed' }
+  | { status: 'suspended'; suspension: RuntimeSuspension };
 
 export class Interpreter {
   dataHandlers: DataHandler[] = [];
@@ -39,6 +45,7 @@ export class Interpreter {
   topFrame = rootFrame;
   lastResult: unknown = null;
   isRunning: boolean = false;
+  suspension: RuntimeSuspension | null = null;
   history: Snapshot[] = [];
   snapshotIndex: number = 0;
 
@@ -53,34 +60,59 @@ export class Interpreter {
     });
   }
 
+  get isSuspended() {
+    return this.suspension !== null;
+  }
+
   run(node: Node) {
     this.globalFunctions = emptyObject;
     this.globalNamespace = emptyObject;
     this.topNamespace = rootNamespace;
     this.topFrame = rootFrame.push(node.makeFrame());
     this.lastResult = null;
+    this.suspension = null;
     return this.runLoop();
   }
 
   runIncremental(node: Node) {
     this.topFrame = rootFrame.push(node.makeFrame());
     this.lastResult = null;
+    this.suspension = null;
     return this.runLoop();
   }
 
-  async runLoop() {
-    this.isRunning = true;
+  async runLoop(): Promise<RunResult> {
+    if (this.suspension) {
+      return { status: 'suspended', suspension: this.suspension };
+    }
 
+    this.isRunning = true;
     try {
       while (this.topFrame !== rootFrame) {
         const result = this.topFrame.head.visit(this);
         if (result instanceof Promise) {
           await result;
+        } else if (isRuntimeSuspension(result)) {
+          this.suspension = result;
+          return { status: 'suspended', suspension: result };
         }
       }
+
+      return { status: 'completed' };
     } finally {
       this.isRunning = false;
     }
+  }
+
+  resumeSuspension(response: unknown) {
+    if (!this.suspension) {
+      throw new Error('interpreter is not suspended');
+    }
+
+    const suspension = this.suspension;
+    this.suspension = null;
+    suspension.resume(this, response);
+    return this.runLoop();
   }
 
   registerHandler(handler: DataHandler) {
@@ -265,6 +297,7 @@ export class Interpreter {
       topNamespace: this.topNamespace,
       topFrame: this.topFrame,
       lastResult: this.lastResult,
+      suspension: this.suspension,
       hostSnapshot: this.host.takeSnapshot(),
     });
     this.snapshotIndex = this.history.length - 1;
@@ -277,6 +310,7 @@ export class Interpreter {
     this.topNamespace = snapshot.topNamespace;
     this.topFrame = snapshot.topFrame;
     this.lastResult = snapshot.lastResult;
+    this.suspension = snapshot.suspension;
     this.host.restoreSnapshot(snapshot.hostSnapshot);
     this.snapshotIndex = index;
   }

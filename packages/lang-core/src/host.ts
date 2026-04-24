@@ -3,9 +3,7 @@ export interface SupportsSnapshots<T = unknown> {
   restoreSnapshot(snapshot: T): void;
 }
 
-export interface RuntimeEnvironment {
-  promptForInput?(prompt: string, initial?: string): Promise<string>;
-}
+export type RuntimeEnvironment = object;
 
 export type PresentationViewMode = 'graphics' | 'text';
 

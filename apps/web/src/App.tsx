@@ -6,8 +6,9 @@ import {
 import { Interpreter } from '@startlang/lang-core/interpreter';
 import { parse } from '@startlang/lang-core/parser.peggy';
 import { runtimeEnvironmentGlobals } from '@startlang/lang-core/runtime-environment';
+import { InputSuspension } from '@startlang/lang-core/suspension';
 import { editor } from 'monaco-editor';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import Editor from './editor.jsx';
 import Graphics from './graphics.jsx';
@@ -41,31 +42,6 @@ function useForceRender() {
   }, []);
 }
 
-function usePromptForInput() {
-  const [inputState, setInputState] = useState<{
-    prompt: string;
-    initial: string;
-    onInputComplete: (value: string) => void;
-  } | null>(null);
-
-  return {
-    inputState,
-
-    promptForInput(prompt: string, initial = '') {
-      return new Promise<string>((resolve) => {
-        setInputState({
-          prompt,
-          initial,
-          onInputComplete(value: string) {
-            setInputState(null);
-            resolve(value);
-          },
-        });
-      });
-    },
-  };
-}
-
 export default function App() {
   const editorRef = useRef<editor.ICodeEditor | null>(null);
 
@@ -84,10 +60,39 @@ export default function App() {
     };
   }, [forceRender, host]);
 
-  const { inputState, promptForInput } = usePromptForInput();
-
   interpreter.registerGlobals(browserPresentationGlobals);
-  interpreter.registerGlobals(runtimeEnvironmentGlobals({ promptForInput }));
+  interpreter.registerGlobals(runtimeEnvironmentGlobals());
+
+  const resumeInput = useCallback(
+    async (value: string) => {
+      setError(null);
+
+      try {
+        await interpreter.resumeSuspension(value);
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          setError(err);
+          // eslint-disable-next-line no-console
+          console.error(err.stack);
+        }
+      } finally {
+        forceRender();
+      }
+    },
+    [forceRender, interpreter]
+  );
+
+  const inputState = useMemo(
+    () =>
+      interpreter.suspension instanceof InputSuspension
+        ? {
+            prompt: interpreter.suspension.prompt,
+            initial: interpreter.suspension.initial,
+            onInputComplete: resumeInput,
+          }
+        : null,
+    [interpreter.suspension, resumeInput]
+  );
 
   const updateSlider = useCallback(
     (index: number) => {
@@ -131,7 +136,7 @@ export default function App() {
       >
         <Header
           host={host}
-          isRunning={interpreter.isRunning}
+          isProgramActive={interpreter.isRunning || interpreter.isSuspended}
           showInspector={showInspector}
           setShowInspector={setShowInspector}
           editorRef={editorRef}

@@ -1,16 +1,10 @@
-import type { RuntimeEnvironment } from './host.js';
+import { InputSuspension } from './suspension.js';
 import type { RuntimeFunctions } from './types.js';
 
-export function runtimeEnvironmentGlobals(
-  environment: RuntimeEnvironment
-): RuntimeFunctions {
+export function runtimeEnvironmentGlobals(): RuntimeFunctions {
   return {
-    async input(interpreter, [prompt, initial = '']: [string, string]) {
-      if (!environment.promptForInput) {
-        throw new Error('input is not supported by this runtime environment');
-      }
-
-      interpreter.setResult(await environment.promptForInput(prompt, initial));
+    input(interpreter, [prompt, initial = '']: [string, string]) {
+      return new InputSuspension(prompt, initial);
     },
   };
 }

@@ -173,14 +173,14 @@ function CodeMenu({
 
 export default function Header({
   host,
-  isRunning,
+  isProgramActive,
   showInspector,
   setShowInspector,
   runProgram,
   editorRef,
 }: {
   host: BrowserHost;
-  isRunning: boolean;
+  isProgramActive: boolean;
   showInspector: boolean;
   setShowInspector: (value: boolean) => void;
   runProgram: () => void;
@@ -215,7 +215,7 @@ export default function Header({
         <CodeMenu editorRef={editorRef} runProgram={runProgram} />
         <Button
           variant="contained"
-          disabled={isRunning}
+          disabled={isProgramActive}
           onClick={runProgram}
           sx={{
             marginLeft: 2,

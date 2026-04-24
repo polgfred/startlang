@@ -1,6 +1,7 @@
 import { immerable } from 'immer';
 
 import { Interpreter } from '../interpreter.js';
+import type { RuntimeSuspension } from '../suspension.js';
 import { Cons } from '../utils/cons.js';
 
 export abstract class Node {
@@ -14,7 +15,9 @@ export abstract class Frame {
 
   constructor(public readonly node: Node) {}
 
-  abstract visit(interpreter: Interpreter): void | Promise<void>;
+  abstract visit(
+    interpreter: Interpreter
+  ): void | Promise<void> | RuntimeSuspension;
 
   dispose(interpreter: Interpreter) {}
   isFlowBoundary(flow: 'loop' | 'call'): boolean {
