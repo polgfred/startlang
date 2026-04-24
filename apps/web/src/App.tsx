@@ -1,12 +1,4 @@
-import {
-  Badge,
-  Button,
-  ButtonGroup,
-  Paper,
-  Stack,
-  ThemeProvider,
-  createTheme,
-} from '@mui/material';
+import { Paper, Stack, ThemeProvider, createTheme } from '@mui/material';
 import {
   BrowserHost,
   browserPresentationGlobals,
@@ -39,7 +31,7 @@ const theme = createTheme({
       main: '#6b9da0',
     },
     secondary: {
-      main: '#ffffff',
+      main: '#455a64',
     },
   },
 });
@@ -70,7 +62,7 @@ export default function App() {
   const editorRef = useRef<editor.ICodeEditor | null>(null);
 
   const [outputTab, setOutputTab] = useState<OutputTab>('graphics');
-  const [showInspector, setShowInspector] = useState(true);
+  const [showInspector, setShowInspector] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
   const forceRender = useForceRender();
@@ -127,7 +119,7 @@ export default function App() {
             initial: interpreter.suspension.initial,
             onInputComplete: resumeInput,
           }
-      : null,
+        : null,
     [interpreter.suspension, resumeInput]
   );
 
@@ -178,6 +170,10 @@ export default function App() {
         })}
       >
         <Header
+          outputTab={outputTab}
+          setOutputTab={setOutputTab}
+          hasGraphicsOutput={hasGraphicsOutput}
+          hasTextOutput={hasTextOutput}
           isProgramActive={interpreter.isRunning || interpreter.isSuspended}
           showInspector={showInspector}
           setShowInspector={setShowInspector}
@@ -185,111 +181,76 @@ export default function App() {
           runProgram={runProgram}
         />
         <Stack
-          direction="row"
+          direction="column"
           sx={{
             height: 'calc(100% - 66px)',
+            minHeight: 0,
           }}
         >
           <Stack
+            direction="row"
             sx={{
-              height: '100%',
               flex: 1,
-              minWidth: 0,
-            }}
-          >
-            <Paper
-              elevation={3}
-              sx={{
-                height: '100%',
-                margin: '5px',
-                padding: '10px',
-              }}
-            >
-              <Editor
-                editorRef={editorRef}
-                showInspector={showInspector}
-                runProgram={runProgram}
-              />
-            </Paper>
-          </Stack>
-          <Stack
-            sx={{
-              height: '100%',
-              flex: 1,
-              minWidth: 0,
               minHeight: 0,
             }}
           >
-            <Paper
-              elevation={3}
-              sx={{
-                position: 'relative',
-                height: '100%',
-                margin: '5px',
-                padding: '10px',
-                flex: 1,
-                minHeight: 0,
-                overflow: outputTab === 'text' ? 'scroll' : 'hidden',
-              }}
-            >
-              <ButtonGroup
-                size="small"
-                variant="contained"
-                sx={{
-                  position: 'absolute',
-                  top: 16,
-                  right: 16,
-                  zIndex: 1,
-                  opacity: 0.62,
-                  transition: 'opacity 120ms ease-in-out',
-                  '&:hover': {
-                    opacity: 0.92,
-                  },
-                }}
-              >
-                <Badge
-                  color="warning"
-                  variant="dot"
-                  invisible={outputTab === 'graphics' || !hasGraphicsOutput}
-                >
-                  <Button
-                    color={outputTab === 'graphics' ? 'primary' : 'inherit'}
-                    onClick={() => {
-                      setOutputTab('graphics');
-                    }}
-                  >
-                    Graphics
-                  </Button>
-                </Badge>
-                <Badge
-                  color="warning"
-                  variant="dot"
-                  invisible={outputTab === 'text' || !hasTextOutput}
-                >
-                  <Button
-                    color={outputTab === 'text' ? 'primary' : 'inherit'}
-                    onClick={() => {
-                      setOutputTab('text');
-                    }}
-                  >
-                    Text
-                  </Button>
-                </Badge>
-              </ButtonGroup>
-              {outputTab === 'graphics' && <Graphics shapes={host.shapes} />}
-              {outputTab === 'text' && (
-                <Term
-                  outputBuffer={host.outputBuffer}
-                  inputState={inputState}
-                />
-              )}
-            </Paper>
-          </Stack>
-          {showInspector && (
             <Stack
               sx={{
                 height: '100%',
                 flex: 1,
+                minWidth: 0,
+              }}
+            >
+              <Paper
+                elevation={3}
+                sx={{
+                  height: '100%',
+                  margin: '5px',
+                  padding: '10px',
+                }}
+              >
+                <Editor
+                  editorRef={editorRef}
+                  showInspector={showInspector}
+                  runProgram={runProgram}
+                />
+              </Paper>
+            </Stack>
+            <Stack
+              sx={{
+                height: '100%',
+                flex: 1,
+                minWidth: 0,
+                minHeight: 0,
+              }}
+            >
+              <Paper
+                elevation={3}
+                sx={{
+                  height: '100%',
+                  margin: '5px',
+                  padding: '10px',
+                  flex: 1,
+                  minHeight: 0,
+                  overflow: outputTab === 'text' ? 'scroll' : 'hidden',
+                }}
+              >
+                {outputTab === 'graphics' && <Graphics shapes={host.shapes} />}
+                {outputTab === 'text' && (
+                  <Term
+                    outputBuffer={host.outputBuffer}
+                    inputState={inputState}
+                  />
+                )}
+              </Paper>
+            </Stack>
+          </Stack>
+          {showInspector && (
+            <Stack
+              sx={{
+                height: '32%',
+                minHeight: 180,
+                maxHeight: 360,
               }}
             >
               <Paper

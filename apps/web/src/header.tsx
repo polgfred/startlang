@@ -1,7 +1,9 @@
 import {
   AppBar,
+  Badge,
   Box,
   Button,
+  ButtonGroup,
   Divider,
   Link as MuiLink,
   Menu,
@@ -20,6 +22,31 @@ import sieveScript from '../tests/sieve.start';
 import sineScript from '../tests/sine.start';
 import victorScript from '../tests/victor.start';
 
+type OutputTab = 'graphics' | 'text';
+
+const headerButtonSx = {
+  height: 36,
+  minWidth: 112,
+  px: 2,
+  boxShadow: 'none',
+};
+
+function SocialIcon({ src }: { src: string }) {
+  return (
+    <Box
+      aria-hidden="true"
+      sx={(theme) => ({
+        display: 'block',
+        height: 32,
+        width: 32,
+        backgroundColor: theme.palette.primary.main,
+        mask: `url(${src}) center / contain no-repeat`,
+        WebkitMask: `url(${src}) center / contain no-repeat`,
+      })}
+    />
+  );
+}
+
 function useMenu() {
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
 
@@ -37,32 +64,58 @@ function useMenu() {
   return { anchor, openMenu, closeMenu };
 }
 
-function ViewMenu({
-  showInspector,
-  setShowInspector,
+function OutputSwitcher({
+  outputTab,
+  setOutputTab,
+  hasGraphicsOutput,
+  hasTextOutput,
 }: {
-  showInspector: boolean;
-  setShowInspector: (value: boolean) => void;
+  outputTab: OutputTab;
+  setOutputTab: (value: OutputTab) => void;
+  hasGraphicsOutput: boolean;
+  hasTextOutput: boolean;
 }) {
-  const { anchor, openMenu, closeMenu } = useMenu();
-
   return (
-    <>
-      <Button variant="text" color="secondary" onClick={openMenu}>
-        View
-      </Button>
-      <Menu open={anchor !== null} anchorEl={anchor} onClose={closeMenu}>
-        <MenuItem
-          selected={showInspector}
+    <ButtonGroup
+      size="small"
+      sx={{
+        marginLeft: 2,
+        height: 36,
+      }}
+    >
+      <Badge
+        color="warning"
+        variant="dot"
+        invisible={outputTab === 'graphics' || !hasGraphicsOutput}
+      >
+        <Button
+          variant={outputTab === 'graphics' ? 'contained' : 'outlined'}
+          color="secondary"
           onClick={() => {
-            setShowInspector(!showInspector);
-            closeMenu();
+            setOutputTab('graphics');
           }}
+          sx={headerButtonSx}
         >
-          Inspector
-        </MenuItem>
-      </Menu>
-    </>
+          Graphics
+        </Button>
+      </Badge>
+      <Badge
+        color="warning"
+        variant="dot"
+        invisible={outputTab === 'text' || !hasTextOutput}
+      >
+        <Button
+          variant={outputTab === 'text' ? 'contained' : 'outlined'}
+          color="secondary"
+          onClick={() => {
+            setOutputTab('text');
+          }}
+          sx={headerButtonSx}
+        >
+          Text
+        </Button>
+      </Badge>
+    </ButtonGroup>
   );
 }
 
@@ -150,12 +203,20 @@ function CodeMenu({
 }
 
 export default function Header({
+  outputTab,
+  setOutputTab,
+  hasGraphicsOutput,
+  hasTextOutput,
   isProgramActive,
   showInspector,
   setShowInspector,
   runProgram,
   editorRef,
 }: {
+  outputTab: OutputTab;
+  setOutputTab: (value: OutputTab) => void;
+  hasGraphicsOutput: boolean;
+  hasTextOutput: boolean;
   isProgramActive: boolean;
   showInspector: boolean;
   setShowInspector: (value: boolean) => void;
@@ -168,6 +229,8 @@ export default function Header({
       sx={{
         flexDirection: 'row',
         justifyContent: 'space-between',
+        backgroundColor: '#f7f9fa',
+        color: '#263238',
       }}
     >
       <Toolbar
@@ -179,23 +242,41 @@ export default function Header({
           variant="body1"
           sx={{
             marginRight: 2,
+            fontWeight: 700,
           }}
         >
           START
         </Typography>
-        <ViewMenu
-          showInspector={showInspector}
-          setShowInspector={setShowInspector}
-        />
         <CodeMenu editorRef={editorRef} runProgram={runProgram} />
+        <OutputSwitcher
+          outputTab={outputTab}
+          setOutputTab={setOutputTab}
+          hasGraphicsOutput={hasGraphicsOutput}
+          hasTextOutput={hasTextOutput}
+        />
+        <Button
+          variant="outlined"
+          color="secondary"
+          onClick={() => {
+            setShowInspector(!showInspector);
+          }}
+          sx={{
+            ...headerButtonSx,
+            backgroundColor: showInspector ? 'rgba(69, 90, 100, 0.1)' : null,
+          }}
+        >
+          Inspector
+        </Button>
         <Button
           variant="contained"
+          color="primary"
           disabled={isProgramActive}
           onClick={runProgram}
           sx={{
             marginLeft: 2,
-            backgroundColor: '#dddddd',
-            color: '#222222',
+            ...headerButtonSx,
+            minWidth: 96,
+            boxShadow: 2,
           }}
         >
           Run
@@ -210,35 +291,19 @@ export default function Header({
           href="https://linkedin.com/in/polgfred"
           target="_blank"
           rel="noreferrer"
+          aria-label="LinkedIn"
           underline="none"
         >
-          <Box
-            component="img"
-            src="/linkedin-logo.svg"
-            alt="LinkedIn"
-            sx={{
-              display: 'block',
-              height: 32,
-              width: 32,
-            }}
-          />
+          <SocialIcon src="/linkedin-logo.svg" />
         </MuiLink>
         <MuiLink
           href="https://github.com/polgfred/startlang"
           target="_blank"
           rel="noreferrer"
+          aria-label="GitHub"
           underline="none"
         >
-          <Box
-            component="img"
-            src="/github-logo.svg"
-            alt="GitHub"
-            sx={{
-              display: 'block',
-              height: 32,
-              width: 32,
-            }}
-          />
+          <SocialIcon src="/github-logo.svg" />
         </MuiLink>
       </Toolbar>
     </AppBar>
