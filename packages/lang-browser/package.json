@@ -8,7 +8,8 @@
     "./shapes": "./src/shapes/index.ts"
   },
   "scripts": {
-    "lint": "eslint src tests vitest.config.ts",
+    "lint": "eslint src tests tools vitest.config.ts",
+    "script": "tsx --import ./tools/hooks.js ./tools/script.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },

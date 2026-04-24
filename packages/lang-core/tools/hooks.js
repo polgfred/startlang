@@ -1,3 +1,3 @@
 import { register } from 'node:module';
 
-register('./peggy-loader.js', import.meta.url);
+register('./loader.js', import.meta.url);
