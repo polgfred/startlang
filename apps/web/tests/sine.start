@@ -8,8 +8,6 @@
 ; of the coordinates over time.
 ;
 
-set mode = "graphics"
-
 ; draw the x and y axes in grey
 set stroke.color = "lightgrey"
 line 0, 400, 720, 400

@@ -45,6 +45,8 @@ function useForceRender() {
 export default function App() {
   const editorRef = useRef<editor.ICodeEditor | null>(null);
 
+  const [showGraphics, setShowGraphics] = useState(true);
+  const [showText, setShowText] = useState(true);
   const [showInspector, setShowInspector] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -135,7 +137,10 @@ export default function App() {
         })}
       >
         <Header
-          host={host}
+          showGraphics={showGraphics}
+          setShowGraphics={setShowGraphics}
+          showText={showText}
+          setShowText={setShowText}
           isProgramActive={interpreter.isRunning || interpreter.isSuspended}
           showInspector={showInspector}
           setShowInspector={setShowInspector}
@@ -152,6 +157,7 @@ export default function App() {
             sx={{
               height: '100%',
               flex: 1,
+              minWidth: 0,
             }}
           >
             <Paper
@@ -173,9 +179,11 @@ export default function App() {
             sx={{
               height: '100%',
               flex: 1,
+              minWidth: 0,
+              minHeight: 0,
             }}
           >
-            {host.viewMode === 'graphics' && (
+            {showGraphics && (
               <Paper
                 elevation={3}
                 sx={{
@@ -183,12 +191,13 @@ export default function App() {
                   margin: '5px',
                   padding: '10px',
                   flex: 1,
+                  minHeight: 0,
                 }}
               >
                 <Graphics shapes={host.shapes} />
               </Paper>
             )}
-            {host.viewMode === 'text' && (
+            {showText && (
               <Paper
                 elevation={3}
                 sx={{
@@ -197,6 +206,7 @@ export default function App() {
                   padding: '10px',
                   overflow: 'scroll',
                   flex: 1,
+                  minHeight: 0,
                 }}
               >
                 <Term

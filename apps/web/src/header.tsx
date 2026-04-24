@@ -9,7 +9,6 @@ import {
   Toolbar,
   Typography,
 } from '@mui/material';
-import { type BrowserHost } from '@startlang/lang-browser/browser';
 import { editor } from 'monaco-editor';
 import { MouseEvent, RefObject, useCallback, useState } from 'react';
 
@@ -39,11 +38,17 @@ function useMenu() {
 }
 
 function ViewMenu({
-  host,
+  showGraphics,
+  setShowGraphics,
+  showText,
+  setShowText,
   showInspector,
   setShowInspector,
 }: {
-  host: BrowserHost;
+  showGraphics: boolean;
+  setShowGraphics: (value: boolean) => void;
+  showText: boolean;
+  setShowText: (value: boolean) => void;
   showInspector: boolean;
   setShowInspector: (value: boolean) => void;
 }) {
@@ -56,18 +61,18 @@ function ViewMenu({
       </Button>
       <Menu open={anchor !== null} anchorEl={anchor} onClose={closeMenu}>
         <MenuItem
-          selected={host.viewMode === 'graphics'}
+          selected={showGraphics}
           onClick={() => {
-            host.setViewMode('graphics');
+            setShowGraphics(!showGraphics);
             closeMenu();
           }}
         >
           Graphics
         </MenuItem>
         <MenuItem
-          selected={host.viewMode === 'text'}
+          selected={showText}
           onClick={() => {
-            host.setViewMode('text');
+            setShowText(!showText);
             closeMenu();
           }}
         >
@@ -172,14 +177,20 @@ function CodeMenu({
 }
 
 export default function Header({
-  host,
+  showGraphics,
+  setShowGraphics,
+  showText,
+  setShowText,
   isProgramActive,
   showInspector,
   setShowInspector,
   runProgram,
   editorRef,
 }: {
-  host: BrowserHost;
+  showGraphics: boolean;
+  setShowGraphics: (value: boolean) => void;
+  showText: boolean;
+  setShowText: (value: boolean) => void;
   isProgramActive: boolean;
   showInspector: boolean;
   setShowInspector: (value: boolean) => void;
@@ -208,7 +219,10 @@ export default function Header({
           START
         </Typography>
         <ViewMenu
-          host={host}
+          showGraphics={showGraphics}
+          setShowGraphics={setShowGraphics}
+          showText={showText}
+          setShowText={setShowText}
           showInspector={showInspector}
           setShowInspector={setShowInspector}
         />

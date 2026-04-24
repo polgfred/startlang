@@ -7,8 +7,6 @@
 ; https://en.wikipedia.org/wiki/Sieve_of_Eratosthenes
 ;
 
-set mode = "text"
-
 ; ask for the upper limit
 upper = num(input("Upper limit:", "100"))
 

@@ -1,7 +1,4 @@
-import type {
-  PresentationHost,
-  PresentationViewMode,
-} from '@startlang/lang-core/host';
+import type { PresentationHost } from '@startlang/lang-core/host';
 import { Interpreter } from '@startlang/lang-core/interpreter';
 import { CallFrame, CallNode } from '@startlang/lang-core/nodes';
 import type { RuntimeFunctions } from '@startlang/lang-core/types';
@@ -55,12 +52,8 @@ const initialTextProps: TextProps = Object.freeze({
   ['font.size']: 36,
 });
 
-export type ViewMode = PresentationViewMode;
-
 export class BrowserHost implements PresentationHost<BrowserSnapshot> {
   events = new EventTarget();
-
-  viewMode: ViewMode = 'graphics';
 
   shapes: readonly Shape[] = emptyArray;
   shapeProps: ShapeProps = initialShapeProps;
@@ -75,11 +68,6 @@ export class BrowserHost implements PresentationHost<BrowserSnapshot> {
     this.textProps = initialTextProps;
     this.outputBuffer = new StackCell();
     this.currentCell = new Cons(rootCell);
-  }
-
-  setViewMode(mode: ViewMode) {
-    this.viewMode = mode;
-    this.events.dispatchEvent(new Event('repaint'));
   }
 
   clearDisplay() {
@@ -124,12 +112,7 @@ export class BrowserHost implements PresentationHost<BrowserSnapshot> {
   }
 
   setConfiguration(name: string, value: unknown) {
-    if (name === 'mode') {
-      if (value !== 'graphics' && value !== 'text') {
-        throw new Error(`invalid mode: ${value}`);
-      }
-      this.setViewMode(value);
-    } else if (name in this.shapeProps) {
+    if (name in this.shapeProps) {
       this.shapeProps = produce(this.shapeProps, (draft) => {
         // @ts-expect-error TODO: validate this
         draft[name] = value;
