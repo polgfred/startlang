@@ -2,11 +2,11 @@ import console from 'node:console';
 import { readFile } from 'node:fs/promises';
 import process from 'node:process';
 import readline from 'node:readline';
-import { inspect } from 'node:util';
+import { inspect, parseArgs } from 'node:util';
 
 import { Interpreter, type RunResult } from '@startlang/lang-core/interpreter';
 import type { Node } from '@startlang/lang-core/nodes';
-import { parse } from '@startlang/lang-core/parser.peggy';
+import { parse, type ParseOptions } from '@startlang/lang-core/parser.peggy';
 import { runtimeGlobals } from '@startlang/lang-core/runtime-globals';
 import { InputSuspension } from '@startlang/lang-core/suspension';
 import type { RuntimeFunctions } from '@startlang/lang-core/types';
@@ -16,19 +16,60 @@ interface ScriptOptions {
   ns?: boolean;
 }
 
-interface ParserOptions {
-  ast?: boolean;
-  meta?: boolean;
-}
-
 type Question = (prompt: string) => Promise<string>;
-
-const options: ScriptOptions = {};
-const parserOptions: ParserOptions = {};
-const sourceArgs: string[] = [];
 
 function output(obj: unknown) {
   console.log(inspect(obj, { colors: true, depth: null }));
+}
+
+function usage() {
+  return [
+    'usage: npm run script -- [options] <file-or-source>',
+    '',
+    'options:',
+    '  -a, --ast   print the parsed AST and exit',
+    '  -m, --meta  include parser metadata in AST output',
+    '  -n, --ns    print interpreter namespace after running',
+    '  -h, --help  show this help',
+  ].join('\n');
+}
+
+function parseCliArgs() {
+  let parsed;
+  try {
+    parsed = parseArgs({
+      options: {
+        ast: { type: 'boolean', short: 'a' },
+        meta: { type: 'boolean', short: 'm' },
+        ns: { type: 'boolean', short: 'n' },
+        help: { type: 'boolean', short: 'h' },
+      },
+      allowPositionals: true,
+    });
+  } catch (err) {
+    console.error(formatMessage(err));
+    console.error();
+    console.error(usage());
+    process.exit(1);
+  }
+
+  const { values, positionals } = parsed;
+
+  const options: ScriptOptions = {
+    ast: values.ast || values.meta,
+    ns: values.ns,
+  };
+  const parserOptions: ParseOptions = {
+    ast: values.ast || values.meta,
+    meta: values.meta,
+  };
+
+  return {
+    options,
+    parserOptions,
+    sourceArg: positionals.join(' '),
+    help: values.help,
+  };
 }
 
 function createQuestioner(rl: readline.Interface): Question {
@@ -66,29 +107,20 @@ function formatError(err: unknown) {
   return err instanceof Error ? err.stack : err;
 }
 
-for (const arg of process.argv.slice(2)) {
-  switch (arg) {
-    case '--ast':
-      options.ast = true;
-      parserOptions.ast = true;
-      break;
-    case '--ns':
-      options.ns = true;
-      break;
-    case '--meta':
-      options.ast = true;
-      parserOptions.ast = parserOptions.meta = true;
-      break;
-    default:
-      sourceArgs.push(arg);
-      break;
-  }
+function formatMessage(err: unknown) {
+  return err instanceof Error ? err.message : err;
 }
 
 async function main() {
-  const sourceArg = sourceArgs.join(' ');
+  const { options, parserOptions, sourceArg, help } = parseCliArgs();
+
+  if (help) {
+    console.log(usage());
+    process.exit();
+  }
+
   if (!sourceArg) {
-    console.error('usage: npm run script -- [--ast] [--meta] [--ns] <file-or-source>');
+    console.error(usage());
     process.exit(1);
   }
 
