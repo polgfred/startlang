@@ -1,4 +1,12 @@
-import { Paper, Stack, ThemeProvider, createTheme } from '@mui/material';
+import {
+  Badge,
+  Button,
+  ButtonGroup,
+  Paper,
+  Stack,
+  ThemeProvider,
+  createTheme,
+} from '@mui/material';
 import {
   BrowserHost,
   browserPresentationGlobals,
@@ -15,6 +23,8 @@ import Graphics from './graphics.jsx';
 import Header from './header.jsx';
 import Inspector from './inspector.jsx';
 import Term from './term.jsx';
+
+type OutputTab = 'graphics' | 'text';
 
 const theme = createTheme({
   components: {
@@ -42,11 +52,24 @@ function useForceRender() {
   }, []);
 }
 
+function chooseOutputTab(
+  current: OutputTab,
+  hasGraphicsOutput: boolean,
+  hasTextOutput: boolean
+) {
+  if (current === 'graphics' && !hasGraphicsOutput && hasTextOutput) {
+    return 'text';
+  }
+  if (current === 'text' && !hasTextOutput && hasGraphicsOutput) {
+    return 'graphics';
+  }
+  return current;
+}
+
 export default function App() {
   const editorRef = useRef<editor.ICodeEditor | null>(null);
 
-  const [showGraphics, setShowGraphics] = useState(true);
-  const [showText, setShowText] = useState(true);
+  const [outputTab, setOutputTab] = useState<OutputTab>('graphics');
   const [showInspector, setShowInspector] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -65,6 +88,17 @@ export default function App() {
   interpreter.registerGlobals(browserPresentationGlobals);
   interpreter.registerGlobals(runtimeEnvironmentGlobals());
 
+  const syncOutputTab = useCallback(() => {
+    const nextHasGraphicsOutput = host.shapes.length > 0;
+    const nextHasTextOutput =
+      host.outputBuffer.children.length > 0 ||
+      interpreter.suspension instanceof InputSuspension;
+
+    setOutputTab((current) =>
+      chooseOutputTab(current, nextHasGraphicsOutput, nextHasTextOutput)
+    );
+  }, [host, interpreter]);
+
   const resumeInput = useCallback(
     async (value: string) => {
       setError(null);
@@ -78,10 +112,11 @@ export default function App() {
           console.error(err.stack);
         }
       } finally {
+        syncOutputTab();
         forceRender();
       }
     },
-    [forceRender, interpreter]
+    [forceRender, interpreter, syncOutputTab]
   );
 
   const inputState = useMemo(
@@ -92,16 +127,21 @@ export default function App() {
             initial: interpreter.suspension.initial,
             onInputComplete: resumeInput,
           }
-        : null,
+      : null,
     [interpreter.suspension, resumeInput]
   );
+
+  const hasGraphicsOutput = host.shapes.length > 0;
+  const hasTextOutput =
+    host.outputBuffer.children.length > 0 || inputState !== null;
 
   const updateSlider = useCallback(
     (index: number) => {
       interpreter.moveToSnapshot(index);
+      syncOutputTab();
       forceRender();
     },
-    [forceRender, interpreter]
+    [forceRender, interpreter, syncOutputTab]
   );
 
   const runProgram = useCallback(async () => {
@@ -122,9 +162,10 @@ export default function App() {
         console.error(err.stack);
       }
     } finally {
+      syncOutputTab();
       forceRender();
     }
-  }, [forceRender, host, interpreter]);
+  }, [forceRender, host, interpreter, syncOutputTab]);
 
   return (
     <ThemeProvider theme={theme}>
@@ -137,10 +178,6 @@ export default function App() {
         })}
       >
         <Header
-          showGraphics={showGraphics}
-          setShowGraphics={setShowGraphics}
-          showText={showText}
-          setShowText={setShowText}
           isProgramActive={interpreter.isRunning || interpreter.isSuspended}
           showInspector={showInspector}
           setShowInspector={setShowInspector}
@@ -183,38 +220,70 @@ export default function App() {
               minHeight: 0,
             }}
           >
-            {showGraphics && (
-              <Paper
-                elevation={3}
+            <Paper
+              elevation={3}
+              sx={{
+                position: 'relative',
+                height: '100%',
+                margin: '5px',
+                padding: '10px',
+                flex: 1,
+                minHeight: 0,
+                overflow: outputTab === 'text' ? 'scroll' : 'hidden',
+              }}
+            >
+              <ButtonGroup
+                size="small"
+                variant="contained"
                 sx={{
-                  height: '100%',
-                  margin: '5px',
-                  padding: '10px',
-                  flex: 1,
-                  minHeight: 0,
+                  position: 'absolute',
+                  top: 16,
+                  right: 16,
+                  zIndex: 1,
+                  opacity: 0.62,
+                  transition: 'opacity 120ms ease-in-out',
+                  '&:hover': {
+                    opacity: 0.92,
+                  },
                 }}
               >
-                <Graphics shapes={host.shapes} />
-              </Paper>
-            )}
-            {showText && (
-              <Paper
-                elevation={3}
-                sx={{
-                  height: '100%',
-                  margin: '5px',
-                  padding: '10px',
-                  overflow: 'scroll',
-                  flex: 1,
-                  minHeight: 0,
-                }}
-              >
+                <Badge
+                  color="warning"
+                  variant="dot"
+                  invisible={outputTab === 'graphics' || !hasGraphicsOutput}
+                >
+                  <Button
+                    color={outputTab === 'graphics' ? 'primary' : 'inherit'}
+                    onClick={() => {
+                      setOutputTab('graphics');
+                    }}
+                  >
+                    Graphics
+                  </Button>
+                </Badge>
+                <Badge
+                  color="warning"
+                  variant="dot"
+                  invisible={outputTab === 'text' || !hasTextOutput}
+                >
+                  <Button
+                    color={outputTab === 'text' ? 'primary' : 'inherit'}
+                    onClick={() => {
+                      setOutputTab('text');
+                    }}
+                  >
+                    Text
+                  </Button>
+                </Badge>
+              </ButtonGroup>
+              {outputTab === 'graphics' && <Graphics shapes={host.shapes} />}
+              {outputTab === 'text' && (
                 <Term
                   outputBuffer={host.outputBuffer}
                   inputState={inputState}
                 />
-              </Paper>
-            )}
+              )}
+            </Paper>
           </Stack>
           {showInspector && (
             <Stack

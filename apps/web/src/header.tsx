@@ -38,17 +38,9 @@ function useMenu() {
 }
 
 function ViewMenu({
-  showGraphics,
-  setShowGraphics,
-  showText,
-  setShowText,
   showInspector,
   setShowInspector,
 }: {
-  showGraphics: boolean;
-  setShowGraphics: (value: boolean) => void;
-  showText: boolean;
-  setShowText: (value: boolean) => void;
   showInspector: boolean;
   setShowInspector: (value: boolean) => void;
 }) {
@@ -60,25 +52,6 @@ function ViewMenu({
         View
       </Button>
       <Menu open={anchor !== null} anchorEl={anchor} onClose={closeMenu}>
-        <MenuItem
-          selected={showGraphics}
-          onClick={() => {
-            setShowGraphics(!showGraphics);
-            closeMenu();
-          }}
-        >
-          Graphics
-        </MenuItem>
-        <MenuItem
-          selected={showText}
-          onClick={() => {
-            setShowText(!showText);
-            closeMenu();
-          }}
-        >
-          Text
-        </MenuItem>
-        <Divider />
         <MenuItem
           selected={showInspector}
           onClick={() => {
@@ -177,20 +150,12 @@ function CodeMenu({
 }
 
 export default function Header({
-  showGraphics,
-  setShowGraphics,
-  showText,
-  setShowText,
   isProgramActive,
   showInspector,
   setShowInspector,
   runProgram,
   editorRef,
 }: {
-  showGraphics: boolean;
-  setShowGraphics: (value: boolean) => void;
-  showText: boolean;
-  setShowText: (value: boolean) => void;
   isProgramActive: boolean;
   showInspector: boolean;
   setShowInspector: (value: boolean) => void;
@@ -219,10 +184,6 @@ export default function Header({
           START
         </Typography>
         <ViewMenu
-          showGraphics={showGraphics}
-          setShowGraphics={setShowGraphics}
-          showText={showText}
-          setShowText={setShowText}
           showInspector={showInspector}
           setShowInspector={setShowInspector}
         />
