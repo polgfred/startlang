@@ -1,16 +1,17 @@
 import { Interpreter } from '../interpreter.js';
 
-import { Frame, Node } from './base.js';
+import { Frame, Node, SourceLocation } from './base.js';
 
 export class ForNode extends Node {
   constructor(
+    location: SourceLocation,
     public readonly name: string,
     public readonly initial: Node,
     public readonly limit: Node,
     public readonly step: Node | null,
     public readonly body: Node
   ) {
-    super();
+    super(location);
   }
 
   makeFrame() {

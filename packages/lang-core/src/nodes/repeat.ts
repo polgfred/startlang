@@ -1,13 +1,14 @@
 import { Interpreter } from '../interpreter.js';
 
-import { Frame, Node } from './base.js';
+import { Frame, Node, SourceLocation } from './base.js';
 
 export class RepeatNode extends Node {
   constructor(
+    location: SourceLocation,
     public readonly times: Node | null,
     public readonly body: Node
   ) {
-    super();
+    super(location);
   }
 
   makeFrame() {

@@ -4,7 +4,20 @@ import { Interpreter } from '../interpreter.js';
 import type { RuntimeSuspension } from '../suspension.js';
 import { Cons } from '../utils/cons.js';
 
+interface SourceOffset {
+  offset: number;
+  line: number;
+  column: number;
+}
+
+export interface SourceLocation {
+  start: SourceOffset;
+  end: SourceOffset;
+}
+
 export abstract class Node {
+  constructor(public readonly location: SourceLocation) {}
+
   abstract makeFrame(): Frame;
 }
 
@@ -37,4 +50,11 @@ class RootFrame extends Frame {
   }
 }
 
-export const rootFrame: Cons<Frame> = new Cons(new RootNode().makeFrame());
+const nullLocation: SourceLocation = {
+  start: { offset: 0, line: 0, column: 0 },
+  end: { offset: 0, line: 0, column: 0 },
+};
+
+export const rootFrame: Cons<Frame> = new Cons(
+  new RootNode(nullLocation).makeFrame()
+);

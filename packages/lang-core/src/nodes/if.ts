@@ -1,14 +1,15 @@
 import { Interpreter } from '../interpreter.js';
 
-import { Frame, Node } from './base.js';
+import { Frame, Node, SourceLocation } from './base.js';
 
 export class IfNode extends Node {
   constructor(
+    location: SourceLocation,
     public readonly condition: Node,
     public readonly thenBody: Node,
     public readonly elseBody: Node | null = null
   ) {
-    super();
+    super(location);
   }
 
   makeFrame() {
