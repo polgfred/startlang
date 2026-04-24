@@ -5,7 +5,7 @@ import {
 } from '@startlang/lang-browser/browser';
 import { Interpreter } from '@startlang/lang-core/interpreter';
 import { parse } from '@startlang/lang-core/parser.peggy';
-import { runtimeEnvironmentGlobals } from '@startlang/lang-core/runtime-environment';
+import { runtimeGlobals } from '@startlang/lang-core/runtime-globals';
 import { InputSuspension } from '@startlang/lang-core/suspension';
 import { editor } from 'monaco-editor';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -88,7 +88,7 @@ export default function App() {
   }, [forceRender, host]);
 
   interpreter.registerGlobals(browserPresentationGlobals);
-  interpreter.registerGlobals(runtimeEnvironmentGlobals());
+  interpreter.registerGlobals(runtimeGlobals);
 
   const syncOutputTab = useCallback(() => {
     const nextHasGraphicsOutput = host.shapes.length > 0;

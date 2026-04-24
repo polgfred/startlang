@@ -6,7 +6,7 @@
     "./host": "./src/host.ts",
     "./interpreter": "./src/interpreter.ts",
     "./parser.peggy": "./src/parser.peggy",
-    "./runtime-environment": "./src/runtime-environment.ts",
+    "./runtime-globals": "./src/runtime-globals.ts",
     "./suspension": "./src/suspension.ts",
     "./types": "./src/types.ts",
     "./nodes": "./src/nodes/index.ts",

@@ -3,8 +3,6 @@ export interface SupportsSnapshots<T = unknown> {
   restoreSnapshot(snapshot: T): void;
 }
 
-export type RuntimeEnvironment = object;
-
 export interface PresentationHost<TSnapshot = unknown>
   extends SupportsSnapshots<TSnapshot> {
   restoreOriginalSettings(): void;
