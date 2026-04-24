@@ -1,0 +1,14 @@
+{
+  "name": "@startlang/electron",
+  "private": true,
+  "type": "module",
+  "main": "main.ts",
+  "scripts": {
+    "dev": "NODE_OPTIONS='--import tsx' electron .",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "electron": "^40.4.1",
+    "tsx": "^4.21.0"
+  }
+}

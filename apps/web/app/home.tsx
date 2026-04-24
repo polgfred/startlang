@@ -1,12 +1,11 @@
 'use client';
 
 import { Paper, Stack, ThemeProvider, createTheme } from '@mui/material';
+import { BrowserHost, browserGlobals } from '@startlang/lang-browser/browser';
+import { Interpreter } from '@startlang/lang-core/interpreter';
+import { parse } from '@startlang/lang-core/parser.peggy';
 import { editor } from 'monaco-editor';
 import { useCallback, useEffect, useRef, useState } from 'react';
-
-import { BrowserHost, browserGlobals } from '../src/lang/ext/browser.js';
-import { Interpreter } from '../src/lang/interpreter.js';
-import { parse } from '../src/lang/parser.peggy';
 
 import Editor from './editor.jsx';
 import Graphics from './graphics.jsx';

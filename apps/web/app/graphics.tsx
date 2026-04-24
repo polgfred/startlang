@@ -1,6 +1,5 @@
+import { Shape } from '@startlang/lang-browser/shapes';
 import { memo } from 'react';
-
-import { Shape } from '../src/lang/ext/shapes/index.js';
 
 const ShapeElement = memo(function ShapeElement({ shape }: { shape: Shape }) {
   return shape.getSVGElement();

@@ -1,0 +1,29 @@
+{
+  "name": "@startlang/lang-core",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./interpreter": "./src/interpreter.ts",
+    "./parser.peggy": "./src/parser.peggy",
+    "./types": "./src/types.ts",
+    "./nodes": "./src/nodes/index.ts",
+    "./nodes/*": "./src/nodes/*.ts",
+    "./handlers/*": "./src/handlers/*.ts",
+    "./utils/*": "./src/utils/*.ts"
+  },
+  "scripts": {
+    "lint": "eslint src",
+    "repl": "tsx --import ./tools/hooks.js ./tools/repl.js",
+    "script": "tsx --import ./tools/hooks.js ./tools/script.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "deep-equal": "^2.2.3",
+    "immer": "^10.1.1",
+    "peggy": "^4.2.0"
+  },
+  "devDependencies": {
+    "@types/deep-equal": "^1.0.4",
+    "tsx": "^4.19.2"
+  }
+}

@@ -9,7 +9,10 @@ export default tseslint.config(
   eslint.configs.recommended,
   tseslint.configs.strict,
   {
-    files: ['app/**/*.{ts,tsx}', 'src/**/*.{ts,tsx}'],
+    ignores: ['apps/web/.next/**', 'node_modules/**'],
+  },
+  {
+    files: ['apps/**/*.{ts,tsx}', 'packages/**/*.{ts,tsx}'],
 
     plugins: {
       typescript: tseslint,

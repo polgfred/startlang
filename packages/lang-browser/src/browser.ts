@@ -1,11 +1,10 @@
 import { EventEmitter } from 'events';
 
+import { Interpreter, type SupportsSnapshots } from '@startlang/lang-core/interpreter';
+import { CallFrame, CallNode } from '@startlang/lang-core/nodes';
+import type { RuntimeFunctions } from '@startlang/lang-core/types';
+import { Cons } from '@startlang/lang-core/utils/cons';
 import { produce } from 'immer';
-
-import { Interpreter, type SupportsSnapshots } from '../interpreter.js';
-import { CallFrame, CallNode } from '../nodes/index.js';
-import type { RuntimeFunctions } from '../types.js';
-import { Cons } from '../utils/cons.js';
 
 import {
   Cell,

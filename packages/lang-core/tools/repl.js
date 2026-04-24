@@ -3,8 +3,8 @@ import process from 'node:process';
 import readline from 'node:readline';
 import { inspect } from 'node:util';
 
-import { Interpreter } from '../src/lang/interpreter.js';
-import { parse, SyntaxError } from '../src/lang/parser.peggy';
+import { Interpreter } from '@startlang/lang-core/interpreter';
+import { parse, SyntaxError } from '@startlang/lang-core/parser.peggy';
 
 async function main() {
   const rl = readline.createInterface({

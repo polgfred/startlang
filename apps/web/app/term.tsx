@@ -1,4 +1,5 @@
 import { Button, Stack, TextField } from '@mui/material';
+import { Cell, CellElement } from '@startlang/lang-browser/cells';
 import {
   ChangeEvent,
   KeyboardEvent,
@@ -8,8 +9,6 @@ import {
   useRef,
   useState,
 } from 'react';
-
-import { Cell, CellElement } from '../src/lang/ext/cells/index.js';
 
 interface InputState {
   prompt: string;

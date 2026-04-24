@@ -9,10 +9,9 @@ import {
   TableRow,
   Typography,
 } from '@mui/material';
+import { Interpreter } from '@startlang/lang-core/interpreter';
+import type { ListType, NamespaceType, RecordType } from '@startlang/lang-core/types';
 import { ChangeEvent, JSX, useCallback, useState } from 'react';
-
-import { Interpreter } from '../src/lang/interpreter.js';
-import type { ListType, NamespaceType, RecordType } from '../src/lang/types.js';
 
 export default function Inspector({
   error,

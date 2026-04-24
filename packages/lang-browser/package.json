@@ -1,0 +1,21 @@
+{
+  "name": "@startlang/lang-browser",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./browser": "./src/browser.ts",
+    "./cells": "./src/cells/index.ts",
+    "./shapes": "./src/shapes/index.ts"
+  },
+  "scripts": {
+    "lint": "eslint src",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@mui/material": "^6.4.4",
+    "@startlang/lang-core": "*",
+    "events": "^3.3.0",
+    "immer": "^10.1.1",
+    "react": "^19.0.0"
+  }
+}

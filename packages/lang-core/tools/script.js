@@ -4,8 +4,8 @@ import process from 'node:process';
 import readline from 'node:readline';
 import { inspect } from 'node:util';
 
-import { Interpreter } from '../src/lang/interpreter.js';
-import { parse } from '../src/lang/parser.peggy';
+import { Interpreter } from '@startlang/lang-core/interpreter';
+import { parse } from '@startlang/lang-core/parser.peggy';
 
 const options = {};
 const parserOptions = {};

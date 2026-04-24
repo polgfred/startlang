@@ -6,7 +6,9 @@ Read the [Language Reference](/reference.md)!
 
 # Setup
 
-It's just a simple Next app! the only dependency to run it on your machine is [NodeJS](https://nodejs.org/).
+This repo now uses npm workspaces. The current web app lives in `apps/web`, the shared language runtime lives in `packages/lang-core`, the browser presentation layer lives in `packages/lang-browser`, and the Electron shell lives in `apps/electron`.
+
+The only dependency to run it on your machine is [NodeJS](https://nodejs.org/).
 
 Alternatively, if you want to use Docker devcontainers, you can:
 
@@ -25,6 +27,12 @@ $ npm install
 
 ```console
 $ npm run dev
+```
+
+### Run the Electron shell:
+
+```console
+$ npm run dev:electron
 ```
 
 ### Run a REPL:

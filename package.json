@@ -2,16 +2,22 @@
   "name": "startlang",
   "version": "0.0.2",
   "description": "Beginning Programming Environment",
+  "private": true,
   "type": "module",
-  "directories": {},
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
-    "build": "NODE_ENV=production next build",
-    "dev": "NODE_ENV=development next dev",
-    "repl": "tsx --import ./tools/hooks.js ./tools/repl.js",
-    "script": "tsx --import ./tools/hooks.js ./tools/script.js",
-    "format": "prettier --write ./src/**/*.[jt]s",
-    "typecheck": "tsc --noEmit",
-    "lint": "eslint ./app ./src"
+    "build": "npm run build --workspaces --if-present",
+    "dev": "npm run dev -w @startlang/web",
+    "dev:web": "npm run dev -w @startlang/web",
+    "dev:electron": "npm run dev -w @startlang/electron",
+    "repl": "npm run repl -w @startlang/lang-core",
+    "script": "npm run script -w @startlang/lang-core --",
+    "format": "prettier --write \"apps/**/*.{js,jsx,ts,tsx}\" \"packages/**/*.{js,jsx,ts,tsx}\"",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present"
   },
   "repository": {
     "type": "git",
@@ -19,25 +25,9 @@
   },
   "author": "Frederick Polgardy <fred@polgardy.com>",
   "license": "ISC",
-  "dependencies": {
-    "@vercel/analytics": "^1.5.0",
-    "next": "^15.1.11"
-  },
   "devDependencies": {
-    "@blockly/field-angle": "^5.0.12",
+    "@types/node": "^22.10.10",
     "@eslint/js": "^9.20.0",
-    "@monaco-editor/react": "^4.7.0",
-    "@mui/material": "^6.4.4",
-    "@mui/material-pigment-css": "^6.4.3",
-    "@mui/system": "^6.4.3",
-    "@pigment-css/nextjs-plugin": "^0.0.30",
-    "@pigment-css/react": "^0.0.29",
-    "@types/deep-equal": "^1.0.4",
-    "blockly": "^11.2.1",
-    "classnames": "^2.5.1",
-    "deep-equal": "^2.2.3",
-    "esbuild-loader": "^4.2.2",
-    "esbuild-runner": "^2.2.2",
     "eslint": "^9.20.1",
     "eslint-config-prettier": "^10.0.1",
     "eslint-import-resolver-typescript": "^3.7.0",
@@ -45,15 +35,7 @@
     "eslint-plugin-react": "^7.37.4",
     "eslint-plugin-react-hooks": "~5.0.0",
     "globals": "^15.15.0",
-    "html-loader": "^5.1.0",
-    "immer": "^10.1.1",
-    "peggy": "^4.2.0",
     "prettier": "^3.5.1",
-    "prettier-plugin-pegjs": "^2.0.2",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "text-loader": "^0.0.1",
-    "tsx": "^4.19.2",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.24.0"
   }

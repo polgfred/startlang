@@ -1,0 +1,21 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
+  },
+  "include": [
+    "next-env.d.ts",
+    "global.d.ts",
+    "app/**/*",
+    ".next/types/**/*.ts",
+    "../../packages/lang-core/src/**/*",
+    "../../packages/lang-browser/src/**/*"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

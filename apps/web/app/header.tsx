@@ -7,12 +7,12 @@ import {
   Toolbar,
   Typography,
 } from '@mui/material';
+import { type BrowserHost } from '@startlang/lang-browser/browser';
 import { editor } from 'monaco-editor';
 import Image from 'next/image';
 import Link from 'next/link';
 import { MouseEvent, RefObject, useCallback, useState } from 'react';
 
-import { type BrowserHost } from '../src/lang/ext/browser';
 import boxScript from '../tests/box.start';
 import investScript from '../tests/invest.start';
 import layoutScript from '../tests/layout.start';
