@@ -6,37 +6,74 @@ import { inspect } from 'node:util';
 
 import { Interpreter } from '@startlang/lang-core/interpreter';
 import { parse } from '@startlang/lang-core/parser.peggy';
+import { runtimeGlobals } from '@startlang/lang-core/runtime-globals';
+import { InputSuspension } from '@startlang/lang-core/suspension';
 
 const options = {};
 const parserOptions = {};
+const sourceArgs = [];
 
 function output(obj) {
   console.log(inspect(obj, { colors: true, depth: null }));
 }
 
-if (process.argv.indexOf('--ast') != -1) {
-  options.ast = true;
-  parserOptions.ast = true;
+function createQuestioner(rl) {
+  const inputLines = rl[Symbol.asyncIterator]();
+
+  return async (prompt) => {
+    rl.setPrompt(prompt);
+    rl.prompt();
+    const { value, done } = await inputLines.next();
+    return done ? '' : value;
+  };
 }
 
-if (process.argv.indexOf('--ns') != -1) {
-  options.ns = true;
+async function runUntilComplete(interp, question, result) {
+  while (result.status === 'suspended') {
+    const { suspension } = result;
+    if (suspension instanceof InputSuspension) {
+      const answer = await question(suspension.prompt);
+      result = await interp.resumeSuspension(answer);
+    } else {
+      throw new Error(`unsupported suspension: ${suspension.kind}`);
+    }
+  }
 }
 
-if (process.argv.indexOf('--meta') != -1) {
-  options.ast = true;
-  parserOptions.ast = parserOptions.meta = true;
+for (const arg of process.argv.slice(2)) {
+  switch (arg) {
+    case '--ast':
+      options.ast = true;
+      parserOptions.ast = true;
+      break;
+    case '--ns':
+      options.ns = true;
+      break;
+    case '--meta':
+      options.ast = true;
+      parserOptions.ast = parserOptions.meta = true;
+      break;
+    default:
+      sourceArgs.push(arg);
+      break;
+  }
 }
 
 async function main() {
+  const sourceArg = sourceArgs.join(' ');
+  if (!sourceArg) {
+    console.error('usage: npm run script -- [--ast] [--meta] [--ns] <file-or-source>');
+    process.exit(1);
+  }
+
   let source;
   try {
-    source = await readFile(process.argv[2], 'utf-8');
+    source = await readFile(sourceArg, 'utf-8');
   } catch (err) {
     if (err.code !== 'ENOENT') {
       throw err;
     }
-    source = process.argv[2] + '\n';
+    source = sourceArg + '\n';
   }
 
   let node;
@@ -56,8 +93,10 @@ async function main() {
     input: process.stdin,
     output: process.stdout,
   });
+  const question = createQuestioner(rl);
 
   const interp = new Interpreter();
+  interp.registerGlobals(runtimeGlobals);
   interp.registerGlobals({
     print(interp, values) {
       if (values.length > 0) {
@@ -69,29 +108,20 @@ async function main() {
         console.log();
       }
     },
-
-    input(interp, [message]) {
-      return new Promise((resolve) => {
-        rl.question(message, (answer) => {
-          interp.setResult(answer);
-          resolve();
-        });
-      });
-    },
   });
 
   try {
-    const result = await interp.run(node);
-
-    if (result) {
-      output(result);
-    }
+    await runUntilComplete(interp, question, await interp.run(node));
   } catch (err) {
     console.log(err.stack);
   }
 
   if (options.ns) {
-    output(interp.snapshot());
+    output({
+      globalNamespace: interp.globalNamespace,
+      topNamespace: interp.topNamespace,
+      lastResult: interp.lastResult,
+    });
   }
   rl.close();
 }

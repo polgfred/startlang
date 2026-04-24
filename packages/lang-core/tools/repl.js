@@ -5,14 +5,39 @@ import { inspect } from 'node:util';
 
 import { Interpreter } from '@startlang/lang-core/interpreter';
 import { parse, SyntaxError } from '@startlang/lang-core/parser.peggy';
+import { runtimeGlobals } from '@startlang/lang-core/runtime-globals';
+import { InputSuspension } from '@startlang/lang-core/suspension';
+
+async function runUntilComplete(interp, rl, result) {
+  while (result.status === 'suspended') {
+    const { suspension } = result;
+    if (suspension instanceof InputSuspension) {
+      rl.setPrompt(suspension.prompt);
+      rl.prompt();
+      return suspension;
+    } else {
+      throw new Error(`unsupported suspension: ${suspension.kind}`);
+    }
+  }
+  return null;
+}
 
 async function main() {
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
   });
+  const promptForCommand = () => {
+    rl.setPrompt('> ');
+    rl.prompt();
+  };
+  const promptForContinuation = () => {
+    rl.setPrompt('... ');
+    rl.prompt();
+  };
 
   const interp = new Interpreter();
+  interp.registerGlobals(runtimeGlobals);
   interp.registerGlobals({
     print(interp, values) {
       if (values.length > 0) {
@@ -24,59 +49,66 @@ async function main() {
         console.log();
       }
     },
-
-    input(interp, [message]) {
-      return new Promise((resolve) => {
-        rl.question(message, (answer) => {
-          interp.setResult(answer);
-          resolve();
-        });
-      });
-    },
   });
 
   let lines = [];
+  let pendingInput = null;
 
-  rl.on('line', async (line) => {
+  promptForCommand();
+  for await (const line of rl) {
+    if (pendingInput) {
+      try {
+        const result = await interp.resumeSuspension(line);
+        pendingInput = await runUntilComplete(interp, rl, result);
+      } catch (err) {
+        console.error(err.stack);
+      }
+
+      if (!pendingInput) {
+        lines = [];
+        promptForCommand();
+      }
+      continue;
+    }
+
     if (line === '.exit') {
       rl.close();
-      process.exit();
+      break;
     } else if (line === '.clear') {
       lines = [];
-      rl.setPrompt('> ');
-      rl.prompt();
-      return;
+      promptForCommand();
+      continue;
     } else if (line === '.dump') {
-      const snap = interp.snapshot();
-      console.log(inspect(Object.keys(snap.gfn)));
-      console.log(inspect(snap.gns));
+      console.log(inspect(Object.keys(interp.globalFunctions)));
+      console.log(inspect(interp.globalNamespace));
       rl.prompt();
-      return;
+      continue;
     }
 
     lines.push(line);
 
     try {
       const node = parse(lines.join('\n') + '\n');
-      await interp.runIncremental(node);
+      pendingInput = await runUntilComplete(
+        interp,
+        rl,
+        await interp.runIncremental(node)
+      );
     } catch (err) {
       if (err instanceof SyntaxError) {
         // get more input
-        rl.setPrompt('... ');
-        rl.prompt();
-        return;
+        promptForContinuation();
+        continue;
       } else {
         console.error(err.stack);
       }
     }
 
-    lines = [];
-    rl.setPrompt('> ');
-    rl.prompt();
-  });
-
-  rl.setPrompt('> ');
-  rl.prompt();
+    if (!pendingInput) {
+      lines = [];
+      promptForCommand();
+    }
+  }
 }
 
 main();
