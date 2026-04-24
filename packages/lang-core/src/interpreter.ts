@@ -1,6 +1,7 @@
 import { Draft, original, produce } from 'immer';
 
 import { DataHandler, installHandlers } from './handlers/index.js';
+import { NullPresentationHost, type SupportsSnapshots } from './host.js';
 import {
   Frame,
   Node,
@@ -18,10 +19,7 @@ const emptyObject = Object.freeze(Object.create(null));
 
 const rootNamespace: Cons<NamespaceType> = new Cons(emptyObject);
 
-export interface SupportsSnapshots<T = unknown> {
-  takeSnapshot(): T;
-  restoreSnapshot(snapshot: T): void;
-}
+export type { SupportsSnapshots } from './host.js';
 
 export interface Snapshot {
   globalFunctions: GlobalFunctions;
@@ -44,7 +42,9 @@ export class Interpreter {
   history: Snapshot[] = [];
   snapshotIndex: number = 0;
 
-  constructor(public readonly host: SupportsSnapshots) {
+  constructor(
+    public readonly host: SupportsSnapshots = new NullPresentationHost()
+  ) {
     installHandlers(this);
     this.registerGlobals({
       snapshot(interpreter) {

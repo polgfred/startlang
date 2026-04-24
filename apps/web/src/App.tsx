@@ -1,7 +1,11 @@
 import { Paper, Stack, ThemeProvider, createTheme } from '@mui/material';
-import { BrowserHost, browserGlobals } from '@startlang/lang-browser/browser';
+import {
+  BrowserHost,
+  browserPresentationGlobals,
+} from '@startlang/lang-browser/browser';
 import { Interpreter } from '@startlang/lang-core/interpreter';
 import { parse } from '@startlang/lang-core/parser.peggy';
+import { runtimeEnvironmentGlobals } from '@startlang/lang-core/runtime-environment';
 import { editor } from 'monaco-editor';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -47,18 +51,14 @@ function usePromptForInput() {
   return {
     inputState,
 
-    promptForInput(
-      interpreter: Interpreter,
-      [prompt, initial = '']: [string, string]
-    ) {
-      return new Promise<void>((resolve) => {
+    promptForInput(prompt: string, initial = '') {
+      return new Promise<string>((resolve) => {
         setInputState({
           prompt,
           initial,
           onInputComplete(value: string) {
             setInputState(null);
-            interpreter.setResult(value);
-            resolve();
+            resolve(value);
           },
         });
       });
@@ -78,15 +78,16 @@ export default function App() {
   const { current: interpreter } = useRef(new Interpreter(host));
 
   useEffect(() => {
-    host.events.on('repaint', forceRender);
+    host.events.addEventListener('repaint', forceRender);
+    return () => {
+      host.events.removeEventListener('repaint', forceRender);
+    };
   }, [forceRender, host]);
 
   const { inputState, promptForInput } = usePromptForInput();
 
-  interpreter.registerGlobals(browserGlobals);
-  interpreter.registerGlobals({
-    input: promptForInput,
-  });
+  interpreter.registerGlobals(browserPresentationGlobals);
+  interpreter.registerGlobals(runtimeEnvironmentGlobals({ promptForInput }));
 
   const updateSlider = useCallback(
     (index: number) => {

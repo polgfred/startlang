@@ -1,6 +1,8 @@
-import { EventEmitter } from 'events';
-
-import { Interpreter, type SupportsSnapshots } from '@startlang/lang-core/interpreter';
+import type {
+  PresentationHost,
+  PresentationViewMode,
+} from '@startlang/lang-core/host';
+import { Interpreter } from '@startlang/lang-core/interpreter';
 import { CallFrame, CallNode } from '@startlang/lang-core/nodes';
 import type { RuntimeFunctions } from '@startlang/lang-core/types';
 import { Cons } from '@startlang/lang-core/utils/cons';
@@ -53,10 +55,10 @@ const initialTextProps: TextProps = Object.freeze({
   ['font.size']: 36,
 });
 
-export type ViewMode = 'graphics' | 'text';
+export type ViewMode = PresentationViewMode;
 
-export class BrowserHost implements SupportsSnapshots<BrowserSnapshot> {
-  events = new EventEmitter();
+export class BrowserHost implements PresentationHost<BrowserSnapshot> {
+  events = new EventTarget();
 
   viewMode: ViewMode = 'graphics';
 
@@ -77,24 +79,24 @@ export class BrowserHost implements SupportsSnapshots<BrowserSnapshot> {
 
   setViewMode(mode: ViewMode) {
     this.viewMode = mode;
-    this.events.emit('repaint');
+    this.events.dispatchEvent(new Event('repaint'));
   }
 
   clearDisplay() {
     this.shapes = emptyArray;
-    this.events.emit('repaint');
+    this.events.dispatchEvent(new Event('repaint'));
   }
 
   pushShape(shape: Shape) {
     this.shapes = produce(this.shapes, (draft) => {
       draft.push(shape);
     });
-    this.events.emit('repaint');
+    this.events.dispatchEvent(new Event('repaint'));
   }
 
   clearOutputBuffer() {
     this.outputBuffer = new StackCell();
-    this.events.emit('repaint');
+    this.events.dispatchEvent(new Event('repaint'));
   }
 
   swapCell(cell: Cell) {
@@ -114,7 +116,7 @@ export class BrowserHost implements SupportsSnapshots<BrowserSnapshot> {
   addCell(cell: Cell) {
     if (this.currentCell.head === rootCell) {
       this.outputBuffer = this.outputBuffer.addChild(cell);
-      this.events.emit('repaint');
+      this.events.dispatchEvent(new Event('repaint'));
       return waitForRepaint();
     } else {
       this.swapCell(this.currentCell.head.addChild(cell));
@@ -175,9 +177,9 @@ function waitForRepaint() {
   });
 }
 
-function getHost(interpreter: Interpreter) {
+function getPresentationHost(interpreter: Interpreter) {
   if (!(interpreter.host instanceof BrowserHost)) {
-    throw new Error('invalid host for interpreter');
+    throw new Error('invalid presentation host for interpreter');
   }
   return interpreter.host;
 }
@@ -191,7 +193,7 @@ class BuildCellFrame extends CallFrame {
   }
 
   visit(interpreter: Interpreter) {
-    const host = getHost(interpreter);
+    const host = getPresentationHost(interpreter);
     const { body } = this.node;
 
     switch (this.state) {
@@ -217,9 +219,9 @@ class BuildCellFrame extends CallFrame {
   }
 }
 
-export const browserGlobals: RuntimeFunctions = {
+export const browserPresentationGlobals: RuntimeFunctions = {
   clear(interpreter) {
-    const host = getHost(interpreter);
+    const host = getPresentationHost(interpreter);
     host.clearDisplay();
     host.clearOutputBuffer();
   },
@@ -238,43 +240,43 @@ export const browserGlobals: RuntimeFunctions = {
   },
 
   rect(interpreter, [x, y, width, height]: number[]) {
-    const host = getHost(interpreter);
+    const host = getPresentationHost(interpreter);
     host.pushShape(new Rect(x, y, width, height, host.shapeProps));
     return waitForRepaint();
   },
 
   circle(interpreter, [cx, cy, radius]: number[]) {
-    const host = getHost(interpreter);
+    const host = getPresentationHost(interpreter);
     host.pushShape(new Circle(cx, cy, radius, host.shapeProps));
     return waitForRepaint();
   },
 
   ellipse(interpreter, [cx, cy, rx, ry]: number[]) {
-    const host = getHost(interpreter);
+    const host = getPresentationHost(interpreter);
     host.pushShape(new Ellipse(cx, cy, rx, ry, host.shapeProps));
     return waitForRepaint();
   },
 
   line(interpreter, [x1, y1, x2, y2]: number[]) {
-    const host = getHost(interpreter);
+    const host = getPresentationHost(interpreter);
     host.pushShape(new Line(x1, y1, x2, y2, host.shapeProps));
     return waitForRepaint();
   },
 
   polygon(interpreter, [points]: [[number, number][]]) {
-    const host = getHost(interpreter);
+    const host = getPresentationHost(interpreter);
     host.pushShape(new Polygon(points, host.shapeProps));
     return waitForRepaint();
   },
 
   text(interpreter, [x, y, text]: [number, number, string]) {
-    const host = getHost(interpreter);
+    const host = getPresentationHost(interpreter);
     host.pushShape(new Text(x, y, text, host.textProps, host.shapeProps));
     return waitForRepaint();
   },
 
   heading(interpreter, [value, level = 1]: [unknown, number]) {
-    const host = getHost(interpreter);
+    const host = getPresentationHost(interpreter);
     const handler = interpreter.getHandler(value);
     return host.addCell(
       new ValueCell(handler.getPrettyValue(value), `h${level}`)
@@ -282,7 +284,7 @@ export const browserGlobals: RuntimeFunctions = {
   },
 
   print(interpreter, [value]: [unknown]) {
-    const host = getHost(interpreter);
+    const host = getPresentationHost(interpreter);
     const handler = interpreter.getHandler(value);
     return host.addCell(new ValueCell(handler.getPrettyValue(value)));
   },
@@ -303,3 +305,5 @@ export const browserGlobals: RuntimeFunctions = {
     return new BuildCellFrame(node, new GridRowCell());
   },
 };
+
+export const browserGlobals = browserPresentationGlobals;

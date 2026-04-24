@@ -3,8 +3,10 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./host": "./src/host.ts",
     "./interpreter": "./src/interpreter.ts",
     "./parser.peggy": "./src/parser.peggy",
+    "./runtime-environment": "./src/runtime-environment.ts",
     "./types": "./src/types.ts",
     "./nodes": "./src/nodes/index.ts",
     "./nodes/*": "./src/nodes/*.ts",
