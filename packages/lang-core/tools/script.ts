@@ -4,20 +4,34 @@ import process from 'node:process';
 import readline from 'node:readline';
 import { inspect } from 'node:util';
 
-import { Interpreter } from '@startlang/lang-core/interpreter';
+import { Interpreter, type RunResult } from '@startlang/lang-core/interpreter';
+import type { Node } from '@startlang/lang-core/nodes';
 import { parse } from '@startlang/lang-core/parser.peggy';
 import { runtimeGlobals } from '@startlang/lang-core/runtime-globals';
 import { InputSuspension } from '@startlang/lang-core/suspension';
+import type { RuntimeFunctions } from '@startlang/lang-core/types';
 
-const options = {};
-const parserOptions = {};
-const sourceArgs = [];
+interface ScriptOptions {
+  ast?: boolean;
+  ns?: boolean;
+}
 
-function output(obj) {
+interface ParserOptions {
+  ast?: boolean;
+  meta?: boolean;
+}
+
+type Question = (prompt: string) => Promise<string>;
+
+const options: ScriptOptions = {};
+const parserOptions: ParserOptions = {};
+const sourceArgs: string[] = [];
+
+function output(obj: unknown) {
   console.log(inspect(obj, { colors: true, depth: null }));
 }
 
-function createQuestioner(rl) {
+function createQuestioner(rl: readline.Interface): Question {
   const inputLines = rl[Symbol.asyncIterator]();
 
   return async (prompt) => {
@@ -28,7 +42,11 @@ function createQuestioner(rl) {
   };
 }
 
-async function runUntilComplete(interp, question, result) {
+async function runUntilComplete(
+  interp: Interpreter,
+  question: Question,
+  result: RunResult
+) {
   while (result.status === 'suspended') {
     const { suspension } = result;
     if (suspension instanceof InputSuspension) {
@@ -38,6 +56,14 @@ async function runUntilComplete(interp, question, result) {
       throw new Error(`unsupported suspension: ${suspension.kind}`);
     }
   }
+}
+
+function isNodeError(err: unknown): err is NodeJS.ErrnoException {
+  return err instanceof Error && 'code' in err;
+}
+
+function formatError(err: unknown) {
+  return err instanceof Error ? err.stack : err;
 }
 
 for (const arg of process.argv.slice(2)) {
@@ -70,17 +96,17 @@ async function main() {
   try {
     source = await readFile(sourceArg, 'utf-8');
   } catch (err) {
-    if (err.code !== 'ENOENT') {
+    if (!isNodeError(err) || err.code !== 'ENOENT') {
       throw err;
     }
     source = sourceArg + '\n';
   }
 
-  let node;
+  let node: Node;
   try {
     node = parse(source, parserOptions);
   } catch (err) {
-    console.log(err.stack);
+    console.log(formatError(err));
     process.exit();
   }
 
@@ -108,12 +134,12 @@ async function main() {
         console.log();
       }
     },
-  });
+  } satisfies RuntimeFunctions);
 
   try {
     await runUntilComplete(interp, question, await interp.run(node));
   } catch (err) {
-    console.log(err.stack);
+    console.log(formatError(err));
   }
 
   if (options.ns) {

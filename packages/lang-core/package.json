@@ -15,9 +15,9 @@
     "./utils/*": "./src/utils/*.ts"
   },
   "scripts": {
-    "lint": "eslint src",
-    "repl": "tsx --import ./tools/hooks.js ./tools/repl.js",
-    "script": "tsx --import ./tools/hooks.js ./tools/script.js",
+    "lint": "eslint src tools",
+    "repl": "tsx --import ./tools/hooks.js ./tools/repl.ts",
+    "script": "tsx --import ./tools/hooks.js ./tools/script.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

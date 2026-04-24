@@ -3,12 +3,17 @@ import process from 'node:process';
 import readline from 'node:readline';
 import { inspect } from 'node:util';
 
-import { Interpreter } from '@startlang/lang-core/interpreter';
+import { Interpreter, type RunResult } from '@startlang/lang-core/interpreter';
 import { parse, SyntaxError } from '@startlang/lang-core/parser.peggy';
 import { runtimeGlobals } from '@startlang/lang-core/runtime-globals';
 import { InputSuspension } from '@startlang/lang-core/suspension';
+import type { RuntimeFunctions } from '@startlang/lang-core/types';
 
-async function runUntilComplete(interp, rl, result) {
+async function runUntilComplete(
+  interp: Interpreter,
+  rl: readline.Interface,
+  result: RunResult
+) {
   while (result.status === 'suspended') {
     const { suspension } = result;
     if (suspension instanceof InputSuspension) {
@@ -20,6 +25,10 @@ async function runUntilComplete(interp, rl, result) {
     }
   }
   return null;
+}
+
+function formatError(err: unknown) {
+  return err instanceof Error ? err.stack : err;
 }
 
 async function main() {
@@ -49,10 +58,10 @@ async function main() {
         console.log();
       }
     },
-  });
+  } satisfies RuntimeFunctions);
 
-  let lines = [];
-  let pendingInput = null;
+  let lines: string[] = [];
+  let pendingInput: InputSuspension | null = null;
 
   promptForCommand();
   for await (const line of rl) {
@@ -61,7 +70,7 @@ async function main() {
         const result = await interp.resumeSuspension(line);
         pendingInput = await runUntilComplete(interp, rl, result);
       } catch (err) {
-        console.error(err.stack);
+        console.error(formatError(err));
       }
 
       if (!pendingInput) {
@@ -100,7 +109,7 @@ async function main() {
         promptForContinuation();
         continue;
       } else {
-        console.error(err.stack);
+        console.error(formatError(err));
       }
     }
 
