@@ -16,16 +16,15 @@
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "baseUrl": ".",
     "paths": {
       "@startlang/lang-core": [
-        "packages/lang-core/src/interpreter.ts"
+        "./packages/lang-core/src/interpreter.ts"
       ],
       "@startlang/lang-core/*": [
-        "packages/lang-core/src/*"
+        "./packages/lang-core/src/*"
       ],
       "@startlang/lang-browser/*": [
-        "packages/lang-browser/src/*"
+        "./packages/lang-browser/src/*"
       ]
     }
   }
