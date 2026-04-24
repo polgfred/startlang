@@ -11,7 +11,11 @@ import {
   Typography,
 } from '@mui/material';
 import { Interpreter } from '@startlang/lang-core/interpreter';
-import type { ListType, NamespaceType, RecordType } from '@startlang/lang-core/types';
+import type {
+  ListType,
+  NamespaceType,
+  RecordType,
+} from '@startlang/lang-core/types';
 import { JSX, useCallback, useState } from 'react';
 
 export default function Inspector({
