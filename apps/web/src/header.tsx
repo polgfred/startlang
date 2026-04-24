@@ -1,7 +1,9 @@
 import {
   AppBar,
+  Box,
   Button,
   Divider,
+  Link as MuiLink,
   Menu,
   MenuItem,
   Toolbar,
@@ -9,8 +11,6 @@ import {
 } from '@mui/material';
 import { type BrowserHost } from '@startlang/lang-browser/browser';
 import { editor } from 'monaco-editor';
-import Image from 'next/image';
-import Link from 'next/link';
 import { MouseEvent, RefObject, useCallback, useState } from 'react';
 
 import boxScript from '../tests/box.start';
@@ -231,12 +231,40 @@ export default function Header({
           gap: 1,
         }}
       >
-        <Link href="https://linkedin.com/in/polgfred" target="_blank">
-          <Image src="/linkedin-logo.svg" alt="logo" width="32" height="32" />
-        </Link>
-        <Link href="https://github.com/polgfred/startlang" target="_blank">
-          <Image src="/github-logo.svg" alt="logo" width="32" height="32" />
-        </Link>
+        <MuiLink
+          href="https://linkedin.com/in/polgfred"
+          target="_blank"
+          rel="noreferrer"
+          underline="none"
+        >
+          <Box
+            component="img"
+            src="/linkedin-logo.svg"
+            alt="LinkedIn"
+            sx={{
+              display: 'block',
+              height: 32,
+              width: 32,
+            }}
+          />
+        </MuiLink>
+        <MuiLink
+          href="https://github.com/polgfred/startlang"
+          target="_blank"
+          rel="noreferrer"
+          underline="none"
+        >
+          <Box
+            component="img"
+            src="/github-logo.svg"
+            alt="GitHub"
+            sx={{
+              display: 'block',
+              height: 32,
+              width: 32,
+            }}
+          />
+        </MuiLink>
       </Toolbar>
     </AppBar>
   );

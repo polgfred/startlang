@@ -8,7 +8,7 @@ const ShapeElement = memo(function ShapeElement({ shape }: { shape: Shape }) {
 export default function Graphics({ shapes }: { shapes: readonly Shape[] }) {
   return (
     <svg
-      sx={{
+      style={{
         height: '100%',
         width: '100%',
       }}

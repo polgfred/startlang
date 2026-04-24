@@ -1,5 +1,6 @@
 import {
   Button,
+  Slider,
   Stack,
   Table,
   TableBody,
@@ -11,7 +12,7 @@ import {
 } from '@mui/material';
 import { Interpreter } from '@startlang/lang-core/interpreter';
 import type { ListType, NamespaceType, RecordType } from '@startlang/lang-core/types';
-import { ChangeEvent, JSX, useCallback, useState } from 'react';
+import { JSX, useCallback, useState } from 'react';
 
 export default function Inspector({
   error,
@@ -23,8 +24,10 @@ export default function Inspector({
   updateSlider: (index: number) => void;
 }) {
   const handleSliderChange = useCallback(
-    (ev: ChangeEvent<HTMLInputElement>) => {
-      updateSlider(Number(ev.target.value));
+    (_event: Event, value: number | number[]) => {
+      if (typeof value === 'number') {
+        updateSlider(value);
+      }
     },
     [updateSlider]
   );
@@ -40,10 +43,10 @@ export default function Inspector({
         overflow: 'auto',
       }}
     >
-      <input
-        type="range"
+      <Slider
         min={0}
-        max={interpreter.history.length - 1}
+        max={Math.max(interpreter.history.length - 1, 0)}
+        step={1}
         value={interpreter.snapshotIndex}
         onChange={handleSliderChange}
         sx={{

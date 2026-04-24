@@ -1,4 +1,4 @@
-import { Button, Stack, TextField } from '@mui/material';
+import { Box, Button, Stack, TextField } from '@mui/material';
 import { Cell, CellElement } from '@startlang/lang-browser/cells';
 import {
   ChangeEvent,
@@ -60,7 +60,7 @@ export default function Term({
   });
 
   return (
-    <div
+    <Box
       sx={{
         height: '100%',
         overflow: 'auto',
@@ -100,7 +100,7 @@ export default function Term({
           </Button>
         </Stack>
       )}
-      <div
+      <Box
         ref={scrollRef}
         sx={{
           fontFamily: 'Roboto',
@@ -109,7 +109,7 @@ export default function Term({
         }}
       >
         <CellElement cell={outputBuffer} />
-      </div>
-    </div>
+      </Box>
+    </Box>
   );
 }

@@ -1,5 +1,3 @@
-'use client';
-
 import { Paper, Stack, ThemeProvider, createTheme } from '@mui/material';
 import { BrowserHost, browserGlobals } from '@startlang/lang-browser/browser';
 import { Interpreter } from '@startlang/lang-core/interpreter';
@@ -68,7 +66,7 @@ function usePromptForInput() {
   };
 }
 
-export default function Home() {
+export default function App() {
   const editorRef = useRef<editor.ICodeEditor | null>(null);
 
   const [showInspector, setShowInspector] = useState(true);

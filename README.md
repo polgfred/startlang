@@ -23,7 +23,7 @@ Alternatively, if you want to use Docker devcontainers, you can:
 $ npm install
 ```
 
-### Run the app:
+### Run the web app:
 
 ```console
 $ npm run dev
@@ -56,5 +56,5 @@ Build and run the docker container:
 
 ```console
 $ docker build --tag startlang:latest .
-$ docker run -it --rm -p 3000:3000 startlang:latest
+$ docker run -it --rm -p 3000:80 startlang:latest
 ```

@@ -1,3 +1,4 @@
 node_modules/
 *.tsbuildinfo
 apps/web/.next
+apps/web/dist
