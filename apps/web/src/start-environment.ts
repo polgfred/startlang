@@ -1,25 +1,19 @@
 import {
+  type BrowserPresentationSnapshot,
   BrowserPresentationHost,
   browserPresentationGlobals,
 } from '@startlang/lang-browser/browser';
-import {
-  rootCell,
-  type Cell,
-  type StackCell,
-} from '@startlang/lang-browser/cells';
-import type { Shape } from '@startlang/lang-browser/shapes';
+import { rootCell } from '@startlang/lang-browser/cells';
 import {
   Interpreter,
   type RuntimeEffect,
+  type Snapshot,
 } from '@startlang/lang-core/interpreter';
 import { runtimeGlobals } from '@startlang/lang-core/runtime-globals';
 import {
   BreakpointSuspension,
   InputSuspension,
-  type RuntimeSuspension,
 } from '@startlang/lang-core/suspension';
-import type { NamespaceType } from '@startlang/lang-core/types';
-import type { Cons } from '@startlang/lang-core/utils/cons';
 import {
   useCallback,
   useEffect,
@@ -33,42 +27,30 @@ import { useEditor } from './editor-context.jsx';
 
 type OutputTab = 'graphics' | 'text';
 
-interface RuntimeView {
+interface RuntimeView extends Snapshot<BrowserPresentationSnapshot> {
   version: number;
-  shapes: readonly Shape[];
-  outputBuffer: StackCell;
-  currentCell: Cons<Cell>;
-  globalNamespace: NamespaceType;
-  topNamespace: Cons<NamespaceType>;
   historyLength: number;
   historyIndex: number;
   isRunning: boolean;
   isSuspended: boolean;
   isRewound: boolean;
-  suspension: RuntimeSuspension | null;
 }
 
 function createStartEnvironmentStore(
-  host: BrowserPresentationHost,
-  interpreter: Interpreter
+  interpreter: Interpreter<BrowserPresentationSnapshot>
 ) {
   const events = new EventTarget();
   let version = 0;
 
   function readView(): RuntimeView {
     return {
+      ...interpreter.captureSnapshot(),
       version,
-      shapes: host.shapes,
-      outputBuffer: host.outputBuffer,
-      currentCell: host.currentCell,
-      globalNamespace: interpreter.globalNamespace,
-      topNamespace: interpreter.topNamespace,
       historyLength: interpreter.history.length,
       historyIndex: interpreter.snapshotIndex,
       isRunning: interpreter.isRunning,
       isSuspended: interpreter.isSuspended,
       isRewound: interpreter.isRewound,
-      suspension: interpreter.suspension,
     };
   }
 
@@ -123,9 +105,7 @@ export function useStartEnvironment() {
 
   const { current: host } = useRef(new BrowserPresentationHost());
   const { current: interpreter } = useRef(new Interpreter(host));
-  const { current: store } = useRef(
-    createStartEnvironmentStore(host, interpreter)
-  );
+  const { current: store } = useRef(createStartEnvironmentStore(interpreter));
   const runtimeView = useSyncExternalStore(
     store.subscribe,
     store.getView,
@@ -227,10 +207,10 @@ export function useStartEnvironment() {
     [runtimeView.suspension, resumeInput]
   );
 
-  const hasGraphicsOutput = runtimeView.shapes.length > 0;
+  const hasGraphicsOutput = runtimeView.hostSnapshot.shapes.length > 0;
   const hasTextOutput =
-    runtimeView.outputBuffer.children.length > 0 ||
-    runtimeView.currentCell.head !== rootCell ||
+    runtimeView.hostSnapshot.outputBuffer.children.length > 0 ||
+    runtimeView.hostSnapshot.currentCell.head !== rootCell ||
     inputState !== null;
 
   const updateSlider = useCallback(

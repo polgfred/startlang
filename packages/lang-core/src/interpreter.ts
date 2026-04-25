@@ -36,14 +36,14 @@ const rootNamespace: Cons<NamespaceType> = new Cons(emptyObject);
 
 export type { SupportsSnapshots } from './host.js';
 
-export interface Snapshot {
+export interface Snapshot<THostSnapshot = unknown> {
   globalFunctions: GlobalFunctions;
   globalNamespace: NamespaceType;
   topNamespace: Cons<NamespaceType>;
   topFrame: Cons<Frame>;
   lastResult: unknown;
-  hostSnapshot: unknown;
   suspension: RuntimeSuspension | null;
+  hostSnapshot: THostSnapshot;
 }
 
 export type RuntimeEffectKind = 'repaint';
@@ -64,7 +64,7 @@ export type RunResult =
   | { status: 'completed' }
   | { status: 'suspended'; suspension: RuntimeSuspension };
 
-export class Interpreter {
+export class Interpreter<THostSnapshot = unknown> {
   dataHandlers: DataHandler[] = [];
   runtimeFunctions: RuntimeFunctions = emptyObject;
   globalFunctions: GlobalFunctions = emptyObject;
@@ -76,12 +76,13 @@ export class Interpreter {
   suspension: RuntimeSuspension | null = null;
   pendingEffect: RuntimeEffect | null = null;
   effectHandler: RuntimeEffectHandler | null = null;
-  history: Snapshot[] = [];
+  history: Snapshot<THostSnapshot>[] = [];
   snapshotIndex: number = 0;
   markersMap: MarkerMap = emptyMarkerMap;
 
   constructor(
-    public readonly host: SupportsSnapshots = new NullPresentationHost()
+    public readonly host: SupportsSnapshots<THostSnapshot> =
+      new NullPresentationHost() as SupportsSnapshots<THostSnapshot>
   ) {
     installHandlers(this);
     this.registerGlobals({
@@ -363,9 +364,8 @@ export class Interpreter {
     this.snapshotIndex = 0;
   }
 
-  takeSnapshot() {
-    this.history.splice(this.snapshotIndex + 1);
-    this.history.push({
+  captureSnapshot(): Snapshot<THostSnapshot> {
+    return {
       globalFunctions: this.globalFunctions,
       globalNamespace: this.globalNamespace,
       topNamespace: this.topNamespace,
@@ -373,7 +373,12 @@ export class Interpreter {
       lastResult: this.lastResult,
       suspension: this.suspension,
       hostSnapshot: this.host.takeSnapshot(),
-    });
+    };
+  }
+
+  takeSnapshot() {
+    this.history.splice(this.snapshotIndex + 1);
+    this.history.push(this.captureSnapshot());
     this.snapshotIndex = this.history.length - 1;
   }
 
