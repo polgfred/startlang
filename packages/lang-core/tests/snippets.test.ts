@@ -134,9 +134,53 @@ describe('core language snippets', () => {
       spy len(list), range(list, 2, 3), join(list, "-")
       spy len(record), keys(record)
       spy len(text), range(text, 2, 3), split(text, ",")
+      `,
+      {
+        spy(_interpreter, args) {
+          calls.push(args);
+        },
+      }
+    );
+
+    expect(calls).toEqual([
+      [4, [2, 3], '1-2-3-4'],
+      [2, ['b', 'a']],
+      [5, ',b', ['a', 'b', 'c']],
+    ]);
+  });
+
+  it('dispatches numeric runtime methods', async () => {
+    const calls: unknown[][] = [];
+
+    await runSnippet(
+      `
       spy abs(-5), cbrt(27), log(100, 10)
       spy bitand(6, 3), bitor(4, 1), bitxor(6, 3), bitnot(0)
       spy sqrt(64), round(1.6), sin(30), cos(60), num("42")
+      `,
+      {
+        spy(_interpreter, args) {
+          calls.push(args);
+        },
+      }
+    );
+
+    expect(calls.slice(0, 2)).toEqual([
+      [5, 3, 2],
+      [2, 5, 5, -1],
+    ]);
+    expect(calls[2][0]).toBe(8);
+    expect(calls[2][1]).toBe(2);
+    expect(calls[2][2]).toBeCloseTo(0.5);
+    expect(calls[2][3]).toBeCloseTo(0.5);
+    expect(calls[2][4]).toBe(42);
+  });
+
+  it('dispatches random number runtime functions', async () => {
+    const calls: unknown[][] = [];
+
+    await runSnippet(
+      `
       spy rand(), rand(1, 3)
       `,
       {
@@ -146,21 +190,13 @@ describe('core language snippets', () => {
       }
     );
 
-    expect(calls.slice(0, 6)).toEqual([
-      [4, [2, 3], '1-2-3-4'],
-      [2, ['b', 'a']],
-      [5, ',b', ['a', 'b', 'c']],
-      [5, 3, 2],
-      [2, 5, 5, -1],
-      [8, 2, 0.49999999999999994, 0.5000000000000001, 42],
-    ]);
-    expect(typeof calls[6][0]).toBe('number');
-    expect(calls[6][0]).toBeGreaterThanOrEqual(0);
-    expect(calls[6][0]).toBeLessThan(1);
-    expect(typeof calls[6][1]).toBe('number');
-    expect(calls[6][1]).toBeGreaterThanOrEqual(1);
-    expect(calls[6][1]).toBeLessThanOrEqual(3);
-    expect(Number.isInteger(calls[6][1])).toBe(true);
+    expect(typeof calls[0][0]).toBe('number');
+    expect(calls[0][0]).toBeGreaterThanOrEqual(0);
+    expect(calls[0][0]).toBeLessThan(1);
+    expect(typeof calls[0][1]).toBe('number');
+    expect(calls[0][1]).toBeGreaterThanOrEqual(1);
+    expect(calls[0][1]).toBeLessThanOrEqual(3);
+    expect(Number.isInteger(calls[0][1])).toBe(true);
   });
 
   it('concatenates and compares strings, lists, and records', async () => {
