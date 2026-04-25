@@ -203,6 +203,7 @@ export function EditorProvider({ children }: { children: ReactNode }) {
       if (!marker) {
         return;
       }
+      const label = marker === 'breakpoint' ? 'Breakpoint' : 'Snapshot';
       nextDecorations.push({
         range: {
           startLineNumber: lineNumber,
@@ -213,6 +214,11 @@ export function EditorProvider({ children }: { children: ReactNode }) {
         options: {
           isWholeLine: true,
           glyphMarginClassName: `start-${marker}`,
+          glyphMarginHoverMessage: {
+            value: `${label}: click to ${
+              marker === 'breakpoint' ? 'change to snapshot' : 'clear'
+            }.`,
+          },
         },
       });
     });

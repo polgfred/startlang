@@ -35,6 +35,26 @@ export default function Editor({
           toggleMarker(ev.target.position.lineNumber);
         }
       });
+      let isPointer = false;
+      const setPointer = (nextIsPointer: boolean) => {
+        if (nextIsPointer === isPointer) {
+          return;
+        }
+
+        isPointer = nextIsPointer;
+        const node = editor.getDomNode();
+        if (node) {
+          node.style.cursor = nextIsPointer ? 'pointer' : '';
+        }
+      };
+
+      editor.onMouseMove((ev) => {
+        // 2 = GUTTER_GLYPH_MARGIN
+        setPointer(ev.target.type === 2);
+      });
+      editor.onMouseLeave(() => {
+        setPointer(false);
+      });
       editor.focus();
       runProgram();
     },
