@@ -95,7 +95,7 @@ export function useStartEnvironment() {
       setError(null);
 
       try {
-        await interpreter.resumeSuspension(value);
+        await interpreter.resume(value);
       } catch (err: unknown) {
         if (err instanceof Error) {
           setError(err);
@@ -167,7 +167,7 @@ export function useStartEnvironment() {
     setError(null);
 
     try {
-      await interpreter.resumeSuspension(undefined);
+      await interpreter.resume(undefined);
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err);

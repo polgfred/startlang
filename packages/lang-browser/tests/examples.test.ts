@@ -34,7 +34,7 @@ async function runUntilComplete(
     const { suspension } = result;
 
     if (suspension instanceof InputSuspension) {
-      result = await interpreter.resumeSuspension(suspension.initial);
+      result = await interpreter.resume(suspension.initial);
       continue;
     }
 
@@ -115,7 +115,7 @@ async function playNumguessWithBinarySearch() {
     const guess = Math.floor((lo + hi) / 2);
     guesses.push(guess);
     lastGuess = guess;
-    result = await interpreter.resumeSuspension(String(guess));
+    result = await interpreter.resume(String(guess));
   }
 
   return { guesses, host, interpreter };

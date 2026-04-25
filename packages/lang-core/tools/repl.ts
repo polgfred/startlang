@@ -67,7 +67,7 @@ async function main() {
   for await (const line of rl) {
     if (pendingInput) {
       try {
-        const result = await interp.resumeSuspension(line);
+        const result = await interp.resume(line);
         pendingInput = await runUntilComplete(interp, rl, result);
       } catch (err) {
         console.error(formatError(err));

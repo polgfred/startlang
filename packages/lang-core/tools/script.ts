@@ -92,7 +92,7 @@ async function runUntilComplete(
     const { suspension } = result;
     if (suspension instanceof InputSuspension) {
       const answer = await question(suspension.prompt);
-      result = await interp.resumeSuspension(answer);
+      result = await interp.resume(answer);
     } else {
       throw new Error(`unsupported suspension: ${suspension.kind}`);
     }

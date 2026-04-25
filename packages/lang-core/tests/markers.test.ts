@@ -31,7 +31,7 @@ describe('marker maps', () => {
     delete markers[2];
     markers[3] = 'breakpoint';
 
-    result = await interpreter.resumeSuspension(undefined);
+    result = await interpreter.resume(undefined);
 
     if (result.status !== 'suspended') {
       throw new Error(`expected suspension, got ${result.status}`);
@@ -42,7 +42,7 @@ describe('marker maps', () => {
 
     delete markers[3];
 
-    result = await interpreter.resumeSuspension(undefined);
+    result = await interpreter.resume(undefined);
 
     expect(result.status).toBe('completed');
     expect(interpreter.getVariable('x')).toBe(3);

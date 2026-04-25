@@ -1,4 +1,4 @@
-import { Interpreter } from '@startlang/lang-core/interpreter';
+import { Interpreter, type RunResult } from '@startlang/lang-core/interpreter';
 import type { CallFrame } from '@startlang/lang-core/nodes';
 import { parse } from '@startlang/lang-core/parser.peggy';
 import { runtimeGlobals } from '@startlang/lang-core/runtime-globals';
@@ -6,6 +6,7 @@ import {
   BreakpointSuspension,
   InputSuspension,
 } from '@startlang/lang-core/suspension';
+import type { RuntimeSuspension } from '@startlang/lang-core/suspension';
 import type { RuntimeFunctions } from '@startlang/lang-core/types';
 import type { MarkerType } from '@startlang/lang-core/types';
 import { describe, expect, it, vi } from 'vitest';
@@ -26,6 +27,24 @@ async function runSnippet(source: string, globals: RuntimeFunctions = {}) {
 
 function parseSnippet(source: string) {
   return parse(`${source}\n`);
+}
+
+function expectSuspended(result: RunResult): RuntimeSuspension {
+  expect(result.status).toBe('suspended');
+  if (result.status !== 'suspended') {
+    throw new Error('expected suspension');
+  }
+  return result.suspension;
+}
+
+function expectInputSuspension(
+  suspension: RuntimeSuspension
+): InputSuspension {
+  expect(suspension).toBeInstanceOf(InputSuspension);
+  if (!(suspension instanceof InputSuspension)) {
+    throw new Error('expected input suspension');
+  }
+  return suspension;
 }
 
 describe('core language snippets', () => {
@@ -458,19 +477,11 @@ describe('core language suspensions and snapshots', () => {
       `)
     );
 
-    expect(result.status).toBe('suspended');
-    if (result.status !== 'suspended') {
-      throw new Error('expected suspension');
-    }
-    const suspension = result.suspension;
-    expect(suspension).toBeInstanceOf(InputSuspension);
-    if (!(suspension instanceof InputSuspension)) {
-      throw new Error('expected input suspension');
-    }
+    const suspension = expectInputSuspension(expectSuspended(result));
     expect(suspension.prompt).toBe('Name?');
     expect(suspension.initial).toBe('Ada');
 
-    const resumed = await interpreter.resumeSuspension('Grace');
+    const resumed = await interpreter.resume('Grace');
 
     expect(resumed.status).toBe('completed');
     expect(interpreter.getVariable('name')).toBe('Grace');
@@ -523,15 +534,11 @@ describe('core language suspensions and snapshots', () => {
 
     const result = await interpreter.run(rootNode);
 
-    expect(result.status).toBe('suspended');
-    if (result.status !== 'suspended') {
-      throw new Error('expected suspension');
-    }
-    expect(result.suspension).toBeInstanceOf(BreakpointSuspension);
+    expect(expectSuspended(result)).toBeInstanceOf(BreakpointSuspension);
     expect(interpreter.history).toHaveLength(2);
     expect(interpreter.getVariable('value')).toBe(1);
 
-    const resumed = await interpreter.resumeSuspension(undefined);
+    const resumed = await interpreter.resume(undefined);
 
     expect(resumed.status).toBe('completed');
     expect(interpreter.getVariable('value')).toBe(2);

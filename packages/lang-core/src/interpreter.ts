@@ -119,7 +119,7 @@ export class Interpreter {
     }
   }
 
-  resumeSuspension(response: unknown) {
+  resume(response: unknown) {
     if (!this.suspension) {
       throw new Error('interpreter is not suspended');
     }
