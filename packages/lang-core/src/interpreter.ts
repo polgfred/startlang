@@ -10,7 +10,11 @@ import {
   VarNode,
   rootFrame,
 } from './nodes/index.js';
-import { mapMarkers } from './nodes/map-markers.js';
+import {
+  emptyMarkerMap,
+  mapMarkers,
+  type MarkerMap,
+} from './nodes/map-markers.js';
 import {
   BreakpointSuspension,
   isRuntimeSuspension,
@@ -58,7 +62,7 @@ export class Interpreter {
   suspension: RuntimeSuspension | null = null;
   history: Snapshot[] = [];
   snapshotIndex: number = 0;
-  markersMap: WeakMap<Node, MarkerType> = new WeakMap();
+  markersMap: MarkerMap = emptyMarkerMap;
 
   constructor(
     public readonly host: SupportsSnapshots = new NullPresentationHost()
@@ -342,7 +346,7 @@ export class Interpreter {
   }
 
   clearMarkers() {
-    this.markersMap = new WeakMap();
+    this.markersMap = emptyMarkerMap;
   }
 
   setMarkers(node: Node, markers: readonly MarkerType[]) {

@@ -10,9 +10,33 @@ import { Node } from './base.js';
 import { RepeatNode } from './repeat.js';
 import { WhileNode } from './while.js';
 
+export interface MarkerMap {
+  get(node: Node): MarkerType | undefined;
+}
+
+export const emptyMarkerMap: MarkerMap = {
+  get() {
+    return undefined;
+  },
+};
+
 export function mapMarkers(node: Node, markers: readonly MarkerType[]) {
-  const markersCopy = markers.slice();
-  const nodeToMarker = new WeakMap<Node, MarkerType>();
+  const nodeToLines = new WeakMap<Node, number[]>();
+  const claimedLines = new Set<number>();
+
+  function addLine(node: Node, lineNumber: number) {
+    if (claimedLines.has(lineNumber)) {
+      return;
+    }
+
+    const lines = nodeToLines.get(node);
+    if (lines) {
+      lines.push(lineNumber);
+    } else {
+      nodeToLines.set(node, [lineNumber]);
+    }
+    claimedLines.add(lineNumber);
+  }
 
   function visit(node: Node | null) {
     if (!(node instanceof BlockNode)) {
@@ -39,15 +63,24 @@ export function mapMarkers(node: Node, markers: readonly MarkerType[]) {
           visit(child.elseBody);
         }
 
-        if (markersCopy[index]) {
-          nodeToMarker.set(child, markersCopy[index]);
-          delete markersCopy[index];
-        }
+        addLine(child, index);
       }
     }
   }
 
   visit(node);
 
-  return nodeToMarker;
+  return {
+    get(node: Node) {
+      const lines = nodeToLines.get(node);
+      if (lines) {
+        for (const lineNumber of lines) {
+          const marker = markers[lineNumber];
+          if (marker) {
+            return marker;
+          }
+        }
+      }
+    },
+  };
 }
