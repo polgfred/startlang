@@ -109,6 +109,22 @@ export class BrowserPresentationHost
     }
   }
 
+  getInProgressOutputBuffer() {
+    if (this.currentCell.head === rootCell) {
+      return this.outputBuffer;
+    }
+
+    let child = this.currentCell.head;
+    let cursor = this.currentCell.tail;
+
+    while (cursor && cursor.head !== rootCell) {
+      child = cursor.head.addChild(child);
+      cursor = cursor.tail;
+    }
+
+    return this.outputBuffer.addChild(child);
+  }
+
   setConfiguration(name: string, value: unknown) {
     if (name in this.shapeProps) {
       this.shapeProps = produce(this.shapeProps, (draft) => {

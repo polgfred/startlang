@@ -2,6 +2,7 @@ import {
   BrowserPresentationHost,
   browserPresentationGlobals,
 } from '@startlang/lang-browser/browser';
+import { rootCell } from '@startlang/lang-browser/cells';
 import {
   Interpreter,
   type RuntimeEffect,
@@ -68,6 +69,7 @@ export function useStartEnvironment() {
     const nextHasGraphicsOutput = host.shapes.length > 0;
     const nextHasTextOutput =
       host.outputBuffer.children.length > 0 ||
+      host.currentCell.head !== rootCell ||
       interpreter.suspension instanceof InputSuspension;
 
     setOutputTab((current) =>
@@ -140,7 +142,9 @@ export function useStartEnvironment() {
 
   const hasGraphicsOutput = host.shapes.length > 0;
   const hasTextOutput =
-    host.outputBuffer.children.length > 0 || inputState !== null;
+    host.outputBuffer.children.length > 0 ||
+    host.currentCell.head !== rootCell ||
+    inputState !== null;
 
   const updateSlider = useCallback(
     (index: number) => {

@@ -122,6 +122,24 @@ async function playNumguessWithBinarySearch() {
 }
 
 describe('browser examples', () => {
+  it('renders an immutable preview of the in-progress cell path', () => {
+    const host = new BrowserPresentationHost();
+
+    host.addCell(new ValueCell('complete'));
+    host.pushCell(new StackCell());
+    host.addCell(new ValueCell('partial stack child'));
+    host.pushCell(new GridCell());
+    host.pushCell(new GridRowCell());
+    host.addCell(new ValueCell('partial row child'));
+
+    expect(getOutputText(host)).toEqual(['complete']);
+    expect(getText(host.getInProgressOutputBuffer())).toEqual([
+      'complete',
+      'partial stack child',
+      'partial row child',
+    ]);
+  });
+
   it.each([
     ['box.start', 73],
     ['sine.start', 74],
