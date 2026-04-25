@@ -87,6 +87,8 @@ const languageDefinition: languages.IMonarchLanguage = {
     'cbrt',
     'cos',
     'exp',
+    'format',
+    'input',
     'join',
     'keys',
     'len',
@@ -100,20 +102,19 @@ const languageDefinition: languages.IMonarchLanguage = {
     'split',
     'sqrt',
     'tan',
-    'align',
-    'anchor',
     'circle',
+    'clear',
     'color',
     'ellipse',
-    'fill',
-    'font',
+    'header',
+    'heading',
     'line',
     'polygon',
-    'opacity',
+    'print',
     'rect',
-    'rotate',
-    'scale',
-    'stroke',
+    'row',
+    'stack',
+    'table',
     'text',
   ],
   tokenizer: {
@@ -152,6 +153,15 @@ export function setupLanguage(monaco: Monaco) {
   monaco.languages.register({ id: 'start' });
   monaco.languages.setLanguageConfiguration('start', languageConfig);
   monaco.languages.setMonarchTokensProvider('start', languageDefinition);
+  monaco.editor.defineTheme('start-light', {
+    base: 'vs',
+    inherit: true,
+    rules: [
+      { token: 'support.function', foreground: '795E26' },
+      { token: 'identifier', foreground: '001080' },
+    ],
+    colors: {},
+  });
 }
 
 export function useEditor() {

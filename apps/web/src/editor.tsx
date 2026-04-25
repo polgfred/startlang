@@ -100,6 +100,7 @@ export default function Editor({
       <Monaco
         defaultValue={boxScript}
         language="start"
+        theme="start-light"
         beforeMount={onBeforeMount}
         onMount={onEditorMount}
         options={{
