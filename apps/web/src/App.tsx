@@ -90,6 +90,7 @@ export default function App() {
                 <Editor
                   showInspector={env.showInspector}
                   runProgram={env.runOrResume}
+                  isReadOnly={env.isEditorReadOnly}
                 />
               </Paper>
             </Stack>

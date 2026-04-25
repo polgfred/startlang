@@ -189,6 +189,7 @@ export function useStartEnvironment() {
   const isBreakpointSuspended =
     interpreter.suspension instanceof BreakpointSuspension;
   const isInputSuspended = interpreter.suspension instanceof InputSuspension;
+  const isProgramActive = interpreter.isRunning || interpreter.isSuspended;
   const runOrResume = useCallback(() => {
     if (interpreter.suspension instanceof BreakpointSuspension) {
       return resumeBreakpoint();
@@ -204,7 +205,8 @@ export function useStartEnvironment() {
     inputState,
     interpreter,
     isRunDisabled: interpreter.isRunning || isInputSuspended,
-    isStopDisabled: !interpreter.isRunning && !interpreter.isSuspended,
+    isStopDisabled: !isProgramActive,
+    isEditorReadOnly: isProgramActive,
     outputTab,
     runLabel: isBreakpointSuspended ? 'Continue' : 'Run',
     runOrResume,

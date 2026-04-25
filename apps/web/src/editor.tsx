@@ -9,9 +9,11 @@ import { setupLanguage, useEditor } from './editor-context.jsx';
 export default function Editor({
   showInspector,
   runProgram,
+  isReadOnly,
 }: {
   showInspector: boolean;
   runProgram: () => void;
+  isReadOnly: boolean;
 }) {
   const { autoLayout, initEditor, toggleMarker } = useEditor();
 
@@ -83,6 +85,10 @@ export default function Editor({
         options={{
           glyphMargin: true,
           minimap: { enabled: false },
+          readOnly: isReadOnly,
+          readOnlyMessage: {
+            value: 'Stop the program before editing source code.',
+          },
           scrollBeyondLastLine: false,
         }}
       />
