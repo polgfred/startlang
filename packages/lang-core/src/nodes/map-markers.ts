@@ -1,12 +1,12 @@
 import type { MarkerType } from '../types.js';
 
+import { Node } from './base.js';
 import { BeginNode } from './begin.js';
 import { BlockNode } from './block.js';
 import { CallNode } from './call.js';
 import { ForInNode } from './for-in.js';
 import { ForNode } from './for.js';
 import { IfNode } from './if.js';
-import { Node } from './base.js';
 import { RepeatNode } from './repeat.js';
 import { WhileNode } from './while.js';
 

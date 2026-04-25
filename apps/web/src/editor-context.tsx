@@ -1,6 +1,6 @@
 import type { Monaco } from '@monaco-editor/react';
-import { parse } from '@startlang/lang-core/parser.peggy';
 import type { Node } from '@startlang/lang-core/nodes';
+import { parse } from '@startlang/lang-core/parser.peggy';
 import type { MarkerType } from '@startlang/lang-core/types';
 import type { editor, languages } from 'monaco-editor';
 import {
@@ -260,6 +260,7 @@ export function EditorProvider({ children }: { children: ReactNode }) {
         } else if (markers[lineNumber] === 'breakpoint') {
           markers[lineNumber] = 'snapshot';
         } else {
+          // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
           delete markers[lineNumber];
         }
         updateDecorations();
