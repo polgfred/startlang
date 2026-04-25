@@ -7,7 +7,9 @@
   },
   "include": [
     "src/**/*",
-    "tools/**/*"
+    "tests/**/*",
+    "tools/**/*",
+    "vitest.config.ts"
   ],
   "exclude": [
     "node_modules"
