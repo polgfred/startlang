@@ -1,8 +1,5 @@
 import type { PresentationHost } from '@startlang/lang-core/host';
-import {
-  Interpreter,
-  repaintEffect,
-} from '@startlang/lang-core/interpreter';
+import { Interpreter, repaintEffect } from '@startlang/lang-core/interpreter';
 import { CallFrame, CallNode } from '@startlang/lang-core/nodes';
 import type { RuntimeFunctions } from '@startlang/lang-core/types';
 import { Cons } from '@startlang/lang-core/utils/cons';

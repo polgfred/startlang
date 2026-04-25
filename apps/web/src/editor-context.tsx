@@ -174,8 +174,9 @@ export function useEditor() {
 
 export function EditorProvider({ children }: { children: ReactNode }) {
   const editorRef = useRef<editor.ICodeEditor | null>(null);
-  const decorationsRef =
-    useRef<editor.IEditorDecorationsCollection | null>(null);
+  const decorationsRef = useRef<editor.IEditorDecorationsCollection | null>(
+    null
+  );
   const markersRef = useRef<MarkerType[]>([]);
   const highlightedNodeRef = useRef<Node | null>(null);
 

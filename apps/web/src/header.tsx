@@ -151,11 +151,7 @@ const exampleScripts = [
   },
 ];
 
-function CodeMenu({
-  runProgram,
-}: {
-  runProgram: () => void;
-}) {
+function CodeMenu({ runProgram }: { runProgram: () => void }) {
   const { anchor, openMenu, closeMenu } = useMenu();
   const { setValue } = useEditor();
 
