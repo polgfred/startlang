@@ -19,3 +19,5 @@ export type IndexType = number | string;
 export type ListType = readonly unknown[];
 
 export type RecordType = Readonly<Record<string, unknown>>;
+
+export type MarkerType = 'breakpoint' | 'snapshot';

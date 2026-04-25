@@ -10,8 +10,18 @@ import {
   VarNode,
   rootFrame,
 } from './nodes/index.js';
-import { isRuntimeSuspension, type RuntimeSuspension } from './suspension.js';
-import type { IndexType, NamespaceType, RuntimeFunctions } from './types.js';
+import { mapMarkers } from './nodes/map-markers.js';
+import {
+  BreakpointSuspension,
+  isRuntimeSuspension,
+  type RuntimeSuspension,
+} from './suspension.js';
+import type {
+  IndexType,
+  MarkerType,
+  NamespaceType,
+  RuntimeFunctions,
+} from './types.js';
 import { Cons } from './utils/cons.js';
 
 type GlobalFunctions = Record<string, BeginNode>;
@@ -48,6 +58,7 @@ export class Interpreter {
   suspension: RuntimeSuspension | null = null;
   history: Snapshot[] = [];
   snapshotIndex: number = 0;
+  markersMap: WeakMap<Node, MarkerType> = new WeakMap();
 
   constructor(
     public readonly host: SupportsSnapshots = new NullPresentationHost()
@@ -82,23 +93,23 @@ export class Interpreter {
   }
 
   async runLoop(): Promise<RunResult> {
-    if (this.suspension) {
-      return { status: 'suspended', suspension: this.suspension };
-    }
-
     this.isRunning = true;
     try {
-      while (this.topFrame !== rootFrame) {
+      while (true) {
+        if (this.suspension) {
+          return { status: 'suspended', suspension: this.suspension };
+        }
+        if (this.topFrame === rootFrame) {
+          return { status: 'completed' };
+        }
+
         const result = this.topFrame.head.visit(this);
         if (result instanceof Promise) {
           await result;
         } else if (isRuntimeSuspension(result)) {
           this.suspension = result;
-          return { status: 'suspended', suspension: result };
         }
       }
-
-      return { status: 'completed' };
     } finally {
       this.isRunning = false;
     }
@@ -165,6 +176,13 @@ export class Interpreter {
       this.lastResult = this.getVariable(node.name);
     } else {
       this.topFrame = this.topFrame.push(node.makeFrame());
+      const marker = this.markersMap.get(this.topFrame.head.node);
+      if (marker) {
+        this.takeSnapshot();
+        if (marker === 'breakpoint') {
+          this.suspension = new BreakpointSuspension();
+        }
+      }
     }
   }
 
@@ -288,9 +306,11 @@ export class Interpreter {
 
   clearHistory() {
     this.history = [];
+    this.snapshotIndex = 0;
   }
 
   takeSnapshot() {
+    this.history.splice(this.snapshotIndex + 1);
     this.history.push({
       globalFunctions: this.globalFunctions,
       globalNamespace: this.globalNamespace,
@@ -313,5 +333,13 @@ export class Interpreter {
     this.suspension = snapshot.suspension;
     this.host.restoreSnapshot(snapshot.hostSnapshot);
     this.snapshotIndex = index;
+  }
+
+  clearMarkers() {
+    this.markersMap = new WeakMap();
+  }
+
+  setMarkers(node: Node, markers: readonly MarkerType[]) {
+    this.markersMap = mapMarkers(node, markers);
   }
 }
