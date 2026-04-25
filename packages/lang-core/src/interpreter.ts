@@ -126,6 +126,12 @@ export class Interpreter {
     return this.runLoop();
   }
 
+  stop() {
+    this.suspension = null;
+    this.isRunning = false;
+    this.popOut();
+  }
+
   registerHandler(handler: DataHandler) {
     this.dataHandlers.push(handler);
     this.registerGlobals(handler.globals);

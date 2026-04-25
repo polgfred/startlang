@@ -208,6 +208,8 @@ export default function Header({
   setShowInspector,
   runProgram,
   runLabel,
+  stopProgram,
+  isStopDisabled,
 }: {
   outputTab: OutputTab;
   setOutputTab: (value: OutputTab) => void;
@@ -218,6 +220,8 @@ export default function Header({
   setShowInspector: (value: boolean) => void;
   runProgram: () => void;
   runLabel: string;
+  stopProgram: () => void;
+  isStopDisabled: boolean;
 }) {
   return (
     <AppBar
@@ -276,6 +280,18 @@ export default function Header({
           }}
         >
           {runLabel}
+        </Button>
+        <Button
+          variant="outlined"
+          color="secondary"
+          disabled={isStopDisabled}
+          onClick={stopProgram}
+          sx={{
+            ...headerButtonSx,
+            minWidth: 96,
+          }}
+        >
+          Stop
         </Button>
       </Toolbar>
       <Toolbar

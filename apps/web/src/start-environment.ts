@@ -179,6 +179,13 @@ export function useStartEnvironment() {
     }
   }, [finishInterpreterAction, interpreter]);
 
+  const stopProgram = useCallback(() => {
+    setError(null);
+    interpreter.stop();
+    highlightNode(null);
+    finishInterpreterAction();
+  }, [finishInterpreterAction, highlightNode, interpreter]);
+
   const isBreakpointSuspended =
     interpreter.suspension instanceof BreakpointSuspension;
   const isInputSuspended = interpreter.suspension instanceof InputSuspension;
@@ -197,12 +204,14 @@ export function useStartEnvironment() {
     inputState,
     interpreter,
     isRunDisabled: interpreter.isRunning || isInputSuspended,
+    isStopDisabled: !interpreter.isRunning && !interpreter.isSuspended,
     outputTab,
     runLabel: isBreakpointSuspended ? 'Continue' : 'Run',
     runOrResume,
     setOutputTab,
     setShowInspector,
     showInspector,
+    stopProgram,
     updateSlider,
   };
 }

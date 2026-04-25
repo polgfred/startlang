@@ -59,6 +59,8 @@ export default function App() {
           setShowInspector={env.setShowInspector}
           runProgram={env.runOrResume}
           runLabel={env.runLabel}
+          stopProgram={env.stopProgram}
+          isStopDisabled={env.isStopDisabled}
         />
         <Stack
           direction="column"
