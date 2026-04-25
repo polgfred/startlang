@@ -306,7 +306,13 @@ export async function main() {
   interp.registerGlobals(browserPresentationGlobals);
 
   try {
-    await runUntilComplete(interp, host, renderer, question, await interp.run(node));
+    await runUntilComplete(
+      interp,
+      host,
+      renderer,
+      question,
+      await interp.run(node)
+    );
   } catch (err) {
     console.log(formatError(err));
   }

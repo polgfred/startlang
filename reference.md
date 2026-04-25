@@ -25,7 +25,7 @@ infinity
 "Hello, world!"
 ```
 
-In addition to the primivite types, the language contains two important composite types: lists and records. A list is an ordered sequence of other values, while a record (some languages refer to them as "maps" or "dictionaries") is an association between string keys and their corresponding values. Notably, lists and records may hold other lists and records as elements, making it possible to express arbitrarily complex structured data.
+In addition to the primitive types, the language contains two important composite types: lists and records. A list is an ordered sequence of other values, while a record (some languages refer to them as "maps" or "dictionaries") is an association between string keys and their corresponding values. Notably, lists and records may hold other lists and records as elements, making it possible to express arbitrarily complex structured data.
 
 ```
 [10, 20, 30]
@@ -43,7 +43,7 @@ In addition to the primivite types, the language contains two important composit
 
 ## Expressions
 
-Values can be combined using operators. Operators have precedence: when an expression contains multiple operators, those that are higher in the list will be peformed first. Use parentheses to force lower-precedence subexpressions to be evaluated first.
+Values can be combined using operators. Operators have precedence: when an expression contains multiple operators, those that are higher in the list will be performed first. Use parentheses to force lower-precedence subexpressions to be evaluated first.
 
 - unary `+` and `-`
 - exponentiation `^`
@@ -117,7 +117,7 @@ Commands are typically built-in behaviors provided by the system (like printing 
 
 ```
 print 1 + 2 * 3
-> 6
+> 7
 
 rect 10, 10, 100, 100 -> draws a 100x100 rectangle on the screen at (10, 10)
 ```
@@ -130,7 +130,7 @@ The `repeat`, `while`, and `for` statements execute a statement or code block (c
 - `while` executes the body as long as some condition is true; if the condition is initially false, the body will never be executed
 - `for` works in two different ways:
   - with `=`, it executes the code for each number in a numeric sequence
-  - with `in`, it executes the code for each member of a list or record
+  - with `in`, it executes the code for each member of a list, or each key in a record
 
 If the loop body is a single short statement, it can be placed on the same line after `do`. For most cases, the `do`/`end` form is preferable.
 
@@ -175,7 +175,7 @@ end
 
 ## Functions
 
-The `begin` statement defines a new function which executes the statement or code block when called. If parameters are provided, any values that are passed to the function when called, are assiged to those variable names inside the body of the function, in the order that they appear. If a `return` statement is encountered, the returned value becomes the value of the expression that called the function.
+The `begin` statement defines a new function which executes the statement or code block when called. If parameters are provided, any values that are passed to the function when called, are assigned to those variable names inside the body of the function, in the order that they appear. If a `return` statement is encountered, the returned value becomes the value of the expression that called the function.
 
 ```
 begin hypotenuse(a, b) do
@@ -205,12 +205,12 @@ Within the body of a function, any assigned variable (including parameters) take
 a = 10
 
 begin hypotenuse(a, b) do
-  return sqrt(a ^ 2 + b ^ 2) <- this a is 3
+  return sqrt(a ^ 2 + b ^ 2) ; this a is 3
 end
 
 print hypotenuse(3, 4)
 > 5
 
-print a <- this a is still 10!
+print a ; this a is still 10!
 > 10
 ```

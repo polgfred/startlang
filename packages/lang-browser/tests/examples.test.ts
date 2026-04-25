@@ -80,7 +80,10 @@ function getOutputText(host: BrowserPresentationHost) {
 }
 
 async function playNumguessWithBinarySearch() {
-  const source = await readFile(path.join(examplesDir, 'numguess.start'), 'utf8');
+  const source = await readFile(
+    path.join(examplesDir, 'numguess.start'),
+    'utf8'
+  );
   const host = new BrowserPresentationHost();
   const interpreter = new Interpreter(host);
   const guesses: number[] = [];
@@ -131,7 +134,7 @@ describe('browser examples', () => {
   });
 
   it.each([
-    ['invest.start', ['Years', '$100,000.00', 'That\'s a total growth']],
+    ['invest.start', ['Years', '$100,000.00', "That's a total growth"]],
     ['layout.start', ['The Beatles', 'Pink Floyd', 'Members']],
     ['numguess.start', ['Your guesses:', 'Goodbye!']],
     ['sieve.start', ['2 is prime', '97 is prime']],
