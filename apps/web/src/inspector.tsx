@@ -22,6 +22,7 @@ import { JSX, useCallback, useState } from 'react';
 const compactTableSx = {
   width: '100%',
   marginBottom: '10px',
+  tableLayout: 'fixed',
   '& .MuiTableCell-root': {
     padding: '8px 10px',
     borderColor: 'rgba(0, 0, 0, 0.08)',
@@ -31,6 +32,14 @@ const compactTableSx = {
   '& .MuiTableHead-root .MuiTableCell-root': {
     fontWeight: 700,
   },
+};
+
+const nameCellSx = {
+  width: '25%',
+};
+
+const valueCellSx = {
+  width: '75%',
 };
 
 export default function Inspector({
@@ -151,6 +160,10 @@ function NamespaceInspector({
 }) {
   return (
     <Table size="small" sx={compactTableSx}>
+      <colgroup>
+        <col style={{ width: '25%' }} />
+        <col style={{ width: '75%' }} />
+      </colgroup>
       <TableHead>
         <TableRow>
           <TableCell
@@ -166,8 +179,8 @@ function NamespaceInspector({
       <TableBody>
         {Object.entries(namespace).map(([key, value]) => (
           <TableRow key={key}>
-            <TableCell>{key}</TableCell>
-            <TableCell>{inspectorFor(value)}</TableCell>
+            <TableCell sx={nameCellSx}>{key}</TableCell>
+            <TableCell sx={valueCellSx}>{inspectorFor(value)}</TableCell>
           </TableRow>
         ))}
       </TableBody>
