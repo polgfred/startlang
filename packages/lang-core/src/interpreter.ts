@@ -36,7 +36,7 @@ const rootNamespace: Cons<NamespaceType> = new Cons(emptyObject);
 
 export type { SupportsSnapshots } from './host.js';
 
-export interface Snapshot<THostSnapshot = unknown> {
+export interface RuntimeState<THostSnapshot = unknown> {
   globalFunctions: GlobalFunctions;
   globalNamespace: NamespaceType;
   topNamespace: Cons<NamespaceType>;
@@ -46,7 +46,7 @@ export interface Snapshot<THostSnapshot = unknown> {
   hostSnapshot: THostSnapshot;
 }
 
-export type RuntimeEffectKind = 'repaint';
+export type RuntimeEffectKind = 'repaint' | 'snapshot';
 
 export interface RuntimeEffect {
   readonly kind: RuntimeEffectKind;
@@ -54,6 +54,10 @@ export interface RuntimeEffect {
 
 export const repaintEffect: RuntimeEffect = Object.freeze({
   kind: 'repaint',
+});
+
+export const snapshotEffect: RuntimeEffect = Object.freeze({
+  kind: 'snapshot',
 });
 
 export type RuntimeEffectHandler = (
@@ -74,30 +78,23 @@ export class Interpreter<THostSnapshot = unknown> {
   lastResult: unknown = null;
   isRunning: boolean = false;
   suspension: RuntimeSuspension | null = null;
-  pendingEffect: RuntimeEffect | null = null;
+  pendingEffects: RuntimeEffect[] = [];
   effectHandler: RuntimeEffectHandler | null = null;
-  history: Snapshot<THostSnapshot>[] = [];
-  snapshotIndex: number = 0;
   markersMap: MarkerMap = emptyMarkerMap;
 
   constructor(
-    public readonly host: SupportsSnapshots<THostSnapshot> =
-      new NullPresentationHost() as SupportsSnapshots<THostSnapshot>
+    public readonly host: SupportsSnapshots<THostSnapshot> = new NullPresentationHost() as SupportsSnapshots<THostSnapshot>
   ) {
     installHandlers(this);
     this.registerGlobals({
       snapshot(interpreter) {
-        interpreter.takeSnapshot();
+        interpreter.setEffect(snapshotEffect);
       },
     });
   }
 
   get isSuspended() {
     return this.suspension !== null;
-  }
-
-  get isRewound() {
-    return this.snapshotIndex < this.history.length - 1;
   }
 
   run(node: Node) {
@@ -107,7 +104,7 @@ export class Interpreter<THostSnapshot = unknown> {
     this.topFrame = rootFrame.push(node.makeFrame());
     this.lastResult = null;
     this.suspension = null;
-    this.pendingEffect = null;
+    this.pendingEffects = [];
     return this.runLoop();
   }
 
@@ -115,7 +112,7 @@ export class Interpreter<THostSnapshot = unknown> {
     this.topFrame = rootFrame.push(node.makeFrame());
     this.lastResult = null;
     this.suspension = null;
-    this.pendingEffect = null;
+    this.pendingEffects = [];
     return this.runLoop();
   }
 
@@ -139,12 +136,14 @@ export class Interpreter<THostSnapshot = unknown> {
           this.suspension = result;
         }
 
-        const effect = this.pendingEffect;
-        if (effect) {
-          this.pendingEffect = null;
-          const result = this.effectHandler?.(effect);
-          if (result instanceof Promise) {
-            await result;
+        const effects = this.pendingEffects;
+        if (effects.length > 0) {
+          this.pendingEffects = [];
+          for (const effect of effects) {
+            const result = this.effectHandler?.(effect);
+            if (result instanceof Promise) {
+              await result;
+            }
           }
         }
       }
@@ -165,18 +164,13 @@ export class Interpreter<THostSnapshot = unknown> {
     return this.runLoop();
   }
 
-  continueFromSnapshot() {
-    this.history.splice(this.snapshotIndex + 1);
-    return this.runLoop();
-  }
-
   setEffect(effect: RuntimeEffect) {
-    this.pendingEffect = effect;
+    this.pendingEffects.push(effect);
   }
 
   stop() {
     this.suspension = null;
-    this.pendingEffect = null;
+    this.pendingEffects = [];
     this.isRunning = false;
     this.popOut();
   }
@@ -233,7 +227,7 @@ export class Interpreter<THostSnapshot = unknown> {
       this.topFrame = this.topFrame.push(node.makeFrame());
       const marker = this.markersMap.get(this.topFrame.head.node);
       if (marker) {
-        this.takeSnapshot();
+        this.setEffect(snapshotEffect);
         if (marker === 'breakpoint') {
           this.suspension = new BreakpointSuspension();
         }
@@ -359,12 +353,7 @@ export class Interpreter<THostSnapshot = unknown> {
     this.lastResult = value;
   }
 
-  clearHistory() {
-    this.history = [];
-    this.snapshotIndex = 0;
-  }
-
-  captureSnapshot(): Snapshot<THostSnapshot> {
+  captureState(): RuntimeState<THostSnapshot> {
     return {
       globalFunctions: this.globalFunctions,
       globalNamespace: this.globalNamespace,
@@ -376,22 +365,14 @@ export class Interpreter<THostSnapshot = unknown> {
     };
   }
 
-  takeSnapshot() {
-    this.history.splice(this.snapshotIndex + 1);
-    this.history.push(this.captureSnapshot());
-    this.snapshotIndex = this.history.length - 1;
-  }
-
-  moveToSnapshot(index: number) {
-    const snapshot = this.history[index];
-    this.globalFunctions = snapshot.globalFunctions;
-    this.globalNamespace = snapshot.globalNamespace;
-    this.topNamespace = snapshot.topNamespace;
-    this.topFrame = snapshot.topFrame;
-    this.lastResult = snapshot.lastResult;
-    this.suspension = snapshot.suspension;
-    this.host.restoreSnapshot(snapshot.hostSnapshot);
-    this.snapshotIndex = index;
+  restoreState(state: RuntimeState<THostSnapshot>) {
+    this.globalFunctions = state.globalFunctions;
+    this.globalNamespace = state.globalNamespace;
+    this.topNamespace = state.topNamespace;
+    this.topFrame = state.topFrame;
+    this.lastResult = state.lastResult;
+    this.suspension = state.suspension;
+    this.host.restoreSnapshot(state.hostSnapshot);
   }
 
   clearMarkers() {

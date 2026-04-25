@@ -7,9 +7,10 @@ import { rootCell } from '@startlang/lang-browser/cells';
 import {
   Interpreter,
   type RuntimeEffect,
-  type Snapshot,
+  type RuntimeState,
 } from '@startlang/lang-core/interpreter';
 import { runtimeGlobals } from '@startlang/lang-core/runtime-globals';
+import { RuntimeHistory } from '@startlang/lang-core/runtime-history';
 import {
   BreakpointSuspension,
   InputSuspension,
@@ -27,7 +28,7 @@ import { useEditor } from './editor-context.jsx';
 
 type OutputTab = 'graphics' | 'text';
 
-interface RuntimeView extends Snapshot<BrowserPresentationSnapshot> {
+interface RuntimeView extends RuntimeState<BrowserPresentationSnapshot> {
   version: number;
   historyLength: number;
   historyIndex: number;
@@ -37,20 +38,21 @@ interface RuntimeView extends Snapshot<BrowserPresentationSnapshot> {
 }
 
 function createStartEnvironmentStore(
-  interpreter: Interpreter<BrowserPresentationSnapshot>
+  interpreter: Interpreter<BrowserPresentationSnapshot>,
+  history: RuntimeHistory<BrowserPresentationSnapshot>
 ) {
   const events = new EventTarget();
   let version = 0;
 
   function readView(): RuntimeView {
     return {
-      ...interpreter.captureSnapshot(),
       version,
-      historyLength: interpreter.history.length,
-      historyIndex: interpreter.snapshotIndex,
+      ...interpreter.captureState(),
+      historyLength: history.length,
+      historyIndex: history.index,
       isRunning: interpreter.isRunning,
       isSuspended: interpreter.isSuspended,
-      isRewound: interpreter.isRewound,
+      isRewound: history.isRewound,
     };
   }
 
@@ -105,12 +107,13 @@ export function useStartEnvironment() {
 
   const { current: host } = useRef(new BrowserPresentationHost());
   const { current: interpreter } = useRef(new Interpreter(host));
-  const { current: store } = useRef(createStartEnvironmentStore(interpreter));
-  const runtimeView = useSyncExternalStore(
-    store.subscribe,
-    store.getView,
-    store.getView
+  const { current: history } = useRef(
+    new RuntimeHistory<BrowserPresentationSnapshot>()
   );
+  const { current: store } = useRef(
+    createStartEnvironmentStore(interpreter, history)
+  );
+  const runtimeView = useSyncExternalStore(store.subscribe, store.getView);
   const globalsRegisteredRef = useRef(false);
 
   if (!globalsRegisteredRef.current) {
@@ -134,13 +137,13 @@ export function useStartEnvironment() {
   const syncHighlight = useCallback(() => {
     if (
       interpreter.suspension instanceof BreakpointSuspension ||
-      interpreter.snapshotIndex < interpreter.history.length - 1
+      history.isRewound
     ) {
       highlightNode(interpreter.topFrame.head.node);
     } else {
       highlightNode(null);
     }
-  }, [highlightNode, interpreter]);
+  }, [highlightNode, history, interpreter]);
 
   const finishInterpreterAction = useCallback(() => {
     syncOutputTab();
@@ -151,6 +154,10 @@ export function useStartEnvironment() {
   const handleRuntimeEffect = useCallback(
     async (effect: RuntimeEffect) => {
       switch (effect.kind) {
+        case 'snapshot': {
+          history.push(interpreter.captureState());
+          break;
+        }
         case 'repaint': {
           store.publish();
           await waitForAnimationFrame();
@@ -158,7 +165,7 @@ export function useStartEnvironment() {
         }
       }
     },
-    [store]
+    [history, interpreter, store]
   );
 
   interpreter.effectHandler = handleRuntimeEffect;
@@ -215,16 +222,16 @@ export function useStartEnvironment() {
 
   const updateSlider = useCallback(
     (index: number) => {
-      interpreter.moveToSnapshot(index);
+      interpreter.restoreState(history.moveTo(index));
       finishInterpreterAction();
     },
-    [finishInterpreterAction, interpreter]
+    [finishInterpreterAction, history, interpreter]
   );
 
   const runProgram = useCallback(async () => {
     setError(null);
     highlightNode(null);
-    interpreter.clearHistory();
+    history.clear();
     host.clearDisplay();
     host.clearOutputBuffer();
 
@@ -239,6 +246,7 @@ export function useStartEnvironment() {
   }, [
     finishInterpreterAction,
     getMarkers,
+    history,
     highlightNode,
     host,
     interpreter,
@@ -260,11 +268,12 @@ export function useStartEnvironment() {
     highlightNode(null);
 
     try {
-      await interpreter.continueFromSnapshot();
+      history.truncateAfterCurrent();
+      await interpreter.runLoop();
     } finally {
       finishInterpreterAction();
     }
-  }, [finishInterpreterAction, highlightNode, interpreter]);
+  }, [finishInterpreterAction, highlightNode, history, interpreter]);
 
   const stopProgram = useCallback(() => {
     setError(null);
@@ -282,16 +291,23 @@ export function useStartEnvironment() {
     if (interpreter.suspension instanceof BreakpointSuspension) {
       return resumeBreakpoint();
     }
-    if (interpreter.isRewound) {
+    if (history.isRewound) {
       return continueFromSnapshot();
     }
     return runProgram();
-  }, [continueFromSnapshot, interpreter, resumeBreakpoint, runProgram]);
+  }, [
+    continueFromSnapshot,
+    history,
+    interpreter,
+    resumeBreakpoint,
+    runProgram,
+  ]);
 
   return {
     error,
     hasGraphicsOutput,
     hasTextOutput,
+    history,
     host,
     inputState,
     interpreter,

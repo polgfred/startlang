@@ -138,6 +138,7 @@ export default function App() {
               >
                 <Inspector
                   error={env.error}
+                  history={env.history}
                   interpreter={env.interpreter}
                   updateSlider={env.updateSlider}
                 />

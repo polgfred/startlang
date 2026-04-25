@@ -11,7 +11,9 @@ import {
   TableRow,
   Typography,
 } from '@mui/material';
-import { Interpreter } from '@startlang/lang-core/interpreter';
+import type { BrowserPresentationSnapshot } from '@startlang/lang-browser/browser';
+import type { Interpreter } from '@startlang/lang-core/interpreter';
+import type { RuntimeHistory } from '@startlang/lang-core/runtime-history';
 import type {
   ListType,
   NamespaceType,
@@ -44,10 +46,12 @@ const valueCellSx = {
 
 export default function Inspector({
   error,
+  history,
   interpreter,
   updateSlider,
 }: {
   error: Error | null;
+  history: RuntimeHistory<BrowserPresentationSnapshot>;
   interpreter: Interpreter;
   updateSlider: (index: number) => void;
 }) {
@@ -72,9 +76,9 @@ export default function Inspector({
     >
       <Slider
         min={0}
-        max={Math.max(interpreter.history.length - 1, 0)}
+        max={Math.max(history.length - 1, 0)}
         step={1}
-        value={interpreter.snapshotIndex}
+        value={history.index}
         onChange={handleSliderChange}
         sx={{
           width: 'auto',
@@ -86,7 +90,7 @@ export default function Inspector({
         }}
       />
       {error && <ErrorInspector error={error} />}
-      {interpreter.history.length > 0 && (
+      {history.length > 0 && (
         <Box
           sx={{
             display: 'grid',
