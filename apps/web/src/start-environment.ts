@@ -2,7 +2,12 @@ import {
   BrowserPresentationHost,
   browserPresentationGlobals,
 } from '@startlang/lang-browser/browser';
-import { rootCell } from '@startlang/lang-browser/cells';
+import {
+  rootCell,
+  type Cell,
+  type StackCell,
+} from '@startlang/lang-browser/cells';
+import type { Shape } from '@startlang/lang-browser/shapes';
 import {
   Interpreter,
   type RuntimeEffect,
@@ -11,12 +16,83 @@ import { runtimeGlobals } from '@startlang/lang-core/runtime-globals';
 import {
   BreakpointSuspension,
   InputSuspension,
+  type RuntimeSuspension,
 } from '@startlang/lang-core/suspension';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { NamespaceType } from '@startlang/lang-core/types';
+import type { Cons } from '@startlang/lang-core/utils/cons';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from 'react';
 
 import { useEditor } from './editor-context.jsx';
 
 type OutputTab = 'graphics' | 'text';
+
+interface RuntimeView {
+  version: number;
+  shapes: readonly Shape[];
+  outputBuffer: StackCell;
+  currentCell: Cons<Cell>;
+  globalNamespace: NamespaceType;
+  topNamespace: Cons<NamespaceType>;
+  historyLength: number;
+  historyIndex: number;
+  isRunning: boolean;
+  isSuspended: boolean;
+  isRewound: boolean;
+  suspension: RuntimeSuspension | null;
+}
+
+function createStartEnvironmentStore(
+  host: BrowserPresentationHost,
+  interpreter: Interpreter
+) {
+  const events = new EventTarget();
+  let version = 0;
+
+  function readView(): RuntimeView {
+    return {
+      version,
+      shapes: host.shapes,
+      outputBuffer: host.outputBuffer,
+      currentCell: host.currentCell,
+      globalNamespace: interpreter.globalNamespace,
+      topNamespace: interpreter.topNamespace,
+      historyLength: interpreter.history.length,
+      historyIndex: interpreter.snapshotIndex,
+      isRunning: interpreter.isRunning,
+      isSuspended: interpreter.isSuspended,
+      isRewound: interpreter.isRewound,
+      suspension: interpreter.suspension,
+    };
+  }
+
+  let view = readView();
+
+  function subscribe(listener: () => void) {
+    events.addEventListener('change', listener);
+    return () => {
+      events.removeEventListener('change', listener);
+    };
+  }
+
+  function getView() {
+    return view;
+  }
+
+  function publish() {
+    version += 1;
+    view = readView();
+    events.dispatchEvent(new Event('change'));
+  }
+
+  return { getView, publish, subscribe };
+}
 
 function chooseOutputTab(
   current: OutputTab,
@@ -32,14 +108,6 @@ function chooseOutputTab(
   return current;
 }
 
-function useForceRender() {
-  const [, setTick] = useState(0);
-
-  return useCallback(() => {
-    setTick((tick) => tick + 1);
-  }, []);
-}
-
 function waitForAnimationFrame() {
   return new Promise<void>((resolve) => {
     requestAnimationFrame(() => resolve());
@@ -53,10 +121,16 @@ export function useStartEnvironment() {
   const [showInspector, setShowInspector] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  const forceRender = useForceRender();
-
   const { current: host } = useRef(new BrowserPresentationHost());
   const { current: interpreter } = useRef(new Interpreter(host));
+  const { current: store } = useRef(
+    createStartEnvironmentStore(host, interpreter)
+  );
+  const runtimeView = useSyncExternalStore(
+    store.subscribe,
+    store.getView,
+    store.getView
+  );
   const globalsRegisteredRef = useRef(false);
 
   if (!globalsRegisteredRef.current) {
@@ -91,20 +165,20 @@ export function useStartEnvironment() {
   const finishInterpreterAction = useCallback(() => {
     syncOutputTab();
     syncHighlight();
-    forceRender();
-  }, [forceRender, syncHighlight, syncOutputTab]);
+    store.publish();
+  }, [store, syncHighlight, syncOutputTab]);
 
   const handleRuntimeEffect = useCallback(
     async (effect: RuntimeEffect) => {
       switch (effect.kind) {
         case 'repaint': {
-          forceRender();
+          store.publish();
           await waitForAnimationFrame();
           break;
         }
       }
     },
-    [forceRender]
+    [store]
   );
 
   interpreter.effectHandler = handleRuntimeEffect;
@@ -143,20 +217,20 @@ export function useStartEnvironment() {
 
   const inputState = useMemo(
     () =>
-      interpreter.suspension instanceof InputSuspension
+      runtimeView.suspension instanceof InputSuspension
         ? {
-            prompt: interpreter.suspension.prompt,
-            initial: interpreter.suspension.initial,
+            prompt: runtimeView.suspension.prompt,
+            initial: runtimeView.suspension.initial,
             onInputComplete: resumeInput,
           }
         : null,
-    [interpreter.suspension, resumeInput]
+    [runtimeView.suspension, resumeInput]
   );
 
-  const hasGraphicsOutput = host.shapes.length > 0;
+  const hasGraphicsOutput = runtimeView.shapes.length > 0;
   const hasTextOutput =
-    host.outputBuffer.children.length > 0 ||
-    host.currentCell.head !== rootCell ||
+    runtimeView.outputBuffer.children.length > 0 ||
+    runtimeView.currentCell.head !== rootCell ||
     inputState !== null;
 
   const updateSlider = useCallback(
@@ -220,10 +294,10 @@ export function useStartEnvironment() {
   }, [finishInterpreterAction, highlightNode, interpreter]);
 
   const isBreakpointSuspended =
-    interpreter.suspension instanceof BreakpointSuspension;
-  const isInputSuspended = interpreter.suspension instanceof InputSuspension;
+    runtimeView.suspension instanceof BreakpointSuspension;
+  const isInputSuspended = runtimeView.suspension instanceof InputSuspension;
   const isProgramActive =
-    interpreter.isRunning || interpreter.isSuspended || interpreter.isRewound;
+    runtimeView.isRunning || runtimeView.isSuspended || runtimeView.isRewound;
   const runOrResume = useCallback(() => {
     if (interpreter.suspension instanceof BreakpointSuspension) {
       return resumeBreakpoint();
@@ -241,7 +315,7 @@ export function useStartEnvironment() {
     host,
     inputState,
     interpreter,
-    isRunDisabled: interpreter.isRunning || isInputSuspended,
+    isRunDisabled: runtimeView.isRunning || isInputSuspended,
     isStopDisabled: !isProgramActive,
     isEditorReadOnly: isProgramActive,
     outputTab,
