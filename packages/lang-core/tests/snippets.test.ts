@@ -4,8 +4,8 @@ import { parse } from '@startlang/lang-core/parser.peggy';
 import { RuntimeHistory } from '@startlang/lang-core/runtime-history';
 import { runtimeGlobals } from '@startlang/lang-core/runtime-globals';
 import {
-  BreakpointSuspension,
   InputSuspension,
+  isBreakpointSuspension,
 } from '@startlang/lang-core/suspension';
 import type { RuntimeSuspension } from '@startlang/lang-core/suspension';
 import type { RuntimeFunctions } from '@startlang/lang-core/types';
@@ -526,6 +526,26 @@ describe('core language suspensions and snapshots', () => {
     expect(restored).toEqual([{ saved: true }]);
   });
 
+  it('pauses execution until resumed', async () => {
+    const interpreter = new Interpreter();
+
+    const result = await interpreter.run(
+      parseSnippet(`
+      value = 1
+      pause
+      value = 2
+      `)
+    );
+
+    expect(isBreakpointSuspension(expectSuspended(result))).toBe(true);
+    expect(interpreter.getVariable('value')).toBe(1);
+
+    const resumed = await interpreter.resume(undefined);
+
+    expect(resumed.status).toBe('completed');
+    expect(interpreter.getVariable('value')).toBe(2);
+  });
+
   it('continues from a restored marker snapshot and discards future history', async () => {
     const markers: MarkerType[] = [];
     const source = [
@@ -584,7 +604,7 @@ describe('core language suspensions and snapshots', () => {
 
     const result = await interpreter.run(rootNode);
 
-    expect(expectSuspended(result)).toBeInstanceOf(BreakpointSuspension);
+    expect(isBreakpointSuspension(expectSuspended(result))).toBe(true);
     expect(history.entries).toHaveLength(2);
     expect(interpreter.getVariable('value')).toBe(1);
 

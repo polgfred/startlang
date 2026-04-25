@@ -12,8 +12,8 @@ import {
 import { runtimeGlobals } from '@startlang/lang-core/runtime-globals';
 import { RuntimeHistory } from '@startlang/lang-core/runtime-history';
 import {
-  BreakpointSuspension,
   InputSuspension,
+  isBreakpointSuspension,
 } from '@startlang/lang-core/suspension';
 import {
   useCallback,
@@ -136,7 +136,7 @@ export function useStartEnvironment() {
 
   const syncHighlight = useCallback(() => {
     if (
-      interpreter.suspension instanceof BreakpointSuspension ||
+      isBreakpointSuspension(interpreter.suspension) ||
       history.isRewound
     ) {
       highlightNode(interpreter.topFrame.head.node);
@@ -283,12 +283,12 @@ export function useStartEnvironment() {
   }, [finishInterpreterAction, highlightNode, interpreter]);
 
   const isBreakpointSuspended =
-    runtimeView.suspension instanceof BreakpointSuspension;
+    isBreakpointSuspension(runtimeView.suspension);
   const isInputSuspended = runtimeView.suspension instanceof InputSuspension;
   const isProgramActive =
     runtimeView.isRunning || runtimeView.isSuspended || runtimeView.isRewound;
   const runOrResume = useCallback(() => {
-    if (interpreter.suspension instanceof BreakpointSuspension) {
+    if (isBreakpointSuspension(interpreter.suspension)) {
       return resumeBreakpoint();
     }
     if (history.isRewound) {

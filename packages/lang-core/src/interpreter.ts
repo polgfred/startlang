@@ -16,7 +16,7 @@ import {
   type MarkerMap,
 } from './nodes/map-markers.js';
 import {
-  BreakpointSuspension,
+  breakpointSuspension,
   isRuntimeSuspension,
   type RuntimeSuspension,
 } from './suspension.js';
@@ -87,6 +87,9 @@ export class Interpreter<THostSnapshot = unknown> {
   ) {
     installHandlers(this);
     this.registerGlobals({
+      pause() {
+        return breakpointSuspension;
+      },
       snapshot(interpreter) {
         interpreter.setEffect(snapshotEffect);
       },
@@ -229,7 +232,7 @@ export class Interpreter<THostSnapshot = unknown> {
       if (marker) {
         this.setEffect(snapshotEffect);
         if (marker === 'breakpoint') {
-          this.suspension = new BreakpointSuspension();
+          this.suspension = breakpointSuspension;
         }
       }
     }

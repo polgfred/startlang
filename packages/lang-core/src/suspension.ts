@@ -27,6 +27,14 @@ export class BreakpointSuspension extends RuntimeSuspension<void> {
   resume() {}
 }
 
+export const breakpointSuspension = Object.freeze(new BreakpointSuspension());
+
+export function isBreakpointSuspension(
+  suspension: RuntimeSuspension | null
+): suspension is BreakpointSuspension {
+  return suspension?.kind === breakpointSuspension.kind;
+}
+
 export function isRuntimeSuspension(
   value: unknown
 ): value is RuntimeSuspension {

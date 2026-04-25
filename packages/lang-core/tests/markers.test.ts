@@ -1,6 +1,6 @@
 import { Interpreter } from '@startlang/lang-core/interpreter';
 import { parse } from '@startlang/lang-core/parser.peggy';
-import { BreakpointSuspension } from '@startlang/lang-core/suspension';
+import { isBreakpointSuspension } from '@startlang/lang-core/suspension';
 import type { MarkerType } from '@startlang/lang-core/types';
 import { describe, expect, it } from 'vitest';
 
@@ -25,7 +25,7 @@ describe('marker maps', () => {
     if (result.status !== 'suspended') {
       throw new Error(`expected suspension, got ${result.status}`);
     }
-    expect(result.suspension).toBeInstanceOf(BreakpointSuspension);
+    expect(isBreakpointSuspension(result.suspension)).toBe(true);
     expect(interpreter.topFrame.head.node.location.start.line).toBe(2);
 
     delete markers[2];
@@ -36,7 +36,7 @@ describe('marker maps', () => {
     if (result.status !== 'suspended') {
       throw new Error(`expected suspension, got ${result.status}`);
     }
-    expect(result.suspension).toBeInstanceOf(BreakpointSuspension);
+    expect(isBreakpointSuspension(result.suspension)).toBe(true);
     expect(interpreter.topFrame.head.node.location.start.line).toBe(3);
     expect(interpreter.getVariable('x')).toBe(0);
 
