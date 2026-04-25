@@ -37,9 +37,7 @@ function expectSuspended(result: RunResult): RuntimeSuspension {
   return result.suspension;
 }
 
-function expectInputSuspension(
-  suspension: RuntimeSuspension
-): InputSuspension {
+function expectInputSuspension(suspension: RuntimeSuspension): InputSuspension {
   expect(suspension).toBeInstanceOf(InputSuspension);
   if (!(suspension instanceof InputSuspension)) {
     throw new Error('expected input suspension');
@@ -515,6 +513,42 @@ describe('core language suspensions and snapshots', () => {
 
     expect(interpreter.getVariable('value')).toBe(1);
     expect(restored).toEqual([{ saved: true }]);
+  });
+
+  it('continues from a restored marker snapshot and discards future history', async () => {
+    const markers: MarkerType[] = [];
+    const source = [
+      'value = 0',
+      'value = value + 1',
+      'value = value + 1',
+      'value = value + 1',
+      '',
+    ].join('\n');
+    const rootNode = parse(source);
+    const interpreter = new Interpreter();
+
+    markers[2] = 'snapshot';
+    markers[3] = 'snapshot';
+    interpreter.setMarkers(rootNode, markers);
+
+    const result = await interpreter.run(rootNode);
+
+    expect(result.status).toBe('completed');
+    expect(interpreter.getVariable('value')).toBe(3);
+    expect(interpreter.history).toHaveLength(2);
+    expect(interpreter.isRewound).toBe(false);
+
+    interpreter.moveToSnapshot(0);
+    expect(interpreter.getVariable('value')).toBe(0);
+    expect(interpreter.isRewound).toBe(true);
+
+    const resumed = await interpreter.continueFromSnapshot();
+
+    expect(resumed.status).toBe('completed');
+    expect(interpreter.getVariable('value')).toBe(3);
+    expect(interpreter.history).toHaveLength(2);
+    expect(interpreter.snapshotIndex).toBe(1);
+    expect(interpreter.isRewound).toBe(false);
   });
 
   it('takes marker snapshots and breakpoint suspensions at node entry', async () => {

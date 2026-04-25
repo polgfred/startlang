@@ -200,6 +200,23 @@ export function useStartEnvironment() {
     }
   }, [finishInterpreterAction, interpreter]);
 
+  const continueFromSnapshot = useCallback(async () => {
+    setError(null);
+    highlightNode(null);
+
+    try {
+      await interpreter.continueFromSnapshot();
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err);
+        // eslint-disable-next-line no-console
+        console.error(err.stack);
+      }
+    } finally {
+      finishInterpreterAction();
+    }
+  }, [finishInterpreterAction, highlightNode, interpreter]);
+
   const stopProgram = useCallback(() => {
     setError(null);
     interpreter.stop();
@@ -210,13 +227,22 @@ export function useStartEnvironment() {
   const isBreakpointSuspended =
     interpreter.suspension instanceof BreakpointSuspension;
   const isInputSuspended = interpreter.suspension instanceof InputSuspension;
-  const isProgramActive = interpreter.isRunning || interpreter.isSuspended;
+  const isProgramActive =
+    interpreter.isRunning || interpreter.isSuspended || interpreter.isRewound;
   const runOrResume = useCallback(() => {
     if (interpreter.suspension instanceof BreakpointSuspension) {
       return resumeBreakpoint();
     }
+    if (interpreter.isRewound) {
+      return continueFromSnapshot();
+    }
     return runProgram();
-  }, [interpreter, resumeBreakpoint, runProgram]);
+  }, [
+    continueFromSnapshot,
+    interpreter,
+    resumeBreakpoint,
+    runProgram,
+  ]);
 
   return {
     error,

@@ -95,6 +95,10 @@ export class Interpreter {
     return this.suspension !== null;
   }
 
+  get isRewound() {
+    return this.snapshotIndex < this.history.length - 1;
+  }
+
   run(node: Node) {
     this.globalFunctions = emptyObject;
     this.globalNamespace = emptyObject;
@@ -157,6 +161,11 @@ export class Interpreter {
     const suspension = this.suspension;
     this.suspension = null;
     suspension.resume(this, response);
+    return this.runLoop();
+  }
+
+  continueFromSnapshot() {
+    this.history.splice(this.snapshotIndex + 1);
     return this.runLoop();
   }
 
