@@ -1,5 +1,8 @@
 import type { PresentationHost } from '@startlang/lang-core/host';
-import { Interpreter } from '@startlang/lang-core/interpreter';
+import {
+  Interpreter,
+  repaintEffect,
+} from '@startlang/lang-core/interpreter';
 import { CallFrame, CallNode } from '@startlang/lang-core/nodes';
 import type { RuntimeFunctions } from '@startlang/lang-core/types';
 import { Cons } from '@startlang/lang-core/utils/cons';
@@ -55,8 +58,6 @@ const initialTextProps: TextProps = Object.freeze({
 export class BrowserPresentationHost
   implements PresentationHost<BrowserPresentationSnapshot>
 {
-  events = new EventTarget();
-
   shapes: readonly Shape[] = emptyArray;
   shapeProps: ShapeProps = initialShapeProps;
   textProps: TextProps = initialTextProps;
@@ -74,19 +75,16 @@ export class BrowserPresentationHost
 
   clearDisplay() {
     this.shapes = emptyArray;
-    this.events.dispatchEvent(new Event('repaint'));
   }
 
   pushShape(shape: Shape) {
     this.shapes = produce(this.shapes, (draft) => {
       draft.push(shape);
     });
-    this.events.dispatchEvent(new Event('repaint'));
   }
 
   clearOutputBuffer() {
     this.outputBuffer = new StackCell();
-    this.events.dispatchEvent(new Event('repaint'));
   }
 
   swapCell(cell: Cell) {
@@ -106,8 +104,6 @@ export class BrowserPresentationHost
   addCell(cell: Cell) {
     if (this.currentCell.head === rootCell) {
       this.outputBuffer = this.outputBuffer.addChild(cell);
-      this.events.dispatchEvent(new Event('repaint'));
-      return waitForRepaint();
     } else {
       this.swapCell(this.currentCell.head.addChild(cell));
     }
@@ -156,17 +152,18 @@ export class BrowserPresentationHost
   }
 }
 
-function waitForRepaint() {
-  return new Promise<void>((resolve) => {
-    setTimeout(resolve, 0);
-  });
-}
-
 function getPresentationHost(interpreter: Interpreter) {
   if (!(interpreter.host instanceof BrowserPresentationHost)) {
     throw new Error('invalid presentation host for interpreter');
   }
   return interpreter.host;
+}
+
+function addPresentationCell(interpreter: Interpreter, cell: Cell) {
+  const host = getPresentationHost(interpreter);
+
+  host.addCell(cell);
+  interpreter.setEffect(repaintEffect);
 }
 
 class BuildCellFrame extends CallFrame {
@@ -194,7 +191,8 @@ class BuildCellFrame extends CallFrame {
       }
       case 1: {
         interpreter.swapFrame(this, 2);
-        return host.addCell(host.popCell());
+        addPresentationCell(interpreter, host.popCell());
+        break;
       }
       case 2: {
         interpreter.popFrame();
@@ -209,6 +207,7 @@ export const browserPresentationGlobals: RuntimeFunctions = {
     const host = getPresentationHost(interpreter);
     host.clearDisplay();
     host.clearOutputBuffer();
+    interpreter.setEffect(repaintEffect);
   },
 
   color(interpreter, [red, green, blue, alpha = 1]: number[]) {
@@ -227,51 +226,53 @@ export const browserPresentationGlobals: RuntimeFunctions = {
   rect(interpreter, [x, y, width, height]: number[]) {
     const host = getPresentationHost(interpreter);
     host.pushShape(new Rect(x, y, width, height, host.shapeProps));
-    return waitForRepaint();
+    interpreter.setEffect(repaintEffect);
   },
 
   circle(interpreter, [cx, cy, radius]: number[]) {
     const host = getPresentationHost(interpreter);
     host.pushShape(new Circle(cx, cy, radius, host.shapeProps));
-    return waitForRepaint();
+    interpreter.setEffect(repaintEffect);
   },
 
   ellipse(interpreter, [cx, cy, rx, ry]: number[]) {
     const host = getPresentationHost(interpreter);
     host.pushShape(new Ellipse(cx, cy, rx, ry, host.shapeProps));
-    return waitForRepaint();
+    interpreter.setEffect(repaintEffect);
   },
 
   line(interpreter, [x1, y1, x2, y2]: number[]) {
     const host = getPresentationHost(interpreter);
     host.pushShape(new Line(x1, y1, x2, y2, host.shapeProps));
-    return waitForRepaint();
+    interpreter.setEffect(repaintEffect);
   },
 
   polygon(interpreter, [points]: [[number, number][]]) {
     const host = getPresentationHost(interpreter);
     host.pushShape(new Polygon(points, host.shapeProps));
-    return waitForRepaint();
+    interpreter.setEffect(repaintEffect);
   },
 
   text(interpreter, [x, y, text]: [number, number, string]) {
     const host = getPresentationHost(interpreter);
     host.pushShape(new Text(x, y, text, host.textProps, host.shapeProps));
-    return waitForRepaint();
+    interpreter.setEffect(repaintEffect);
   },
 
   heading(interpreter, [value, level = 1]: [unknown, number]) {
-    const host = getPresentationHost(interpreter);
     const handler = interpreter.getHandler(value);
-    return host.addCell(
+    addPresentationCell(
+      interpreter,
       new ValueCell(handler.getPrettyValue(value), `h${level}`)
     );
   },
 
   print(interpreter, [value]: [unknown]) {
-    const host = getPresentationHost(interpreter);
     const handler = interpreter.getHandler(value);
-    return host.addCell(new ValueCell(handler.getPrettyValue(value)));
+    addPresentationCell(
+      interpreter,
+      new ValueCell(handler.getPrettyValue(value))
+    );
   },
 
   stack(interpreter, args, node) {

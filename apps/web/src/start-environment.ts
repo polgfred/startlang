@@ -2,13 +2,16 @@ import {
   BrowserPresentationHost,
   browserPresentationGlobals,
 } from '@startlang/lang-browser/browser';
-import { Interpreter } from '@startlang/lang-core/interpreter';
+import {
+  Interpreter,
+  type RuntimeEffect,
+} from '@startlang/lang-core/interpreter';
 import { runtimeGlobals } from '@startlang/lang-core/runtime-globals';
 import {
   BreakpointSuspension,
   InputSuspension,
 } from '@startlang/lang-core/suspension';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 
 import { useEditor } from './editor-context.jsx';
 
@@ -36,6 +39,12 @@ function useForceRender() {
   }, []);
 }
 
+function waitForAnimationFrame() {
+  return new Promise<void>((resolve) => {
+    requestAnimationFrame(() => resolve());
+  });
+}
+
 export function useStartEnvironment() {
   const { getMarkers, highlightNode, parseValue } = useEditor();
 
@@ -54,13 +63,6 @@ export function useStartEnvironment() {
     interpreter.registerGlobals(runtimeGlobals);
     globalsRegisteredRef.current = true;
   }
-
-  useEffect(() => {
-    host.events.addEventListener('repaint', forceRender);
-    return () => {
-      host.events.removeEventListener('repaint', forceRender);
-    };
-  }, [forceRender, host]);
 
   const syncOutputTab = useCallback(() => {
     const nextHasGraphicsOutput = host.shapes.length > 0;
@@ -89,6 +91,21 @@ export function useStartEnvironment() {
     syncHighlight();
     forceRender();
   }, [forceRender, syncHighlight, syncOutputTab]);
+
+  const handleRuntimeEffect = useCallback(
+    async (effect: RuntimeEffect) => {
+      switch (effect.kind) {
+        case 'repaint': {
+          forceRender();
+          await waitForAnimationFrame();
+          break;
+        }
+      }
+    },
+    [forceRender]
+  );
+
+  interpreter.effectHandler = handleRuntimeEffect;
 
   const resumeInput = useCallback(
     async (value: string) => {

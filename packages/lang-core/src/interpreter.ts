@@ -46,6 +46,20 @@ export interface Snapshot {
   suspension: RuntimeSuspension | null;
 }
 
+export type RuntimeEffectKind = 'repaint';
+
+export interface RuntimeEffect {
+  readonly kind: RuntimeEffectKind;
+}
+
+export const repaintEffect: RuntimeEffect = Object.freeze({
+  kind: 'repaint',
+});
+
+export type RuntimeEffectHandler = (
+  effect: RuntimeEffect
+) => void | Promise<void>;
+
 export type RunResult =
   | { status: 'completed' }
   | { status: 'suspended'; suspension: RuntimeSuspension };
@@ -60,6 +74,8 @@ export class Interpreter {
   lastResult: unknown = null;
   isRunning: boolean = false;
   suspension: RuntimeSuspension | null = null;
+  pendingEffect: RuntimeEffect | null = null;
+  effectHandler: RuntimeEffectHandler | null = null;
   history: Snapshot[] = [];
   snapshotIndex: number = 0;
   markersMap: MarkerMap = emptyMarkerMap;
@@ -86,6 +102,7 @@ export class Interpreter {
     this.topFrame = rootFrame.push(node.makeFrame());
     this.lastResult = null;
     this.suspension = null;
+    this.pendingEffect = null;
     return this.runLoop();
   }
 
@@ -93,6 +110,7 @@ export class Interpreter {
     this.topFrame = rootFrame.push(node.makeFrame());
     this.lastResult = null;
     this.suspension = null;
+    this.pendingEffect = null;
     return this.runLoop();
   }
 
@@ -101,9 +119,11 @@ export class Interpreter {
     try {
       while (true) {
         if (this.suspension) {
+          this.isRunning = false;
           return { status: 'suspended', suspension: this.suspension };
         }
         if (this.topFrame === rootFrame) {
+          this.isRunning = false;
           return { status: 'completed' };
         }
 
@@ -113,9 +133,19 @@ export class Interpreter {
         } else if (isRuntimeSuspension(result)) {
           this.suspension = result;
         }
+
+        const effect = this.pendingEffect;
+        if (effect) {
+          this.pendingEffect = null;
+          const result = this.effectHandler?.(effect);
+          if (result instanceof Promise) {
+            await result;
+          }
+        }
       }
-    } finally {
+    } catch (err) {
       this.isRunning = false;
+      throw err;
     }
   }
 
@@ -130,8 +160,13 @@ export class Interpreter {
     return this.runLoop();
   }
 
+  setEffect(effect: RuntimeEffect) {
+    this.pendingEffect = effect;
+  }
+
   stop() {
     this.suspension = null;
+    this.pendingEffect = null;
     this.isRunning = false;
     this.popOut();
   }
