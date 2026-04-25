@@ -12,7 +12,7 @@ import {
   BreakpointSuspension,
   InputSuspension,
 } from '@startlang/lang-core/suspension';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useEditor } from './editor-context.jsx';
 
@@ -109,18 +109,31 @@ export function useStartEnvironment() {
 
   interpreter.effectHandler = handleRuntimeEffect;
 
+  useEffect(() => {
+    const handleAppError = (event: PromiseRejectionEvent) => {
+      const { reason } = event;
+      if (!(reason instanceof Error)) {
+        return;
+      }
+
+      setError(reason);
+      // eslint-disable-next-line no-console
+      console.error(reason.stack);
+      event.preventDefault();
+    };
+
+    window.addEventListener('unhandledrejection', handleAppError);
+    return () => {
+      window.removeEventListener('unhandledrejection', handleAppError);
+    };
+  }, []);
+
   const resumeInput = useCallback(
     async (value: string) => {
       setError(null);
 
       try {
         await interpreter.resume(value);
-      } catch (err: unknown) {
-        if (err instanceof Error) {
-          setError(err);
-          // eslint-disable-next-line no-console
-          console.error(err.stack);
-        }
       } finally {
         finishInterpreterAction();
       }
@@ -166,12 +179,6 @@ export function useStartEnvironment() {
       const rootNode = parseValue();
       interpreter.setMarkers(rootNode, getMarkers());
       await interpreter.run(rootNode);
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err);
-        // eslint-disable-next-line no-console
-        console.error(err.stack);
-      }
     } finally {
       finishInterpreterAction();
     }
@@ -189,12 +196,6 @@ export function useStartEnvironment() {
 
     try {
       await interpreter.resume(undefined);
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err);
-        // eslint-disable-next-line no-console
-        console.error(err.stack);
-      }
     } finally {
       finishInterpreterAction();
     }
@@ -206,12 +207,6 @@ export function useStartEnvironment() {
 
     try {
       await interpreter.continueFromSnapshot();
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err);
-        // eslint-disable-next-line no-console
-        console.error(err.stack);
-      }
     } finally {
       finishInterpreterAction();
     }
@@ -237,12 +232,7 @@ export function useStartEnvironment() {
       return continueFromSnapshot();
     }
     return runProgram();
-  }, [
-    continueFromSnapshot,
-    interpreter,
-    resumeBreakpoint,
-    runProgram,
-  ]);
+  }, [continueFromSnapshot, interpreter, resumeBreakpoint, runProgram]);
 
   return {
     error,
