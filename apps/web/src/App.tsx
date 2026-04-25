@@ -1,22 +1,11 @@
 import { Paper, Stack, ThemeProvider, createTheme } from '@mui/material';
-import {
-  BrowserPresentationHost,
-  browserPresentationGlobals,
-} from '@startlang/lang-browser/browser';
-import { Interpreter } from '@startlang/lang-core/interpreter';
-import { parse } from '@startlang/lang-core/parser.peggy';
-import { runtimeGlobals } from '@startlang/lang-core/runtime-globals';
-import { InputSuspension } from '@startlang/lang-core/suspension';
-import { editor } from 'monaco-editor';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import Editor from './editor.jsx';
 import Graphics from './graphics.jsx';
 import Header from './header.jsx';
 import Inspector from './inspector.jsx';
+import { useStartEnvironment } from './start-environment.js';
 import Term from './term.jsx';
-
-type OutputTab = 'graphics' | 'text';
 
 const theme = createTheme({
   components: {
@@ -46,128 +35,8 @@ const panelSx = {
   p: 2,
 };
 
-function useForceRender() {
-  const [, setTick] = useState(0);
-
-  return useCallback(() => {
-    setTick((tick) => tick + 1);
-  }, []);
-}
-
-function chooseOutputTab(
-  current: OutputTab,
-  hasGraphicsOutput: boolean,
-  hasTextOutput: boolean
-) {
-  if (current === 'graphics' && !hasGraphicsOutput && hasTextOutput) {
-    return 'text';
-  }
-  if (current === 'text' && !hasTextOutput && hasGraphicsOutput) {
-    return 'graphics';
-  }
-  return current;
-}
-
 export default function App() {
-  const editorRef = useRef<editor.ICodeEditor | null>(null);
-
-  const [outputTab, setOutputTab] = useState<OutputTab>('graphics');
-  const [showInspector, setShowInspector] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-
-  const forceRender = useForceRender();
-
-  const { current: host } = useRef(new BrowserPresentationHost());
-  const { current: interpreter } = useRef(new Interpreter(host));
-
-  useEffect(() => {
-    host.events.addEventListener('repaint', forceRender);
-    return () => {
-      host.events.removeEventListener('repaint', forceRender);
-    };
-  }, [forceRender, host]);
-
-  interpreter.registerGlobals(browserPresentationGlobals);
-  interpreter.registerGlobals(runtimeGlobals);
-
-  const syncOutputTab = useCallback(() => {
-    const nextHasGraphicsOutput = host.shapes.length > 0;
-    const nextHasTextOutput =
-      host.outputBuffer.children.length > 0 ||
-      interpreter.suspension instanceof InputSuspension;
-
-    setOutputTab((current) =>
-      chooseOutputTab(current, nextHasGraphicsOutput, nextHasTextOutput)
-    );
-  }, [host, interpreter]);
-
-  const resumeInput = useCallback(
-    async (value: string) => {
-      setError(null);
-
-      try {
-        await interpreter.resumeSuspension(value);
-      } catch (err: unknown) {
-        if (err instanceof Error) {
-          setError(err);
-          // eslint-disable-next-line no-console
-          console.error(err.stack);
-        }
-      } finally {
-        syncOutputTab();
-        forceRender();
-      }
-    },
-    [forceRender, interpreter, syncOutputTab]
-  );
-
-  const inputState = useMemo(
-    () =>
-      interpreter.suspension instanceof InputSuspension
-        ? {
-            prompt: interpreter.suspension.prompt,
-            initial: interpreter.suspension.initial,
-            onInputComplete: resumeInput,
-          }
-        : null,
-    [interpreter.suspension, resumeInput]
-  );
-
-  const hasGraphicsOutput = host.shapes.length > 0;
-  const hasTextOutput =
-    host.outputBuffer.children.length > 0 || inputState !== null;
-
-  const updateSlider = useCallback(
-    (index: number) => {
-      interpreter.moveToSnapshot(index);
-      syncOutputTab();
-      forceRender();
-    },
-    [forceRender, interpreter, syncOutputTab]
-  );
-
-  const runProgram = useCallback(async () => {
-    setError(null);
-    interpreter.clearHistory();
-    host.clearDisplay();
-    host.clearOutputBuffer();
-
-    try {
-      host.restoreOriginalSettings();
-      const source = (editorRef.current?.getValue() ?? '') + '\n';
-      const rootNode = parse(source);
-      await interpreter.run(rootNode);
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err);
-        // eslint-disable-next-line no-console
-        console.error(err.stack);
-      }
-    } finally {
-      syncOutputTab();
-      forceRender();
-    }
-  }, [forceRender, host, interpreter, syncOutputTab]);
+  const env = useStartEnvironment();
 
   return (
     <ThemeProvider theme={theme}>
@@ -181,15 +50,15 @@ export default function App() {
         })}
       >
         <Header
-          outputTab={outputTab}
-          setOutputTab={setOutputTab}
-          hasGraphicsOutput={hasGraphicsOutput}
-          hasTextOutput={hasTextOutput}
-          isProgramActive={interpreter.isRunning || interpreter.isSuspended}
-          showInspector={showInspector}
-          setShowInspector={setShowInspector}
-          editorRef={editorRef}
-          runProgram={runProgram}
+          outputTab={env.outputTab}
+          setOutputTab={env.setOutputTab}
+          hasGraphicsOutput={env.hasGraphicsOutput}
+          hasTextOutput={env.hasTextOutput}
+          isProgramActive={env.isRunDisabled}
+          showInspector={env.showInspector}
+          setShowInspector={env.setShowInspector}
+          runProgram={env.runOrResume}
+          runLabel={env.runLabel}
         />
         <Stack
           direction="column"
@@ -215,14 +84,10 @@ export default function App() {
                 minHeight: 0,
               }}
             >
-              <Paper
-                elevation={3}
-                sx={panelSx}
-              >
+              <Paper elevation={3} sx={panelSx}>
                 <Editor
-                  editorRef={editorRef}
-                  showInspector={showInspector}
-                  runProgram={runProgram}
+                  showInspector={env.showInspector}
+                  runProgram={env.runOrResume}
                 />
               </Paper>
             </Stack>
@@ -237,20 +102,22 @@ export default function App() {
                 elevation={3}
                 sx={{
                   ...panelSx,
-                  overflow: outputTab === 'text' ? 'scroll' : 'hidden',
+                  overflow: env.outputTab === 'text' ? 'scroll' : 'hidden',
                 }}
               >
-                {outputTab === 'graphics' && <Graphics shapes={host.shapes} />}
-                {outputTab === 'text' && (
+                {env.outputTab === 'graphics' && (
+                  <Graphics shapes={env.host.shapes} />
+                )}
+                {env.outputTab === 'text' && (
                   <Term
-                    outputBuffer={host.outputBuffer}
-                    inputState={inputState}
+                    outputBuffer={env.host.outputBuffer}
+                    inputState={env.inputState}
                   />
                 )}
               </Paper>
             </Stack>
           </Stack>
-          {showInspector && (
+          {env.showInspector && (
             <Stack
               sx={{
                 height: '32%',
@@ -267,9 +134,9 @@ export default function App() {
                 }}
               >
                 <Inspector
-                  error={error}
-                  interpreter={interpreter}
-                  updateSlider={updateSlider}
+                  error={env.error}
+                  interpreter={env.interpreter}
+                  updateSlider={env.updateSlider}
                 />
               </Paper>
             </Stack>

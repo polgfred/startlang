@@ -11,8 +11,7 @@ import {
   Toolbar,
   Typography,
 } from '@mui/material';
-import { editor } from 'monaco-editor';
-import { MouseEvent, RefObject, useCallback, useState } from 'react';
+import { MouseEvent, useCallback, useState } from 'react';
 
 import boxScript from '../tests/box.start';
 import investScript from '../tests/invest.start';
@@ -21,6 +20,8 @@ import numguessScript from '../tests/numguess.start';
 import sieveScript from '../tests/sieve.start';
 import sineScript from '../tests/sine.start';
 import victorScript from '../tests/victor.start';
+
+import { useEditor } from './editor-context.jsx';
 
 type OutputTab = 'graphics' | 'text';
 
@@ -151,23 +152,20 @@ const exampleScripts = [
 ];
 
 function CodeMenu({
-  editorRef,
   runProgram,
 }: {
-  editorRef: RefObject<editor.ICodeEditor | null>;
   runProgram: () => void;
 }) {
   const { anchor, openMenu, closeMenu } = useMenu();
+  const { setValue } = useEditor();
 
   const loadScript = useCallback(
     (script: string) => {
-      if (editorRef.current) {
-        editorRef.current.setValue(script);
-        closeMenu();
-        runProgram();
-      }
+      setValue(script);
+      closeMenu();
+      runProgram();
     },
-    [closeMenu, editorRef, runProgram]
+    [closeMenu, runProgram, setValue]
   );
 
   return (
@@ -189,10 +187,8 @@ function CodeMenu({
         <Divider />
         <MenuItem
           onClick={() => {
-            if (editorRef.current) {
-              editorRef.current.setValue('');
-              closeMenu();
-            }
+            setValue('');
+            closeMenu();
           }}
         >
           New
@@ -211,7 +207,7 @@ export default function Header({
   showInspector,
   setShowInspector,
   runProgram,
-  editorRef,
+  runLabel,
 }: {
   outputTab: OutputTab;
   setOutputTab: (value: OutputTab) => void;
@@ -221,7 +217,7 @@ export default function Header({
   showInspector: boolean;
   setShowInspector: (value: boolean) => void;
   runProgram: () => void;
-  editorRef: RefObject<editor.ICodeEditor | null>;
+  runLabel: string;
 }) {
   return (
     <AppBar
@@ -247,7 +243,7 @@ export default function Header({
         >
           START
         </Typography>
-        <CodeMenu editorRef={editorRef} runProgram={runProgram} />
+        <CodeMenu runProgram={runProgram} />
         <OutputSwitcher
           outputTab={outputTab}
           setOutputTab={setOutputTab}
@@ -279,7 +275,7 @@ export default function Header({
             boxShadow: 2,
           }}
         >
-          Run
+          {runLabel}
         </Button>
       </Toolbar>
       <Toolbar
