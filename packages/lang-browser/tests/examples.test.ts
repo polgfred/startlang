@@ -260,6 +260,33 @@ describe('browser examples', () => {
     ]);
   });
 
+  it('renders an immutable preview of the in-progress shape group path', () => {
+    const host = new BrowserPresentationHost();
+
+    host.pushShape(new Circle(0, 0, 1, host.getShapeProps()));
+    host.beginShapeGroup(new ShapeGroup(host.getShapeProps({ rotate: 45 })));
+    host.pushShape(new Circle(0, 0, 2, host.getShapeProps()));
+    host.beginShapeGroup(new ShapeGroup(host.getShapeProps({ 'scale.x': 2 })));
+    host.pushShape(new Circle(0, 0, 3, host.getShapeProps()));
+
+    expect(host.shapes).toHaveLength(1);
+
+    const shapes = host.getInProgressShapes();
+    expect(shapes).toHaveLength(2);
+    expect(shapes[0]).toBeInstanceOf(Circle);
+    expect(shapes[1]).toBeInstanceOf(ShapeGroup);
+
+    const group = shapes[1] as ShapeGroup;
+    expect(group.shapeProps.rotate).toBe(45);
+    expect(group.children).toHaveLength(2);
+    expect(group.children[0]).toBeInstanceOf(Circle);
+    expect(group.children[1]).toBeInstanceOf(ShapeGroup);
+
+    const nested = group.children[1] as ShapeGroup;
+    expect(nested.shapeProps['scale.x']).toBe(2);
+    expect(nested.children).toHaveLength(1);
+  });
+
   it.each([
     ['box.start', 73],
     ['sine.start', 74],

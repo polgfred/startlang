@@ -109,7 +109,7 @@ export default function App() {
                 }}
               >
                 {env.outputTab === 'graphics' && (
-                  <Graphics shapes={env.host.shapes} />
+                  <Graphics shapes={env.host.getInProgressShapes()} />
                 )}
                 {env.outputTab === 'text' && (
                   <Term

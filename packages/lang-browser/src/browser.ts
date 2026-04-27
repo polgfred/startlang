@@ -223,6 +223,22 @@ export class BrowserPresentationHost
     return [...this.outputCells, child];
   }
 
+  getInProgressShapes() {
+    if (this.currentShapeGroup.head === rootShapeGroup) {
+      return this.shapes;
+    }
+
+    let child = this.currentShapeGroup.head;
+    let cursor = this.currentShapeGroup.tail;
+
+    while (cursor && cursor.head !== rootShapeGroup) {
+      child = cursor.head.addChild(child);
+      cursor = cursor.tail;
+    }
+
+    return [...this.shapes, child];
+  }
+
   swapShapeGroup(group: ShapeGroup) {
     this.currentShapeGroup = this.currentShapeGroup.swap(group);
   }
@@ -317,21 +333,19 @@ export class BrowserPresentationHost
   }
 
   private setGraphicConfiguration(name: string, value: unknown) {
-    this.graphicConfig = this.graphicConfig.swap({
-      props: {
-        ...this.graphicConfig.head.props,
-        [name]: value,
-      },
-    });
+    this.graphicConfig = this.graphicConfig.swap(
+      produce(this.graphicConfig.head, (draft) => {
+        draft.props[name] = value;
+      })
+    );
   }
 
   private setCellConfiguration(name: string, value: unknown) {
-    this.cellConfig = this.cellConfig.swap({
-      props: {
-        ...this.cellConfig.head.props,
-        [name]: value,
-      },
-    });
+    this.cellConfig = this.cellConfig.swap(
+      produce(this.cellConfig.head, (draft) => {
+        draft.props[name] = value;
+      })
+    );
   }
 
   takeSnapshot(): BrowserPresentationSnapshot {
