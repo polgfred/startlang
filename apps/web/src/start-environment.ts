@@ -125,7 +125,7 @@ export function useStartEnvironment() {
   const syncOutputTab = useCallback(() => {
     const nextHasGraphicsOutput = host.shapes.length > 0;
     const nextHasTextOutput =
-      host.outputBuffer.children.length > 0 ||
+      host.outputCells.length > 0 ||
       host.currentCell.head !== rootCell ||
       interpreter.suspension instanceof InputSuspension;
 
@@ -216,7 +216,7 @@ export function useStartEnvironment() {
 
   const hasGraphicsOutput = runtimeView.hostSnapshot.shapes.length > 0;
   const hasTextOutput =
-    runtimeView.hostSnapshot.outputBuffer.children.length > 0 ||
+    runtimeView.hostSnapshot.outputCells.length > 0 ||
     runtimeView.hostSnapshot.currentCell.head !== rootCell ||
     inputState !== null;
 

@@ -17,10 +17,10 @@ interface InputState {
 }
 
 export default function Term({
-  outputBuffer,
+  outputCells,
   inputState,
 }: {
-  outputBuffer: Cell;
+  outputCells: readonly Cell[];
   inputState: InputState | null;
 }) {
   const [input, setInput] = useState('');
@@ -108,7 +108,11 @@ export default function Term({
           padding: 2,
         }}
       >
-        <CellElement cell={outputBuffer} />
+        <Stack gap={2}>
+          {outputCells.map((cell, index) => (
+            <CellElement key={index} cell={cell} />
+          ))}
+        </Stack>
       </Box>
     </Box>
   );

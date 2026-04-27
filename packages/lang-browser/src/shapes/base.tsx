@@ -1,5 +1,5 @@
 import { immerable } from 'immer';
-import { JSX, CSSProperties } from 'react';
+import { JSX, CSSProperties, memo } from 'react';
 
 export interface ShapeProps {
   opacity: number;
@@ -62,3 +62,11 @@ export abstract class Shape {
     return svgProps;
   }
 }
+
+export const ShapeElement = memo(function ShapeElement({
+  shape,
+}: {
+  shape: Shape;
+}) {
+  return shape.getSVGElement();
+});

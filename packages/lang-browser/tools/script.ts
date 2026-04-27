@@ -228,11 +228,11 @@ class ConsoleOutputRenderer {
   private renderedShapeCount = 0;
 
   flush(host: BrowserPresentationHost, options: FlushOptions = {}) {
-    const newCells = host.outputBuffer.children.slice(this.renderedCellCount);
+    const newCells = host.outputCells.slice(this.renderedCellCount);
     for (const cell of newCells) {
       renderCell(cell);
     }
-    this.renderedCellCount = host.outputBuffer.children.length;
+    this.renderedCellCount = host.outputCells.length;
 
     if (options.includeGraphics) {
       this.flushGraphics(host);

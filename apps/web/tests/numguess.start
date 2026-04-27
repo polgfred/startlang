@@ -22,9 +22,7 @@ repeat 10 do
   ; convert the guess to a number
   guess = num(guess)
 
-  stack do
-    set direction = "row"
-
+  stack { direction = "row" } do
     print guess
 
     ; check if it was too low or too high

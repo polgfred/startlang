@@ -15,6 +15,12 @@ export interface StackProps {
   justify: JustifyType;
 }
 
+export const initialStackProps: StackProps = Object.freeze({
+  direction: 'column',
+  align: 'normal',
+  justify: 'normal',
+});
+
 export class StackCell extends Cell {
   static directionTypes = Object.freeze(['row', 'column'] as const);
 
@@ -47,11 +53,10 @@ export class StackCell extends Cell {
   ] as const);
 
   readonly children: readonly Cell[] = Object.freeze([]);
-  readonly stackProps: StackProps = Object.freeze({
-    direction: 'column',
-    align: 'normal',
-    justify: 'normal',
-  });
+
+  constructor(readonly stackProps: StackProps = initialStackProps) {
+    super();
+  }
 
   addChild(child: Cell) {
     return produce(this, (draft) => {
@@ -59,39 +64,48 @@ export class StackCell extends Cell {
     });
   }
 
-  updateProp(name: string, value: unknown) {
-    return produce(this, (draft) => {
-      switch (name) {
-        case 'direction': {
-          if (!StackCell.directionTypes.includes(value as DirectionType)) {
-            throw new Error(`invalid value for direction: ${value}`);
-          }
-          // @ts-expect-error we just checked it
-          draft.stackProps.direction = value;
-          break;
-        }
+  static updateProps(props: StackProps, name: string, value: unknown) {
+    return produce(props, (draft) => {
+      StackCell.assignProp(draft, name, value);
+    });
+  }
 
-        case 'align': {
-          if (!StackCell.alignTypes.includes(value as AlignType)) {
-            throw new Error(`invalid value for align: ${value}`);
-          }
-          // @ts-expect-error we just checked it
-          draft.stackProps.align = value;
-          break;
-        }
-        case 'justify': {
-          if (!StackCell.justifyTypes.includes(value as JustifyType)) {
-            throw new Error(`invalid value for justify: ${value}`);
-          }
-          // @ts-expect-error we just checked it
-          draft.stackProps.justify = value;
-          break;
-        }
-        default: {
-          throw new Error(`invalid prop: ${name}`);
-        }
+  static mergeProps(props: StackProps, overrides: Record<string, unknown>) {
+    return produce(props, (draft) => {
+      for (const [name, value] of Object.entries(overrides)) {
+        StackCell.assignProp(draft, name, value);
       }
     });
+  }
+
+  private static assignProp(props: StackProps, name: string, value: unknown) {
+    switch (name) {
+      case 'direction': {
+        if (!StackCell.directionTypes.includes(value as DirectionType)) {
+          throw new Error(`invalid value for direction: ${value}`);
+        }
+        props.direction = value as DirectionType;
+        break;
+      }
+
+      case 'align': {
+        if (!StackCell.alignTypes.includes(value as AlignType)) {
+          throw new Error(`invalid value for align: ${value}`);
+        }
+        props.align = value as AlignType;
+        break;
+      }
+      case 'justify': {
+        if (!StackCell.justifyTypes.includes(value as JustifyType)) {
+          throw new Error(`invalid value for justify: ${value}`);
+        }
+        props.justify = value as JustifyType;
+        break;
+      }
+      default: {
+        throw new Error(`invalid prop: ${name}`);
+      }
+    }
   }
 
   getHTMLElement() {

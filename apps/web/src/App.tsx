@@ -113,7 +113,7 @@ export default function App() {
                 )}
                 {env.outputTab === 'text' && (
                   <Term
-                    outputBuffer={env.host.getInProgressOutputBuffer()}
+                    outputCells={env.host.getInProgressOutputCells()}
                     inputState={env.inputState}
                   />
                 )}
