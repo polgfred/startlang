@@ -4,6 +4,7 @@ import {
   browserPresentationGlobals,
 } from '@startlang/lang-browser/browser';
 import { rootCell } from '@startlang/lang-browser/cells';
+import { rootShapeGroup } from '@startlang/lang-browser/shapes';
 import {
   Interpreter,
   type RuntimeEffect,
@@ -123,7 +124,8 @@ export function useStartEnvironment() {
   }
 
   const syncOutputTab = useCallback(() => {
-    const nextHasGraphicsOutput = host.shapes.length > 0;
+    const nextHasGraphicsOutput =
+      host.shapes.length > 0 || host.currentShapeGroup.head !== rootShapeGroup;
     const nextHasTextOutput =
       host.outputCells.length > 0 ||
       host.currentCell.head !== rootCell ||
@@ -215,7 +217,9 @@ export function useStartEnvironment() {
     [runtimeView.suspension, resumeInput]
   );
 
-  const hasGraphicsOutput = runtimeView.hostSnapshot.shapes.length > 0;
+  const hasGraphicsOutput =
+    runtimeView.hostSnapshot.shapes.length > 0 ||
+    runtimeView.hostSnapshot.currentShapeGroup.head !== rootShapeGroup;
   const hasTextOutput =
     runtimeView.hostSnapshot.outputCells.length > 0 ||
     runtimeView.hostSnapshot.currentCell.head !== rootCell ||
