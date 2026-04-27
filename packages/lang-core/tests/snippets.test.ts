@@ -130,11 +130,14 @@ describe('core language snippets', () => {
       `
       letters = ["a", "b", "c"]
       person = { name = "Lily", stats = { age = 17 } }
+      style = { fill.color = "red", stroke.width = 2, in.end = "ok" }
       bones = "Bones"
       letters[2] = "B"
       person.stats.age = person.stats.age + 1
+      style["fill.color"] = "blue"
       spy letters, letters.2, letters[-1]
       spy person.name, person.stats.age, bones[1], bones[-1]
+      spy style["fill.color"], style["stroke.width"], style["in.end"]
       `,
       {
         spy(_interpreter, args) {
@@ -146,6 +149,7 @@ describe('core language snippets', () => {
     expect(calls).toEqual([
       [['a', 'B', 'c'], 'B', 'c'],
       ['Lily', 18, 'B', 's'],
+      ['blue', 2, 'ok'],
     ]);
   });
 

@@ -168,7 +168,7 @@ Statement
   / LetStatement
   / CallStatement
 
-ConfigOption = $(!Reserved [a-z]i+)|.., "."|
+ConfigOption = DottedSymbol
 
 SetStatement
   = set _ option:ConfigOption _ "=" _ value:Value {
@@ -292,7 +292,7 @@ ListExpr
     }
   / RecordExpr
 
-Pair = key:Symbol _ "=" _ value:Value { return { key, value }; }
+Pair = key:DottedSymbol _ "=" _ value:Value { return { key, value }; }
 
 Pairs = Pair|.., (_ "," EOL? _)|
 
@@ -380,7 +380,11 @@ Digits = $[0-9]+
 
 // Symbols
 
-Symbol "a name" = $(!Reserved [a-z_]i [a-z0-9_]i*)
+DottedSymbol "a dotted name" = $(Name|.., "."|)
+
+Symbol "a name" = $(!Reserved Name)
+
+Name = [a-z_]i [a-z0-9_]i*
 
 // Keywords
 
