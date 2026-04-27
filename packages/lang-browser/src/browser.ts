@@ -91,20 +91,8 @@ function splitProps(args: readonly unknown[]) {
   return [emptyObject, args] as const;
 }
 
-function mergeShapeProps(
-  props: ShapeProps,
-  overrides: Readonly<Record<string, unknown>>
-) {
-  return produce(props, (draft) => {
-    for (const [name, value] of Object.entries(overrides)) {
-      // @ts-expect-error dynamic config keys are validated above
-      draft[name] = value;
-    }
-  });
-}
-
-function mergeTextProps(
-  props: TextProps,
+function mergeProps<T extends object>(
+  props: T,
   overrides: Readonly<Record<string, unknown>>
 ) {
   return produce(props, (draft) => {
@@ -132,14 +120,14 @@ export class BrowserPresentationHost
   cellConfig: Cons<CellConfig> = new Cons(initialCellConfig);
 
   get shapeProps() {
-    return mergeShapeProps(
+    return mergeProps(
       initialShapeProps,
       selectProps(this.graphicConfig.head.props, 'shape')
     );
   }
 
   get textProps() {
-    return mergeTextProps(
+    return mergeProps(
       initialTextProps,
       selectProps(this.graphicConfig.head.props, 'text')
     );
@@ -282,7 +270,7 @@ export class BrowserPresentationHost
     overrides: Readonly<Record<string, unknown>> = emptyObject,
     context: PropContext = propContexts.shape
   ) {
-    return mergeShapeProps(
+    return mergeProps(
       this.shapeProps,
       selectProps(normalizeProps(overrides, context), 'shape')
     );
@@ -292,7 +280,7 @@ export class BrowserPresentationHost
     overrides: Readonly<Record<string, unknown>> = emptyObject,
     context: PropContext = propContexts.text
   ) {
-    return mergeTextProps(
+    return mergeProps(
       this.textProps,
       selectProps(normalizeProps(overrides, context), 'text')
     );
@@ -381,6 +369,13 @@ function addPresentationCell(interpreter: Interpreter, cell: Cell) {
   interpreter.setEffect(repaintEffect);
 }
 
+function addPresentationShape(interpreter: Interpreter, shape: Shape) {
+  const host = getPresentationHost(interpreter);
+
+  host.pushShape(shape);
+  interpreter.setEffect(repaintEffect);
+}
+
 class BuildCellFrame extends CallFrame {
   constructor(
     node: CallNode,
@@ -442,8 +437,7 @@ class BuildShapeGroupFrame extends CallFrame {
       }
       case 1: {
         interpreter.swapFrame(this, 2);
-        host.pushShape(host.endShapeGroup());
-        interpreter.setEffect(repaintEffect);
+        addPresentationShape(interpreter, host.endShapeGroup());
         break;
       }
       case 2: {
@@ -479,47 +473,58 @@ export const browserPresentationGlobals: RuntimeFunctions = {
     const [props, rest] = splitProps(args);
     const [x, y, width, height] = rest as [number, number, number, number];
     const host = getPresentationHost(interpreter);
-    host.pushShape(new Rect(x, y, width, height, host.getShapeProps(props)));
-    interpreter.setEffect(repaintEffect);
+    addPresentationShape(
+      interpreter,
+      new Rect(x, y, width, height, host.getShapeProps(props))
+    );
   },
 
   circle(interpreter, args) {
     const [props, rest] = splitProps(args);
     const [cx, cy, radius] = rest as [number, number, number];
     const host = getPresentationHost(interpreter);
-    host.pushShape(new Circle(cx, cy, radius, host.getShapeProps(props)));
-    interpreter.setEffect(repaintEffect);
+    addPresentationShape(
+      interpreter,
+      new Circle(cx, cy, radius, host.getShapeProps(props))
+    );
   },
 
   ellipse(interpreter, args) {
     const [props, rest] = splitProps(args);
     const [cx, cy, rx, ry] = rest as [number, number, number, number];
     const host = getPresentationHost(interpreter);
-    host.pushShape(new Ellipse(cx, cy, rx, ry, host.getShapeProps(props)));
-    interpreter.setEffect(repaintEffect);
+    addPresentationShape(
+      interpreter,
+      new Ellipse(cx, cy, rx, ry, host.getShapeProps(props))
+    );
   },
 
   line(interpreter, args) {
     const [props, rest] = splitProps(args);
     const [x1, y1, x2, y2] = rest as [number, number, number, number];
     const host = getPresentationHost(interpreter);
-    host.pushShape(new Line(x1, y1, x2, y2, host.getShapeProps(props)));
-    interpreter.setEffect(repaintEffect);
+    addPresentationShape(
+      interpreter,
+      new Line(x1, y1, x2, y2, host.getShapeProps(props))
+    );
   },
 
   polygon(interpreter, args) {
     const [props, rest] = splitProps(args);
     const [points] = rest as [[number, number][]];
     const host = getPresentationHost(interpreter);
-    host.pushShape(new Polygon(points, host.getShapeProps(props)));
-    interpreter.setEffect(repaintEffect);
+    addPresentationShape(
+      interpreter,
+      new Polygon(points, host.getShapeProps(props))
+    );
   },
 
   text(interpreter, args) {
     const [props, rest] = splitProps(args);
     const [x, y, text] = rest as [number, number, string];
     const host = getPresentationHost(interpreter);
-    host.pushShape(
+    addPresentationShape(
+      interpreter,
       new Text(
         x,
         y,
@@ -528,7 +533,6 @@ export const browserPresentationGlobals: RuntimeFunctions = {
         host.getShapeProps(props, propContexts.text)
       )
     );
-    interpreter.setEffect(repaintEffect);
   },
 
   group(interpreter, args, node) {
