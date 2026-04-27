@@ -1,0 +1,75 @@
+;
+; Table Cell Layout
+;
+; Calculates a regional revenue table while demonstrating cell alignment,
+; width, colspan, and rowspan.
+;
+
+regions = [
+  {
+    name = "North",
+    products = [
+      { name = "Console", q1 = 12400, q2 = 15200 },
+      { name = "Handheld", q1 = 8900, q2 = 11700 }
+    ]
+  },
+  {
+    name = "South",
+    products = [
+      { name = "Console", q1 = 9800, q2 = 13300 },
+      { name = "Handheld", q1 = 7200, q2 = 10500 }
+    ]
+  }
+]
+
+q1_total = 0
+q2_total = 0
+grand_total = 0
+
+table do
+  header do
+    cell { rowspan = 2, valign = "middle", width = 140 }, "Region"
+    cell { rowspan = 2, valign = "middle", width = 160 }, "Product"
+    cell { span = 3, align = "center" }, "Quarterly Revenue"
+  end
+
+  header do
+    set cell.align = "right"
+    cell "Q1"
+    cell "Q2"
+    cell "Total"
+  end
+
+  for region in regions do
+    product_count = len(region.products)
+    first_product = true
+
+    for product in region.products do
+      product_total = product.q1 + product.q2
+      q1_total = q1_total + product.q1
+      q2_total = q2_total + product.q2
+      grand_total = grand_total + product_total
+
+      row do
+        if first_product then
+          cell { rowspan = product_count, valign = "middle" }, region.name
+          first_product = false
+        end
+
+        cell product.name
+        set cell.align = "right"
+        cell format(product.q1, "currency")
+        cell format(product.q2, "currency")
+        cell format(product_total, "currency")
+      end
+    end
+  end
+
+  row do
+    set cell.align = "right"
+    cell { span = 2 }, "Grand Total"
+    cell format(q1_total, "currency")
+    cell format(q2_total, "currency")
+    cell format(grand_total, "currency")
+  end
+end

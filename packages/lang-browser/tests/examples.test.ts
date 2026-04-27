@@ -367,6 +367,7 @@ describe('browser examples', () => {
     ['layout.start', ['The Beatles', 'Pink Floyd', 'Members']],
     ['numguess.start', ['Your guesses:', 'Goodbye!']],
     ['sieve.start', ['2 is prime', '97 is prime']],
+    ['table-cells.start', ['Quarterly Revenue', 'North', 'Grand Total']],
   ])('%s renders text output', async (name, expectedText) => {
     const { host, interpreter } = await runExample(name);
     const text = getOutputText(host).join('\n');
