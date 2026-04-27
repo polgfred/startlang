@@ -349,7 +349,9 @@ export class BrowserPresentationHost
   }
 
   getGroupProps(overrides: Readonly<Record<string, unknown>> = emptyObject) {
-    const configProps = selectInheritedGroupProps(this.graphicConfig.head.props);
+    const configProps = selectInheritedGroupProps(
+      this.graphicConfig.head.props
+    );
     const overrideProps = normalizeProps(overrides, propContexts.shape);
     return mergeProps(
       initialGroupProps,

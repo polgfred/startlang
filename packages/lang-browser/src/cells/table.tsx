@@ -145,14 +145,22 @@ export class GridSlotCell extends Cell {
         break;
       }
       case 'span': {
-        if (typeof value !== 'number' || !Number.isInteger(value) || value < 1) {
+        if (
+          typeof value !== 'number' ||
+          !Number.isInteger(value) ||
+          value < 1
+        ) {
           throw new Error(`invalid value for span: ${value}`);
         }
         props.span = value;
         break;
       }
       case 'rowspan': {
-        if (typeof value !== 'number' || !Number.isInteger(value) || value < 1) {
+        if (
+          typeof value !== 'number' ||
+          !Number.isInteger(value) ||
+          value < 1
+        ) {
           throw new Error(`invalid value for rowspan: ${value}`);
         }
         props.rowspan = value;

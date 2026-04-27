@@ -137,10 +137,7 @@ export function useStartEnvironment() {
   }, [host, interpreter]);
 
   const syncHighlight = useCallback(() => {
-    if (
-      isBreakpointSuspension(interpreter.suspension) ||
-      history.isRewound
-    ) {
+    if (isBreakpointSuspension(interpreter.suspension) || history.isRewound) {
       highlightNode(interpreter.topFrame.head.node);
     } else {
       highlightNode(null);
@@ -287,8 +284,7 @@ export function useStartEnvironment() {
     finishInterpreterAction();
   }, [finishInterpreterAction, highlightNode, interpreter]);
 
-  const isBreakpointSuspended =
-    isBreakpointSuspension(runtimeView.suspension);
+  const isBreakpointSuspended = isBreakpointSuspension(runtimeView.suspension);
   const isInputSuspended = runtimeView.suspension instanceof InputSuspension;
   const isProgramActive =
     runtimeView.isRunning || runtimeView.isSuspended || runtimeView.isRewound;
