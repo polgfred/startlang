@@ -19,6 +19,20 @@ regions = [
       { name = "Console", q1 = 9800, q2 = 13300 },
       { name = "Handheld", q1 = 7200, q2 = 10500 }
     ]
+  },
+  {
+    name = "East",
+    products = [
+      { name = "Console", q1 = 14100, q2 = 16800 },
+      { name = "Handheld", q1 = 9600, q2 = 12400 }
+    ]
+  },
+  {
+    name = "West",
+    products = [
+      { name = "Console", q1 = 11300, q2 = 14900 },
+      { name = "Handheld", q1 = 8300, q2 = 10900 }
+    ]
   }
 ]
 

@@ -15,10 +15,11 @@ import { MouseEvent, useCallback, useState } from 'react';
 
 import boxScript from '../tests/box.start';
 import investScript from '../tests/invest.start';
-import layoutScript from '../tests/layout.start';
 import numguessScript from '../tests/numguess.start';
+import rosetteScript from '../tests/rosette.start';
 import sieveScript from '../tests/sieve.start';
 import sineScript from '../tests/sine.start';
+import tableCellsScript from '../tests/table-cells.start';
 import victorScript from '../tests/victor.start';
 
 import { useEditor } from './editor-context.jsx';
@@ -146,8 +147,12 @@ const exampleScripts = [
     script: victorScript,
   },
   {
-    name: 'Nested Data Layout',
-    script: layoutScript,
+    name: 'Nested Group Rosette',
+    script: rosetteScript,
+  },
+  {
+    name: 'Table Cell Layout',
+    script: tableCellsScript,
   },
 ];
 
