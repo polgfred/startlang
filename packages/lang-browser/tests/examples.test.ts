@@ -14,6 +14,7 @@ import {
 import {
   GridCell,
   GridRowCell,
+  GridSlotCell,
   StackCell,
   ValueCell,
 } from '@startlang/lang-browser/cells';
@@ -77,6 +78,10 @@ function getText(cell: unknown): string[] {
   }
 
   if (cell instanceof GridRowCell) {
+    return cell.children.flatMap(getText);
+  }
+
+  if (cell instanceof GridSlotCell) {
     return cell.children.flatMap(getText);
   }
 
@@ -155,6 +160,46 @@ describe('browser examples', () => {
     expect((host.outputCells[0] as StackCell).stackProps.direction).toBe('row');
     expect(((host.outputCells[0] as StackCell).children[0] as ValueCell).variant).toBe('h3');
     expect(getOutputText(host)).toEqual(['A', 'B']);
+  });
+
+  it('uses table cells as explicit row slots', async () => {
+    const { host } = await runSource(`
+      table do
+        row do
+          cell { align = "right", span = 2, width = 80 }, "A"
+          cell do
+            stack do
+              print "B"
+              print "C"
+            end
+          end
+        end
+      end
+    `);
+
+    const table = host.outputCells[0] as GridCell;
+    const row = table.rows[0];
+    const first = row.children[0];
+    const second = row.children[1];
+
+    expect(first).toBeInstanceOf(GridSlotCell);
+    expect(first.slotProps.align).toBe('right');
+    expect(first.slotProps.span).toBe(2);
+    expect(first.slotProps.width).toBe(80);
+    expect(getText(first)).toEqual(['A']);
+    expect(getText(second)).toEqual(['B', 'C']);
+  });
+
+  it('rejects non-cell children inside table rows', async () => {
+    await expect(
+      runSource(`
+        table do
+          row do
+            print "oops"
+          end
+        end
+      `)
+    ).rejects.toThrow('table rows can only contain cells');
   });
 
   it('renders nested graphics groups with scoped drawing defaults', async () => {
@@ -250,7 +295,7 @@ describe('browser examples', () => {
     host.addCell(new ValueCell('partial stack child'));
     host.pushCell(new GridCell());
     host.pushCell(new GridRowCell());
-    host.addCell(new ValueCell('partial row child'));
+    host.addCell(new GridSlotCell().addChild(new ValueCell('partial row child')));
 
     expect(getOutputText(host)).toEqual(['complete']);
     expect(host.getInProgressOutputCells().flatMap(getText)).toEqual([

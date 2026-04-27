@@ -13,16 +13,16 @@ years = num(input("How many years?", "10"))
 ; draw a data table
 table do
   header do
-    print "Years"
-    print "Interest"
-    print "Total"
+    cell "Years"
+    cell "Interest"
+    cell "Total"
   end
 
   ; display a row for year 0
   row do
-    print 0
-    print 0
-    print format(principal, "currency")
+    cell 0
+    cell 0
+    cell format(principal, "currency")
   end
 
   ; start calculating the total from the principal value
@@ -36,9 +36,9 @@ table do
 
     ; display a row for this year
     row do
-      print year
-      print format(interest, "currency")
-      print format(total, "currency")
+      cell year
+      cell format(interest, "currency")
+      cell format(total, "currency")
     end
   end
 end

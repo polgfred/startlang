@@ -20,6 +20,7 @@ import {
   type Cell,
   GridCell,
   GridRowCell,
+  GridSlotCell,
   StackCell,
   ValueCell,
 } from '@startlang/lang-browser/cells';
@@ -165,6 +166,10 @@ function renderInlineText(cell: Cell): string {
 
   if (cell instanceof GridRowCell) {
     return cell.children.map(renderInlineText).join(' | ');
+  }
+
+  if (cell instanceof GridSlotCell) {
+    return cell.children.map(renderInlineText).join('\n');
   }
 
   if (cell instanceof GridCell) {

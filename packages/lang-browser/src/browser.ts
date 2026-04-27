@@ -10,6 +10,8 @@ import {
   GridCell,
   GridHeaderRowCell,
   GridRowCell,
+  GridSlotCell,
+  initialGridSlotProps,
   initialStackProps,
   StackCell,
   ValueCell,
@@ -267,6 +269,10 @@ export class BrowserPresentationHost
     return this.currentShapeGroup.head !== rootShapeGroup;
   }
 
+  isBuildingGridRow() {
+    return this.currentCell.head instanceof GridRowCell;
+  }
+
   getValueProps(overrides: Readonly<Record<string, unknown>>) {
     return {
       ...this.cellConfig.head.props,
@@ -280,6 +286,13 @@ export class BrowserPresentationHost
       ...normalizeProps(overrides, propContexts.stack),
     };
     return StackCell.mergeProps(initialStackProps, selectProps(props, 'stack'));
+  }
+
+  getGridSlotProps(overrides: Readonly<Record<string, unknown>>) {
+    return GridSlotCell.mergeProps(
+      initialGridSlotProps,
+      selectProps(normalizeProps(overrides, propContexts.cell), 'cell')
+    );
   }
 
   getShapeProps(
@@ -599,5 +612,27 @@ export const browserPresentationGlobals: RuntimeFunctions = {
     const [props] = splitProps(args);
     normalizeProps(props, propContexts.none);
     return new BuildCellFrame(node, new GridRowCell());
+  },
+
+  cell(interpreter, args, node) {
+    const [props, rest] = splitProps(args);
+    const [value] = rest;
+    const host = getPresentationHost(interpreter);
+
+    if (!host.isBuildingGridRow()) {
+      throw new Error('cell can only be used inside a table row');
+    }
+
+    const slot = new GridSlotCell(host.getGridSlotProps(props));
+
+    if (node.body) {
+      return new BuildCellFrame(node, slot);
+    }
+
+    const handler = interpreter.getHandler(value);
+    addPresentationCell(
+      interpreter,
+      slot.addChild(new ValueCell(handler.getPrettyValue(value)))
+    );
   },
 };

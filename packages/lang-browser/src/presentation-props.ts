@@ -12,6 +12,7 @@ export const propNamespaces = Object.freeze({
   text: Object.freeze(['font.name', 'font.size']),
   stack: Object.freeze(['direction', 'align', 'justify']),
   value: Object.freeze(['variant']),
+  cell: Object.freeze(['align', 'valign', 'width', 'span', 'rowspan']),
 });
 
 export type PropNamespace = keyof typeof propNamespaces;
@@ -24,6 +25,7 @@ export const propContexts = Object.freeze({
   text: Object.freeze(['shape', 'text']),
   stack: Object.freeze(['stack']),
   value: Object.freeze(['value']),
+  cell: Object.freeze(['cell']),
   graphics: Object.freeze(['shape', 'text']),
   cells: Object.freeze(['stack', 'value']),
   root: Object.freeze(['shape', 'text', 'stack', 'value']),
@@ -40,6 +42,7 @@ const propKeySets = Object.freeze({
   text: getNamespaceKeySet('text'),
   stack: getNamespaceKeySet('stack'),
   value: getNamespaceKeySet('value'),
+  cell: getNamespaceKeySet('cell'),
 } satisfies Record<PropNamespace, ReadonlySet<string>>);
 
 function getExplicitNamespace(key: string) {

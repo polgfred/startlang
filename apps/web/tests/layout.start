@@ -32,18 +32,20 @@ bands = [
 ; tables and stacks are fully nestable!
 table do
   header do
-    print "Band"
-    print "Founded"
-    print "Members"
+    cell "Band"
+    cell "Founded"
+    cell "Members"
   end
 
   for band in bands do
     row do
-      print band.name
-      print band.year
-      stack do
-        for member in band.members do
-          print member
+      cell band.name
+      cell band.year
+      cell do
+        stack do
+          for member in band.members do
+            print member
+          end
         end
       end
     end
