@@ -20,6 +20,7 @@ export interface GridSlotProps {
   width: number | string | null;
   span: number;
   rowspan: number;
+  ['background.color']: string | null;
 }
 
 export const initialGridSlotProps: GridSlotProps = Object.freeze({
@@ -28,6 +29,7 @@ export const initialGridSlotProps: GridSlotProps = Object.freeze({
   width: null,
   span: 1,
   rowspan: 1,
+  ['background.color']: null,
 });
 
 export class GridCell extends Cell {
@@ -156,6 +158,13 @@ export class GridSlotCell extends Cell {
         props.rowspan = value;
         break;
       }
+      case 'background.color': {
+        if (value !== null && typeof value !== 'string') {
+          throw new Error(`invalid value for background.color: ${value}`);
+        }
+        props['background.color'] = value;
+        break;
+      }
       default: {
         throw new Error(`invalid prop: ${name}`);
       }
@@ -173,6 +182,7 @@ export class GridSlotCell extends Cell {
         sx={(theme) => ({
           verticalAlign: this.slotProps.valign,
           width: this.slotProps.width ?? undefined,
+          backgroundColor: this.slotProps['background.color'] ?? undefined,
           ...(header ? { color: theme.palette.common.white } : null),
         })}
       >

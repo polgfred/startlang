@@ -199,9 +199,10 @@ describe('browser examples', () => {
       table do
         row do
           set cell.align = "right"
+          set cell.background.color = "lavender"
           set font.weight = "bold"
           cell "A"
-          cell { align = "center", font.weight = "normal" }, "B"
+          cell { align = "center", background.color = "white", font.weight = "normal" }, "B"
         end
       end
     `);
@@ -212,6 +213,8 @@ describe('browser examples', () => {
 
     expect(row.children[0].slotProps.align).toBe('right');
     expect(row.children[1].slotProps.align).toBe('center');
+    expect(row.children[0].slotProps['background.color']).toBe('lavender');
+    expect(row.children[1].slotProps['background.color']).toBe('white');
     expect(first.textProps['font.weight']).toBe('bold');
     expect(second.textProps['font.weight']).toBe('normal');
   });

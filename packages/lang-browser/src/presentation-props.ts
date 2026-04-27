@@ -14,7 +14,14 @@ export const propNamespaces = Object.freeze({
   text: Object.freeze(['font.name', 'font.size', 'font.weight']),
   stack: Object.freeze(['direction', 'align', 'justify']),
   value: Object.freeze(['variant']),
-  cell: Object.freeze(['align', 'valign', 'width', 'span', 'rowspan']),
+  cell: Object.freeze([
+    'align',
+    'valign',
+    'width',
+    'span',
+    'rowspan',
+    'background.color',
+  ]),
 });
 
 export type PropNamespace = keyof typeof propNamespaces;

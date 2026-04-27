@@ -74,13 +74,14 @@ table do
         set cell.align = "right"
         cell format(product.q1, "currency")
         cell format(product.q2, "currency")
-        cell { font.weight = "bold" }, format(product_total, "currency")
+        cell { background.color = "lightgrey", font.weight = "bold" }, format(product_total, "currency")
       end
     end
   end
 
   row do
     set cell.align = "right"
+    set cell.background.color = "lightgrey"
     set font.weight = "bold"
     cell { span = 2 }, "Grand Total"
     cell format(q1_total, "currency")
