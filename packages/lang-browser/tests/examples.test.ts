@@ -144,8 +144,8 @@ describe('browser examples', () => {
 
   it('configures cells with record arguments instead of current-container mutation', async () => {
     const { host } = await runSource(`
-      stack { direction = "row" } do
-        print "A"
+      stack { stack.direction = "row" } do
+        print { value.variant = "h3" }, "A"
         print "B"
       end
     `);
@@ -153,14 +153,15 @@ describe('browser examples', () => {
     expect(host.outputCells).toHaveLength(1);
     expect(host.outputCells[0]).toBeInstanceOf(StackCell);
     expect((host.outputCells[0] as StackCell).stackProps.direction).toBe('row');
+    expect(((host.outputCells[0] as StackCell).children[0] as ValueCell).variant).toBe('h3');
     expect(getOutputText(host)).toEqual(['A', 'B']);
   });
 
   it('renders nested graphics groups with scoped drawing defaults', async () => {
     const { host } = await runSource(`
-      set fill.color = "red"
+      set shape.fill.color = "red"
 
-      group { rotate = 45 } do
+      group { shape.rotate = 45 } do
         circle 0, 0, 1
 
         group do
@@ -194,6 +195,31 @@ describe('browser examples', () => {
     expect(third.shapeProps.rotate).toBe(90);
     expect(topLevel.shapeProps['fill.color']).toBe('red');
     expect(topLevel.shapeProps.rotate).toBe(0);
+  });
+
+  it('resolves text props with contextual and fully-qualified names', async () => {
+    const { host } = await runSource(`
+      set text.font.size = 12
+      text { font.size = 24, shape.fill.color = "green" }, 0, 0, "Hello"
+    `);
+
+    expect(host.shapes).toHaveLength(1);
+    expect(host.shapes[0]).toHaveProperty('textProps');
+
+    const text = host.shapes[0] as unknown as {
+      shapeProps: { ['fill.color']: string | null };
+      textProps: { ['font.size']: number };
+    };
+    expect(text.shapeProps['fill.color']).toBe('green');
+    expect(text.textProps['font.size']).toBe(24);
+  });
+
+  it('rejects fully-qualified props outside the current context', async () => {
+    await expect(
+      runSource(`
+        rect { text.font.size = 24 }, 0, 0, 10, 10
+      `)
+    ).rejects.toThrow('unknown property "text.font.size"');
   });
 
   it('rejects graphics inside cell containers', async () => {

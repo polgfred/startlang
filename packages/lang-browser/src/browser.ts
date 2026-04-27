@@ -16,6 +16,13 @@ import {
   rootCell,
 } from './cells/index.js';
 import {
+  CanonicalProps,
+  normalizeProps,
+  PropContext,
+  propContexts,
+  selectProps,
+} from './presentation-props.js';
+import {
   ShapeProps,
   TextProps,
   Shape,
@@ -30,12 +37,11 @@ import {
 } from './shapes/index.js';
 
 interface GraphicConfig {
-  shapeProps: ShapeProps;
-  textProps: TextProps;
+  props: CanonicalProps;
 }
 
 interface CellConfig {
-  props: Readonly<Record<string, unknown>>;
+  props: CanonicalProps;
 }
 
 export interface BrowserPresentationSnapshot {
@@ -67,21 +73,12 @@ const initialTextProps: TextProps = Object.freeze({
 });
 
 const initialGraphicConfig: GraphicConfig = Object.freeze({
-  shapeProps: initialShapeProps,
-  textProps: initialTextProps,
+  props: emptyObject,
 });
 
 const initialCellConfig: CellConfig = Object.freeze({
   props: emptyObject,
 });
-
-const stackPropNames = new Set(Object.keys(initialStackProps));
-const valuePropNames = new Set(['variant']);
-const cellPropNames = new Set([...stackPropNames, ...valuePropNames]);
-const shapePropNames = new Set(Object.keys(initialShapeProps));
-const textPropNames = new Set(Object.keys(initialTextProps));
-const graphicPropNames = new Set([...shapePropNames, ...textPropNames]);
-const noPropNames = new Set<string>();
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -94,36 +91,10 @@ function splitProps(args: readonly unknown[]) {
   return [emptyObject, args] as const;
 }
 
-function pickProps(
-  props: Readonly<Record<string, unknown>>,
-  names: ReadonlySet<string>
-) {
-  const picked: Record<string, unknown> = {};
-  for (const [name, value] of Object.entries(props)) {
-    if (names.has(name)) {
-      picked[name] = value;
-    }
-  }
-  return picked;
-}
-
-function assertKnownProps(
-  props: Readonly<Record<string, unknown>>,
-  names: ReadonlySet<string>,
-  target: string
-) {
-  for (const name of Object.keys(props)) {
-    if (!names.has(name)) {
-      throw new Error(`invalid ${target} prop: ${name}`);
-    }
-  }
-}
-
 function mergeShapeProps(
   props: ShapeProps,
   overrides: Readonly<Record<string, unknown>>
 ) {
-  assertKnownProps(overrides, shapePropNames, 'shape');
   return produce(props, (draft) => {
     for (const [name, value] of Object.entries(overrides)) {
       // @ts-expect-error dynamic config keys are validated above
@@ -136,7 +107,6 @@ function mergeTextProps(
   props: TextProps,
   overrides: Readonly<Record<string, unknown>>
 ) {
-  assertKnownProps(overrides, textPropNames, 'text');
   return produce(props, (draft) => {
     for (const [name, value] of Object.entries(overrides)) {
       // @ts-expect-error dynamic config keys are validated above
@@ -146,7 +116,7 @@ function mergeTextProps(
 }
 
 function getValueVariant(props: Readonly<Record<string, unknown>>) {
-  const variant = props.variant;
+  const variant = props['value.variant'];
   return typeof variant === 'string' ? variant : undefined;
 }
 
@@ -162,11 +132,17 @@ export class BrowserPresentationHost
   cellConfig: Cons<CellConfig> = new Cons(initialCellConfig);
 
   get shapeProps() {
-    return this.graphicConfig.head.shapeProps;
+    return mergeShapeProps(
+      initialShapeProps,
+      selectProps(this.graphicConfig.head.props, 'shape')
+    );
   }
 
   get textProps() {
-    return this.graphicConfig.head.textProps;
+    return mergeTextProps(
+      initialTextProps,
+      selectProps(this.graphicConfig.head.props, 'text')
+    );
   }
 
   restoreOriginalSettings() {
@@ -287,75 +263,81 @@ export class BrowserPresentationHost
     return this.currentShapeGroup.head !== rootShapeGroup;
   }
 
-  getCellProps(overrides: Readonly<Record<string, unknown>>) {
-    const props = {
-      ...this.cellConfig.head.props,
-      ...overrides,
-    };
-    assertKnownProps(overrides, cellPropNames, 'cell');
-    return props;
-  }
-
   getValueProps(overrides: Readonly<Record<string, unknown>>) {
-    assertKnownProps(overrides, valuePropNames, 'value');
     return {
-      ...pickProps(this.cellConfig.head.props, valuePropNames),
-      ...overrides,
+      ...this.cellConfig.head.props,
+      ...normalizeProps(overrides, propContexts.value),
     };
   }
 
   getStackProps(overrides: Readonly<Record<string, unknown>>) {
-    assertKnownProps(overrides, stackPropNames, 'stack');
     const props = {
       ...this.cellConfig.head.props,
-      ...overrides,
+      ...normalizeProps(overrides, propContexts.stack),
     };
-    return StackCell.mergeProps(initialStackProps, pickProps(props, stackPropNames));
+    return StackCell.mergeProps(initialStackProps, selectProps(props, 'stack'));
   }
 
-  getShapeProps(overrides: Readonly<Record<string, unknown>> = emptyObject) {
-    return mergeShapeProps(this.shapeProps, overrides);
+  getShapeProps(
+    overrides: Readonly<Record<string, unknown>> = emptyObject,
+    context: PropContext = propContexts.shape
+  ) {
+    return mergeShapeProps(
+      this.shapeProps,
+      selectProps(normalizeProps(overrides, context), 'shape')
+    );
   }
 
-  getTextProps(overrides: Readonly<Record<string, unknown>> = emptyObject) {
-    return mergeTextProps(this.textProps, pickProps(overrides, textPropNames));
+  getTextProps(
+    overrides: Readonly<Record<string, unknown>> = emptyObject,
+    context: PropContext = propContexts.text
+  ) {
+    return mergeTextProps(
+      this.textProps,
+      selectProps(normalizeProps(overrides, context), 'text')
+    );
   }
 
   setConfiguration(name: string, value: unknown) {
     if (this.isBuildingGraphics()) {
-      this.setGraphicConfiguration(name, value);
+      this.setConfigurationProp(name, value, propContexts.graphics);
     } else if (this.isBuildingCells()) {
-      this.setCellConfiguration(name, value);
-    } else if (graphicPropNames.has(name)) {
-      this.setGraphicConfiguration(name, value);
-    } else if (cellPropNames.has(name)) {
-      this.setCellConfiguration(name, value);
+      this.setConfigurationProp(name, value, propContexts.cells);
     } else {
-      throw new Error(`could not set configuration option: ${name}`);
+      const prop = normalizeProps({ [name]: value }, propContexts.root);
+      const [key, resolvedValue] = Object.entries(prop)[0];
+      if (key.startsWith('shape.') || key.startsWith('text.')) {
+        this.setGraphicConfiguration(key, resolvedValue);
+      } else {
+        this.setCellConfiguration(key, resolvedValue);
+      }
+    }
+  }
+
+  private setConfigurationProp(
+    name: string,
+    value: unknown,
+    context: PropContext
+  ) {
+    const prop = normalizeProps({ [name]: value }, context);
+    const [key, resolvedValue] = Object.entries(prop)[0];
+    if (key.startsWith('shape.') || key.startsWith('text.')) {
+      this.setGraphicConfiguration(key, resolvedValue);
+    } else {
+      this.setCellConfiguration(key, resolvedValue);
     }
   }
 
   private setGraphicConfiguration(name: string, value: unknown) {
-    if (shapePropNames.has(name)) {
-      this.graphicConfig = this.graphicConfig.swap({
-        ...this.graphicConfig.head,
-        shapeProps: mergeShapeProps(this.shapeProps, { [name]: value }),
-      });
-    } else if (textPropNames.has(name)) {
-      this.graphicConfig = this.graphicConfig.swap({
-        ...this.graphicConfig.head,
-        textProps: mergeTextProps(this.textProps, { [name]: value }),
-      });
-    } else {
-      throw new Error(`could not set graphics configuration option: ${name}`);
-    }
+    this.graphicConfig = this.graphicConfig.swap({
+      props: {
+        ...this.graphicConfig.head.props,
+        [name]: value,
+      },
+    });
   }
 
   private setCellConfiguration(name: string, value: unknown) {
-    if (!cellPropNames.has(name)) {
-      throw new Error(`could not set cell configuration option: ${name}`);
-    }
-
     this.cellConfig = this.cellConfig.swap({
       props: {
         ...this.cellConfig.head.props,
@@ -537,14 +519,13 @@ export const browserPresentationGlobals: RuntimeFunctions = {
     const [props, rest] = splitProps(args);
     const [x, y, text] = rest as [number, number, string];
     const host = getPresentationHost(interpreter);
-    assertKnownProps(props, graphicPropNames, 'text');
     host.pushShape(
       new Text(
         x,
         y,
         text,
-        host.getTextProps(pickProps(props, textPropNames)),
-        host.getShapeProps(pickProps(props, shapePropNames))
+        host.getTextProps(props, propContexts.text),
+        host.getShapeProps(props, propContexts.text)
       )
     );
     interpreter.setEffect(repaintEffect);
@@ -586,19 +567,19 @@ export const browserPresentationGlobals: RuntimeFunctions = {
 
   table(interpreter, args, node) {
     const [props] = splitProps(args);
-    assertKnownProps(props, noPropNames, 'table');
+    normalizeProps(props, propContexts.none);
     return new BuildCellFrame(node, new GridCell());
   },
 
   header(interpreter, args, node) {
     const [props] = splitProps(args);
-    assertKnownProps(props, noPropNames, 'header');
+    normalizeProps(props, propContexts.none);
     return new BuildCellFrame(node, new GridHeaderRowCell());
   },
 
   row(interpreter, args, node) {
     const [props] = splitProps(args);
-    assertKnownProps(props, noPropNames, 'row');
+    normalizeProps(props, propContexts.none);
     return new BuildCellFrame(node, new GridRowCell());
   },
 };
