@@ -9,7 +9,7 @@ export const propNamespaces = Object.freeze({
     'scale.x',
     'scale.y',
   ]),
-  text: Object.freeze(['font.name', 'font.size']),
+  text: Object.freeze(['font.name', 'font.size', 'font.weight']),
   stack: Object.freeze(['direction', 'align', 'justify']),
   value: Object.freeze(['variant']),
   cell: Object.freeze(['align', 'valign', 'width', 'span', 'rowspan']),
@@ -24,10 +24,11 @@ export const propContexts = Object.freeze({
   shape: Object.freeze(['shape']),
   text: Object.freeze(['shape', 'text']),
   stack: Object.freeze(['stack']),
-  value: Object.freeze(['value']),
+  value: Object.freeze(['value', 'text']),
   cell: Object.freeze(['cell']),
   graphics: Object.freeze(['shape', 'text']),
-  cells: Object.freeze(['stack', 'value', 'cell']),
+  cells: Object.freeze(['stack', 'value', 'cell', 'text']),
+  cellValue: Object.freeze(['cell', 'value', 'text']),
   root: Object.freeze(['shape', 'text', 'stack', 'value', 'cell']),
 } satisfies Record<string, PropContext>);
 
@@ -77,9 +78,7 @@ export function resolvePropKey(key: string, context: PropContext) {
 
   if (matches.length > 1) {
     const choices = matches.map((namespace) => `"${namespace}.${key}"`);
-    throw new Error(
-      `ambiguous property "${key}"; use ${choices.join(' or ')}`
-    );
+    throw new Error(`ambiguous property "${key}"; use ${choices.join(' or ')}`);
   }
 
   throw new Error(`unknown property "${key}"`);
@@ -97,10 +96,7 @@ export function normalizeProps(
   );
 }
 
-export function selectProps(
-  props: CanonicalProps,
-  namespace: PropNamespace
-) {
+export function selectProps(props: CanonicalProps, namespace: PropNamespace) {
   const prefix = `${namespace}.`;
   return Object.fromEntries(
     Object.entries(props)

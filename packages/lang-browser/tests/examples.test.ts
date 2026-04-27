@@ -18,10 +18,7 @@ import {
   StackCell,
   ValueCell,
 } from '@startlang/lang-browser/cells';
-import {
-  Circle,
-  ShapeGroup,
-} from '@startlang/lang-browser/shapes';
+import { Circle, ShapeGroup } from '@startlang/lang-browser/shapes';
 
 const repoDir = path.resolve(import.meta.dirname, '../../..');
 const examplesDir = path.join(repoDir, 'apps/web/tests');
@@ -59,7 +56,10 @@ async function runSource(source: string): Promise<ExampleResult> {
   interpreter.registerGlobals(runtimeGlobals);
   interpreter.registerGlobals(browserPresentationGlobals);
 
-  await runUntilComplete(interpreter, await interpreter.run(parse(`${source}\n`)));
+  await runUntilComplete(
+    interpreter,
+    await interpreter.run(parse(`${source}\n`))
+  );
 
   return { host, interpreter };
 }
@@ -150,7 +150,7 @@ describe('browser examples', () => {
   it('configures cells with record arguments instead of current-container mutation', async () => {
     const { host } = await runSource(`
       stack { stack.direction = "row" } do
-        print { value.variant = "h3" }, "A"
+        print { value.variant = "h3", font.weight = "bold" }, "A"
         print "B"
       end
     `);
@@ -158,7 +158,9 @@ describe('browser examples', () => {
     expect(host.outputCells).toHaveLength(1);
     expect(host.outputCells[0]).toBeInstanceOf(StackCell);
     expect((host.outputCells[0] as StackCell).stackProps.direction).toBe('row');
-    expect(((host.outputCells[0] as StackCell).children[0] as ValueCell).variant).toBe('h3');
+    const first = (host.outputCells[0] as StackCell).children[0] as ValueCell;
+    expect(first.variant).toBe('h3');
+    expect(first.textProps['font.weight']).toBe('bold');
     expect(getOutputText(host)).toEqual(['A', 'B']);
   });
 
@@ -197,16 +199,21 @@ describe('browser examples', () => {
       table do
         row do
           set cell.align = "right"
+          set font.weight = "bold"
           cell "A"
-          cell { align = "center" }, "B"
+          cell { align = "center", font.weight = "normal" }, "B"
         end
       end
     `);
 
     const row = (host.outputCells[0] as GridCell).rows[0];
+    const first = row.children[0].children[0] as ValueCell;
+    const second = row.children[1].children[0] as ValueCell;
 
     expect(row.children[0].slotProps.align).toBe('right');
     expect(row.children[1].slotProps.align).toBe('center');
+    expect(first.textProps['font.weight']).toBe('bold');
+    expect(second.textProps['font.weight']).toBe('normal');
   });
 
   it('rejects non-cell children inside table rows', async () => {
@@ -314,7 +321,9 @@ describe('browser examples', () => {
     host.addCell(new ValueCell('partial stack child'));
     host.pushCell(new GridCell());
     host.pushCell(new GridRowCell());
-    host.addCell(new GridSlotCell().addChild(new ValueCell('partial row child')));
+    host.addCell(
+      new GridSlotCell().addChild(new ValueCell('partial row child'))
+    );
 
     expect(getOutputText(host)).toEqual(['complete']);
     expect(host.getInProgressOutputCells().flatMap(getText)).toEqual([

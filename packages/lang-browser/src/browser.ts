@@ -13,6 +13,8 @@ import {
   GridSlotCell,
   initialGridSlotProps,
   initialStackProps,
+  initialValueProps,
+  initialValueTextProps,
   StackCell,
   ValueCell,
   rootCell,
@@ -72,6 +74,7 @@ const initialShapeProps: ShapeProps = Object.freeze({
 const initialTextProps: TextProps = Object.freeze({
   ['font.name']: 'Helvetica',
   ['font.size']: 36,
+  ['font.weight']: null,
 });
 
 const initialGraphicConfig: GraphicConfig = Object.freeze({
@@ -103,11 +106,6 @@ function mergeProps<T extends object>(
       draft[name] = value;
     }
   });
-}
-
-function getValueVariant(props: Readonly<Record<string, unknown>>) {
-  const variant = props['value.variant'];
-  return typeof variant === 'string' ? variant : undefined;
 }
 
 export class BrowserPresentationHost
@@ -273,11 +271,30 @@ export class BrowserPresentationHost
     return this.currentCell.head instanceof GridRowCell;
   }
 
-  getValueProps(overrides: Readonly<Record<string, unknown>>) {
-    return {
+  getValueProps(
+    overrides: Readonly<Record<string, unknown>>,
+    defaultVariant: string = initialValueProps.variant,
+    context: PropContext = propContexts.value
+  ) {
+    const props = {
       ...this.cellConfig.head.props,
-      ...normalizeProps(overrides, propContexts.value),
+      ...normalizeProps(overrides, context),
     };
+    return ValueCell.mergeProps(initialValueProps, {
+      variant: defaultVariant,
+      ...selectProps(props, 'value'),
+    });
+  }
+
+  getValueTextProps(
+    overrides: Readonly<Record<string, unknown>>,
+    context: PropContext = propContexts.value
+  ) {
+    const props = {
+      ...this.cellConfig.head.props,
+      ...normalizeProps(overrides, context),
+    };
+    return mergeProps(initialValueTextProps, selectProps(props, 'text'));
   }
 
   getStackProps(overrides: Readonly<Record<string, unknown>>) {
@@ -291,7 +308,7 @@ export class BrowserPresentationHost
   getGridSlotProps(overrides: Readonly<Record<string, unknown>>) {
     const props = {
       ...this.cellConfig.head.props,
-      ...normalizeProps(overrides, propContexts.cell),
+      ...normalizeProps(overrides, propContexts.cellValue),
     };
     return GridSlotCell.mergeProps(
       initialGridSlotProps,
@@ -321,14 +338,17 @@ export class BrowserPresentationHost
 
   setConfiguration(name: string, value: unknown) {
     if (this.isBuildingGraphics()) {
-      this.setConfigurationProp(name, value, propContexts.graphics);
+      this.setConfigurationProp(name, value, propContexts.graphics, 'graphic');
     } else if (this.isBuildingCells()) {
-      this.setConfigurationProp(name, value, propContexts.cells);
+      this.setConfigurationProp(name, value, propContexts.cells, 'cell');
     } else {
       const prop = normalizeProps({ [name]: value }, propContexts.root);
       const [key, resolvedValue] = Object.entries(prop)[0];
-      if (key.startsWith('shape.') || key.startsWith('text.')) {
+      if (key.startsWith('shape.')) {
         this.setGraphicConfiguration(key, resolvedValue);
+      } else if (key.startsWith('text.')) {
+        this.setGraphicConfiguration(key, resolvedValue);
+        this.setCellConfiguration(key, resolvedValue);
       } else {
         this.setCellConfiguration(key, resolvedValue);
       }
@@ -338,11 +358,12 @@ export class BrowserPresentationHost
   private setConfigurationProp(
     name: string,
     value: unknown,
-    context: PropContext
+    context: PropContext,
+    target: 'graphic' | 'cell'
   ) {
     const prop = normalizeProps({ [name]: value }, context);
     const [key, resolvedValue] = Object.entries(prop)[0];
-    if (key.startsWith('shape.') || key.startsWith('text.')) {
+    if (target === 'graphic') {
       this.setGraphicConfiguration(key, resolvedValue);
     } else {
       this.setCellConfiguration(key, resolvedValue);
@@ -569,28 +590,37 @@ export const browserPresentationGlobals: RuntimeFunctions = {
   group(interpreter, args, node) {
     const [props] = splitProps(args);
     const host = getPresentationHost(interpreter);
-    return new BuildShapeGroupFrame(node, new ShapeGroup(host.getShapeProps(props)));
+    return new BuildShapeGroupFrame(
+      node,
+      new ShapeGroup(host.getShapeProps(props))
+    );
   },
 
   heading(interpreter, args) {
     const [props, [value, level = 1]] = splitProps(args);
     const host = getPresentationHost(interpreter);
-    const cellProps = host.getValueProps(props);
     const handler = interpreter.getHandler(value);
     addPresentationCell(
       interpreter,
-      new ValueCell(handler.getPrettyValue(value), getValueVariant(cellProps) ?? `h${level}`)
+      new ValueCell(
+        handler.getPrettyValue(value),
+        host.getValueProps(props, `h${level}`),
+        host.getValueTextProps(props)
+      )
     );
   },
 
   print(interpreter, args) {
     const [props, [value]] = splitProps(args);
     const host = getPresentationHost(interpreter);
-    const cellProps = host.getValueProps(props);
     const handler = interpreter.getHandler(value);
     addPresentationCell(
       interpreter,
-      new ValueCell(handler.getPrettyValue(value), getValueVariant(cellProps))
+      new ValueCell(
+        handler.getPrettyValue(value),
+        host.getValueProps(props),
+        host.getValueTextProps(props)
+      )
     );
   },
 
@@ -636,7 +666,17 @@ export const browserPresentationGlobals: RuntimeFunctions = {
     const handler = interpreter.getHandler(value);
     addPresentationCell(
       interpreter,
-      slot.addChild(new ValueCell(handler.getPrettyValue(value)))
+      slot.addChild(
+        new ValueCell(
+          handler.getPrettyValue(value),
+          host.getValueProps(
+            props,
+            initialValueProps.variant,
+            propContexts.cellValue
+          ),
+          host.getValueTextProps(props, propContexts.cellValue)
+        )
+      )
     );
   },
 };

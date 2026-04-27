@@ -1,8 +1,9 @@
 import { Shape, ShapeProps } from './base.jsx';
 
 export interface TextProps {
-  ['font.name']: string;
-  ['font.size']: number;
+  ['font.name']: string | null;
+  ['font.size']: number | string | null;
+  ['font.weight']: string | number | null;
 }
 
 export class Text extends Shape {
@@ -28,13 +29,20 @@ export class Text extends Shape {
   protected getSVGProps() {
     const svgProps = super.getSVGProps();
 
-    const { ['font.name']: fontName, ['font.size']: fontSize } = this.textProps;
+    const {
+      ['font.name']: fontName,
+      ['font.size']: fontSize,
+      ['font.weight']: fontWeight,
+    } = this.textProps;
 
-    if (fontName) {
+    if (fontName !== null) {
       svgProps.style.fontFamily = fontName;
     }
-    if (fontSize) {
+    if (fontSize !== null) {
       svgProps.style.fontSize = fontSize;
+    }
+    if (fontWeight !== null) {
+      svgProps.style.fontWeight = fontWeight;
     }
 
     return svgProps;
