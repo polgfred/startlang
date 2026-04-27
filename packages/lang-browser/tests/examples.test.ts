@@ -166,6 +166,7 @@ describe('browser examples', () => {
     const { host } = await runSource(`
       table do
         row do
+          set cell.align = "right"
           cell { align = "right", span = 2, width = 80 }, "A"
           cell do
             stack do
@@ -186,8 +187,26 @@ describe('browser examples', () => {
     expect(first.slotProps.align).toBe('right');
     expect(first.slotProps.span).toBe(2);
     expect(first.slotProps.width).toBe(80);
+    expect(second.slotProps.align).toBe('right');
     expect(getText(first)).toEqual(['A']);
     expect(getText(second)).toEqual(['B', 'C']);
+  });
+
+  it('configures table cell props with set commands', async () => {
+    const { host } = await runSource(`
+      table do
+        row do
+          set cell.align = "right"
+          cell "A"
+          cell { align = "center" }, "B"
+        end
+      end
+    `);
+
+    const row = (host.outputCells[0] as GridCell).rows[0];
+
+    expect(row.children[0].slotProps.align).toBe('right');
+    expect(row.children[1].slotProps.align).toBe('center');
   });
 
   it('rejects non-cell children inside table rows', async () => {

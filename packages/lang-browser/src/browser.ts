@@ -289,9 +289,13 @@ export class BrowserPresentationHost
   }
 
   getGridSlotProps(overrides: Readonly<Record<string, unknown>>) {
+    const props = {
+      ...this.cellConfig.head.props,
+      ...normalizeProps(overrides, propContexts.cell),
+    };
     return GridSlotCell.mergeProps(
       initialGridSlotProps,
-      selectProps(normalizeProps(overrides, propContexts.cell), 'cell')
+      selectProps(props, 'cell')
     );
   }
 

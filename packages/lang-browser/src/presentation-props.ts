@@ -27,8 +27,8 @@ export const propContexts = Object.freeze({
   value: Object.freeze(['value']),
   cell: Object.freeze(['cell']),
   graphics: Object.freeze(['shape', 'text']),
-  cells: Object.freeze(['stack', 'value']),
-  root: Object.freeze(['shape', 'text', 'stack', 'value']),
+  cells: Object.freeze(['stack', 'value', 'cell']),
+  root: Object.freeze(['shape', 'text', 'stack', 'value', 'cell']),
 } satisfies Record<string, PropContext>);
 
 export type CanonicalProps = Readonly<Record<string, unknown>>;
