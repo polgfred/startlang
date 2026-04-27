@@ -13,7 +13,7 @@ export class ShapeGroup extends Shape {
 
   getSVGElement() {
     return (
-      <g {...this.getSVGProps()}>
+      <g {...this.getSVGProps({ useAnchor: false })}>
         {this.children.map((child, i) => (
           <ShapeElement key={i} shape={child} />
         ))}

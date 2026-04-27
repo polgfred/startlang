@@ -8,6 +8,8 @@ export interface ShapeProps {
   ['fill.color']: string | null;
   ['stroke.color']: string | null;
   ['stroke.width']: number;
+  ['translate.x']: number;
+  ['translate.y']: number;
   ['scale.x']: number;
   ['scale.y']: number;
 }
@@ -19,7 +21,7 @@ export abstract class Shape {
 
   abstract getSVGElement(): JSX.Element;
 
-  protected getSVGProps() {
+  protected getSVGProps({ useAnchor = true } = {}) {
     const {
       opacity,
       anchor,
@@ -27,6 +29,8 @@ export abstract class Shape {
       ['fill.color']: fill,
       ['stroke.color']: stroke,
       ['stroke.width']: strokeWidth,
+      ['translate.x']: translatex,
+      ['translate.y']: translatey,
       ['scale.x']: scalex,
       ['scale.y']: scaley,
     } = this.shapeProps;
@@ -36,13 +40,16 @@ export abstract class Shape {
       transform: '',
     };
 
+    if (translatex !== 0 || translatey !== 0) {
+      svgProps.transform += `translate(${translatex} ${translatey}) `;
+    }
     if (rotate !== 0) {
-      svgProps.transform += `rotate(${rotate})`;
+      svgProps.transform += `rotate(${rotate}) `;
     }
     if (scalex !== 1 || scaley !== 1) {
       svgProps.transform += `scale(${scalex} ${scaley})`;
     }
-    if (anchor) {
+    if (useAnchor && anchor) {
       svgProps.style.transformOrigin = anchor;
       svgProps.style.transformBox = 'fill-box';
     }

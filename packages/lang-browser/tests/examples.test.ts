@@ -231,8 +231,12 @@ describe('browser examples', () => {
   it('renders nested graphics groups with scoped drawing defaults', async () => {
     const { host } = await runSource(`
       set shape.fill.color = "red"
+      set opacity = 0.4
+      set stroke.color = "black"
 
       group { shape.rotate = 45 } do
+        set translate.x = 10
+        set translate.y = 20
         circle 0, 0, 1
 
         group do
@@ -253,7 +257,11 @@ describe('browser examples', () => {
 
     const group = host.shapes[0] as ShapeGroup;
     expect(group.shapeProps.rotate).toBe(45);
+    expect(group.shapeProps.opacity).toBe(1);
+    expect(group.shapeProps['fill.color']).toBe(null);
+    expect(group.shapeProps['stroke.color']).toBe(null);
     expect(group.children).toHaveLength(3);
+    expect(group.getSVGElement().props.style.transformOrigin).toBeUndefined();
 
     const first = group.children[0] as Circle;
     const nested = group.children[1] as ShapeGroup;
@@ -261,6 +269,11 @@ describe('browser examples', () => {
     const topLevel = host.shapes[1] as Circle;
 
     expect(first.shapeProps['fill.color']).toBe('red');
+    expect(first.shapeProps.opacity).toBe(0.4);
+    expect(first.shapeProps['stroke.color']).toBe('black');
+    expect(first.shapeProps['translate.x']).toBe(10);
+    expect(first.shapeProps['translate.y']).toBe(20);
+    expect(nested.shapeProps['fill.color']).toBe(null);
     expect(nested.children[0].shapeProps['fill.color']).toBe('blue');
     expect(third.shapeProps['fill.color']).toBe('red');
     expect(third.shapeProps.rotate).toBe(90);

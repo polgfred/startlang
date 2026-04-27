@@ -67,8 +67,18 @@ const initialShapeProps: ShapeProps = Object.freeze({
   ['fill.color']: null,
   ['stroke.color']: null,
   ['stroke.width']: 1,
+  ['translate.x']: 0,
+  ['translate.y']: 0,
   ['scale.x']: 1,
   ['scale.y']: 1,
+});
+
+const initialGroupProps: ShapeProps = Object.freeze({
+  ...initialShapeProps,
+  anchor: '',
+  ['fill.color']: null,
+  ['stroke.color']: null,
+  ['stroke.width']: 0,
 });
 
 const initialTextProps: TextProps = Object.freeze({
@@ -106,6 +116,18 @@ function mergeProps<T extends object>(
       draft[name] = value;
     }
   });
+}
+
+function selectInheritedGroupProps(props: CanonicalProps) {
+  return Object.fromEntries(
+    [
+      'shape.rotate',
+      'shape.translate.x',
+      'shape.translate.y',
+      'shape.scale.x',
+      'shape.scale.y',
+    ].flatMap((key) => (key in props ? [[key, props[key]]] : []))
+  );
 }
 
 export class BrowserPresentationHost
@@ -323,6 +345,15 @@ export class BrowserPresentationHost
     return mergeProps(
       this.shapeProps,
       selectProps(normalizeProps(overrides, context), 'shape')
+    );
+  }
+
+  getGroupProps(overrides: Readonly<Record<string, unknown>> = emptyObject) {
+    const configProps = selectInheritedGroupProps(this.graphicConfig.head.props);
+    const overrideProps = normalizeProps(overrides, propContexts.shape);
+    return mergeProps(
+      initialGroupProps,
+      selectProps({ ...configProps, ...overrideProps }, 'shape')
     );
   }
 
@@ -592,7 +623,7 @@ export const browserPresentationGlobals: RuntimeFunctions = {
     const host = getPresentationHost(interpreter);
     return new BuildShapeGroupFrame(
       node,
-      new ShapeGroup(host.getShapeProps(props))
+      new ShapeGroup(host.getGroupProps(props))
     );
   },
 

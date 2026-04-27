@@ -6,6 +6,8 @@ export const propNamespaces = Object.freeze({
     'fill.color',
     'stroke.color',
     'stroke.width',
+    'translate.x',
+    'translate.y',
     'scale.x',
     'scale.y',
   ]),
