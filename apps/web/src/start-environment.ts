@@ -159,13 +159,14 @@ export function useStartEnvironment() {
           break;
         }
         case 'repaint': {
+          syncOutputTab();
           store.publish();
           await waitForAnimationFrame();
           break;
         }
       }
     },
-    [history, interpreter, store]
+    [history, interpreter, store, syncOutputTab]
   );
 
   interpreter.effectHandler = handleRuntimeEffect;
