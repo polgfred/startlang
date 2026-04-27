@@ -1,0 +1,48 @@
+;
+; Nested Group Rosette
+;
+; Draws a layered flower pattern using nested groups. The outer group moves
+; the drawing origin to the center of the canvas, each arm group rotates around
+; that origin, and smaller nested groups rotate details within each arm.
+;
+
+group { translate.x = 300, translate.y = 300 } do
+  set stroke.color = "white"
+  set stroke.width = 2
+
+  ; soft outer halo
+  set fill.color = color(0.1, 0.2, 0.55)
+  set opacity = 0.18
+  circle 0, 0, 260
+
+  ; twelve repeated arms
+  for arm = 0 to 330 by 30 do
+    group { rotate = arm } do
+      set opacity = 0.72
+      set fill.color = color(0.2 + arm / 900, 0.45, 0.92 - arm / 1000)
+      ellipse 0, -130, 34, 120
+
+      ; details that fan out inside each arm
+      for twist = -24 to 24 by 24 do
+        group { rotate = twist } do
+          set opacity = 0.44
+          set fill.color = color(0.85, 0.45 + twist / 160, 0.32)
+          ellipse 0, -170, 15, 64
+          circle 0, -228, 9
+        end
+      end
+
+      set opacity = 0.86
+      set fill.color = "gold"
+      circle 0, -248, 13
+    end
+  end
+
+  ; center cap
+  set opacity = 1
+  set fill.color = "gold"
+  circle 0, 0, 42
+
+  set fill.color = "white"
+  circle 0, 0, 16
+end

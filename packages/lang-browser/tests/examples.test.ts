@@ -375,6 +375,7 @@ describe('browser examples', () => {
 
   it.each([
     ['box.start', 73],
+    ['rosette.start', 1],
     ['sine.start', 74],
     ['victor.start', 50],
   ])('%s renders graphics output', async (name, shapeCount) => {
