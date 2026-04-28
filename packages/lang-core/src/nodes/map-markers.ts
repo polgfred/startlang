@@ -48,21 +48,21 @@ export function mapMarkers(node: Node, markers: readonly MarkerType[]) {
     for (const child of node.elems) {
       const { end } = child.location;
 
-      for (; index <= end.line; ++index) {
-        if (
-          child instanceof BeginNode ||
-          child instanceof CallNode ||
-          child instanceof ForInNode ||
-          child instanceof ForNode ||
-          child instanceof WhileNode ||
-          child instanceof RepeatNode
-        ) {
-          visit(child.body);
-        } else if (child instanceof IfNode) {
-          visit(child.thenBody);
-          visit(child.elseBody);
-        }
+      if (
+        child instanceof BeginNode ||
+        child instanceof CallNode ||
+        child instanceof ForInNode ||
+        child instanceof ForNode ||
+        child instanceof WhileNode ||
+        child instanceof RepeatNode
+      ) {
+        visit(child.body);
+      } else if (child instanceof IfNode) {
+        visit(child.thenBody);
+        visit(child.elseBody);
+      }
 
+      for (; index <= end.line; ++index) {
         addLine(child, index);
       }
     }
