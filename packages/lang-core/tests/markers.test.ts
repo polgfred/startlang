@@ -1,10 +1,38 @@
 import { Interpreter } from '@startlang/lang-core/interpreter';
+import { BlockNode, IfNode, RepeatNode } from '@startlang/lang-core/nodes';
+import { mapMarkers } from '@startlang/lang-core/nodes/map-markers';
 import { parse } from '@startlang/lang-core/parser.peggy';
 import { isBreakpointSuspension } from '@startlang/lang-core/suspension';
 import type { MarkerType } from '@startlang/lang-core/types';
 import { describe, expect, it } from 'vitest';
 
 describe('marker maps', () => {
+  it('maps marked lines to the nearest matching AST node', () => {
+    const source = `
+      repeat 3 do
+        if true then
+          print "then"
+        else
+          print "else"
+        end
+      end
+      `;
+    const rootNode = parse(`${source}\n`);
+    const repeatNode = (rootNode as BlockNode).elems[0] as RepeatNode;
+    const ifNode = (repeatNode.body as BlockNode).elems[0] as IfNode;
+    const thenPrintNode = (ifNode.thenBody as BlockNode).elems[0];
+    const markers: MarkerType[] = [];
+
+    markers[3] = 'snapshot';
+    markers[4] = 'breakpoint';
+
+    const markerMap = mapMarkers(rootNode, markers);
+
+    expect(markerMap.get(ifNode)).toBe('snapshot');
+    expect(markerMap.get(thenPrintNode)).toBe('breakpoint');
+    expect(markerMap.get(repeatNode)).toBeUndefined();
+  });
+
   it('maps deeply nested block lines without repeated subtree walks', () => {
     const source = `
       begin render_sieve do
