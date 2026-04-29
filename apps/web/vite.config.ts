@@ -81,6 +81,9 @@ function peggyPlugin(): Plugin {
 }
 
 export default defineConfig({
+  build: {
+    chunkSizeWarningLimit: 700,
+  },
   plugins: [
     extensionAliasPlugin(),
     rawTextPlugin('.start'),
