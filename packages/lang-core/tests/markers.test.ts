@@ -1,6 +1,9 @@
 import { Interpreter } from '@startlang/lang-core/interpreter';
 import { BlockNode, IfNode, RepeatNode } from '@startlang/lang-core/nodes';
-import { mapMarkers } from '@startlang/lang-core/nodes/map-markers';
+import {
+  buildMarkerLineMap,
+  mapMarkers,
+} from '@startlang/lang-core/nodes/map-markers';
 import { parse } from '@startlang/lang-core/parser.peggy';
 import { isBreakpointSuspension } from '@startlang/lang-core/suspension';
 import type { MarkerType } from '@startlang/lang-core/types';
@@ -30,6 +33,49 @@ describe('marker maps', () => {
 
     expect(markerMap.get(ifNode)).toBe('snapshot');
     expect(markerMap.get(thenPrintNode)).toBe('breakpoint');
+    expect(markerMap.get(repeatNode)).toBeUndefined();
+  });
+
+  it('resolves clicked lines to marker owner start lines', () => {
+    const source = `
+      repeat 3 do
+
+        print "inside"
+      end
+
+      print "after"
+      `;
+    const rootNode = parse(`${source}\n`);
+    const lineMap = buildMarkerLineMap(rootNode);
+
+    expect(lineMap.resolve(2)?.lineNumber).toBe(2);
+    expect(lineMap.resolve(3)?.lineNumber).toBe(4);
+    expect(lineMap.resolve(5)?.lineNumber).toBe(2);
+    expect(lineMap.resolve(6)?.lineNumber).toBe(7);
+  });
+
+  it('maps blank lines forward to the next child in the current block', () => {
+    const source = `
+      repeat 3 do
+
+        print "inside"
+      end
+
+      print "after"
+      `;
+    const rootNode = parse(`${source}\n`);
+    const repeatNode = (rootNode as BlockNode).elems[0] as RepeatNode;
+    const insidePrintNode = (repeatNode.body as BlockNode).elems[0];
+    const afterPrintNode = (rootNode as BlockNode).elems[1];
+    const markers: MarkerType[] = [];
+
+    markers[3] = 'breakpoint';
+    markers[6] = 'snapshot';
+
+    const markerMap = mapMarkers(rootNode, markers);
+
+    expect(markerMap.get(insidePrintNode)).toBe('breakpoint');
+    expect(markerMap.get(afterPrintNode)).toBe('snapshot');
     expect(markerMap.get(repeatNode)).toBeUndefined();
   });
 

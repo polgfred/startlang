@@ -1,5 +1,9 @@
 import type { Monaco } from '@monaco-editor/react';
 import type { Node } from '@startlang/lang-core/nodes';
+import {
+  buildMarkerLineMap,
+  type MarkerLineMap,
+} from '@startlang/lang-core/nodes/map-markers';
 import { parse } from '@startlang/lang-core/parser.peggy';
 import type { MarkerType } from '@startlang/lang-core/types';
 import type { editor, languages } from 'monaco-editor';
@@ -25,6 +29,16 @@ interface EditorContextValue {
 }
 
 const EditorContext = createContext<EditorContextValue | null>(null);
+
+type ParseCacheEntry = {
+  version: number;
+  result:
+    | {
+        markerLineMap: MarkerLineMap;
+        node: Node;
+      }
+    | Error;
+};
 
 const languageConfig: languages.LanguageConfiguration = {
   comments: {
@@ -179,6 +193,7 @@ export function EditorProvider({ children }: { children: ReactNode }) {
   );
   const markersRef = useRef<MarkerType[]>([]);
   const highlightedNodeRef = useRef<Node | null>(null);
+  const parseCacheRef = useRef<ParseCacheEntry | null>(null);
 
   const requireEditor = useCallback(() => {
     if (!editorRef.current) {
@@ -186,6 +201,34 @@ export function EditorProvider({ children }: { children: ReactNode }) {
     }
     return editorRef.current;
   }, []);
+
+  const parseCurrentValue = useCallback(() => {
+    const editor = requireEditor();
+    const model = editor.getModel();
+    const version = model?.getVersionId() ?? 0;
+    const cached = parseCacheRef.current;
+
+    if (cached?.version === version) {
+      if (cached.result instanceof Error) {
+        throw cached.result;
+      }
+      return cached.result;
+    }
+
+    try {
+      const node = parse(editor.getValue() + '\n');
+      const result = {
+        markerLineMap: buildMarkerLineMap(node),
+        node,
+      };
+      parseCacheRef.current = { version, result };
+      return result;
+    } catch (err) {
+      const result = err instanceof Error ? err : new Error(String(err));
+      parseCacheRef.current = { version, result };
+      throw result;
+    }
+  }, [requireEditor]);
 
   const updateDecorations = useCallback(() => {
     const decorations = decorationsRef.current;
@@ -237,6 +280,53 @@ export function EditorProvider({ children }: { children: ReactNode }) {
     decorations.set(nextDecorations);
   }, []);
 
+  const resolveMarkerLineNumber = useCallback(
+    (lineNumber: number) => {
+      const { markerLineMap } = parseCurrentValue();
+      return markerLineMap.resolve(lineNumber)?.lineNumber ?? null;
+    },
+    [parseCurrentValue]
+  );
+
+  const cycleMarker = useCallback(
+    (lineNumber: number) => {
+      const markers = markersRef.current;
+
+      if (!markers[lineNumber]) {
+        markers[lineNumber] = 'breakpoint';
+      } else if (markers[lineNumber] === 'breakpoint') {
+        markers[lineNumber] = 'snapshot';
+      } else {
+        // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+        delete markers[lineNumber];
+      }
+
+      updateDecorations();
+    },
+    [updateDecorations]
+  );
+
+  const toggleMarker = useCallback(
+    (lineNumber: number) => {
+      const markers = markersRef.current;
+
+      if (markers[lineNumber]) {
+        cycleMarker(lineNumber);
+        return;
+      }
+
+      try {
+        const resolvedLineNumber = resolveMarkerLineNumber(lineNumber);
+        if (resolvedLineNumber !== null) {
+          cycleMarker(resolvedLineNumber);
+        }
+      } catch {
+        // leave invalid source unmarked
+      }
+    },
+    [cycleMarker, resolveMarkerLineNumber]
+  );
+
   const value = useMemo<EditorContextValue>(
     () => ({
       autoLayout() {
@@ -258,26 +348,15 @@ export function EditorProvider({ children }: { children: ReactNode }) {
         decorationsRef.current = editor.createDecorationsCollection([]);
       },
       parseValue() {
-        return parse(requireEditor().getValue() + '\n');
+        return parseCurrentValue().node;
       },
-      requireEditor,
       setValue(value) {
         requireEditor().setValue(value ?? '');
       },
-      toggleMarker(lineNumber) {
-        const markers = markersRef.current;
-        if (!markers[lineNumber]) {
-          markers[lineNumber] = 'breakpoint';
-        } else if (markers[lineNumber] === 'breakpoint') {
-          markers[lineNumber] = 'snapshot';
-        } else {
-          // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-          delete markers[lineNumber];
-        }
-        updateDecorations();
-      },
+      requireEditor,
+      toggleMarker,
     }),
-    [requireEditor, updateDecorations]
+    [parseCurrentValue, requireEditor, toggleMarker]
   );
 
   return (
