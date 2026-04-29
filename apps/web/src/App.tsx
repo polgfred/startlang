@@ -57,6 +57,7 @@ export default function App() {
           isProgramActive={env.isRunDisabled}
           showInspector={env.showInspector}
           setShowInspector={env.setShowInspector}
+          runExample={env.runProgram}
           runProgram={env.runOrResume}
           runLabel={env.runLabel}
           stopProgram={env.stopProgram}

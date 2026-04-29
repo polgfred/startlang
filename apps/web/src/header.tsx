@@ -162,7 +162,7 @@ function CodeMenu({ runProgram }: { runProgram: () => void }) {
 
   const loadScript = useCallback(
     (script: string) => {
-      setValue(script);
+      setValue(script, { clearMarkers: true });
       closeMenu();
       runProgram();
     },
@@ -188,7 +188,7 @@ function CodeMenu({ runProgram }: { runProgram: () => void }) {
         <Divider />
         <MenuItem
           onClick={() => {
-            setValue('');
+            setValue('', { clearMarkers: true });
             closeMenu();
           }}
         >
@@ -207,6 +207,7 @@ export default function Header({
   isProgramActive,
   showInspector,
   setShowInspector,
+  runExample,
   runProgram,
   runLabel,
   stopProgram,
@@ -219,6 +220,7 @@ export default function Header({
   isProgramActive: boolean;
   showInspector: boolean;
   setShowInspector: (value: boolean) => void;
+  runExample: () => void;
   runProgram: () => void;
   runLabel: string;
   stopProgram: () => void;
@@ -248,7 +250,7 @@ export default function Header({
         >
           START
         </Typography>
-        <CodeMenu runProgram={runProgram} />
+        <CodeMenu runProgram={runExample} />
         <OutputSwitcher
           outputTab={outputTab}
           setOutputTab={setOutputTab}

@@ -24,7 +24,7 @@ interface EditorContextValue {
   initEditor(editor: editor.ICodeEditor): void;
   parseValue(): Node;
   requireEditor(): editor.ICodeEditor;
-  setValue(value: string | null): void;
+  setValue(value: string | null, options?: { clearMarkers?: boolean }): void;
   toggleMarker(lineNumber: number): void;
 }
 
@@ -350,13 +350,17 @@ export function EditorProvider({ children }: { children: ReactNode }) {
       parseValue() {
         return parseCurrentValue().node;
       },
-      setValue(value) {
+      setValue(value, options) {
+        if (options?.clearMarkers) {
+          markersRef.current = [];
+        }
         requireEditor().setValue(value ?? '');
+        updateDecorations();
       },
       requireEditor,
       toggleMarker,
     }),
-    [parseCurrentValue, requireEditor, toggleMarker]
+    [parseCurrentValue, requireEditor, toggleMarker, updateDecorations]
   );
 
   return (
