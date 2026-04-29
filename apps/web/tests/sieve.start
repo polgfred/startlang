@@ -18,9 +18,6 @@ i = 2
 
 ; count from i until we hit the upper limit
 while i <= upper do
-  ; the value i has not been marked as composite
-  print "{i} is prime"
-
   ; count from i^2 to the upper limit in multiples of i
   ; (this marks all multiples of i as composite)
   for j = i^2 to upper by i do composite[j] = true
@@ -30,4 +27,27 @@ while i <= upper do
 
   ; skip over everything that has been marked as composite
   while composite[i] do i = i + 1
+end
+
+; show a table of primes vs. composites
+columns = 10
+set cell.align = "center"
+set cell.width = 52
+
+table do
+  for row_start = 1 to upper by columns do
+    row do
+      for n = row_start to row_start + columns - 1 do
+        if n = 1 then
+          set cell.background.color = "whitesmoke"
+        else if composite[n] then
+          set cell.background.color = "lightgrey"
+        else
+          set cell.background.color = "palegreen"
+        end
+
+        cell n
+      end
+    end
+  end
 end
