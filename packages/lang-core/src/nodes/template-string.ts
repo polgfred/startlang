@@ -1,13 +1,10 @@
 import { Interpreter } from '../interpreter.js';
 
-import { Frame, Node, SourceLocation } from './base.js';
+import { Frame, Node } from './base.js';
 
 export class TemplateStringNode extends Node {
-  constructor(
-    location: SourceLocation,
-    public readonly segments: readonly Node[]
-  ) {
-    super(location);
+  constructor(public readonly segments: readonly Node[]) {
+    super();
   }
 
   makeFrame() {

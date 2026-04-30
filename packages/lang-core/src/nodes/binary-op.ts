@@ -1,15 +1,14 @@
 import { Interpreter } from '../interpreter.js';
 
-import { Frame, Node, SourceLocation } from './base.js';
+import { Frame, Node } from './base.js';
 
 export class BinaryOpNode extends Node {
   constructor(
-    location: SourceLocation,
     public readonly operator: string,
     public readonly left: Node,
     public readonly right: Node
   ) {
-    super(location);
+    super();
   }
 
   makeFrame() {

@@ -1,14 +1,11 @@
 import { emptyList } from '../handlers/list.js';
 import { Interpreter } from '../interpreter.js';
 
-import { Frame, Node, SourceLocation } from './base.js';
+import { Frame, Node } from './base.js';
 
 export class ListNode extends Node {
-  constructor(
-    location: SourceLocation,
-    public readonly items: readonly Node[]
-  ) {
-    super(location);
+  constructor(public readonly items: readonly Node[]) {
+    super();
   }
 
   makeFrame(): Frame {

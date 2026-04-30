@@ -15,8 +15,18 @@ export interface SourceLocation {
   end: SourceOffset;
 }
 
+const nullLocation: SourceLocation = {
+  start: { offset: 0, line: 0, column: 0 },
+  end: { offset: 0, line: 0, column: 0 },
+};
+
 export abstract class Node {
-  constructor(public readonly location: SourceLocation) {}
+  location: SourceLocation = nullLocation;
+
+  at(location: SourceLocation): this {
+    this.location = location;
+    return this;
+  }
 
   abstract makeFrame(): Frame;
 }
@@ -50,11 +60,4 @@ class RootFrame extends Frame {
   }
 }
 
-const nullLocation: SourceLocation = {
-  start: { offset: 0, line: 0, column: 0 },
-  end: { offset: 0, line: 0, column: 0 },
-};
-
-export const rootFrame: Cons<Frame> = new Cons(
-  new RootNode(nullLocation).makeFrame()
-);
+export const rootFrame: Cons<Frame> = new Cons(new RootNode().makeFrame());

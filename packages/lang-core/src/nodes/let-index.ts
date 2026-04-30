@@ -1,16 +1,15 @@
 import { Interpreter } from '../interpreter.js';
 import { IndexType } from '../types.js';
 
-import { Frame, Node, SourceLocation } from './base.js';
+import { Frame, Node } from './base.js';
 
 export class LetIndexNode extends Node {
   constructor(
-    location: SourceLocation,
     public readonly name: string,
     public readonly indexes: readonly Node[],
     public readonly value: Node
   ) {
-    super(location);
+    super();
   }
 
   makeFrame() {

@@ -1,14 +1,13 @@
 import { Interpreter } from '../interpreter.js';
 
-import { Frame, Node, SourceLocation } from './base.js';
+import { Frame, Node } from './base.js';
 
 export class WhileNode extends Node {
   constructor(
-    location: SourceLocation,
     public readonly condition: Node,
     public readonly body: Node
   ) {
-    super(location);
+    super();
   }
 
   makeFrame() {

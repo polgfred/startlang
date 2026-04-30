@@ -1,17 +1,16 @@
 import { emptyRecord } from '../handlers/record.js';
 import { Interpreter } from '../interpreter.js';
 
-import { Frame, Node, SourceLocation } from './base.js';
+import { Frame, Node } from './base.js';
 
 export class RecordNode extends Node {
   constructor(
-    location: SourceLocation,
     public readonly pairs: ReadonlyArray<{
       readonly key: string;
       readonly value: Node;
     }>
   ) {
-    super(location);
+    super();
   }
 
   makeFrame(): Frame {

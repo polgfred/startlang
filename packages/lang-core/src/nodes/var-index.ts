@@ -1,15 +1,14 @@
 import { Interpreter } from '../interpreter.js';
 import type { IndexType } from '../types.js';
 
-import { Frame, Node, SourceLocation } from './base.js';
+import { Frame, Node } from './base.js';
 
 export class VarIndexNode extends Node {
   constructor(
-    location: SourceLocation,
     public readonly name: string,
     public readonly indexes: readonly Node[]
   ) {
-    super(location);
+    super();
   }
 
   makeFrame() {

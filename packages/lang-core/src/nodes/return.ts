@@ -1,13 +1,10 @@
 import { Interpreter } from '../interpreter.js';
 
-import { Frame, Node, SourceLocation } from './base.js';
+import { Frame, Node } from './base.js';
 
 export class ReturnNode extends Node {
-  constructor(
-    location: SourceLocation,
-    public readonly result: Node | null
-  ) {
-    super(location);
+  constructor(public readonly result: Node | null) {
+    super();
   }
 
   makeFrame() {
