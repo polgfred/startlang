@@ -392,7 +392,6 @@ describe('browser examples', () => {
     ['invest.start', ['Years', '$100,000.00', "That's a total growth"]],
     ['layout.start', ['The Beatles', 'Pink Floyd', 'Members']],
     ['numguess.start', ['Your guesses:', 'Goodbye!']],
-    ['sieve.start', ['2 is prime', '97 is prime']],
     ['table-cells.start', ['Quarterly Revenue', 'North', 'Grand Total']],
   ])('%s renders text output', async (name, expectedText) => {
     const { host, interpreter } = await runExample(name);
@@ -402,6 +401,34 @@ describe('browser examples', () => {
     for (const expected of expectedText) {
       expect(text).toContain(expected);
     }
+  });
+
+  it('sieve.start renders a prime/composite table', async () => {
+    const { host, interpreter } = await runExample('sieve.start');
+
+    expect(interpreter.isSuspended).toBe(false);
+    expect(host.outputCells).toHaveLength(1);
+    expect(host.outputCells[0]).toBeInstanceOf(GridCell);
+
+    const table = host.outputCells[0] as GridCell;
+    const cells = table.rows.flatMap((row) => row.children);
+
+    expect(table.rows).toHaveLength(10);
+    expect(cells).toHaveLength(100);
+
+    function getNumberCell(value: string) {
+      const cell = cells.find((slot) => getText(slot).includes(value));
+      expect(cell).toBeDefined();
+      return cell as GridSlotCell;
+    }
+
+    expect(getNumberCell('1').slotProps['background.color']).toBe('whitesmoke');
+    expect(getNumberCell('2').slotProps['background.color']).toBe('palegreen');
+    expect(getNumberCell('4').slotProps['background.color']).toBe('lightgrey');
+    expect(getNumberCell('97').slotProps['background.color']).toBe('palegreen');
+    expect(getNumberCell('100').slotProps['background.color']).toBe(
+      'lightgrey'
+    );
   });
 
   it('can play numguess by splitting the difference', async () => {
