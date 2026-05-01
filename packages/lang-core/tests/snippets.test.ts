@@ -1,5 +1,4 @@
 import { Interpreter, type RunResult } from '@startlang/lang-core/interpreter';
-import type { CallFrame } from '@startlang/lang-core/nodes';
 import { parse } from '@startlang/lang-core/parser.peggy';
 import { RuntimeHistory } from '@startlang/lang-core/runtime-history';
 import { runtimeGlobals } from '@startlang/lang-core/runtime-globals';
@@ -440,7 +439,7 @@ describe('core language snippets', () => {
           if (!node.body) {
             throw new Error('missing body');
           }
-          return node.body.makeFrame() as CallFrame;
+          return node.body.makeFrame();
         },
       }
     );

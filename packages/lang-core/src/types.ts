@@ -1,5 +1,5 @@
 import type { Interpreter } from './interpreter';
-import { CallFrame, CallNode } from './nodes';
+import type { CallNode, Frame } from './nodes';
 import type { RuntimeSuspension } from './suspension';
 
 export interface RuntimeFunction {
@@ -7,7 +7,7 @@ export interface RuntimeFunction {
     interpreter: Interpreter,
     args: any, // eslint-disable-line @typescript-eslint/no-explicit-any
     node: CallNode
-  ): void | Promise<void> | CallFrame | RuntimeSuspension;
+  ): void | Promise<void> | Frame | RuntimeSuspension;
 }
 
 export type RuntimeFunctions = Readonly<Record<string, RuntimeFunction>>;
