@@ -204,6 +204,10 @@ export class Interpreter<THostSnapshot = unknown> {
     });
   }
 
+  pushFrame(frame: Frame) {
+    this.topFrame = this.topFrame.push(frame);
+  }
+
   swapFrame<T extends Frame>(
     frame: T,
     state: number | null = null,
@@ -221,13 +225,18 @@ export class Interpreter<THostSnapshot = unknown> {
     );
   }
 
-  pushFrame(node: Node) {
+  popFrame() {
+    this.topFrame.head.dispose(this);
+    this.topFrame = this.topFrame.pop();
+  }
+
+  pushNode(node: Node) {
     if (node instanceof LiteralNode) {
       this.lastResult = node.value;
     } else if (node instanceof VarNode) {
       this.lastResult = this.getVariable(node.name);
     } else {
-      this.topFrame = this.topFrame.push(node.makeFrame());
+      this.pushFrame(node.makeFrame());
       const marker = this.markersMap.get(this.topFrame.head.node);
       if (marker) {
         this.setEffect(snapshotEffect);
@@ -236,11 +245,6 @@ export class Interpreter<THostSnapshot = unknown> {
         }
       }
     }
-  }
-
-  popFrame() {
-    this.topFrame.head.dispose(this);
-    this.topFrame = this.topFrame.pop();
   }
 
   popOut() {

@@ -31,7 +31,7 @@ export class ForInFrame extends Frame {
     switch (this.state) {
       case 0: {
         interpreter.swapFrame(this, 1);
-        interpreter.pushFrame(iterable);
+        interpreter.pushNode(iterable);
         break;
       }
       case 1: {
@@ -48,7 +48,7 @@ export class ForInFrame extends Frame {
           interpreter.swapFrame(this, null, (draft) => {
             draft.count++;
           });
-          interpreter.pushFrame(body);
+          interpreter.pushNode(body);
         } else {
           interpreter.popFrame();
         }

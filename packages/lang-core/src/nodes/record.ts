@@ -31,7 +31,7 @@ export class RecordFrame extends Frame {
       case 0: {
         if (this.count < pairs.length) {
           interpreter.swapFrame(this, 1);
-          interpreter.pushFrame(pairs[this.count].value);
+          interpreter.pushNode(pairs[this.count].value);
         } else {
           interpreter.swapFrame(this, 2);
         }

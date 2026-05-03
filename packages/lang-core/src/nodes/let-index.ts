@@ -32,7 +32,7 @@ export class LetIndexFrame extends Frame {
       case 0: {
         if (this.count < indexes.length) {
           interpreter.swapFrame(this, 1);
-          interpreter.pushFrame(indexes[this.count]);
+          interpreter.pushNode(indexes[this.count]);
         } else {
           interpreter.swapFrame(this, 2);
         }
@@ -53,7 +53,7 @@ export class LetIndexFrame extends Frame {
       }
       case 2: {
         interpreter.swapFrame(this, 3);
-        interpreter.pushFrame(value);
+        interpreter.pushNode(value);
         break;
       }
       case 3: {

@@ -23,7 +23,7 @@ class RepeatFrame extends Frame {
   declare node: RepeatNode;
 
   visit(interpreter: Interpreter) {
-    interpreter.pushFrame(this.node.body);
+    interpreter.pushNode(this.node.body);
   }
 }
 
@@ -40,7 +40,7 @@ class RepeatTimesFrame extends Frame {
       case 0: {
         interpreter.swapFrame(this, 1);
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        interpreter.pushFrame(times!);
+        interpreter.pushNode(times!);
         break;
       }
       case 1: {
@@ -54,7 +54,7 @@ class RepeatTimesFrame extends Frame {
           interpreter.swapFrame(this, null, (draft) => {
             draft.count++;
           });
-          interpreter.pushFrame(body);
+          interpreter.pushNode(body);
         } else {
           interpreter.popFrame();
         }

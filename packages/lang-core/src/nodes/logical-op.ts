@@ -42,7 +42,7 @@ export class LogicalAndFrame extends Frame {
       case 0: {
         if (this.count < values.length) {
           interpreter.swapFrame(this, 1);
-          interpreter.pushFrame(values[this.count]);
+          interpreter.pushNode(values[this.count]);
         } else {
           interpreter.swapFrame(this, 2);
         }
@@ -80,7 +80,7 @@ export class LogicalOrFrame extends Frame {
       case 0: {
         if (this.count < values.length) {
           interpreter.swapFrame(this, 1);
-          interpreter.pushFrame(values[this.count]);
+          interpreter.pushNode(values[this.count]);
         } else {
           interpreter.swapFrame(this, 2);
         }
@@ -113,7 +113,7 @@ export class LogicalNotFrame extends Frame {
     switch (this.state) {
       case 0: {
         interpreter.swapFrame(this, 1);
-        interpreter.pushFrame(this.node.value);
+        interpreter.pushNode(this.node.value);
         break;
       }
       case 1: {

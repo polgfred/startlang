@@ -478,7 +478,7 @@ class BuildCellFrame extends CallFrame {
         if (body) {
           host.beginCellContainer(this.cell);
           interpreter.swapFrame(this, 1);
-          interpreter.pushFrame(body);
+          interpreter.pushNode(body);
         } else {
           interpreter.popFrame();
         }
@@ -514,7 +514,7 @@ class BuildShapeGroupFrame extends CallFrame {
         if (body) {
           host.beginShapeGroup(this.group);
           interpreter.swapFrame(this, 1);
-          interpreter.pushFrame(body);
+          interpreter.pushNode(body);
         } else {
           interpreter.popFrame();
         }

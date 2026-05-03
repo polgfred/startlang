@@ -29,7 +29,7 @@ export class CallFrame extends Frame {
       case 0: {
         if (this.count < args.length) {
           interpreter.swapFrame(this, 1);
-          interpreter.pushFrame(args[this.count]);
+          interpreter.pushNode(args[this.count]);
         } else {
           interpreter.swapFrame(this, 2);
         }
@@ -71,7 +71,7 @@ class CallGlobalFrame extends CallFrame {
           interpreter.setVariable(func.params[i], this.args[i]);
         }
         interpreter.swapFrame(this, 1);
-        interpreter.pushFrame(func.body);
+        interpreter.pushNode(func.body);
         break;
       }
       case 1: {
@@ -95,10 +95,10 @@ class CallRuntimeFrame extends CallFrame {
     switch (this.state) {
       case 0: {
         const result = func(interpreter, this.args, this.node);
+        interpreter.swapFrame(this, 1);
         if (result instanceof Frame) {
-          interpreter.swapFrame(result);
-        } else {
-          interpreter.swapFrame(this, 1);
+          interpreter.pushFrame(result);
+        } else if (result) {
           return result;
         }
         break;

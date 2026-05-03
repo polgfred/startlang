@@ -27,7 +27,7 @@ export class TemplateStringFrame extends Frame {
       case 0: {
         if (this.count < segments.length) {
           interpreter.swapFrame(this, 1);
-          interpreter.pushFrame(segments[this.count]);
+          interpreter.pushNode(segments[this.count]);
         } else {
           interpreter.swapFrame(this, 2);
         }

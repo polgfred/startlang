@@ -26,7 +26,7 @@ export class ListFrame extends Frame {
       case 0: {
         if (this.count < items.length) {
           interpreter.swapFrame(this, 1);
-          interpreter.pushFrame(items[this.count]);
+          interpreter.pushNode(items[this.count]);
         } else {
           interpreter.swapFrame(this, 2);
         }

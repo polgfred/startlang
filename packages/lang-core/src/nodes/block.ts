@@ -24,7 +24,7 @@ class BlockFrame extends Frame {
       interpreter.swapFrame(this, null, (draft) => {
         draft.count++;
       });
-      interpreter.pushFrame(elems[this.count]);
+      interpreter.pushNode(elems[this.count]);
     } else {
       interpreter.popFrame();
     }
