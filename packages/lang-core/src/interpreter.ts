@@ -271,8 +271,10 @@ export class Interpreter<THostSnapshot = unknown> {
     }
   }
 
-  pushNamespace() {
-    this.topNamespace = this.topNamespace.push(emptyObject);
+  pushNamespace(updater?: (draft: Draft<Record<string, unknown>>) => void) {
+    this.topNamespace = this.topNamespace.push(
+      updater ? produce(emptyObject, updater) : emptyObject
+    );
   }
 
   popNamespace() {

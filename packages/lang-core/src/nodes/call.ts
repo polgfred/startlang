@@ -66,10 +66,11 @@ class CallGlobalFrame extends CallFrame {
     switch (this.state) {
       case 0: {
         const func = interpreter.globalFunctions[name];
-        interpreter.pushNamespace();
-        for (let i = 0; i < func.params.length; i++) {
-          interpreter.setVariable(func.params[i], this.args[i]);
-        }
+        interpreter.pushNamespace((draft) => {
+          for (let i = 0; i < func.params.length; i++) {
+            draft[func.params[i]] = this.args[i];
+          }
+        });
         interpreter.swapFrame(this, 1);
         interpreter.pushNode(func.body);
         break;
