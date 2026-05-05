@@ -89,7 +89,7 @@ function getText(cell: unknown): string[] {
 }
 
 function getOutputText(host: BrowserPresentationHost) {
-  return host.outputCells.flatMap(getText);
+  return host.cells.flatMap(getText);
 }
 
 async function playNumguessWithBinarySearch() {
@@ -141,9 +141,9 @@ describe('browser examples', () => {
       print "B"
     `);
 
-    expect(host.outputCells).toHaveLength(2);
-    expect(host.outputCells[0]).toBeInstanceOf(ValueCell);
-    expect(host.outputCells[1]).toBeInstanceOf(ValueCell);
+    expect(host.cells).toHaveLength(2);
+    expect(host.cells[0]).toBeInstanceOf(ValueCell);
+    expect(host.cells[1]).toBeInstanceOf(ValueCell);
     expect(getOutputText(host)).toEqual(['A', 'B']);
   });
 
@@ -155,10 +155,10 @@ describe('browser examples', () => {
       end
     `);
 
-    expect(host.outputCells).toHaveLength(1);
-    expect(host.outputCells[0]).toBeInstanceOf(StackCell);
-    expect((host.outputCells[0] as StackCell).stackProps.direction).toBe('row');
-    const first = (host.outputCells[0] as StackCell).children[0] as ValueCell;
+    expect(host.cells).toHaveLength(1);
+    expect(host.cells[0]).toBeInstanceOf(StackCell);
+    expect((host.cells[0] as StackCell).stackProps.direction).toBe('row');
+    const first = (host.cells[0] as StackCell).children[0] as ValueCell;
     expect(first.variant).toBe('h3');
     expect(first.textProps['font.weight']).toBe('bold');
     expect(getOutputText(host)).toEqual(['A', 'B']);
@@ -180,7 +180,7 @@ describe('browser examples', () => {
       end
     `);
 
-    const table = host.outputCells[0] as GridCell;
+    const table = host.cells[0] as GridCell;
     const row = table.rows[0];
     const first = row.children[0];
     const second = row.children[1];
@@ -207,7 +207,7 @@ describe('browser examples', () => {
       end
     `);
 
-    const row = (host.outputCells[0] as GridCell).rows[0];
+    const row = (host.cells[0] as GridCell).rows[0];
     const first = row.children[0].children[0] as ValueCell;
     const second = row.children[1].children[0] as ValueCell;
 
@@ -342,7 +342,7 @@ describe('browser examples', () => {
     );
 
     expect(getOutputText(host)).toEqual(['complete']);
-    expect(host.getInProgressOutputCells().flatMap(getText)).toEqual([
+    expect(host.getInProgressCells().flatMap(getText)).toEqual([
       'complete',
       'partial stack child',
       'partial row child',
@@ -407,10 +407,10 @@ describe('browser examples', () => {
     const { host, interpreter } = await runExample('sieve.start');
 
     expect(interpreter.isSuspended).toBe(false);
-    expect(host.outputCells).toHaveLength(1);
-    expect(host.outputCells[0]).toBeInstanceOf(GridCell);
+    expect(host.cells).toHaveLength(1);
+    expect(host.cells[0]).toBeInstanceOf(GridCell);
 
-    const table = host.outputCells[0] as GridCell;
+    const table = host.cells[0] as GridCell;
     const cells = table.rows.flatMap((row) => row.children);
 
     expect(table.rows).toHaveLength(10);

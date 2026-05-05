@@ -133,13 +133,13 @@ function selectInheritedGroupProps(props: CanonicalProps) {
 export class BrowserPresentationHost
   implements PresentationHost<BrowserPresentationSnapshot>
 {
-  shapes: readonly Shape[] = emptyArray;
-  outputCells: readonly Cell[] = emptyArray;
-
+  cells: readonly Cell[] = emptyArray;
   currentCell: Cons<Cell> = new Cons(rootCell);
-  currentShapeGroup: Cons<ShapeGroup> = new Cons(rootShapeGroup);
-  graphicConfig: Cons<GraphicConfig> = new Cons(initialGraphicConfig);
   cellConfig: Cons<CellConfig> = new Cons(initialCellConfig);
+
+  shapes: readonly Shape[] = emptyArray;
+  currentGroup: Cons<ShapeGroup> = new Cons(rootShapeGroup);
+  graphicConfig: Cons<GraphicConfig> = new Cons(initialGraphicConfig);
 
   get shapeProps() {
     return mergeProps(
@@ -157,9 +157,9 @@ export class BrowserPresentationHost
 
   restoreOriginalSettings() {
     this.shapes = emptyArray;
-    this.outputCells = emptyArray;
+    this.cells = emptyArray;
     this.currentCell = new Cons(rootCell);
-    this.currentShapeGroup = new Cons(rootShapeGroup);
+    this.currentGroup = new Cons(rootShapeGroup);
     this.graphicConfig = new Cons(initialGraphicConfig);
     this.cellConfig = new Cons(initialCellConfig);
   }
@@ -173,17 +173,17 @@ export class BrowserPresentationHost
       throw new Error('cannot create graphics inside a cell container');
     }
 
-    if (this.currentShapeGroup.head === rootShapeGroup) {
+    if (this.currentGroup.head === rootShapeGroup) {
       this.shapes = produce(this.shapes, (draft) => {
         draft.push(shape);
       });
     } else {
-      this.swapShapeGroup(this.currentShapeGroup.head.addChild(shape));
+      this.swapShapeGroup(this.currentGroup.head.addChild(shape));
     }
   }
 
   clearOutputBuffer() {
-    this.outputCells = emptyArray;
+    this.cells = emptyArray;
   }
 
   swapCell(cell: Cell) {
@@ -221,7 +221,7 @@ export class BrowserPresentationHost
     }
 
     if (this.currentCell.head === rootCell) {
-      this.outputCells = produce(this.outputCells, (draft) => {
+      this.cells = produce(this.cells, (draft) => {
         draft.push(cell);
       });
     } else {
@@ -229,9 +229,9 @@ export class BrowserPresentationHost
     }
   }
 
-  getInProgressOutputCells() {
+  getInProgressCells() {
     if (this.currentCell.head === rootCell) {
-      return this.outputCells;
+      return this.cells;
     }
 
     let child = this.currentCell.head;
@@ -242,16 +242,16 @@ export class BrowserPresentationHost
       cursor = cursor.tail;
     }
 
-    return [...this.outputCells, child];
+    return [...this.cells, child];
   }
 
   getInProgressShapes() {
-    if (this.currentShapeGroup.head === rootShapeGroup) {
+    if (this.currentGroup.head === rootShapeGroup) {
       return this.shapes;
     }
 
-    let child = this.currentShapeGroup.head;
-    let cursor = this.currentShapeGroup.tail;
+    let child = this.currentGroup.head;
+    let cursor = this.currentGroup.tail;
 
     while (cursor && cursor.head !== rootShapeGroup) {
       child = cursor.head.addChild(child);
@@ -262,7 +262,7 @@ export class BrowserPresentationHost
   }
 
   swapShapeGroup(group: ShapeGroup) {
-    this.currentShapeGroup = this.currentShapeGroup.swap(group);
+    this.currentGroup = this.currentGroup.swap(group);
   }
 
   beginShapeGroup(group: ShapeGroup) {
@@ -271,12 +271,12 @@ export class BrowserPresentationHost
     }
 
     this.graphicConfig = this.graphicConfig.push(this.graphicConfig.head);
-    this.currentShapeGroup = this.currentShapeGroup.push(group);
+    this.currentGroup = this.currentGroup.push(group);
   }
 
   endShapeGroup() {
-    const group = this.currentShapeGroup.head;
-    this.currentShapeGroup = this.currentShapeGroup.pop();
+    const group = this.currentGroup.head;
+    this.currentGroup = this.currentGroup.pop();
     this.graphicConfig = this.graphicConfig.pop();
     return group;
   }
@@ -286,7 +286,7 @@ export class BrowserPresentationHost
   }
 
   isBuildingGraphics() {
-    return this.currentShapeGroup.head !== rootShapeGroup;
+    return this.currentGroup.head !== rootShapeGroup;
   }
 
   isBuildingGridRow() {
@@ -327,7 +327,7 @@ export class BrowserPresentationHost
     return StackCell.mergeProps(initialStackProps, selectProps(props, 'stack'));
   }
 
-  getGridSlotProps(overrides: Readonly<Record<string, unknown>>) {
+  getCellProps(overrides: Readonly<Record<string, unknown>>) {
     const props = {
       ...this.cellConfig.head.props,
       ...normalizeProps(overrides, propContexts.cellValue),
@@ -422,9 +422,9 @@ export class BrowserPresentationHost
   takeSnapshot(): BrowserPresentationSnapshot {
     return {
       shapes: this.shapes,
-      outputCells: this.outputCells,
+      outputCells: this.cells,
       currentCell: this.currentCell,
-      currentShapeGroup: this.currentShapeGroup,
+      currentShapeGroup: this.currentGroup,
       graphicConfig: this.graphicConfig,
       cellConfig: this.cellConfig,
     };
@@ -433,8 +433,8 @@ export class BrowserPresentationHost
   restoreSnapshot(snapshot: BrowserPresentationSnapshot) {
     this.shapes = snapshot.shapes;
     this.currentCell = snapshot.currentCell;
-    this.outputCells = snapshot.outputCells;
-    this.currentShapeGroup = snapshot.currentShapeGroup;
+    this.cells = snapshot.outputCells;
+    this.currentGroup = snapshot.currentShapeGroup;
     this.graphicConfig = snapshot.graphicConfig;
     this.cellConfig = snapshot.cellConfig;
   }
@@ -690,7 +690,7 @@ export const browserPresentationGlobals: RuntimeFunctions = {
       throw new Error('cell can only be used inside a table row');
     }
 
-    const slot = new GridSlotCell(host.getGridSlotProps(props));
+    const slot = new GridSlotCell(host.getCellProps(props));
 
     if (node.body) {
       return new BuildCellFrame(node, slot);

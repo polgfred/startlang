@@ -125,9 +125,9 @@ export function useStartEnvironment() {
 
   const syncOutputTab = useCallback(() => {
     const nextHasGraphicsOutput =
-      host.shapes.length > 0 || host.currentShapeGroup.head !== rootShapeGroup;
+      host.shapes.length > 0 || host.currentGroup.head !== rootShapeGroup;
     const nextHasTextOutput =
-      host.outputCells.length > 0 ||
+      host.cells.length > 0 ||
       host.currentCell.head !== rootCell ||
       interpreter.suspension instanceof InputSuspension;
 

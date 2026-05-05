@@ -114,7 +114,7 @@ export default function App() {
                 )}
                 {env.outputTab === 'text' && (
                   <Term
-                    outputCells={env.host.getInProgressOutputCells()}
+                    outputCells={env.host.getInProgressCells()}
                     inputState={env.inputState}
                   />
                 )}
