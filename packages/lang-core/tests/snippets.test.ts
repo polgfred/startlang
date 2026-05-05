@@ -447,6 +447,33 @@ describe('core language snippets', () => {
     expect(calls).toEqual([['inside']]);
   });
 
+  it('treats runtime command frames as call boundaries for returns', async () => {
+    const calls: unknown[][] = [];
+
+    await runSnippet(
+      `
+      wrap do
+        spy "inside"
+        return "done"
+      end
+      spy "after"
+      `,
+      {
+        spy(_interpreter, args) {
+          calls.push(args);
+        },
+        wrap(_interpreter, _args, node) {
+          if (!node.body) {
+            throw new Error('missing body');
+          }
+          return node.body.makeFrame();
+        },
+      }
+    );
+
+    expect(calls).toEqual([['inside'], ['after']]);
+  });
+
   it('routes set statements to the presentation host', async () => {
     const settings: unknown[][] = [];
     const host = {

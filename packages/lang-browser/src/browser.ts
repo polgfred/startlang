@@ -1,6 +1,6 @@
 import type { PresentationHost } from '@startlang/lang-core/host';
 import { Interpreter, repaintEffect } from '@startlang/lang-core/interpreter';
-import { CallFrame, CallNode } from '@startlang/lang-core/nodes';
+import { CallBodyFrame, CallNode } from '@startlang/lang-core/nodes';
 import type { RuntimeFunctions } from '@startlang/lang-core/types';
 import { Cons } from '@startlang/lang-core/utils/cons';
 import { produce } from 'immer';
@@ -461,7 +461,7 @@ function addPresentationShape(interpreter: Interpreter, shape: Shape) {
   interpreter.setEffect(repaintEffect);
 }
 
-class BuildCellFrame extends CallFrame {
+class BuildCellFrame extends CallBodyFrame {
   constructor(
     node: CallNode,
     readonly cell: Cell
@@ -497,7 +497,7 @@ class BuildCellFrame extends CallFrame {
   }
 }
 
-class BuildShapeGroupFrame extends CallFrame {
+class BuildShapeGroupFrame extends CallBodyFrame {
   constructor(
     node: CallNode,
     readonly group: ShapeGroup

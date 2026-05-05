@@ -1,5 +1,4 @@
 import { Interpreter } from '../interpreter.js';
-
 import { Frame, Node } from './base.js';
 
 export class CallNode extends Node {
@@ -19,8 +18,8 @@ export class CallNode extends Node {
 export class CallFrame extends Frame {
   declare node: CallNode;
 
-  readonly count: number = 0;
   readonly args: unknown[] = [];
+  readonly count: number = 0;
 
   visit(interpreter: Interpreter) {
     const { name, args } = this.node;
@@ -30,6 +29,8 @@ export class CallFrame extends Frame {
         if (this.count < args.length) {
           interpreter.swapFrame(this, 1);
           interpreter.pushNode(args[this.count]);
+        } else if (name in interpreter.globalFunctions) {
+          interpreter.swapFrame(new CallGlobalFrame(this.node, this.args));
         } else {
           interpreter.swapFrame(this, 2);
         }
@@ -43,13 +44,19 @@ export class CallFrame extends Frame {
         break;
       }
       case 2: {
-        const frame =
-          name in interpreter.globalFunctions
-            ? new CallGlobalFrame(this.node)
-            : new CallRuntimeFrame(this.node);
-        interpreter.swapFrame(frame, null, (draft) => {
-          draft.args = this.args;
-        });
+        const func = interpreter.getRuntimeFunction(name, this.args);
+        const result = func(interpreter, this.args, this.node);
+        interpreter.swapFrame(this, 3);
+        if (result instanceof Frame) {
+          interpreter.pushFrame(result);
+        } else if (result) {
+          return result;
+        }
+        break;
+      }
+      case 3: {
+        interpreter.popFrame();
+        break;
       }
     }
   }
@@ -59,7 +66,16 @@ export class CallFrame extends Frame {
   }
 }
 
-class CallGlobalFrame extends CallFrame {
+class CallGlobalFrame extends Frame {
+  declare node: CallNode;
+
+  constructor(
+    node: CallNode,
+    readonly args: unknown[]
+  ) {
+    super(node);
+  }
+
   visit(interpreter: Interpreter) {
     const { name } = this.node;
 
@@ -85,29 +101,16 @@ class CallGlobalFrame extends CallFrame {
   dispose(interpreter: Interpreter) {
     interpreter.popNamespace();
   }
+
+  isFlowBoundary(flow: 'loop' | 'call') {
+    return flow === 'call';
+  }
 }
 
-class CallRuntimeFrame extends CallFrame {
-  visit(interpreter: Interpreter) {
-    const { name } = this.node;
+export abstract class CallBodyFrame extends Frame {
+  declare node: CallNode;
 
-    const func = interpreter.getRuntimeFunction(name, this.args);
-
-    switch (this.state) {
-      case 0: {
-        const result = func(interpreter, this.args, this.node);
-        interpreter.swapFrame(this, 1);
-        if (result instanceof Frame) {
-          interpreter.pushFrame(result);
-        } else if (result) {
-          return result;
-        }
-        break;
-      }
-      case 1: {
-        interpreter.popFrame();
-        break;
-      }
-    }
+  isFlowBoundary(flow: 'loop' | 'call') {
+    return flow === 'call';
   }
 }
