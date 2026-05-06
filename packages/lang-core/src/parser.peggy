@@ -55,7 +55,7 @@
       return left;
     } else {
       const [operator, right] = rest.shift();
-      const node = new LogicalOpNode(operator, [left, right]).at(location());
+      const node = new LogicalOpNode(operator, left, right).at(location());
       return buildLogicalExpr(node, rest);
     }
   }

@@ -5,7 +5,8 @@ import { Frame, Node } from './base.js';
 export class LogicalOpNode extends Node {
   constructor(
     public readonly operator: 'and' | 'or',
-    public readonly values: readonly Node[]
+    public readonly left: Node,
+    public readonly right: Node
   ) {
     super();
   }
@@ -33,19 +34,13 @@ export class LogicalNotNode extends Node {
 export class LogicalAndFrame extends Frame {
   declare node: LogicalOpNode;
 
-  readonly count: number = 0;
-
   visit(interpreter: Interpreter) {
-    const { values } = this.node;
+    const { left, right } = this.node;
 
     switch (this.state) {
       case 0: {
-        if (this.count < values.length) {
-          interpreter.swapFrame(this, 1);
-          interpreter.pushNode(values[this.count]);
-        } else {
-          interpreter.swapFrame(this, 2);
-        }
+        interpreter.swapFrame(this, 1);
+        interpreter.pushNode(left);
         break;
       }
       case 1: {
@@ -53,14 +48,13 @@ export class LogicalAndFrame extends Frame {
           interpreter.setResult(false);
           interpreter.popFrame();
         } else {
-          interpreter.swapFrame(this, 0, (draft) => {
-            draft.count++;
-          });
+          interpreter.swapFrame(this, 2);
+          interpreter.pushNode(right);
         }
         break;
       }
       case 2: {
-        interpreter.setResult(true);
+        interpreter.setResult(Boolean(interpreter.lastResult));
         interpreter.popFrame();
         break;
       }
@@ -71,19 +65,13 @@ export class LogicalAndFrame extends Frame {
 export class LogicalOrFrame extends Frame {
   declare node: LogicalOpNode;
 
-  readonly count: number = 0;
-
   visit(interpreter: Interpreter) {
-    const { values } = this.node;
+    const { left, right } = this.node;
 
     switch (this.state) {
       case 0: {
-        if (this.count < values.length) {
-          interpreter.swapFrame(this, 1);
-          interpreter.pushNode(values[this.count]);
-        } else {
-          interpreter.swapFrame(this, 2);
-        }
+        interpreter.swapFrame(this, 1);
+        interpreter.pushNode(left);
         break;
       }
       case 1: {
@@ -91,14 +79,13 @@ export class LogicalOrFrame extends Frame {
           interpreter.setResult(true);
           interpreter.popFrame();
         } else {
-          interpreter.swapFrame(this, 0, (draft) => {
-            draft.count++;
-          });
+          interpreter.swapFrame(this, 2);
+          interpreter.pushNode(right);
         }
         break;
       }
       case 2: {
-        interpreter.setResult(false);
+        interpreter.setResult(Boolean(interpreter.lastResult));
         interpreter.popFrame();
         break;
       }
