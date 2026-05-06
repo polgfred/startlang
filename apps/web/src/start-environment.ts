@@ -316,6 +316,7 @@ export function useStartEnvironment() {
     isStopDisabled: !isProgramActive,
     isEditorReadOnly: isProgramActive,
     outputTab,
+    runtimeVersion: runtimeView.version,
     runProgram,
     runLabel: isBreakpointSuspended ? 'Continue' : 'Run',
     runOrResume,

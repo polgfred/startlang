@@ -1,12 +1,12 @@
 import Monaco, { type BeforeMount, type OnMount } from '@monaco-editor/react';
 import { Box } from '@mui/material';
-import { useCallback, useLayoutEffect } from 'react';
+import { memo, useCallback, useLayoutEffect, useMemo } from 'react';
 
 import boxScript from '../tests/box.start';
 
 import { setupLanguage, useEditor } from './editor-context.jsx';
 
-export default function Editor({
+export default memo(function Editor({
   showInspector,
   runProgram,
   isReadOnly,
@@ -72,6 +72,19 @@ export default function Editor({
     };
   }, [autoLayout]);
 
+  const options = useMemo(
+    () => ({
+      glyphMargin: true,
+      minimap: { enabled: false },
+      readOnly: isReadOnly,
+      readOnlyMessage: {
+        value: 'Stop the program before editing source code.',
+      },
+      scrollBeyondLastLine: false,
+    }),
+    [isReadOnly]
+  );
+
   return (
     <Box
       sx={{
@@ -103,16 +116,8 @@ export default function Editor({
         theme="start-light"
         beforeMount={onBeforeMount}
         onMount={onEditorMount}
-        options={{
-          glyphMargin: true,
-          minimap: { enabled: false },
-          readOnly: isReadOnly,
-          readOnlyMessage: {
-            value: 'Stop the program before editing source code.',
-          },
-          scrollBeyondLastLine: false,
-        }}
+        options={options}
       />
     </Box>
   );
-}
+});

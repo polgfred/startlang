@@ -3,6 +3,7 @@ import { Cell, CellElement } from '@startlang/lang-browser/cells';
 import {
   ChangeEvent,
   KeyboardEvent,
+  memo,
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -16,7 +17,7 @@ interface InputState {
   onInputComplete: (value: string) => void;
 }
 
-export default function Term({
+export default memo(function Term({
   outputCells,
   inputState,
 }: {
@@ -116,4 +117,4 @@ export default function Term({
       </Box>
     </Box>
   );
-}
+});

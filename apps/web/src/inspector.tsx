@@ -19,7 +19,7 @@ import type {
   NamespaceType,
   RecordType,
 } from '@startlang/lang-core/types';
-import { JSX, useCallback, useState } from 'react';
+import { JSX, memo, useCallback, useState } from 'react';
 
 const compactTableSx = {
   width: '100%',
@@ -44,7 +44,7 @@ const valueCellSx = {
   width: '75%',
 };
 
-export default function Inspector({
+export default memo(function Inspector({
   error,
   history,
   interpreter,
@@ -53,6 +53,7 @@ export default function Inspector({
   error: Error | null;
   history: RuntimeHistory<BrowserPresentationSnapshot>;
   interpreter: Interpreter;
+  runtimeVersion: number;
   updateSlider: (index: number) => void;
 }) {
   const handleSliderChange = useCallback(
@@ -114,7 +115,7 @@ export default function Inspector({
       )}
     </Stack>
   );
-}
+});
 
 function ErrorInspector({ error }: { error: Error }) {
   return (
@@ -155,7 +156,7 @@ function ErrorInspector({ error }: { error: Error }) {
   );
 }
 
-function NamespaceInspector({
+const NamespaceInspector = memo(function NamespaceInspector({
   title,
   namespace,
 }: {
@@ -190,7 +191,7 @@ function NamespaceInspector({
       </TableBody>
     </Table>
   );
-}
+});
 
 function NoneInspector() {
   return <span>*none*</span>;
@@ -261,7 +262,11 @@ function ExpandableFooter({
   );
 }
 
-function ListInspector({ value }: { value: ListType }) {
+const ListInspector = memo(function ListInspector({
+  value,
+}: {
+  value: ListType;
+}) {
   const [visible, setVisible] = useState(5);
 
   const rows: JSX.Element[] = [];
@@ -300,9 +305,13 @@ function ListInspector({ value }: { value: ListType }) {
       />
     </Table>
   );
-}
+});
 
-function RecordInspector({ value }: { value: RecordType }) {
+const RecordInspector = memo(function RecordInspector({
+  value,
+}: {
+  value: RecordType;
+}) {
   const [visible, setVisible] = useState(5);
 
   const keys = Object.keys(value);
@@ -350,7 +359,7 @@ function RecordInspector({ value }: { value: RecordType }) {
       />
     </Table>
   );
-}
+});
 
 function inspectorFor(value: unknown) {
   if (value === null || value === undefined) {

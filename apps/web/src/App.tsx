@@ -141,6 +141,7 @@ export default function App() {
                   error={env.error}
                   history={env.history}
                   interpreter={env.interpreter}
+                  runtimeVersion={env.runtimeVersion}
                   updateSlider={env.updateSlider}
                 />
               </Paper>

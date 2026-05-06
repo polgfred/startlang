@@ -11,7 +11,7 @@ import {
   Toolbar,
   Typography,
 } from '@mui/material';
-import { MouseEvent, useCallback, useState } from 'react';
+import { MouseEvent, memo, useCallback, useState } from 'react';
 
 import boxScript from '../tests/box.start';
 import investScript from '../tests/invest.start';
@@ -33,7 +33,7 @@ const headerButtonSx = {
   boxShadow: 'none',
 };
 
-function SocialIcon({ src }: { src: string }) {
+const SocialIcon = memo(function SocialIcon({ src }: { src: string }) {
   return (
     <Box
       aria-hidden="true"
@@ -47,7 +47,7 @@ function SocialIcon({ src }: { src: string }) {
       })}
     />
   );
-}
+});
 
 function useMenu() {
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
@@ -66,7 +66,7 @@ function useMenu() {
   return { anchor, openMenu, closeMenu };
 }
 
-function OutputSwitcher({
+const OutputSwitcher = memo(function OutputSwitcher({
   outputTab,
   setOutputTab,
   hasGraphicsOutput,
@@ -77,6 +77,14 @@ function OutputSwitcher({
   hasGraphicsOutput: boolean;
   hasTextOutput: boolean;
 }) {
+  const showGraphics = useCallback(() => {
+    setOutputTab('graphics');
+  }, [setOutputTab]);
+
+  const showText = useCallback(() => {
+    setOutputTab('text');
+  }, [setOutputTab]);
+
   return (
     <ButtonGroup
       size="small"
@@ -93,9 +101,7 @@ function OutputSwitcher({
         <Button
           variant={outputTab === 'graphics' ? 'contained' : 'outlined'}
           color="secondary"
-          onClick={() => {
-            setOutputTab('graphics');
-          }}
+          onClick={showGraphics}
           sx={headerButtonSx}
         >
           Graphics
@@ -109,9 +115,7 @@ function OutputSwitcher({
         <Button
           variant={outputTab === 'text' ? 'contained' : 'outlined'}
           color="secondary"
-          onClick={() => {
-            setOutputTab('text');
-          }}
+          onClick={showText}
           sx={headerButtonSx}
         >
           Text
@@ -119,7 +123,7 @@ function OutputSwitcher({
       </Badge>
     </ButtonGroup>
   );
-}
+});
 
 const exampleScripts = [
   {
@@ -156,7 +160,11 @@ const exampleScripts = [
   },
 ];
 
-function CodeMenu({ runProgram }: { runProgram: () => void }) {
+const CodeMenu = memo(function CodeMenu({
+  runProgram,
+}: {
+  runProgram: () => void;
+}) {
   const { anchor, openMenu, closeMenu } = useMenu();
   const { setValue } = useEditor();
 
@@ -197,9 +205,9 @@ function CodeMenu({ runProgram }: { runProgram: () => void }) {
       </Menu>
     </>
   );
-}
+});
 
-export default function Header({
+export default memo(function Header({
   outputTab,
   setOutputTab,
   hasGraphicsOutput,
@@ -226,6 +234,10 @@ export default function Header({
   stopProgram: () => void;
   isStopDisabled: boolean;
 }) {
+  const toggleInspector = useCallback(() => {
+    setShowInspector(!showInspector);
+  }, [setShowInspector, showInspector]);
+
   return (
     <AppBar
       position="static"
@@ -260,9 +272,7 @@ export default function Header({
         <Button
           variant="outlined"
           color="secondary"
-          onClick={() => {
-            setShowInspector(!showInspector);
-          }}
+          onClick={toggleInspector}
           sx={{
             ...headerButtonSx,
             backgroundColor: showInspector ? 'rgba(69, 90, 100, 0.1)' : null,
@@ -323,4 +333,4 @@ export default function Header({
       </Toolbar>
     </AppBar>
   );
-}
+});
