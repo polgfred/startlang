@@ -111,10 +111,8 @@ export class StackCell extends Cell {
   getHTMLElement() {
     return (
       <Stack
-        gap={2}
+        spacing={2}
         direction={this.stackProps.direction}
-        alignItems={this.stackProps.align}
-        justifyContent={this.stackProps.justify}
         divider={
           <Divider
             flexItem
@@ -124,6 +122,8 @@ export class StackCell extends Cell {
           />
         }
         sx={{
+          alignItems: this.stackProps.align,
+          justifyContent: this.stackProps.justify,
           width: '100%',
         }}
       >

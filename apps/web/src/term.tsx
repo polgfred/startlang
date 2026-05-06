@@ -109,7 +109,7 @@ export default memo(function Term({
           padding: 2,
         }}
       >
-        <Stack gap={2}>
+        <Stack spacing={2}>
           {outputCells.map((cell, index) => (
             <CellElement key={index} cell={cell} />
           ))}

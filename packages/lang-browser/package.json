@@ -14,7 +14,7 @@
     "typecheck": "tsgo --noEmit"
   },
   "dependencies": {
-    "@mui/material": "^6.4.4",
+    "@mui/material": "^9.0.0",
     "@startlang/lang-core": "*",
     "immer": "^11.1.7",
     "react": "^19.2.6"
