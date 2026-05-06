@@ -1,4 +1,4 @@
-import { castDraft, type Draft, original, produce } from 'immer';
+import { castDraft, original, produce, type Draft, type Producer } from 'immer';
 
 import { DataHandler, installHandlers } from './handlers/index.js';
 import { NullPresentationHost, type SupportsSnapshots } from './host.js';
@@ -211,15 +211,15 @@ export class Interpreter<THostSnapshot = unknown> {
   swapFrame<T extends Frame>(
     frame: T,
     state: number | null = null,
-    updater?: (draft: Draft<T>) => void
+    producer?: Producer<T>
   ) {
     this.topFrame = this.topFrame.swap(
       produce(frame, (draft) => {
         if (state !== null) {
           draft.state = state;
         }
-        if (updater) {
-          updater(draft);
+        if (producer) {
+          producer(draft);
         }
       })
     );
@@ -271,9 +271,9 @@ export class Interpreter<THostSnapshot = unknown> {
     }
   }
 
-  pushNamespace(updater?: (draft: Draft<Record<string, unknown>>) => void) {
+  pushNamespace(producer?: Producer<Record<string, unknown>>) {
     this.topNamespace = this.topNamespace.push(
-      updater ? produce(emptyObject, updater) : emptyObject
+      producer ? produce(emptyObject, producer) : emptyObject
     );
   }
 
