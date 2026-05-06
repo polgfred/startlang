@@ -84,7 +84,7 @@ export default memo(function Term({
             className={clsx(
               controls.button,
               controls.buttonPrimary,
-              controls.buttonSmall
+              styles.inputButton
             )}
           >
             OK

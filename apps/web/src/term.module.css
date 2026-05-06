@@ -5,16 +5,21 @@
 
 .inputRow {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: stretch;
   width: 100%;
-  gap: 12px;
-  padding-bottom: 8px;
+  gap: 16px;
+  padding: 4px 0 12px;
 }
 
 .inputField {
   flex: 1;
   min-width: 0;
+}
+
+.inputButton {
+  height: 40px;
+  min-width: 72px;
 }
 
 .output {
