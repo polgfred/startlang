@@ -1,7 +1,8 @@
-import { Divider, Stack } from '@mui/material';
 import { produce } from 'immer';
+import { Fragment } from 'react';
 
 import { Cell, CellElement } from './base.jsx';
+import styles from './cells.module.css';
 
 type DirectionType = (typeof StackCell.directionTypes)[number];
 
@@ -109,28 +110,27 @@ export class StackCell extends Cell {
   }
 
   getHTMLElement() {
+    const dividerClass =
+      this.stackProps.direction === 'column'
+        ? styles.dividerHorizontal
+        : styles.dividerVertical;
+
     return (
-      <Stack
-        spacing={2}
-        direction={this.stackProps.direction}
-        divider={
-          <Divider
-            flexItem
-            orientation={
-              this.stackProps.direction === 'column' ? 'horizontal' : 'vertical'
-            }
-          />
-        }
-        sx={{
+      <div
+        className={styles.stack}
+        style={{
           alignItems: this.stackProps.align,
+          flexDirection: this.stackProps.direction,
           justifyContent: this.stackProps.justify,
-          width: '100%',
         }}
       >
         {this.children.map((child, i) => (
-          <CellElement key={i} cell={child} />
+          <Fragment key={i}>
+            {i > 0 && <div className={dividerClass} />}
+            <CellElement cell={child} />
+          </Fragment>
         ))}
-      </Stack>
+      </div>
     );
   }
 }

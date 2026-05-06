@@ -1,17 +1,6 @@
-import {
-  AppBar,
-  Badge,
-  Box,
-  Button,
-  ButtonGroup,
-  Divider,
-  Link as MuiLink,
-  Menu,
-  MenuItem,
-  Toolbar,
-  Typography,
-} from '@mui/material';
-import { MouseEvent, memo, useCallback, useState } from 'react';
+import { Button } from '@base-ui/react/button';
+import { Menu } from '@base-ui/react/menu';
+import { memo, useCallback } from 'react';
 
 import boxScript from '../tests/box.start';
 import investScript from '../tests/invest.start';
@@ -23,48 +12,26 @@ import tableCellsScript from '../tests/table-cells.start';
 import victorScript from '../tests/victor.start';
 
 import { useEditor } from './editor-context.jsx';
+import styles from './Header.module.css';
 
 type OutputTab = 'graphics' | 'text';
 
-const headerButtonSx = {
-  height: 36,
-  minWidth: 112,
-  px: 2,
-  boxShadow: 'none',
-};
+function cx(...classes: Array<string | false | null | undefined>) {
+  return classes.filter(Boolean).join(' ');
+}
 
 const SocialIcon = memo(function SocialIcon({ src }: { src: string }) {
   return (
-    <Box
+    <span
       aria-hidden="true"
-      sx={(theme) => ({
-        display: 'block',
-        height: 32,
-        width: 32,
-        backgroundColor: theme.palette.primary.main,
+      className={styles.socialIcon}
+      style={{
         mask: `url(${src}) center / contain no-repeat`,
         WebkitMask: `url(${src}) center / contain no-repeat`,
-      })}
+      }}
     />
   );
 });
-
-function useMenu() {
-  const [anchor, setAnchor] = useState<HTMLElement | null>(null);
-
-  const openMenu = useCallback(
-    (ev: MouseEvent<HTMLButtonElement>) => {
-      setAnchor(ev.currentTarget);
-    },
-    [setAnchor]
-  );
-
-  const closeMenu = useCallback(() => {
-    setAnchor(null);
-  }, [setAnchor]);
-
-  return { anchor, openMenu, closeMenu };
-}
 
 const OutputSwitcher = memo(function OutputSwitcher({
   outputTab,
@@ -86,42 +53,42 @@ const OutputSwitcher = memo(function OutputSwitcher({
   }, [setOutputTab]);
 
   return (
-    <ButtonGroup
-      size="small"
-      sx={{
-        marginLeft: 2,
-        height: 36,
-      }}
-    >
-      <Badge
-        color="warning"
-        variant="dot"
-        invisible={outputTab === 'graphics' || !hasGraphicsOutput}
+    <div className={styles.buttonGroup}>
+      <span
+        className={cx(
+          styles.badge,
+          outputTab !== 'graphics' && hasGraphicsOutput && styles.badgeDot
+        )}
       >
         <Button
-          variant={outputTab === 'graphics' ? 'contained' : 'outlined'}
-          color="secondary"
           onClick={showGraphics}
-          sx={headerButtonSx}
+          className={cx(
+            styles.button,
+            styles.buttonLeft,
+            outputTab === 'graphics' && styles.buttonActive
+          )}
         >
           Graphics
         </Button>
-      </Badge>
-      <Badge
-        color="warning"
-        variant="dot"
-        invisible={outputTab === 'text' || !hasTextOutput}
+      </span>
+      <span
+        className={cx(
+          styles.badge,
+          outputTab !== 'text' && hasTextOutput && styles.badgeDot
+        )}
       >
         <Button
-          variant={outputTab === 'text' ? 'contained' : 'outlined'}
-          color="secondary"
           onClick={showText}
-          sx={headerButtonSx}
+          className={cx(
+            styles.button,
+            styles.buttonRight,
+            outputTab === 'text' && styles.buttonActive
+          )}
         >
           Text
         </Button>
-      </Badge>
-    </ButtonGroup>
+      </span>
+    </div>
   );
 });
 
@@ -165,45 +132,48 @@ const CodeMenu = memo(function CodeMenu({
 }: {
   runProgram: () => void;
 }) {
-  const { anchor, openMenu, closeMenu } = useMenu();
   const { setValue } = useEditor();
 
   const loadScript = useCallback(
     (script: string) => {
       setValue(script, { clearMarkers: true });
-      closeMenu();
       runProgram();
     },
-    [closeMenu, runProgram, setValue]
+    [runProgram, setValue]
   );
 
   return (
-    <>
-      <Button variant="text" color="secondary" onClick={openMenu}>
+    <Menu.Root>
+      <Menu.Trigger className={cx(styles.button, styles.buttonText)}>
         Examples
-      </Button>
-      <Menu open={anchor !== null} anchorEl={anchor} onClose={closeMenu}>
-        {exampleScripts.map(({ name, script }) => (
-          <MenuItem
-            key={name}
-            onClick={() => {
-              loadScript(script);
-            }}
-          >
-            {name}
-          </MenuItem>
-        ))}
-        <Divider />
-        <MenuItem
-          onClick={() => {
-            setValue('', { clearMarkers: true });
-            closeMenu();
-          }}
-        >
-          New
-        </MenuItem>
-      </Menu>
-    </>
+      </Menu.Trigger>
+      <Menu.Portal>
+        <Menu.Positioner className={styles.menuPositioner} sideOffset={8}>
+          <Menu.Popup className={styles.menu}>
+            {exampleScripts.map(({ name, script }) => (
+              <Menu.Item
+                key={name}
+                className={styles.menuItem}
+                onClick={() => {
+                  loadScript(script);
+                }}
+              >
+                {name}
+              </Menu.Item>
+            ))}
+            <Menu.Separator className={styles.menuSeparator} />
+            <Menu.Item
+              className={styles.menuItem}
+              onClick={() => {
+                setValue('', { clearMarkers: true });
+              }}
+            >
+              New
+            </Menu.Item>
+          </Menu.Popup>
+        </Menu.Positioner>
+      </Menu.Portal>
+    </Menu.Root>
   );
 });
 
@@ -239,29 +209,9 @@ export default memo(function Header({
   }, [setShowInspector, showInspector]);
 
   return (
-    <AppBar
-      position="static"
-      sx={{
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        backgroundColor: '#f7f9fa',
-        color: '#263238',
-      }}
-    >
-      <Toolbar
-        sx={{
-          gap: 1,
-        }}
-      >
-        <Typography
-          variant="body1"
-          sx={{
-            marginRight: 2,
-            fontWeight: 700,
-          }}
-        >
-          START
-        </Typography>
+    <header className={styles.header}>
+      <div className={styles.toolbar}>
+        <div className={styles.brand}>START</div>
         <CodeMenu runProgram={runExample} />
         <OutputSwitcher
           outputTab={outputTab}
@@ -270,67 +220,46 @@ export default memo(function Header({
           hasTextOutput={hasTextOutput}
         />
         <Button
-          variant="outlined"
-          color="secondary"
           onClick={toggleInspector}
-          sx={{
-            ...headerButtonSx,
-            backgroundColor: showInspector ? 'rgba(69, 90, 100, 0.1)' : null,
-          }}
+          className={cx(styles.button, showInspector && styles.buttonPressed)}
         >
           Inspector
         </Button>
         <Button
-          variant="contained"
-          color="primary"
           disabled={isProgramActive}
           onClick={runProgram}
-          sx={{
-            marginLeft: 2,
-            ...headerButtonSx,
-            minWidth: 96,
-            boxShadow: 2,
-          }}
+          className={cx(styles.button, styles.buttonContained, styles.runButton)}
         >
           {runLabel}
         </Button>
         <Button
-          variant="outlined"
-          color="secondary"
           disabled={isStopDisabled}
           onClick={stopProgram}
-          sx={{
-            ...headerButtonSx,
-            minWidth: 96,
-          }}
+          className={cx(styles.button, styles.stopButton)}
         >
           Stop
         </Button>
-      </Toolbar>
-      <Toolbar
-        sx={{
-          gap: 1,
-        }}
-      >
-        <MuiLink
+      </div>
+      <div className={styles.toolbar}>
+        <a
           href="https://linkedin.com/in/polgfred"
           target="_blank"
           rel="noreferrer"
           aria-label="LinkedIn"
-          underline="none"
+          className={styles.socialLink}
         >
           <SocialIcon src="/linkedin-logo.svg" />
-        </MuiLink>
-        <MuiLink
+        </a>
+        <a
           href="https://github.com/polgfred/startlang"
           target="_blank"
           rel="noreferrer"
           aria-label="GitHub"
-          underline="none"
+          className={styles.socialLink}
         >
           <SocialIcon src="/github-logo.svg" />
-        </MuiLink>
-      </Toolbar>
-    </AppBar>
+        </a>
+      </div>
+    </header>
   );
 });

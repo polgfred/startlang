@@ -1,16 +1,4 @@
-import {
-  Box,
-  Button,
-  Slider,
-  Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableFooter,
-  TableHead,
-  TableRow,
-  Typography,
-} from '@mui/material';
+import { Button } from '@base-ui/react/button';
 import type { BrowserPresentationSnapshot } from '@startlang/lang-browser/browser';
 import type { Interpreter } from '@startlang/lang-core/interpreter';
 import type { RuntimeHistory } from '@startlang/lang-core/runtime-history';
@@ -19,30 +7,9 @@ import type {
   NamespaceType,
   RecordType,
 } from '@startlang/lang-core/types';
-import { JSX, memo, useCallback, useState } from 'react';
+import { ChangeEvent, JSX, memo, useCallback, useState } from 'react';
 
-const compactTableSx = {
-  width: '100%',
-  marginBottom: '10px',
-  tableLayout: 'fixed',
-  '& .MuiTableCell-root': {
-    padding: '8px 10px',
-    borderColor: 'rgba(0, 0, 0, 0.08)',
-    fontSize: 13,
-    lineHeight: 1.35,
-  },
-  '& .MuiTableHead-root .MuiTableCell-root': {
-    fontWeight: 700,
-  },
-};
-
-const nameCellSx = {
-  width: '25%',
-};
-
-const valueCellSx = {
-  width: '75%',
-};
+import styles from './Inspector.module.css';
 
 export default memo(function Inspector({
   error,
@@ -57,52 +24,26 @@ export default memo(function Inspector({
   updateSlider: (index: number) => void;
 }) {
   const handleSliderChange = useCallback(
-    (_event: Event, value: number | number[]) => {
-      if (typeof value === 'number') {
-        updateSlider(value);
-      }
+    (event: ChangeEvent<HTMLInputElement>) => {
+      updateSlider(Number(event.target.value));
     },
     [updateSlider]
   );
 
   return (
-    <Stack
-      sx={{
-        width: '100%',
-        height: '100%',
-        fontFamily: 'Roboto',
-        fontSize: 13,
-        overflow: 'auto',
-      }}
-    >
-      <Slider
+    <div className={styles.inspector}>
+      <input
+        className={styles.slider}
+        type="range"
         min={0}
         max={Math.max(history.length - 1, 0)}
         step={1}
         value={history.index}
         onChange={handleSliderChange}
-        sx={{
-          width: 'auto',
-          mx: 3,
-          my: 0.5,
-          '& .MuiSlider-thumb.Mui-active': {
-            boxShadow: '0 0 0 8px rgba(107, 157, 160, 0.16)',
-          },
-        }}
       />
       {error && <ErrorInspector error={error} />}
       {history.length > 0 && (
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: {
-              xs: '1fr',
-              md: 'minmax(0, 1fr) minmax(0, 1fr)',
-            },
-            gap: 2,
-            alignItems: 'start',
-          }}
-        >
+        <div className={styles.grid}>
           <NamespaceInspector
             title="Globals"
             namespace={interpreter.globalNamespace}
@@ -111,48 +52,33 @@ export default memo(function Inspector({
             title="Locals"
             namespace={interpreter.topNamespace.head}
           />
-        </Box>
+        </div>
       )}
-    </Stack>
+    </div>
   );
 });
 
 function ErrorInspector({ error }: { error: Error }) {
   return (
-    <Table size="small" sx={compactTableSx}>
-      <TableHead>
-        <TableRow>
-          <TableCell
-            colSpan={2}
-            sx={{
-              fontWeight: 'bold',
-            }}
-          >
-            <Typography variant="subtitle2">Error</Typography>
-          </TableCell>
-        </TableRow>
-      </TableHead>
-      <TableBody>
-        <TableRow>
-          <TableCell
-            sx={{
-              width: '25%',
-              fontWeight: 'bold',
-            }}
-          >
+    <table className={styles.table}>
+      <thead>
+        <tr>
+          <th colSpan={2}>
+            <h3 className={styles.title}>Error</h3>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th className={styles.nameCell}>
             Message
-          </TableCell>
-          <TableCell
-            sx={{
-              width: '75%',
-              color: '#aa0000',
-            }}
-          >
+          </th>
+          <td className={`${styles.valueCell} ${styles.error}`}>
             {error.message}
-          </TableCell>
-        </TableRow>
-      </TableBody>
-    </Table>
+          </td>
+        </tr>
+      </tbody>
+    </table>
   );
 }
 
@@ -164,32 +90,27 @@ const NamespaceInspector = memo(function NamespaceInspector({
   namespace: NamespaceType;
 }) {
   return (
-    <Table size="small" sx={compactTableSx}>
+    <table className={styles.table}>
       <colgroup>
         <col style={{ width: '25%' }} />
         <col style={{ width: '75%' }} />
       </colgroup>
-      <TableHead>
-        <TableRow>
-          <TableCell
-            colSpan={2}
-            sx={{
-              fontWeight: 'bold',
-            }}
-          >
-            <Typography variant="subtitle2">{title}</Typography>
-          </TableCell>
-        </TableRow>
-      </TableHead>
-      <TableBody>
+      <thead>
+        <tr>
+          <th colSpan={2}>
+            <h3 className={styles.title}>{title}</h3>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
         {Object.entries(namespace).map(([key, value]) => (
-          <TableRow key={key}>
-            <TableCell sx={nameCellSx}>{key}</TableCell>
-            <TableCell sx={valueCellSx}>{inspectorFor(value)}</TableCell>
-          </TableRow>
+          <tr key={key}>
+            <td className={styles.nameCell}>{key}</td>
+            <td className={styles.valueCell}>{inspectorFor(value)}</td>
+          </tr>
         ))}
-      </TableBody>
-    </Table>
+      </tbody>
+    </table>
   );
 });
 
@@ -227,38 +148,32 @@ function ExpandableFooter({
   setVisible: (visible: number) => void;
 }) {
   return (
-    <TableFooter>
-      <TableRow
-        sx={{
-          '&:last-child td': {
-            borderBottom: 0,
-          },
-        }}
-      >
-        <TableCell colSpan={2}>
+    <tfoot>
+      <tr>
+        <td colSpan={2}>
           {visible > 5 && (
             <Button
-              size="small"
               onClick={() => {
                 setVisible(visible - 5);
               }}
+              className={styles.button}
             >
               Less
             </Button>
           )}
           {visible < total && (
             <Button
-              size="small"
               onClick={() => {
                 setVisible(visible + 5);
               }}
+              className={styles.button}
             >
               More
             </Button>
           )}
-        </TableCell>
-      </TableRow>
-    </TableFooter>
+        </td>
+      </tr>
+    </tfoot>
   );
 }
 
@@ -272,38 +187,28 @@ const ListInspector = memo(function ListInspector({
   const rows: JSX.Element[] = [];
   for (let i = 0; i < Math.min(visible, value.length); i++) {
     rows.push(
-      <TableRow key={i}>
-        <TableCell>{inspectorFor(value[i])}</TableCell>
-      </TableRow>
+      <tr key={i}>
+        <td>{inspectorFor(value[i])}</td>
+      </tr>
     );
   }
 
   return (
-    <Table size="small" sx={compactTableSx}>
-      <TableHead>
-        <TableRow
-          sx={{
-            '&:last-child td': {
-              borderBottom: 0,
-            },
-          }}
-        >
-          <TableCell
-            sx={{
-              width: '75%',
-            }}
-          >
+    <table className={styles.table}>
+      <thead>
+        <tr>
+          <th className={styles.valueCell}>
             Items
-          </TableCell>
-        </TableRow>
-      </TableHead>
-      <TableBody>{rows}</TableBody>
+          </th>
+        </tr>
+      </thead>
+      <tbody>{rows}</tbody>
       <ExpandableFooter
         total={value.length}
         visible={visible}
         setVisible={setVisible}
       />
-    </Table>
+    </table>
   );
 });
 
@@ -318,46 +223,32 @@ const RecordInspector = memo(function RecordInspector({
   const rows: JSX.Element[] = [];
   for (let i = 0; i < Math.min(visible, keys.length); i++) {
     rows.push(
-      <TableRow key={i}>
-        <TableCell>{inspectorFor(keys[i])}</TableCell>
-        <TableCell>{inspectorFor(value[keys[i]])}</TableCell>
-      </TableRow>
+      <tr key={i}>
+        <td>{inspectorFor(keys[i])}</td>
+        <td>{inspectorFor(value[keys[i]])}</td>
+      </tr>
     );
   }
 
   return (
-    <Table size="small" sx={compactTableSx}>
-      <TableHead>
-        <TableRow
-          sx={{
-            '&:last-child td': {
-              borderBottom: 0,
-            },
-          }}
-        >
-          <TableCell
-            sx={{
-              width: '25%',
-            }}
-          >
+    <table className={styles.table}>
+      <thead>
+        <tr>
+          <th className={styles.nameCell}>
             Key
-          </TableCell>
-          <TableCell
-            sx={{
-              width: '75%',
-            }}
-          >
+          </th>
+          <th className={styles.valueCell}>
             Value
-          </TableCell>
-        </TableRow>
-      </TableHead>
-      <TableBody>{rows}</TableBody>
+          </th>
+        </tr>
+      </thead>
+      <tbody>{rows}</tbody>
       <ExpandableFooter
         total={keys.length}
         visible={visible}
         setVisible={setVisible}
       />
-    </Table>
+    </table>
   );
 });
 

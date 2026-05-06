@@ -1,10 +1,10 @@
 import Monaco, { type BeforeMount, type OnMount } from '@monaco-editor/react';
-import { Box } from '@mui/material';
 import { memo, useCallback, useLayoutEffect, useMemo } from 'react';
 
 import boxScript from '../tests/box.start';
 
 import { setupLanguage, useEditor } from './editor-context.jsx';
+import styles from './Editor.module.css';
 
 export default memo(function Editor({
   showInspector,
@@ -86,30 +86,7 @@ export default memo(function Editor({
   );
 
   return (
-    <Box
-      sx={{
-        width: '100%',
-        height: '100%',
-        '& .glyph-margin-widgets > .codicon': {
-          marginTop: '-3px',
-        },
-        '& .start-breakpoint::before': {
-          color: 'red',
-          content: '"\\2022"',
-          fontSize: 40,
-        },
-        '& .start-snapshot::before': {
-          color: 'green',
-          content: '"\\2022"',
-          fontSize: 40,
-        },
-        '& .start-highlight': {
-          backgroundColor: '#6b9da080',
-          width: '5px !important',
-          marginLeft: '12px',
-        },
-      }}
-    >
+    <div className={styles.editor}>
       <Monaco
         defaultValue={boxScript}
         language="start"
@@ -118,6 +95,6 @@ export default memo(function Editor({
         onMount={onEditorMount}
         options={options}
       />
-    </Box>
+    </div>
   );
 });

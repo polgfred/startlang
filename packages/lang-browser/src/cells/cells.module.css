@@ -1,0 +1,93 @@
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.cell {
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.headerRow {
+  background: #424242;
+}
+
+.headerCell {
+  color: #fff;
+}
+
+.row:last-child td,
+.headerRow:last-child th {
+  border-bottom: 0;
+}
+
+.stack {
+  display: flex;
+  width: 100%;
+  gap: 16px;
+}
+
+.dividerHorizontal {
+  width: 100%;
+  height: 1px;
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.dividerVertical {
+  align-self: stretch;
+  width: 1px;
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.text {
+  margin: 0;
+  font-family: Roboto, sans-serif;
+}
+
+.h1 {
+  font-size: 6rem;
+  font-weight: 300;
+  line-height: 1.167;
+}
+
+.h2 {
+  font-size: 3.75rem;
+  font-weight: 300;
+  line-height: 1.2;
+}
+
+.h3 {
+  font-size: 3rem;
+  font-weight: 400;
+  line-height: 1.167;
+}
+
+.h4 {
+  font-size: 2.125rem;
+  font-weight: 400;
+  line-height: 1.235;
+}
+
+.h5 {
+  font-size: 1.5rem;
+  font-weight: 400;
+  line-height: 1.334;
+}
+
+.h6 {
+  font-size: 1.25rem;
+  font-weight: 500;
+  line-height: 1.6;
+}
+
+.body1 {
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.body2 {
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: 1.43;
+}

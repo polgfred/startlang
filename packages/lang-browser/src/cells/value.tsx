@@ -1,19 +1,19 @@
-import { Typography } from '@mui/material';
 import { produce } from 'immer';
 
 import type { TextProps } from '../shapes/text.jsx';
 
 import { Cell } from './base.jsx';
+import styles from './cells.module.css';
 
 const variantMap = Object.freeze({
-  h1: 'h1',
-  h2: 'h2',
-  h3: 'h3',
-  h4: 'h4',
-  h5: 'h5',
-  h6: 'h6',
-  body1: 'body1',
-  body2: 'body2',
+  h1: styles.h1,
+  h2: styles.h2,
+  h3: styles.h3,
+  h4: styles.h4,
+  h5: styles.h5,
+  h6: styles.h6,
+  body1: styles.body1,
+  body2: styles.body2,
 });
 
 type VariantType = keyof typeof variantMap;
@@ -70,16 +70,16 @@ export class ValueCell extends Cell {
 
   getHTMLElement() {
     return (
-      <Typography
-        variant={variantMap[this.valueProps.variant]}
-        sx={{
+      <p
+        className={`${styles.text} ${variantMap[this.valueProps.variant]}`}
+        style={{
           fontFamily: this.textProps['font.name'] ?? undefined,
           fontSize: this.textProps['font.size'] ?? undefined,
           fontWeight: this.textProps['font.weight'] ?? undefined,
         }}
       >
         {this.value}
-      </Typography>
+      </p>
     );
   }
 }

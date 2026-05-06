@@ -1,13 +1,8 @@
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
-} from '@mui/material';
 import { castDraft, produce } from 'immer';
+import type { CSSProperties } from 'react';
 
 import { Cell, CellElement } from './base.jsx';
+import styles from './cells.module.css';
 
 const emptyArray = Object.freeze([]);
 
@@ -56,22 +51,18 @@ export class GridCell extends Cell {
 
   getHTMLElement() {
     return (
-      <Table
-        sx={{
-          width: '100%',
-        }}
-      >
-        <TableHead>
+      <table className={styles.table}>
+        <thead>
           {this.headers.map((child, i) => (
             <CellElement key={i} cell={child} />
           ))}
-        </TableHead>
-        <TableBody>
+        </thead>
+        <tbody>
           {this.rows.map((child, i) => (
             <CellElement key={i} cell={child} />
           ))}
-        </TableBody>
-      </Table>
+        </tbody>
+      </table>
     );
   }
 }
@@ -180,24 +171,26 @@ export class GridSlotCell extends Cell {
   }
 
   getTableCellElement(header: boolean, key?: number) {
+    const style: CSSProperties = {
+      backgroundColor: this.slotProps['background.color'] ?? undefined,
+      textAlign: this.slotProps.align,
+      verticalAlign: this.slotProps.valign,
+      width: this.slotProps.width ?? undefined,
+    };
+    const Component = header ? 'th' : 'td';
+
     return (
-      <TableCell
+      <Component
         key={key}
-        component={header ? 'th' : 'td'}
-        align={this.slotProps.align}
+        className={`${styles.cell} ${header ? styles.headerCell : ''}`}
         colSpan={this.slotProps.span}
         rowSpan={this.slotProps.rowspan}
-        sx={(theme) => ({
-          verticalAlign: this.slotProps.valign,
-          width: this.slotProps.width ?? undefined,
-          backgroundColor: this.slotProps['background.color'] ?? undefined,
-          ...(header ? { color: theme.palette.common.white } : null),
-        })}
+        style={style}
       >
         {this.children.map((child, i) => (
           <CellElement key={i} cell={child} />
         ))}
-      </TableCell>
+      </Component>
     );
   }
 
@@ -223,15 +216,9 @@ export class GridRowCell extends Cell {
 
   getHTMLElement() {
     return (
-      <TableRow
-        sx={{
-          '&:last-child td': {
-            borderBottom: 0,
-          },
-        }}
-      >
+      <tr className={styles.row}>
         {this.children.map((child, i) => child.getTableCellElement(false, i))}
-      </TableRow>
+      </tr>
     );
   }
 }
@@ -239,16 +226,9 @@ export class GridRowCell extends Cell {
 export class GridHeaderRowCell extends GridRowCell {
   getHTMLElement() {
     return (
-      <TableRow
-        sx={(theme) => ({
-          backgroundColor: theme.palette.grey[800],
-          '&:last-child th': {
-            borderBottom: 0,
-          },
-        })}
-      >
+      <tr className={styles.headerRow}>
         {this.children.map((child, i) => child.getTableCellElement(true, i))}
-      </TableRow>
+      </tr>
     );
   }
 }

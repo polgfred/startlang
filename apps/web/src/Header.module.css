@@ -1,0 +1,170 @@
+.header {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  min-height: 64px;
+  background: #f7f9fa;
+  color: #263238;
+  border-bottom: 1px solid rgba(38, 50, 56, 0.12);
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 64px;
+  padding: 0 16px;
+}
+
+.brand {
+  margin-right: 16px;
+  font-weight: 700;
+}
+
+.buttonGroup {
+  display: flex;
+  height: 36px;
+  margin-left: 16px;
+}
+
+.badge {
+  position: relative;
+  display: inline-flex;
+}
+
+.badgeDot::after {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 8px;
+  height: 8px;
+  content: '';
+  background: #ed6c02;
+  border-radius: 999px;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  min-width: 112px;
+  padding: 0 16px;
+  font: inherit;
+  font-size: 14px;
+  color: #455a64;
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid #455a64;
+  border-radius: 4px;
+}
+
+.button:hover {
+  background: rgba(69, 90, 100, 0.08);
+}
+
+.button:focus-visible {
+  outline: 2px solid rgba(107, 157, 160, 0.5);
+  outline-offset: 2px;
+}
+
+.button:disabled,
+.button[data-disabled] {
+  color: rgba(38, 50, 56, 0.38);
+  cursor: default;
+  background: transparent;
+  border-color: rgba(38, 50, 56, 0.2);
+}
+
+.buttonContained {
+  color: #fff;
+  background: #6b9da0;
+  border-color: #6b9da0;
+  box-shadow: 0 2px 4px rgba(38, 50, 56, 0.2);
+}
+
+.buttonContained:hover {
+  background: #5f8f92;
+}
+
+.buttonText {
+  min-width: auto;
+  border-color: transparent;
+}
+
+.buttonActive {
+  color: #fff;
+  background: #455a64;
+}
+
+.buttonPressed {
+  background: rgba(69, 90, 100, 0.1);
+}
+
+.buttonLeft {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.buttonRight {
+  margin-left: -1px;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.runButton {
+  min-width: 96px;
+  margin-left: 16px;
+}
+
+.stopButton {
+  min-width: 96px;
+}
+
+.menuPositioner {
+  z-index: 20;
+}
+
+.menu {
+  min-width: 220px;
+  padding: 6px;
+  background: #fff;
+  border: 1px solid rgba(38, 50, 56, 0.16);
+  border-radius: 6px;
+  box-shadow:
+    0 8px 24px rgba(38, 50, 56, 0.16),
+    0 2px 8px rgba(38, 50, 56, 0.08);
+}
+
+.menuItem {
+  padding: 8px 10px;
+  font-size: 14px;
+  line-height: 1.3;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.menuItem[data-highlighted] {
+  color: #263238;
+  background: rgba(107, 157, 160, 0.16);
+  outline: none;
+}
+
+.menuSeparator {
+  height: 1px;
+  margin: 6px 0;
+  background: rgba(38, 50, 56, 0.12);
+}
+
+.socialLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.socialIcon {
+  display: block;
+  width: 32px;
+  height: 32px;
+  background: #6b9da0;
+}

@@ -1,4 +1,4 @@
-import { Box, Button, Stack, TextField } from '@mui/material';
+import { Button } from '@base-ui/react/button';
 import { Cell, CellElement } from '@startlang/lang-browser/cells';
 import {
   ChangeEvent,
@@ -10,6 +10,8 @@ import {
   useRef,
   useState,
 } from 'react';
+
+import styles from './Term.module.css';
 
 interface InputState {
   prompt: string;
@@ -61,60 +63,35 @@ export default memo(function Term({
   });
 
   return (
-    <Box
-      sx={{
-        height: '100%',
-        overflow: 'auto',
-      }}
-    >
+    <div className={styles.term}>
       {inputState && (
-        <Stack
-          direction="row"
-          sx={{
-            alignItems: 'center',
-            justifyContent: 'stretch',
-            width: '100%',
-          }}
-        >
-          <TextField
-            type="string"
-            margin="normal"
-            value={input}
-            label={inputState.prompt}
-            onChange={handleChange}
-            onKeyUp={handleKeyUp}
-            autoFocus={true}
-            sx={{
-              flexGrow: 1,
-            }}
-          />
+        <div className={styles.inputRow}>
+          <label className={styles.inputField}>
+            <span className={styles.inputLabel}>{inputState.prompt}</span>
+            <input
+              className={styles.input}
+              type="text"
+              value={input}
+              onChange={handleChange}
+              onKeyUp={handleKeyUp}
+              autoFocus={true}
+            />
+          </label>
           <Button
-            color="primary"
-            size="small"
-            variant="contained"
             onClick={handleAccept}
-            sx={{
-              marginLeft: '12px',
-            }}
+            className={styles.button}
           >
             OK
           </Button>
-        </Stack>
+        </div>
       )}
-      <Box
-        ref={scrollRef}
-        sx={{
-          fontFamily: 'Roboto',
-          fontSize: 14,
-          padding: 2,
-        }}
-      >
-        <Stack spacing={2}>
+      <div ref={scrollRef} className={styles.output}>
+        <div className={styles.outputStack}>
           {outputCells.map((cell, index) => (
             <CellElement key={index} cell={cell} />
           ))}
-        </Stack>
-      </Box>
-    </Box>
+        </div>
+      </div>
+    </div>
   );
 });
