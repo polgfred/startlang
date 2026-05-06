@@ -1,4 +1,5 @@
 import Monaco, { type BeforeMount, type OnMount } from '@monaco-editor/react';
+import type { editor as MonacoEditor } from 'monaco-editor';
 import { memo, useCallback, useLayoutEffect, useMemo } from 'react';
 
 import boxScript from '../tests/box.start';
@@ -22,7 +23,7 @@ export default memo(function Editor({
   }, []);
 
   const onEditorMount: OnMount = useCallback(
-    (editor) => {
+    (editor, monaco) => {
       initEditor(editor);
       editor.onKeyUp((ev) => {
         if (ev.code === 'Enter' && ev.ctrlKey) {
@@ -55,8 +56,14 @@ export default memo(function Editor({
       editor.onMouseLeave(() => {
         setPointer(false);
       });
-      editor.focus();
-      runProgram();
+
+      window.requestAnimationFrame(async () => {
+        await document.fonts.ready;
+        monaco.editor.remeasureFonts();
+        editor.layout();
+        editor.focus();
+        runProgram();
+      });
     },
     [initEditor, runProgram, toggleMarker]
   );
@@ -72,9 +79,11 @@ export default memo(function Editor({
     };
   }, [autoLayout]);
 
-  const options = useMemo(
+  const options = useMemo<MonacoEditor.IStandaloneEditorConstructionOptions>(
     () => ({
       glyphMargin: true,
+      fontFamily: 'var(--font-mono)',
+      fontSize: 13,
       minimap: { enabled: false },
       readOnly: isReadOnly,
       readOnlyMessage: {

@@ -24,7 +24,7 @@
 
 .output {
   padding: 16px;
-  font-family: Roboto, sans-serif;
+  font-family: var(--font-ui);
   font-size: 14px;
 }
 

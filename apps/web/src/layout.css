@@ -1,7 +1,6 @@
-@import url('https://fonts.googleapis.com/css?family=Roboto+Mono:400,700&subset=latin,latin-ext');
-@import url('https://fonts.googleapis.com/css?family=Roboto:400&subset=latin,latin-ext');
-
 :root {
+  --font-ui: 'Atkinson Hyperlegible', system-ui, sans-serif;
+  --font-mono: 'Atkinson Hyperlegible Mono', ui-monospace, monospace;
   --color-primary: #6b9da0;
   --color-primary-hover: #5f8f92;
   --color-secondary: #455a64;
@@ -35,6 +34,13 @@ body,
 #root {
   height: 100%;
   margin: 0;
+  padding: 0;
+}
+
+body {
+  background: #ccc;
+  font-family: var(--font-ui);
+  font-weight: 400;
 }
 
 *,
