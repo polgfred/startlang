@@ -1,8 +1,6 @@
 import Monaco, { type BeforeMount, type OnMount } from '@monaco-editor/react';
 import type { editor as MonacoEditor } from 'monaco-editor';
-import { memo, useCallback, useLayoutEffect, useMemo } from 'react';
-
-import boxScript from '../tests/box.start';
+import { memo, useCallback, useLayoutEffect, useMemo, useRef } from 'react';
 
 import { setupLanguage, useEditor } from './editor-context.jsx';
 import styles from './editor.module.css';
@@ -16,15 +14,82 @@ export default memo(function Editor({
   runProgram: () => void;
   isReadOnly: boolean;
 }) {
-  const { autoLayout, initEditor, toggleMarker } = useEditor();
+  const {
+    highlightedNode,
+    markers,
+    setSourceValue,
+    sourceValue,
+    toggleMarker,
+  } = useEditor();
+  const editorRef = useRef<MonacoEditor.ICodeEditor | null>(null);
+  const decorationsRef =
+    useRef<MonacoEditor.IEditorDecorationsCollection | null>(null);
 
   const onBeforeMount: BeforeMount = useCallback((monaco) => {
     setupLanguage(monaco);
   }, []);
 
+  const updateDecorations = useCallback(() => {
+    const decorations = decorationsRef.current;
+    if (!decorations) {
+      return;
+    }
+
+    const nextDecorations: MonacoEditor.IModelDeltaDecoration[] = [];
+    if (highlightedNode) {
+      nextDecorations.push({
+        range: {
+          startLineNumber: highlightedNode.location.start.line,
+          startColumn: highlightedNode.location.start.column,
+          endLineNumber: highlightedNode.location.end.line,
+          endColumn: highlightedNode.location.end.column,
+        },
+        options: {
+          isWholeLine: true,
+          linesDecorationsClassName: 'start-highlight',
+        },
+      });
+    }
+
+    markers.forEach((marker, lineNumber) => {
+      if (!marker) {
+        return;
+      }
+
+      const label = marker === 'breakpoint' ? 'Breakpoint' : 'Snapshot';
+      nextDecorations.push({
+        range: {
+          startLineNumber: lineNumber,
+          startColumn: 1,
+          endLineNumber: lineNumber,
+          endColumn: 1,
+        },
+        options: {
+          isWholeLine: true,
+          glyphMarginClassName: `start-${marker}`,
+          glyphMarginHoverMessage: {
+            value: `${label}: click to ${
+              marker === 'breakpoint' ? 'change to snapshot' : 'clear'
+            }.`,
+          },
+        },
+      });
+    });
+
+    decorations.set(nextDecorations);
+  }, [highlightedNode, markers]);
+
+  const autoLayout = useCallback(() => {
+    // @ts-expect-error 'auto' is allowed
+    editorRef.current?.layout({ width: 'auto', height: 'auto' });
+  }, []);
+
   const onEditorMount: OnMount = useCallback(
     (editor, monaco) => {
-      initEditor(editor);
+      editorRef.current = editor;
+      decorationsRef.current = editor.createDecorationsCollection([]);
+      updateDecorations();
+
       editor.onKeyUp((ev) => {
         if (ev.code === 'Enter' && ev.ctrlKey) {
           runProgram();
@@ -65,8 +130,19 @@ export default memo(function Editor({
         runProgram();
       });
     },
-    [initEditor, runProgram, toggleMarker]
+    [runProgram, toggleMarker, updateDecorations]
   );
+
+  const onEditorChange = useCallback(
+    (value?: string) => {
+      setSourceValue(value ?? '');
+    },
+    [setSourceValue]
+  );
+
+  useLayoutEffect(() => {
+    updateDecorations();
+  }, [updateDecorations]);
 
   useLayoutEffect(() => {
     autoLayout();
@@ -97,11 +173,12 @@ export default memo(function Editor({
   return (
     <div className={styles.editor}>
       <Monaco
-        defaultValue={boxScript}
+        value={sourceValue}
         language="start"
         theme="start-light"
         beforeMount={onBeforeMount}
         onMount={onEditorMount}
+        onChange={onEditorChange}
         options={options}
       />
     </div>

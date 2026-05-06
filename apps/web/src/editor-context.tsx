@@ -6,25 +6,34 @@ import {
 } from '@startlang/lang-core/nodes/map-markers';
 import { parse } from '@startlang/lang-core/parser.peggy';
 import type { MarkerType } from '@startlang/lang-core/types';
-import type { editor, languages } from 'monaco-editor';
+import type { languages } from 'monaco-editor';
 import {
   createContext,
-  ReactNode,
   useCallback,
   useContext,
   useMemo,
   useRef,
+  useState,
+  useSyncExternalStore,
+  type ReactNode,
 } from 'react';
 
+import boxScript from '../tests/box.start';
+
+interface SetEditorValueOptions {
+  clearMarkers?: boolean;
+}
+
 interface EditorContextValue {
-  autoLayout(): void;
-  getMarkers(): MarkerType[];
   getValue(): string;
+  setValue(value: string | null, options?: SetEditorValueOptions): void;
+  getMarkers(): MarkerType[];
   highlightNode(node: Node | null): void;
-  initEditor(editor: editor.ICodeEditor): void;
   parseValue(): Node;
-  requireEditor(): editor.ICodeEditor;
-  setValue(value: string | null, options?: { clearMarkers?: boolean }): void;
+  highlightedNode: Node | null;
+  markers: MarkerType[];
+  sourceValue: string;
+  setSourceValue(value: string): void;
   toggleMarker(lineNumber: number): void;
 }
 
@@ -39,6 +48,51 @@ type ParseCacheEntry = {
       }
     | Error;
 };
+
+function createEditorSourceStore(initialValue: string) {
+  const listeners = new Set<() => void>();
+  let value = initialValue;
+  let version = 0;
+
+  function subscribe(listener: () => void) {
+    listeners.add(listener);
+    return () => {
+      listeners.delete(listener);
+    };
+  }
+
+  function publish() {
+    listeners.forEach((listener) => {
+      listener();
+    });
+  }
+
+  function getValue() {
+    return value;
+  }
+
+  function getVersion() {
+    return version;
+  }
+
+  function setValue(nextValue: string) {
+    if (nextValue === value) {
+      return;
+    }
+
+    value = nextValue;
+    version += 1;
+    publish();
+  }
+
+  return {
+    getSnapshot: getValue,
+    getValue,
+    getVersion,
+    setValue,
+    subscribe,
+  };
+}
 
 const languageConfig: languages.LanguageConfiguration = {
   comments: {
@@ -187,25 +241,30 @@ export function useEditor() {
 }
 
 export function EditorProvider({ children }: { children: ReactNode }) {
-  const editorRef = useRef<editor.ICodeEditor | null>(null);
-  const decorationsRef = useRef<editor.IEditorDecorationsCollection | null>(
-    null
+  const [highlightedNode, setHighlightedNode] = useState<Node | null>(null);
+  const [markers, setMarkersState] = useState<MarkerType[]>([]);
+  const { current: sourceStore } = useRef(createEditorSourceStore(boxScript));
+  const sourceValue = useSyncExternalStore(
+    sourceStore.subscribe,
+    sourceStore.getSnapshot
   );
-  const markersRef = useRef<MarkerType[]>([]);
-  const highlightedNodeRef = useRef<Node | null>(null);
+  const markersRef = useRef(markers);
   const parseCacheRef = useRef<ParseCacheEntry | null>(null);
 
-  const requireEditor = useCallback(() => {
-    if (!editorRef.current) {
-      throw new Error('Editor not found');
-    }
-    return editorRef.current;
+  const replaceMarkers = useCallback((nextMarkers: MarkerType[]) => {
+    markersRef.current = nextMarkers;
+    setMarkersState(nextMarkers);
   }, []);
 
+  const setSourceValue = useCallback(
+    (value: string) => {
+      sourceStore.setValue(value);
+    },
+    [sourceStore]
+  );
+
   const parseCurrentValue = useCallback(() => {
-    const editor = requireEditor();
-    const model = editor.getModel();
-    const version = model?.getVersionId() ?? 0;
+    const version = sourceStore.getVersion();
     const cached = parseCacheRef.current;
 
     if (cached?.version === version) {
@@ -216,7 +275,7 @@ export function EditorProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      const node = parse(editor.getValue() + '\n');
+      const node = parse(sourceStore.getValue() + '\n');
       const result = {
         markerLineMap: buildMarkerLineMap(node),
         node,
@@ -228,57 +287,7 @@ export function EditorProvider({ children }: { children: ReactNode }) {
       parseCacheRef.current = { version, result };
       throw result;
     }
-  }, [requireEditor]);
-
-  const updateDecorations = useCallback(() => {
-    const decorations = decorationsRef.current;
-    if (!decorations) {
-      return;
-    }
-
-    const nextDecorations: editor.IModelDeltaDecoration[] = [];
-    const highlightedNode = highlightedNodeRef.current;
-    if (highlightedNode) {
-      nextDecorations.push({
-        range: {
-          startLineNumber: highlightedNode.location.start.line,
-          startColumn: highlightedNode.location.start.column,
-          endLineNumber: highlightedNode.location.end.line,
-          endColumn: highlightedNode.location.end.column,
-        },
-        options: {
-          isWholeLine: true,
-          linesDecorationsClassName: 'start-highlight',
-        },
-      });
-    }
-
-    markersRef.current.forEach((marker, lineNumber) => {
-      if (!marker) {
-        return;
-      }
-      const label = marker === 'breakpoint' ? 'Breakpoint' : 'Snapshot';
-      nextDecorations.push({
-        range: {
-          startLineNumber: lineNumber,
-          startColumn: 1,
-          endLineNumber: lineNumber,
-          endColumn: 1,
-        },
-        options: {
-          isWholeLine: true,
-          glyphMarginClassName: `start-${marker}`,
-          glyphMarginHoverMessage: {
-            value: `${label}: click to ${
-              marker === 'breakpoint' ? 'change to snapshot' : 'clear'
-            }.`,
-          },
-        },
-      });
-    });
-
-    decorations.set(nextDecorations);
-  }, []);
+  }, [sourceStore]);
 
   const resolveMarkerLineNumber = useCallback(
     (lineNumber: number) => {
@@ -290,20 +299,20 @@ export function EditorProvider({ children }: { children: ReactNode }) {
 
   const cycleMarker = useCallback(
     (lineNumber: number) => {
-      const markers = markersRef.current;
+      const nextMarkers = markersRef.current.slice();
 
-      if (!markers[lineNumber]) {
-        markers[lineNumber] = 'breakpoint';
-      } else if (markers[lineNumber] === 'breakpoint') {
-        markers[lineNumber] = 'snapshot';
+      if (!nextMarkers[lineNumber]) {
+        nextMarkers[lineNumber] = 'breakpoint';
+      } else if (nextMarkers[lineNumber] === 'breakpoint') {
+        nextMarkers[lineNumber] = 'snapshot';
       } else {
         // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-        delete markers[lineNumber];
+        delete nextMarkers[lineNumber];
       }
 
-      updateDecorations();
+      replaceMarkers(nextMarkers);
     },
-    [updateDecorations]
+    [replaceMarkers]
   );
 
   const toggleMarker = useCallback(
@@ -327,43 +336,59 @@ export function EditorProvider({ children }: { children: ReactNode }) {
     [cycleMarker, resolveMarkerLineNumber]
   );
 
-  const value = useMemo<EditorContextValue>(
+  const getMarkers = useCallback(() => markersRef.current, []);
+
+  const getValue = useCallback(() => sourceStore.getValue(), [sourceStore]);
+
+  const highlightNode = useCallback((node: Node | null) => {
+    setHighlightedNode(node);
+  }, []);
+
+  const parseValue = useCallback(
+    () => parseCurrentValue().node,
+    [parseCurrentValue]
+  );
+
+  const setValue = useCallback(
+    (value: string | null, options?: SetEditorValueOptions) => {
+      if (options?.clearMarkers) {
+        replaceMarkers([]);
+      }
+      setSourceValue(value ?? '');
+    },
+    [replaceMarkers, setSourceValue]
+  );
+
+  const contextValue = useMemo<EditorContextValue>(
     () => ({
-      autoLayout() {
-        // @ts-expect-error 'auto' is allowed
-        editorRef.current?.layout({ width: 'auto', height: 'auto' });
-      },
-      getMarkers() {
-        return markersRef.current;
-      },
-      getValue() {
-        return requireEditor().getValue() + '\n';
-      },
-      highlightNode(node) {
-        highlightedNodeRef.current = node;
-        updateDecorations();
-      },
-      initEditor(editor) {
-        editorRef.current = editor;
-        decorationsRef.current = editor.createDecorationsCollection([]);
-      },
-      parseValue() {
-        return parseCurrentValue().node;
-      },
-      setValue(value, options) {
-        if (options?.clearMarkers) {
-          markersRef.current = [];
-        }
-        requireEditor().setValue(value ?? '');
-        updateDecorations();
-      },
-      requireEditor,
+      getMarkers,
+      getValue,
+      highlightedNode,
+      highlightNode,
+      markers,
+      parseValue,
+      setValue,
+      sourceValue,
+      setSourceValue,
       toggleMarker,
     }),
-    [parseCurrentValue, requireEditor, toggleMarker, updateDecorations]
+    [
+      getMarkers,
+      getValue,
+      highlightedNode,
+      highlightNode,
+      markers,
+      parseValue,
+      setSourceValue,
+      setValue,
+      sourceValue,
+      toggleMarker,
+    ]
   );
 
   return (
-    <EditorContext.Provider value={value}>{children}</EditorContext.Provider>
+    <EditorContext.Provider value={contextValue}>
+      {children}
+    </EditorContext.Provider>
   );
 }
