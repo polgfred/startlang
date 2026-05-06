@@ -38,7 +38,7 @@ export default memo(function Editor({
   const {
     highlightedNode,
     markers,
-    setSourceValue,
+    setValue,
     sourceValue,
     toggleMarker,
   } = useEditor();
@@ -150,9 +150,9 @@ export default memo(function Editor({
 
   const onEditorChange = useCallback(
     (value?: string) => {
-      setSourceValue(value ?? '');
+      setValue(value ?? '');
     },
-    [setSourceValue]
+    [setValue]
   );
 
   useLayoutEffect(() => {

@@ -26,14 +26,13 @@ interface SetEditorValueOptions {
 
 interface EditorContextValue {
   getValue(): string;
-  setValue(value: string | null, options?: SetEditorValueOptions): void;
+  setValue(value: string, options?: SetEditorValueOptions): void;
   getMarkers(): MarkerType[];
   highlightNode(node: Node | null): void;
   parseValue(): Node;
   highlightedNode: Node | null;
   markers: MarkerType[];
   sourceValue: string;
-  setSourceValue(value: string): void;
   toggleMarker(lineNumber: number): void;
 }
 
@@ -256,13 +255,6 @@ export function EditorProvider({ children }: { children: ReactNode }) {
     setMarkersState(nextMarkers);
   }, []);
 
-  const setSourceValue = useCallback(
-    (value: string) => {
-      sourceStore.setValue(value);
-    },
-    [sourceStore]
-  );
-
   const parseCurrentValue = useCallback(() => {
     const version = sourceStore.getVersion();
     const cached = parseCacheRef.current;
@@ -350,13 +342,13 @@ export function EditorProvider({ children }: { children: ReactNode }) {
   );
 
   const setValue = useCallback(
-    (value: string | null, options?: SetEditorValueOptions) => {
+    (value: string, options?: SetEditorValueOptions) => {
       if (options?.clearMarkers) {
         replaceMarkers([]);
       }
-      setSourceValue(value ?? '');
+      sourceStore.setValue(value);
     },
-    [replaceMarkers, setSourceValue]
+    [replaceMarkers, sourceStore]
   );
 
   const contextValue = useMemo<EditorContextValue>(
@@ -369,7 +361,6 @@ export function EditorProvider({ children }: { children: ReactNode }) {
       parseValue,
       setValue,
       sourceValue,
-      setSourceValue,
       toggleMarker,
     }),
     [
@@ -379,7 +370,6 @@ export function EditorProvider({ children }: { children: ReactNode }) {
       highlightNode,
       markers,
       parseValue,
-      setSourceValue,
       setValue,
       sourceValue,
       toggleMarker,
