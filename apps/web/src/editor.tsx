@@ -5,12 +5,33 @@ import { memo, useCallback, useLayoutEffect, useMemo, useRef } from 'react';
 import { setupLanguage, useEditor } from './editor-context.jsx';
 import styles from './editor.module.css';
 
+function observeEditorLayout(editor: MonacoEditor.ICodeEditor) {
+  let layoutAnimationFrame: number | null = null;
+  const layoutSoon = () => {
+    if (layoutAnimationFrame !== null) {
+      return;
+    }
+
+    layoutAnimationFrame = window.requestAnimationFrame(() => {
+      layoutAnimationFrame = null;
+      // @ts-expect-error 'auto' is allowed
+      editor.layout({ width: 'auto', height: 'auto' });
+    });
+  };
+
+  window.addEventListener('resize', layoutSoon, false);
+  editor.onDidDispose(() => {
+    if (layoutAnimationFrame !== null) {
+      window.cancelAnimationFrame(layoutAnimationFrame);
+    }
+    window.removeEventListener('resize', layoutSoon, false);
+  });
+}
+
 export default memo(function Editor({
-  showInspector,
   runProgram,
   isReadOnly,
 }: {
-  showInspector: boolean;
   runProgram: () => void;
   isReadOnly: boolean;
 }) {
@@ -21,7 +42,6 @@ export default memo(function Editor({
     sourceValue,
     toggleMarker,
   } = useEditor();
-  const editorRef = useRef<MonacoEditor.ICodeEditor | null>(null);
   const decorationsRef =
     useRef<MonacoEditor.IEditorDecorationsCollection | null>(null);
 
@@ -79,16 +99,11 @@ export default memo(function Editor({
     decorations.set(nextDecorations);
   }, [highlightedNode, markers]);
 
-  const autoLayout = useCallback(() => {
-    // @ts-expect-error 'auto' is allowed
-    editorRef.current?.layout({ width: 'auto', height: 'auto' });
-  }, []);
-
   const onEditorMount: OnMount = useCallback(
     (editor, monaco) => {
-      editorRef.current = editor;
       decorationsRef.current = editor.createDecorationsCollection([]);
       updateDecorations();
+      observeEditorLayout(editor);
 
       editor.onKeyUp((ev) => {
         if (ev.code === 'Enter' && ev.ctrlKey) {
@@ -143,17 +158,6 @@ export default memo(function Editor({
   useLayoutEffect(() => {
     updateDecorations();
   }, [updateDecorations]);
-
-  useLayoutEffect(() => {
-    autoLayout();
-  }, [showInspector, autoLayout]);
-
-  useLayoutEffect(() => {
-    window.addEventListener('resize', autoLayout, false);
-    return () => {
-      window.removeEventListener('resize', autoLayout, false);
-    };
-  }, [autoLayout]);
 
   const options = useMemo<MonacoEditor.IStandaloneEditorConstructionOptions>(
     () => ({

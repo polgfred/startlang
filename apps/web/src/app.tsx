@@ -30,7 +30,6 @@ export default function App() {
           <section className={styles.pane}>
             <div className={styles.panel}>
               <Editor
-                showInspector={env.showInspector}
                 runProgram={env.runOrResume}
                 isReadOnly={env.isEditorReadOnly}
               />
