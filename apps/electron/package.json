@@ -5,7 +5,7 @@
   "main": "main.ts",
   "scripts": {
     "dev": "NODE_OPTIONS='--import tsx' electron .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsgo --noEmit"
   },
   "devDependencies": {
     "electron": "^40.4.1",

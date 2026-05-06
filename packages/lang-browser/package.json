@@ -11,13 +11,13 @@
     "lint": "eslint src tests tools vitest.config.ts",
     "script": "tsx --import ./tools/hooks.js ./tools/script.ts",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsgo --noEmit"
   },
   "dependencies": {
     "@mui/material": "^6.4.4",
     "@startlang/lang-core": "*",
-    "immer": "^10.1.1",
-    "react": "^19.0.0"
+    "immer": "^11.1.7",
+    "react": "^19.2.6"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^6.0.1",
