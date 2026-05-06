@@ -66,17 +66,17 @@ function createStartEnvironmentStore(
     };
   }
 
-  function getView() {
-    return view;
-  }
-
   function publish() {
     version += 1;
     view = readView();
     events.dispatchEvent(new Event('change'));
   }
 
-  return { getView, publish, subscribe };
+  return {
+    getView: () => view,
+    publish,
+    subscribe,
+  };
 }
 
 function chooseOutputTab(

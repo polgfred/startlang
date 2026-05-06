@@ -49,29 +49,15 @@ type ParseCacheEntry = {
 };
 
 function createEditorSourceStore(initialValue: string) {
-  const listeners = new Set<() => void>();
+  const events = new EventTarget();
   let value = initialValue;
   let version = 0;
 
   function subscribe(listener: () => void) {
-    listeners.add(listener);
+    events.addEventListener('change', listener);
     return () => {
-      listeners.delete(listener);
+      events.removeEventListener('change', listener);
     };
-  }
-
-  function publish() {
-    listeners.forEach((listener) => {
-      listener();
-    });
-  }
-
-  function getValue() {
-    return value;
-  }
-
-  function getVersion() {
-    return version;
   }
 
   function setValue(nextValue: string) {
@@ -79,15 +65,15 @@ function createEditorSourceStore(initialValue: string) {
       return;
     }
 
-    value = nextValue;
     version += 1;
-    publish();
+    value = nextValue;
+    events.dispatchEvent(new Event('change'));
   }
 
   return {
-    getSnapshot: getValue,
-    getValue,
-    getVersion,
+    getSnapshot: () => value,
+    getValue: () => value,
+    getVersion: () => version,
     setValue,
     subscribe,
   };
