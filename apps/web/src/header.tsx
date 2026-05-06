@@ -13,7 +13,7 @@ import victorScript from '../tests/victor.start';
 
 import controls from './controls.module.css';
 import { useEditor } from './editor-context.jsx';
-import styles from './Header.module.css';
+import styles from './header.module.css';
 
 type OutputTab = 'graphics' | 'text';
 

@@ -4,7 +4,7 @@ import { memo, useCallback, useLayoutEffect, useMemo } from 'react';
 import boxScript from '../tests/box.start';
 
 import { setupLanguage, useEditor } from './editor-context.jsx';
-import styles from './Editor.module.css';
+import styles from './editor.module.css';
 
 export default memo(function Editor({
   showInspector,

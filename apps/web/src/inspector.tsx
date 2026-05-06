@@ -10,7 +10,7 @@ import type {
 import { ChangeEvent, JSX, memo, useCallback, useState } from 'react';
 
 import controls from './controls.module.css';
-import styles from './Inspector.module.css';
+import styles from './inspector.module.css';
 
 export default memo(function Inspector({
   error,

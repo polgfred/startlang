@@ -12,7 +12,7 @@ import {
 } from 'react';
 
 import controls from './controls.module.css';
-import styles from './Term.module.css';
+import styles from './term.module.css';
 
 interface InputState {
   prompt: string;

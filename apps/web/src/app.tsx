@@ -1,4 +1,4 @@
-import styles from './App.module.css';
+import styles from './app.module.css';
 import Editor from './editor.jsx';
 import Graphics from './graphics.jsx';
 import Header from './header.jsx';
