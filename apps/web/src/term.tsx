@@ -11,6 +11,7 @@ import {
   useState,
 } from 'react';
 
+import controls from './controls.module.css';
 import styles from './Term.module.css';
 
 interface InputState {
@@ -67,9 +68,9 @@ export default memo(function Term({
       {inputState && (
         <div className={styles.inputRow}>
           <label className={styles.inputField}>
-            <span className={styles.inputLabel}>{inputState.prompt}</span>
+            <span className={controls.fieldLabel}>{inputState.prompt}</span>
             <input
-              className={styles.input}
+              className={controls.textInput}
               type="text"
               value={input}
               onChange={handleChange}
@@ -79,7 +80,7 @@ export default memo(function Term({
           </label>
           <Button
             onClick={handleAccept}
-            className={styles.button}
+            className={`${controls.button} ${controls.buttonPrimary} ${controls.buttonSmall}`}
           >
             OK
           </Button>

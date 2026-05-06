@@ -61,24 +61,8 @@
   color: var(--color-error);
 }
 
-.button {
-  padding: 4px 8px;
+.footerButton {
   margin-right: 6px;
-  font: inherit;
-  color: var(--color-secondary);
-  cursor: pointer;
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: 4px;
-}
-
-.button:hover {
-  background: var(--color-secondary-hover);
-}
-
-.button:focus-visible {
-  outline: 2px solid var(--color-focus);
-  outline-offset: 2px;
 }
 
 @media (max-width: 900px) {

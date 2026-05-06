@@ -11,6 +11,7 @@ import sineScript from '../tests/sine.start';
 import tableCellsScript from '../tests/table-cells.start';
 import victorScript from '../tests/victor.start';
 
+import controls from './controls.module.css';
 import { useEditor } from './editor-context.jsx';
 import styles from './Header.module.css';
 
@@ -63,7 +64,8 @@ const OutputSwitcher = memo(function OutputSwitcher({
         <Button
           onClick={showGraphics}
           className={cx(
-            styles.button,
+            controls.button,
+            styles.headerButton,
             styles.buttonLeft,
             outputTab === 'graphics' && styles.buttonActive
           )}
@@ -80,7 +82,8 @@ const OutputSwitcher = memo(function OutputSwitcher({
         <Button
           onClick={showText}
           className={cx(
-            styles.button,
+            controls.button,
+            styles.headerButton,
             styles.buttonRight,
             outputTab === 'text' && styles.buttonActive
           )}
@@ -144,16 +147,16 @@ const CodeMenu = memo(function CodeMenu({
 
   return (
     <Menu.Root>
-      <Menu.Trigger className={cx(styles.button, styles.buttonText)}>
+      <Menu.Trigger className={cx(controls.button, controls.buttonText)}>
         Examples
       </Menu.Trigger>
       <Menu.Portal>
         <Menu.Positioner className={styles.menuPositioner} sideOffset={8}>
-          <Menu.Popup className={styles.menu}>
+          <Menu.Popup className={controls.menu}>
             {exampleScripts.map(({ name, script }) => (
               <Menu.Item
                 key={name}
-                className={styles.menuItem}
+                className={controls.menuItem}
                 onClick={() => {
                   loadScript(script);
                 }}
@@ -161,9 +164,9 @@ const CodeMenu = memo(function CodeMenu({
                 {name}
               </Menu.Item>
             ))}
-            <Menu.Separator className={styles.menuSeparator} />
+            <Menu.Separator className={controls.menuSeparator} />
             <Menu.Item
-              className={styles.menuItem}
+              className={controls.menuItem}
               onClick={() => {
                 setValue('', { clearMarkers: true });
               }}
@@ -221,21 +224,34 @@ export default memo(function Header({
         />
         <Button
           onClick={toggleInspector}
-          className={cx(styles.button, showInspector && styles.buttonPressed)}
+          className={cx(
+            controls.button,
+            styles.headerButton,
+            showInspector && styles.buttonPressed
+          )}
         >
           Inspector
         </Button>
         <Button
           disabled={isProgramActive}
           onClick={runProgram}
-          className={cx(styles.button, styles.buttonContained, styles.runButton)}
+          className={cx(
+            controls.button,
+            controls.buttonPrimary,
+            styles.headerButton,
+            styles.runButton
+          )}
         >
           {runLabel}
         </Button>
         <Button
           disabled={isStopDisabled}
           onClick={stopProgram}
-          className={cx(styles.button, styles.stopButton)}
+          className={cx(
+            controls.button,
+            styles.headerButton,
+            styles.stopButton
+          )}
         >
           Stop
         </Button>

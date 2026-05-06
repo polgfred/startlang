@@ -9,6 +9,7 @@ import type {
 } from '@startlang/lang-core/types';
 import { ChangeEvent, JSX, memo, useCallback, useState } from 'react';
 
+import controls from './controls.module.css';
 import styles from './Inspector.module.css';
 
 export default memo(function Inspector({
@@ -156,7 +157,7 @@ function ExpandableFooter({
               onClick={() => {
                 setVisible(visible - 5);
               }}
-              className={styles.button}
+              className={`${controls.button} ${controls.buttonBare} ${styles.footerButton}`}
             >
               Less
             </Button>
@@ -166,7 +167,7 @@ function ExpandableFooter({
               onClick={() => {
                 setVisible(visible + 5);
               }}
-              className={styles.button}
+              className={`${controls.button} ${controls.buttonBare} ${styles.footerButton}`}
             >
               More
             </Button>
