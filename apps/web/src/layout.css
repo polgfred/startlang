@@ -1,6 +1,35 @@
 @import url('https://fonts.googleapis.com/css?family=Roboto+Mono:400,700&subset=latin,latin-ext');
 @import url('https://fonts.googleapis.com/css?family=Roboto:400&subset=latin,latin-ext');
 
+:root {
+  --color-primary: #6b9da0;
+  --color-primary-hover: #5f8f92;
+  --color-secondary: #455a64;
+  --color-text: #263238;
+  --color-surface: #fff;
+  --color-header: #f7f9fa;
+  --color-warning: #ed6c02;
+  --color-error: #aa0000;
+  --color-table-header: #424242;
+  --color-border: rgba(38, 50, 56, 0.12);
+  --color-border-strong: rgba(38, 50, 56, 0.28);
+  --color-border-subtle: rgba(0, 0, 0, 0.08);
+  --color-focus: rgba(107, 157, 160, 0.5);
+  --color-focus-soft: rgba(107, 157, 160, 0.18);
+  --color-primary-soft: rgba(107, 157, 160, 0.16);
+  --color-secondary-hover: rgba(69, 90, 100, 0.08);
+  --color-secondary-selected: rgba(69, 90, 100, 0.1);
+  --color-disabled-text: rgba(38, 50, 56, 0.38);
+  --color-disabled-border: rgba(38, 50, 56, 0.2);
+  --shadow-panel:
+    0 3px 6px rgba(38, 50, 56, 0.16),
+    0 3px 6px rgba(38, 50, 56, 0.08);
+  --shadow-menu:
+    0 8px 24px rgba(38, 50, 56, 0.16),
+    0 2px 8px rgba(38, 50, 56, 0.08);
+  --shadow-button: 0 2px 4px rgba(38, 50, 56, 0.2);
+}
+
 html,
 body,
 #root {

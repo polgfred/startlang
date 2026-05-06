@@ -3,9 +3,9 @@
   flex-direction: row;
   justify-content: space-between;
   min-height: 64px;
-  background: #f7f9fa;
-  color: #263238;
-  border-bottom: 1px solid rgba(38, 50, 56, 0.12);
+  color: var(--color-text);
+  background: var(--color-header);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .toolbar {
@@ -39,7 +39,7 @@
   width: 8px;
   height: 8px;
   content: '';
-  background: #ed6c02;
+  background: var(--color-warning);
   border-radius: 999px;
 }
 
@@ -52,39 +52,39 @@
   padding: 0 16px;
   font: inherit;
   font-size: 14px;
-  color: #455a64;
+  color: var(--color-secondary);
   cursor: pointer;
   background: transparent;
-  border: 1px solid #455a64;
+  border: 1px solid var(--color-secondary);
   border-radius: 4px;
 }
 
 .button:hover {
-  background: rgba(69, 90, 100, 0.08);
+  background: var(--color-secondary-hover);
 }
 
 .button:focus-visible {
-  outline: 2px solid rgba(107, 157, 160, 0.5);
+  outline: 2px solid var(--color-focus);
   outline-offset: 2px;
 }
 
 .button:disabled,
 .button[data-disabled] {
-  color: rgba(38, 50, 56, 0.38);
+  color: var(--color-disabled-text);
   cursor: default;
   background: transparent;
-  border-color: rgba(38, 50, 56, 0.2);
+  border-color: var(--color-disabled-border);
 }
 
 .buttonContained {
-  color: #fff;
-  background: #6b9da0;
-  border-color: #6b9da0;
-  box-shadow: 0 2px 4px rgba(38, 50, 56, 0.2);
+  color: var(--color-surface);
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-button);
 }
 
 .buttonContained:hover {
-  background: #5f8f92;
+  background: var(--color-primary-hover);
 }
 
 .buttonText {
@@ -93,12 +93,12 @@
 }
 
 .buttonActive {
-  color: #fff;
-  background: #455a64;
+  color: var(--color-surface);
+  background: var(--color-secondary);
 }
 
 .buttonPressed {
-  background: rgba(69, 90, 100, 0.1);
+  background: var(--color-secondary-selected);
 }
 
 .buttonLeft {
@@ -128,12 +128,10 @@
 .menu {
   min-width: 220px;
   padding: 6px;
-  background: #fff;
-  border: 1px solid rgba(38, 50, 56, 0.16);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 6px;
-  box-shadow:
-    0 8px 24px rgba(38, 50, 56, 0.16),
-    0 2px 8px rgba(38, 50, 56, 0.08);
+  box-shadow: var(--shadow-menu);
 }
 
 .menuItem {
@@ -145,15 +143,15 @@
 }
 
 .menuItem[data-highlighted] {
-  color: #263238;
-  background: rgba(107, 157, 160, 0.16);
+  color: var(--color-text);
+  background: var(--color-primary-soft);
   outline: none;
 }
 
 .menuSeparator {
   height: 1px;
   margin: 6px 0;
-  background: rgba(38, 50, 56, 0.12);
+  background: var(--color-border);
 }
 
 .socialLink {
@@ -166,5 +164,5 @@
   display: block;
   width: 32px;
   height: 32px;
-  background: #6b9da0;
+  background: var(--color-primary);
 }
