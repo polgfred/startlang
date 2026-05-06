@@ -7,6 +7,7 @@ import type {
   NamespaceType,
   RecordType,
 } from '@startlang/lang-core/types';
+import clsx from 'clsx';
 import { ChangeEvent, JSX, memo, useCallback, useState } from 'react';
 
 import controls from './controls.module.css';
@@ -74,7 +75,7 @@ function ErrorInspector({ error }: { error: Error }) {
           <th className={styles.nameCell}>
             Message
           </th>
-          <td className={`${styles.valueCell} ${styles.error}`}>
+          <td className={clsx(styles.valueCell, styles.error)}>
             {error.message}
           </td>
         </tr>
@@ -157,7 +158,11 @@ function ExpandableFooter({
               onClick={() => {
                 setVisible(visible - 5);
               }}
-              className={`${controls.button} ${controls.buttonBare} ${styles.footerButton}`}
+              className={clsx(
+                controls.button,
+                controls.buttonBare,
+                styles.footerButton
+              )}
             >
               Less
             </Button>
@@ -167,7 +172,11 @@ function ExpandableFooter({
               onClick={() => {
                 setVisible(visible + 5);
               }}
-              className={`${controls.button} ${controls.buttonBare} ${styles.footerButton}`}
+              className={clsx(
+                controls.button,
+                controls.buttonBare,
+                styles.footerButton
+              )}
             >
               More
             </Button>

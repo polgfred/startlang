@@ -1,5 +1,6 @@
 import { Button } from '@base-ui/react/button';
 import { Menu } from '@base-ui/react/menu';
+import clsx from 'clsx';
 import { memo, useCallback } from 'react';
 
 import boxScript from '../tests/box.start';
@@ -16,10 +17,6 @@ import { useEditor } from './editor-context.jsx';
 import styles from './header.module.css';
 
 type OutputTab = 'graphics' | 'text';
-
-function cx(...classes: Array<string | false | null | undefined>) {
-  return classes.filter(Boolean).join(' ');
-}
 
 const SocialIcon = memo(function SocialIcon({ src }: { src: string }) {
   return (
@@ -56,14 +53,14 @@ const OutputSwitcher = memo(function OutputSwitcher({
   return (
     <div className={styles.buttonGroup}>
       <span
-        className={cx(
+        className={clsx(
           styles.badge,
           outputTab !== 'graphics' && hasGraphicsOutput && styles.badgeDot
         )}
       >
         <Button
           onClick={showGraphics}
-          className={cx(
+          className={clsx(
             controls.button,
             styles.headerButton,
             styles.buttonLeft,
@@ -74,14 +71,14 @@ const OutputSwitcher = memo(function OutputSwitcher({
         </Button>
       </span>
       <span
-        className={cx(
+        className={clsx(
           styles.badge,
           outputTab !== 'text' && hasTextOutput && styles.badgeDot
         )}
       >
         <Button
           onClick={showText}
-          className={cx(
+          className={clsx(
             controls.button,
             styles.headerButton,
             styles.buttonRight,
@@ -147,7 +144,7 @@ const CodeMenu = memo(function CodeMenu({
 
   return (
     <Menu.Root>
-      <Menu.Trigger className={cx(controls.button, controls.buttonText)}>
+      <Menu.Trigger className={clsx(controls.button, controls.buttonText)}>
         Examples
       </Menu.Trigger>
       <Menu.Portal>
@@ -224,7 +221,7 @@ export default memo(function Header({
         />
         <Button
           onClick={toggleInspector}
-          className={cx(
+          className={clsx(
             controls.button,
             styles.headerButton,
             showInspector && styles.buttonPressed
@@ -235,7 +232,7 @@ export default memo(function Header({
         <Button
           disabled={isProgramActive}
           onClick={runProgram}
-          className={cx(
+          className={clsx(
             controls.button,
             controls.buttonPrimary,
             styles.headerButton,
@@ -247,7 +244,7 @@ export default memo(function Header({
         <Button
           disabled={isStopDisabled}
           onClick={stopProgram}
-          className={cx(
+          className={clsx(
             controls.button,
             styles.headerButton,
             styles.stopButton

@@ -14,6 +14,7 @@
     "@monaco-editor/react": "^4.7.0",
     "@startlang/lang-browser": "*",
     "@startlang/lang-core": "*",
+    "clsx": "^2.1.1",
     "monaco-editor": "^0.55.1",
     "react": "^19.2.6",
     "react-dom": "^19.2.6"

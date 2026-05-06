@@ -1,5 +1,6 @@
 import { Button } from '@base-ui/react/button';
 import { Cell, CellElement } from '@startlang/lang-browser/cells';
+import clsx from 'clsx';
 import {
   ChangeEvent,
   KeyboardEvent,
@@ -80,7 +81,11 @@ export default memo(function Term({
           </label>
           <Button
             onClick={handleAccept}
-            className={`${controls.button} ${controls.buttonPrimary} ${controls.buttonSmall}`}
+            className={clsx(
+              controls.button,
+              controls.buttonPrimary,
+              controls.buttonSmall
+            )}
           >
             OK
           </Button>
