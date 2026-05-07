@@ -47,9 +47,17 @@
   min-width: 112px;
 }
 
+.headerButton:hover:not(:disabled):not([data-disabled]) {
+  background: color-mix(in srgb, var(--color-header) 65%, var(--color-surface));
+}
+
 .buttonActive {
   color: var(--color-surface);
   background: var(--color-secondary);
+}
+
+.headerButton.buttonActive:hover:not(:disabled):not([data-disabled]) {
+  background: color-mix(in srgb, var(--color-secondary) 88%, var(--color-surface));
 }
 
 .buttonPressed {
@@ -70,6 +78,11 @@
 .runButton {
   min-width: 96px;
   margin-left: 16px;
+}
+
+.headerButton.runButton:hover:not(:disabled):not([data-disabled]) {
+  background: color-mix(in srgb, var(--color-primary) 88%, var(--color-surface));
+  border-color: color-mix(in srgb, var(--color-primary) 88%, var(--color-surface));
 }
 
 .stopButton {

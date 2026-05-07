@@ -37,7 +37,7 @@
   box-shadow: var(--shadow-button);
 }
 
-.buttonPrimary:hover {
+.buttonPrimary:hover:not(:disabled):not([data-disabled]) {
   background: var(--color-primary-hover);
 }
 
