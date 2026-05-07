@@ -7,7 +7,7 @@ import styles from './editor.module.css';
 
 function observeEditorLayout(editor: MonacoEditor.ICodeEditor) {
   let layoutAnimationFrame: number | null = null;
-  const layoutSoon = () => {
+  const updateEditorLayout = () => {
     if (layoutAnimationFrame !== null) {
       return;
     }
@@ -19,12 +19,12 @@ function observeEditorLayout(editor: MonacoEditor.ICodeEditor) {
     });
   };
 
-  window.addEventListener('resize', layoutSoon, false);
+  window.addEventListener('resize', updateEditorLayout, false);
   editor.onDidDispose(() => {
     if (layoutAnimationFrame !== null) {
       window.cancelAnimationFrame(layoutAnimationFrame);
     }
-    window.removeEventListener('resize', layoutSoon, false);
+    window.removeEventListener('resize', updateEditorLayout, false);
   });
 }
 
