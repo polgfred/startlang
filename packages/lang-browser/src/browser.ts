@@ -130,9 +130,7 @@ function selectInheritedGroupProps(props: CanonicalProps) {
   );
 }
 
-export class BrowserPresentationHost
-  implements PresentationHost<BrowserPresentationSnapshot>
-{
+export class BrowserPresentationHost implements PresentationHost<BrowserPresentationSnapshot> {
   cells: readonly Cell[] = emptyArray;
   currentCell: Cons<Cell> = new Cons(rootCell);
   cellConfig: Cons<CellConfig> = new Cons(initialCellConfig);

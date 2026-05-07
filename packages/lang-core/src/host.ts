@@ -3,8 +3,9 @@ export interface SupportsSnapshots<T = unknown> {
   restoreSnapshot(snapshot: T): void;
 }
 
-export interface PresentationHost<TSnapshot = unknown>
-  extends SupportsSnapshots<TSnapshot> {
+export interface PresentationHost<
+  TSnapshot = unknown,
+> extends SupportsSnapshots<TSnapshot> {
   restoreOriginalSettings(): void;
   clearDisplay(): void;
   clearOutputBuffer(): void;
@@ -13,9 +14,7 @@ export interface PresentationHost<TSnapshot = unknown>
 
 export type NullPresentationSnapshot = Record<string, never>;
 
-export class NullPresentationHost
-  implements PresentationHost<NullPresentationSnapshot>
-{
+export class NullPresentationHost implements PresentationHost<NullPresentationSnapshot> {
   restoreOriginalSettings() {}
 
   clearDisplay() {}

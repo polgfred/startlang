@@ -72,9 +72,7 @@ function ErrorInspector({ error }: { error: Error }) {
       </thead>
       <tbody>
         <tr>
-          <th className={styles.nameCell}>
-            Message
-          </th>
+          <th className={styles.nameCell}>Message</th>
           <td className={clsx(styles.valueCell, styles.error)}>
             {error.message}
           </td>
@@ -207,9 +205,7 @@ const ListInspector = memo(function ListInspector({
     <table className={styles.table}>
       <thead>
         <tr>
-          <th className={styles.valueCell}>
-            Items
-          </th>
+          <th className={styles.valueCell}>Items</th>
         </tr>
       </thead>
       <tbody>{rows}</tbody>
@@ -244,12 +240,8 @@ const RecordInspector = memo(function RecordInspector({
     <table className={styles.table}>
       <thead>
         <tr>
-          <th className={styles.nameCell}>
-            Key
-          </th>
-          <th className={styles.valueCell}>
-            Value
-          </th>
+          <th className={styles.nameCell}>Key</th>
+          <th className={styles.valueCell}>Value</th>
         </tr>
       </thead>
       <tbody>{rows}</tbody>
