@@ -32,6 +32,7 @@ export default function App() {
               <Editor
                 runProgram={env.runOrResume}
                 isReadOnly={env.isEditorReadOnly}
+                layoutSignal={env.showInspector}
               />
             </div>
           </section>

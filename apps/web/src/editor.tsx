@@ -5,9 +5,10 @@ import { memo, useCallback, useLayoutEffect, useMemo, useRef } from 'react';
 import { setupLanguage, useEditor } from './editor-context.jsx';
 import styles from './editor.module.css';
 
-function observeEditorLayout(editor: MonacoEditor.ICodeEditor) {
+function createEditorLayoutScheduler(editor: MonacoEditor.ICodeEditor) {
   let layoutAnimationFrame: number | null = null;
-  const updateEditorLayout = () => {
+
+  function schedule() {
     if (layoutAnimationFrame !== null) {
       return;
     }
@@ -17,26 +18,40 @@ function observeEditorLayout(editor: MonacoEditor.ICodeEditor) {
       // @ts-expect-error 'auto' is allowed
       editor.layout({ width: 'auto', height: 'auto' });
     });
-  };
+  }
 
-  window.addEventListener('resize', updateEditorLayout, false);
-  editor.onDidDispose(() => {
+  function dispose() {
     if (layoutAnimationFrame !== null) {
       window.cancelAnimationFrame(layoutAnimationFrame);
+      layoutAnimationFrame = null;
     }
-    window.removeEventListener('resize', updateEditorLayout, false);
-  });
+  }
+
+  return { dispose, schedule };
+}
+
+type EditorLayoutScheduler = ReturnType<typeof createEditorLayoutScheduler>;
+
+function observeEditorLayout(layoutScheduler: EditorLayoutScheduler) {
+  window.addEventListener('resize', layoutScheduler.schedule, false);
+  return () => {
+    window.removeEventListener('resize', layoutScheduler.schedule, false);
+    layoutScheduler.dispose();
+  };
 }
 
 export default memo(function Editor({
   runProgram,
   isReadOnly,
+  layoutSignal,
 }: {
   runProgram: () => void;
   isReadOnly: boolean;
+  layoutSignal: unknown;
 }) {
   const { highlightedNode, markers, setValue, source, toggleMarker } =
     useEditor();
+  const layoutSchedulerRef = useRef<EditorLayoutScheduler | null>(null);
   const decorationsRef =
     useRef<MonacoEditor.IEditorDecorationsCollection | null>(null);
 
@@ -92,9 +107,19 @@ export default memo(function Editor({
 
   const onEditorMount: OnMount = useCallback(
     (editor, monaco) => {
+      const layoutScheduler = createEditorLayoutScheduler(editor);
+      const cleanupEditorLayout = observeEditorLayout(layoutScheduler);
+      layoutSchedulerRef.current = layoutScheduler;
+
       decorationsRef.current = editor.createDecorationsCollection([]);
       updateDecorations();
-      observeEditorLayout(editor);
+
+      editor.onDidDispose(() => {
+        cleanupEditorLayout();
+        if (layoutSchedulerRef.current === layoutScheduler) {
+          layoutSchedulerRef.current = null;
+        }
+      });
 
       editor.onKeyUp((ev) => {
         if (ev.code === 'Enter' && ev.ctrlKey) {
@@ -149,6 +174,10 @@ export default memo(function Editor({
   useLayoutEffect(() => {
     updateDecorations();
   }, [updateDecorations]);
+
+  useLayoutEffect(() => {
+    layoutSchedulerRef.current?.schedule();
+  }, [layoutSignal]);
 
   const options = useMemo<MonacoEditor.IStandaloneEditorConstructionOptions>(
     () => ({
