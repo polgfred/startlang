@@ -4,6 +4,7 @@
   "type": "module",
   "exports": {
     "./host": "./src/host.ts",
+    "./editor-model": "./src/editor-model.ts",
     "./interpreter": "./src/interpreter.ts",
     "./parser.peggy": "./src/parser.peggy",
     "./runtime-history": "./src/runtime-history.ts",

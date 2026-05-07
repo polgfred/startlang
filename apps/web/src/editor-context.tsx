@@ -1,11 +1,10 @@
 import type { Monaco } from '@monaco-editor/react';
-import type { Node } from '@startlang/lang-core/nodes';
 import {
-  buildMarkerLineMap,
-  type MarkerLineMap,
-} from '@startlang/lang-core/nodes/map-markers';
-import { parse } from '@startlang/lang-core/parser.peggy';
-import type { MarkerType } from '@startlang/lang-core/types';
+  EditorModel,
+  type EditorMarker,
+  type EditorProgram,
+} from '@startlang/lang-core/editor-model';
+import type { Node } from '@startlang/lang-core/nodes';
 import type { languages } from 'monaco-editor';
 import {
   createContext,
@@ -26,100 +25,15 @@ interface SetEditorValueOptions {
 interface EditorContextValue {
   getValue(): string;
   setValue(value: string, options?: SetEditorValueOptions): void;
-  getMarkers(): MarkerType[];
   highlightNode(node: Node | null): void;
-  parseValue(): Node;
+  parseProgram(): EditorProgram;
   highlightedNode: Node | null;
-  markers: MarkerType[];
-  markerVersion: number;
+  markers: readonly EditorMarker[];
   sourceValue: string;
-  sourceVersion: number;
   toggleMarker(lineNumber: number): void;
 }
 
 const EditorContext = createContext<EditorContextValue | null>(null);
-
-type ParseCacheEntry = {
-  version: number;
-  result:
-    | {
-        markerLineMap: MarkerLineMap;
-        node: Node;
-      }
-    | Error;
-};
-
-interface EditorSnapshot {
-  markers: MarkerType[];
-  markerVersion: number;
-  sourceValue: string;
-  sourceVersion: number;
-}
-
-function createEditorStore(initialSourceValue: string) {
-  const events = new EventTarget();
-  const markers: MarkerType[] = [];
-  let markerVersion = 0;
-  let sourceValue = initialSourceValue;
-  let sourceVersion = 0;
-  let snapshot: EditorSnapshot = {
-    markers,
-    markerVersion,
-    sourceValue,
-    sourceVersion,
-  };
-
-  function subscribe(listener: () => void) {
-    events.addEventListener('change', listener);
-    return () => {
-      events.removeEventListener('change', listener);
-    };
-  }
-
-  function publish() {
-    snapshot = { markers, markerVersion, sourceValue, sourceVersion };
-    events.dispatchEvent(new Event('change'));
-  }
-
-  function setValue(nextValue: string) {
-    if (nextValue === sourceValue) {
-      return;
-    }
-    sourceValue = nextValue;
-    sourceVersion += 1;
-    publish();
-  }
-
-  function clearMarkers() {
-    markers.length = 0;
-    markerVersion += 1;
-    publish();
-  }
-
-  function cycleMarker(lineNumber: number) {
-    if (!markers[lineNumber]) {
-      markers[lineNumber] = 'breakpoint';
-    } else if (markers[lineNumber] === 'breakpoint') {
-      markers[lineNumber] = 'snapshot';
-    } else {
-      // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-      delete markers[lineNumber];
-    }
-    markerVersion += 1;
-    publish();
-  }
-
-  return {
-    getSnapshot: () => snapshot,
-    getMarkers: () => markers,
-    getValue: () => sourceValue,
-    getVersion: () => sourceVersion,
-    clearMarkers,
-    cycleMarker,
-    setValue,
-    subscribe,
-  };
-}
 
 const languageConfig: languages.LanguageConfiguration = {
   comments: {
@@ -259,6 +173,54 @@ export function setupLanguage(monaco: Monaco) {
   });
 }
 
+function createEditorStore(initialSourceValue: string) {
+  const events = new EventTarget();
+  const model = new EditorModel(initialSourceValue);
+
+  function subscribe(listener: () => void) {
+    events.addEventListener('change', listener);
+    return () => {
+      events.removeEventListener('change', listener);
+    };
+  }
+
+  function publish() {
+    events.dispatchEvent(new Event('change'));
+  }
+
+  function setValue(nextValue: string) {
+    if (model.setSource(nextValue)) {
+      publish();
+    }
+  }
+
+  function clearMarkers() {
+    if (model.clearMarkers()) {
+      publish();
+    }
+  }
+
+  function toggleMarker(lineNumber: number) {
+    try {
+      if (model.toggleMarker(lineNumber)) {
+        publish();
+      }
+    } catch {
+      // leave invalid source unmarked
+    }
+  }
+
+  return {
+    getSnapshot: () => model.getSnapshot(),
+    getValue: () => model.getSource(),
+    parseProgram: () => model.parseProgram(),
+    clearMarkers,
+    setValue,
+    subscribe,
+    toggleMarker,
+  };
+}
+
 export function useEditor() {
   const context = useContext(EditorContext);
   if (!context) {
@@ -270,66 +232,17 @@ export function useEditor() {
 export function EditorProvider({ children }: { children: ReactNode }) {
   const [highlightedNode, setHighlightedNode] = useState<Node | null>(null);
   const { current: editorStore } = useRef(createEditorStore(boxScript));
-  const { markers, markerVersion, sourceValue, sourceVersion } =
-    useSyncExternalStore(editorStore.subscribe, editorStore.getSnapshot);
-  const parseCacheRef = useRef<ParseCacheEntry | null>(null);
-
-  const parseCurrentValue = useCallback(() => {
-    const version = editorStore.getVersion();
-    const cached = parseCacheRef.current;
-
-    if (cached?.version === version) {
-      if (cached.result instanceof Error) {
-        throw cached.result;
-      }
-      return cached.result;
-    }
-
-    try {
-      const node = parse(editorStore.getValue() + '\n');
-      const result = {
-        markerLineMap: buildMarkerLineMap(node),
-        node,
-      };
-      parseCacheRef.current = { version, result };
-      return result;
-    } catch (err) {
-      const result = err instanceof Error ? err : new Error(String(err));
-      parseCacheRef.current = { version, result };
-      throw result;
-    }
-  }, [editorStore]);
-
-  const resolveMarkerLineNumber = useCallback(
-    (lineNumber: number) => {
-      const { markerLineMap } = parseCurrentValue();
-      return markerLineMap.resolve(lineNumber)?.lineNumber ?? null;
-    },
-    [parseCurrentValue]
+  const { markers, sourceValue } = useSyncExternalStore(
+    editorStore.subscribe,
+    editorStore.getSnapshot
   );
 
   const toggleMarker = useCallback(
     (lineNumber: number) => {
-      const markers = editorStore.getMarkers();
-
-      if (markers[lineNumber]) {
-        editorStore.cycleMarker(lineNumber);
-        return;
-      }
-
-      try {
-        const resolvedLineNumber = resolveMarkerLineNumber(lineNumber);
-        if (resolvedLineNumber !== null) {
-          editorStore.cycleMarker(resolvedLineNumber);
-        }
-      } catch {
-        // leave invalid source unmarked
-      }
+      editorStore.toggleMarker(lineNumber);
     },
-    [editorStore, resolveMarkerLineNumber]
+    [editorStore]
   );
-
-  const getMarkers = useCallback(() => editorStore.getMarkers(), [editorStore]);
 
   const getValue = useCallback(() => editorStore.getValue(), [editorStore]);
 
@@ -337,9 +250,9 @@ export function EditorProvider({ children }: { children: ReactNode }) {
     setHighlightedNode(node);
   }, []);
 
-  const parseValue = useCallback(
-    () => parseCurrentValue().node,
-    [parseCurrentValue]
+  const parseProgram = useCallback(
+    () => editorStore.parseProgram(),
+    [editorStore]
   );
 
   const setValue = useCallback(
@@ -353,16 +266,13 @@ export function EditorProvider({ children }: { children: ReactNode }) {
   );
 
   const contextValue: EditorContextValue = {
-    getMarkers,
     getValue,
     highlightedNode,
     highlightNode,
     markers,
-    markerVersion,
-    parseValue,
+    parseProgram,
     setValue,
     sourceValue,
-    sourceVersion,
     toggleMarker,
   };
 

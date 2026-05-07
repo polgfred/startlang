@@ -1,3 +1,4 @@
+import { EditorModel } from '@startlang/lang-core/editor-model';
 import { Interpreter } from '@startlang/lang-core/interpreter';
 import { BlockNode, IfNode, RepeatNode } from '@startlang/lang-core/nodes';
 import {
@@ -10,6 +11,59 @@ import type { MarkerType } from '@startlang/lang-core/types';
 import { describe, expect, it } from 'vitest';
 
 describe('marker maps', () => {
+  it('keeps editor-owned markers behind a run-ready marker map', () => {
+    const model = new EditorModel(`
+      repeat 3 do
+
+        print "inside"
+      end
+      `);
+
+    expect(model.toggleMarker(3)).toBe(true);
+    expect(model.getSnapshot().markers).toEqual([
+      { lineNumber: 4, marker: 'breakpoint' },
+    ]);
+
+    const { markerMap, node } = model.parseProgram();
+    const repeatNode = (node as BlockNode).elems[0] as RepeatNode;
+    const insidePrintNode = (repeatNode.body as BlockNode).elems[0];
+
+    expect(markerMap.get(insidePrintNode)).toBe('breakpoint');
+
+    model.toggleMarker(4);
+    expect(markerMap.get(insidePrintNode)).toBe('snapshot');
+
+    model.toggleMarker(4);
+    expect(markerMap.get(insidePrintNode)).toBeUndefined();
+  });
+
+  it('uses live editor-owned markers after resuming from a breakpoint', async () => {
+    const model = new EditorModel(
+      ['let x = 0', 'repeat 3 do', '  let x = x + 1', 'end', ''].join('\n')
+    );
+    const interpreter = new Interpreter();
+
+    model.toggleMarker(3);
+    const { markerMap, node } = model.parseProgram();
+    interpreter.setMarkerMap(markerMap);
+
+    const result = await interpreter.run(node);
+
+    if (result.status !== 'suspended') {
+      throw new Error(`expected suspension, got ${result.status}`);
+    }
+    expect(isBreakpointSuspension(result.suspension)).toBe(true);
+    expect(interpreter.topFrame.head.node.location.start.line).toBe(3);
+
+    model.toggleMarker(3);
+    model.toggleMarker(3);
+
+    const resumed = await interpreter.resume(undefined);
+
+    expect(resumed.status).toBe('completed');
+    expect(interpreter.getVariable('x')).toBe(3);
+  });
+
   it('maps marked lines to the nearest matching AST node', () => {
     const source = `
       repeat 3 do
@@ -112,7 +166,7 @@ describe('marker maps', () => {
     const interpreter = new Interpreter();
     const startedAt = performance.now();
 
-    interpreter.setMarkers(rootNode, []);
+    interpreter.setMarkerMap(mapMarkers(rootNode, []));
 
     expect(performance.now() - startedAt).toBeLessThan(100);
   });
@@ -129,7 +183,7 @@ describe('marker maps', () => {
     const interpreter = new Interpreter();
 
     markers[2] = 'breakpoint';
-    interpreter.setMarkers(rootNode, markers);
+    interpreter.setMarkerMap(mapMarkers(rootNode, markers));
 
     let result = await interpreter.run(rootNode);
 

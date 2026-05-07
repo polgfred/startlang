@@ -1,4 +1,5 @@
 import { Interpreter, type RunResult } from '@startlang/lang-core/interpreter';
+import { mapMarkers } from '@startlang/lang-core/nodes/map-markers';
 import { parse } from '@startlang/lang-core/parser.peggy';
 import { RuntimeHistory } from '@startlang/lang-core/runtime-history';
 import { runtimeGlobals } from '@startlang/lang-core/runtime-globals';
@@ -592,7 +593,7 @@ describe('core language suspensions and snapshots', () => {
 
     markers[2] = 'snapshot';
     markers[3] = 'snapshot';
-    interpreter.setMarkers(rootNode, markers);
+    interpreter.setMarkerMap(mapMarkers(rootNode, markers));
 
     const result = await interpreter.run(rootNode);
 
@@ -630,7 +631,7 @@ describe('core language suspensions and snapshots', () => {
 
     markers[2] = 'snapshot';
     markers[3] = 'breakpoint';
-    interpreter.setMarkers(rootNode, markers);
+    interpreter.setMarkerMap(mapMarkers(rootNode, markers));
 
     const result = await interpreter.run(rootNode);
 

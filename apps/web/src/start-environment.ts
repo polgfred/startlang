@@ -100,7 +100,7 @@ function waitForAnimationFrame() {
 }
 
 export function useStartEnvironment() {
-  const { getMarkers, highlightNode, parseValue } = useEditor();
+  const { highlightNode, parseProgram } = useEditor();
 
   const [outputTab, setOutputTab] = useState<OutputTab>('graphics');
   const [showInspector, setShowInspector] = useState(false);
@@ -239,20 +239,19 @@ export function useStartEnvironment() {
 
     try {
       host.restoreOriginalSettings();
-      const rootNode = parseValue();
-      interpreter.setMarkers(rootNode, getMarkers());
-      await interpreter.run(rootNode);
+      const { markerMap, node } = parseProgram();
+      interpreter.setMarkerMap(markerMap);
+      await interpreter.run(node);
     } finally {
       finishInterpreterAction();
     }
   }, [
     finishInterpreterAction,
-    getMarkers,
     history,
     highlightNode,
     host,
     interpreter,
-    parseValue,
+    parseProgram,
   ]);
 
   const resumeBreakpoint = useCallback(async () => {

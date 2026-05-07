@@ -14,6 +14,10 @@ export interface MarkerMap {
   get(node: Node): MarkerType | undefined;
 }
 
+export interface MarkerLineSource {
+  getMarker(lineNumber: number): MarkerType | undefined;
+}
+
 export const emptyMarkerMap: MarkerMap = {
   get() {
     return undefined;
@@ -27,7 +31,17 @@ export interface MarkerResolution {
 
 export interface MarkerLineMap {
   resolve(lineNumber: number): MarkerResolution | null;
-  mapMarkers(markers: readonly MarkerType[]): MarkerMap;
+  mapMarkers(markers: MarkerLineSource): MarkerMap;
+}
+
+export function markerLineArray(
+  markers: readonly MarkerType[]
+): MarkerLineSource {
+  return {
+    getMarker(lineNumber) {
+      return markers[lineNumber];
+    },
+  };
 }
 
 export function buildMarkerLineMap(node: Node): MarkerLineMap {
@@ -98,13 +112,13 @@ export function buildMarkerLineMap(node: Node): MarkerLineMap {
         lineNumber: markerNode.location.start.line,
       };
     },
-    mapMarkers(markers: readonly MarkerType[]) {
+    mapMarkers(markers: MarkerLineSource) {
       return {
         get(node: Node) {
           const lines = nodeToLines.get(node);
           if (lines) {
             for (const lineNumber of lines) {
-              const marker = markers[lineNumber];
+              const marker = markers.getMarker(lineNumber);
               if (marker) {
                 return marker;
               }
@@ -117,5 +131,5 @@ export function buildMarkerLineMap(node: Node): MarkerLineMap {
 }
 
 export function mapMarkers(node: Node, markers: readonly MarkerType[]) {
-  return buildMarkerLineMap(node).mapMarkers(markers);
+  return buildMarkerLineMap(node).mapMarkers(markerLineArray(markers));
 }

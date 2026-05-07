@@ -35,14 +35,8 @@ export default memo(function Editor({
   runProgram: () => void;
   isReadOnly: boolean;
 }) {
-  const {
-    highlightedNode,
-    markerVersion,
-    markers,
-    setValue,
-    sourceValue,
-    toggleMarker,
-  } = useEditor();
+  const { highlightedNode, markers, setValue, sourceValue, toggleMarker } =
+    useEditor();
   const decorationsRef =
     useRef<MonacoEditor.IEditorDecorationsCollection | null>(null);
 
@@ -72,11 +66,7 @@ export default memo(function Editor({
       });
     }
 
-    markers.forEach((marker, lineNumber) => {
-      if (!marker) {
-        return;
-      }
-
+    markers.forEach(({ lineNumber, marker }) => {
       const label = marker === 'breakpoint' ? 'Breakpoint' : 'Snapshot';
       nextDecorations.push({
         range: {
@@ -158,7 +148,7 @@ export default memo(function Editor({
 
   useLayoutEffect(() => {
     updateDecorations();
-  }, [markerVersion, updateDecorations]);
+  }, [updateDecorations]);
 
   const options = useMemo<MonacoEditor.IStandaloneEditorConstructionOptions>(
     () => ({

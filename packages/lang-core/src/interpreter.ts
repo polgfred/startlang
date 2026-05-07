@@ -10,22 +10,13 @@ import {
   VarNode,
   rootFrame,
 } from './nodes/index.js';
-import {
-  emptyMarkerMap,
-  mapMarkers,
-  type MarkerMap,
-} from './nodes/map-markers.js';
+import { emptyMarkerMap, type MarkerMap } from './nodes/map-markers.js';
 import {
   breakpointSuspension,
   isRuntimeSuspension,
   type RuntimeSuspension,
 } from './suspension.js';
-import type {
-  IndexType,
-  MarkerType,
-  NamespaceType,
-  RuntimeFunctions,
-} from './types.js';
+import type { IndexType, NamespaceType, RuntimeFunctions } from './types.js';
 import { Cons } from './utils/cons.js';
 
 type GlobalFunctions = Record<string, BeginNode>;
@@ -388,7 +379,7 @@ export class Interpreter<THostSnapshot = unknown> {
     this.markersMap = emptyMarkerMap;
   }
 
-  setMarkers(node: Node, markers: readonly MarkerType[]) {
-    this.markersMap = mapMarkers(node, markers);
+  setMarkerMap(markersMap: MarkerMap) {
+    this.markersMap = markersMap;
   }
 }
