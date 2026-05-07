@@ -228,7 +228,7 @@ export class Interpreter<THostSnapshot = unknown> {
       this.lastResult = this.getVariable(node.name);
     } else {
       this.pushFrame(node.makeFrame());
-      const marker = this.markersMap.get(node);
+      const marker = this.markersMap(node);
       if (marker) {
         this.setEffect(snapshotEffect);
         if (marker === 'breakpoint') {

@@ -26,13 +26,13 @@ describe('marker maps', () => {
     const repeatNode = (node as BlockNode).elems[0] as RepeatNode;
     const insidePrintNode = (repeatNode.body as BlockNode).elems[0];
 
-    expect(markerMap.get(insidePrintNode)).toBe('breakpoint');
+    expect(markerMap(insidePrintNode)).toBe('breakpoint');
 
     model.toggleMarker(4);
-    expect(markerMap.get(insidePrintNode)).toBe('snapshot');
+    expect(markerMap(insidePrintNode)).toBe('snapshot');
 
     model.toggleMarker(4);
-    expect(markerMap.get(insidePrintNode)).toBeUndefined();
+    expect(markerMap(insidePrintNode)).toBeUndefined();
   });
 
   it('uses live editor-owned markers after resuming from a breakpoint', async () => {
@@ -83,9 +83,9 @@ describe('marker maps', () => {
 
     const markerMap = mapMarkers(rootNode, markers);
 
-    expect(markerMap.get(ifNode)).toBe('snapshot');
-    expect(markerMap.get(thenPrintNode)).toBe('breakpoint');
-    expect(markerMap.get(repeatNode)).toBeUndefined();
+    expect(markerMap(ifNode)).toBe('snapshot');
+    expect(markerMap(thenPrintNode)).toBe('breakpoint');
+    expect(markerMap(repeatNode)).toBeUndefined();
   });
 
   it('resolves clicked lines to marker owner start lines', () => {
@@ -126,9 +126,9 @@ describe('marker maps', () => {
 
     const markerMap = mapMarkers(rootNode, markers);
 
-    expect(markerMap.get(insidePrintNode)).toBe('breakpoint');
-    expect(markerMap.get(afterPrintNode)).toBe('snapshot');
-    expect(markerMap.get(repeatNode)).toBeUndefined();
+    expect(markerMap(insidePrintNode)).toBe('breakpoint');
+    expect(markerMap(afterPrintNode)).toBe('snapshot');
+    expect(markerMap(repeatNode)).toBeUndefined();
   });
 
   it('maps deeply nested block lines without repeated subtree walks', () => {

@@ -11,17 +11,11 @@ import {
 } from './nodes/index.js';
 import type { MarkerType } from './types.js';
 
-export interface MarkerMap {
-  get(node: Node): MarkerType | undefined;
-}
+export type MarkerMap = (node: Node) => MarkerType | undefined;
 
 export type MarkerLineLookup = (lineNumber: number) => MarkerType | undefined;
 
-export const emptyMarkerMap: MarkerMap = {
-  get() {
-    return undefined;
-  },
-};
+export const emptyMarkerMap: MarkerMap = () => undefined;
 
 export interface MarkerResolution {
   node: Node;
@@ -100,18 +94,16 @@ export function buildMarkerLineMap(node: Node): MarkerLineMap {
   }
 
   function mapMarkers(getMarker: MarkerLineLookup): MarkerMap {
-    return {
-      get(node: Node) {
-        const lines = nodeToLines.get(node);
-        if (lines) {
-          for (const lineNumber of lines) {
-            const marker = getMarker(lineNumber);
-            if (marker) {
-              return marker;
-            }
+    return (node) => {
+      const lines = nodeToLines.get(node);
+      if (lines) {
+        for (const lineNumber of lines) {
+          const marker = getMarker(lineNumber);
+          if (marker) {
+            return marker;
           }
         }
-      },
+      }
     };
   }
 
