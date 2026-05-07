@@ -1,14 +1,12 @@
 import { EditorModel } from '@startlang/lang-core/editor-model';
 import { Interpreter } from '@startlang/lang-core/interpreter';
 import { BlockNode, IfNode, RepeatNode } from '@startlang/lang-core/nodes';
-import {
-  buildMarkerLineMap,
-  mapMarkers,
-} from '@startlang/lang-core/nodes/map-markers';
 import { parse } from '@startlang/lang-core/parser.peggy';
 import { isBreakpointSuspension } from '@startlang/lang-core/suspension';
 import type { MarkerType } from '@startlang/lang-core/types';
 import { describe, expect, it } from 'vitest';
+
+import { buildMarkerLineMap, mapMarkers } from '../src/editor-markers.js';
 
 describe('marker maps', () => {
   it('keeps editor-owned markers behind a run-ready marker map', () => {

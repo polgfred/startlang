@@ -1,5 +1,4 @@
 import { Interpreter, type RunResult } from '@startlang/lang-core/interpreter';
-import { mapMarkers } from '@startlang/lang-core/nodes/map-markers';
 import { parse } from '@startlang/lang-core/parser.peggy';
 import { RuntimeHistory } from '@startlang/lang-core/runtime-history';
 import { runtimeGlobals } from '@startlang/lang-core/runtime-globals';
@@ -11,6 +10,8 @@ import type { RuntimeSuspension } from '@startlang/lang-core/suspension';
 import type { RuntimeFunctions } from '@startlang/lang-core/types';
 import type { MarkerType } from '@startlang/lang-core/types';
 import { describe, expect, it, vi } from 'vitest';
+
+import { mapMarkers } from '../src/editor-markers.js';
 
 async function runSnippet(source: string, globals: RuntimeFunctions = {}) {
   const interpreter = new Interpreter();

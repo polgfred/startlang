@@ -1,5 +1,6 @@
 import { castDraft, original, produce, type Draft, type Producer } from 'immer';
 
+import { emptyMarkerMap, type MarkerMap } from './editor-markers.js';
 import { DataHandler, installHandlers } from './handlers/index.js';
 import { NullPresentationHost, type SupportsSnapshots } from './host.js';
 import {
@@ -10,7 +11,6 @@ import {
   VarNode,
   rootFrame,
 } from './nodes/index.js';
-import { emptyMarkerMap, type MarkerMap } from './nodes/map-markers.js';
 import {
   breakpointSuspension,
   isRuntimeSuspension,

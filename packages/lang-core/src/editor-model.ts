@@ -1,9 +1,9 @@
-import type { Node } from './nodes/index.js';
 import {
   buildMarkerLineMap,
   type MarkerLineMap,
   type MarkerMap,
-} from './nodes/map-markers.js';
+} from './editor-markers.js';
+import type { Node } from './nodes/index.js';
 import { parse } from './parser.peggy';
 import type { MarkerType } from './types.js';
 
@@ -75,10 +75,6 @@ export class EditorModel {
     return true;
   }
 
-  getMarker(lineNumber: number) {
-    return this.markers[lineNumber];
-  }
-
   toggleMarker(lineNumber: number) {
     if (this.markers[lineNumber]) {
       this.cycleMarker(lineNumber);
@@ -97,7 +93,9 @@ export class EditorModel {
   parseProgram(): EditorProgram {
     const { markerLineMap, node } = this.parseCurrentSource();
     return {
-      markerMap: markerLineMap.mapMarkers(this),
+      markerMap: markerLineMap.mapMarkers(
+        (lineNumber) => this.markers[lineNumber]
+      ),
       node,
     };
   }

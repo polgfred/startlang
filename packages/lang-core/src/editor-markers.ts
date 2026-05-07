@@ -1,22 +1,21 @@
-import type { MarkerType } from '../types.js';
-
-import { Node } from './base.js';
-import { BeginNode } from './begin.js';
-import { BlockNode } from './block.js';
-import { CallNode } from './call.js';
-import { ForInNode } from './for-in.js';
-import { ForNode } from './for.js';
-import { IfNode } from './if.js';
-import { RepeatNode } from './repeat.js';
-import { WhileNode } from './while.js';
+import {
+  BeginNode,
+  BlockNode,
+  CallNode,
+  ForInNode,
+  ForNode,
+  IfNode,
+  type Node,
+  RepeatNode,
+  WhileNode,
+} from './nodes/index.js';
+import type { MarkerType } from './types.js';
 
 export interface MarkerMap {
   get(node: Node): MarkerType | undefined;
 }
 
-export interface MarkerLineSource {
-  getMarker(lineNumber: number): MarkerType | undefined;
-}
+export type MarkerLineLookup = (lineNumber: number) => MarkerType | undefined;
 
 export const emptyMarkerMap: MarkerMap = {
   get() {
@@ -31,17 +30,7 @@ export interface MarkerResolution {
 
 export interface MarkerLineMap {
   resolve(lineNumber: number): MarkerResolution | null;
-  mapMarkers(markers: MarkerLineSource): MarkerMap;
-}
-
-export function markerLineArray(
-  markers: readonly MarkerType[]
-): MarkerLineSource {
-  return {
-    getMarker(lineNumber) {
-      return markers[lineNumber];
-    },
-  };
+  mapMarkers(getMarker: MarkerLineLookup): MarkerMap;
 }
 
 export function buildMarkerLineMap(node: Node): MarkerLineMap {
@@ -97,39 +86,45 @@ export function buildMarkerLineMap(node: Node): MarkerLineMap {
     }
   }
 
+  function resolve(lineNumber: number): MarkerResolution | null {
+    const markerNode = lineToNode.get(lineNumber);
+
+    if (!markerNode) {
+      return null;
+    }
+
+    return {
+      node: markerNode,
+      lineNumber: markerNode.location.start.line,
+    };
+  }
+
+  function mapMarkers(getMarker: MarkerLineLookup): MarkerMap {
+    return {
+      get(node: Node) {
+        const lines = nodeToLines.get(node);
+        if (lines) {
+          for (const lineNumber of lines) {
+            const marker = getMarker(lineNumber);
+            if (marker) {
+              return marker;
+            }
+          }
+        }
+      },
+    };
+  }
+
   visit(node);
 
   return {
-    resolve(lineNumber: number): MarkerResolution | null {
-      const markerNode = lineToNode.get(lineNumber);
-
-      if (!markerNode) {
-        return null;
-      }
-
-      return {
-        node: markerNode,
-        lineNumber: markerNode.location.start.line,
-      };
-    },
-    mapMarkers(markers: MarkerLineSource) {
-      return {
-        get(node: Node) {
-          const lines = nodeToLines.get(node);
-          if (lines) {
-            for (const lineNumber of lines) {
-              const marker = markers.getMarker(lineNumber);
-              if (marker) {
-                return marker;
-              }
-            }
-          }
-        },
-      };
-    },
+    mapMarkers,
+    resolve,
   };
 }
 
 export function mapMarkers(node: Node, markers: readonly MarkerType[]) {
-  return buildMarkerLineMap(node).mapMarkers(markerLineArray(markers));
+  return buildMarkerLineMap(node).mapMarkers(
+    (lineNumber) => markers[lineNumber]
+  );
 }
