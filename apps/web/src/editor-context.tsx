@@ -25,12 +25,12 @@ interface SetEditorValueOptions {
 interface EditorContextValue {
   getValue(): string;
   setValue(value: string, options?: SetEditorValueOptions): void;
-  highlightNode(node: Node | null): void;
   parseProgram(): EditorProgram;
-  highlightedNode: Node | null;
-  markers: readonly EditorMarker[];
-  sourceValue: string;
+  highlightNode(node: Node | null): void;
   toggleMarker(lineNumber: number): void;
+  source: string;
+  markers: readonly EditorMarker[];
+  highlightedNode: Node | null;
 }
 
 const EditorContext = createContext<EditorContextValue | null>(null);
@@ -232,7 +232,7 @@ export function useEditor() {
 export function EditorProvider({ children }: { children: ReactNode }) {
   const [highlightedNode, setHighlightedNode] = useState<Node | null>(null);
   const { current: editorStore } = useRef(createEditorStore(boxScript));
-  const { markers, sourceValue } = useSyncExternalStore(
+  const { markers, source } = useSyncExternalStore(
     editorStore.subscribe,
     editorStore.getSnapshot
   );
@@ -267,13 +267,13 @@ export function EditorProvider({ children }: { children: ReactNode }) {
 
   const contextValue: EditorContextValue = {
     getValue,
-    highlightedNode,
-    highlightNode,
-    markers,
-    parseProgram,
     setValue,
-    sourceValue,
+    parseProgram,
+    highlightNode,
     toggleMarker,
+    source,
+    markers,
+    highlightedNode,
   };
 
   return (

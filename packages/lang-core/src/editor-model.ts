@@ -13,10 +13,9 @@ export interface EditorMarker {
 }
 
 export interface EditorSnapshot {
+  readonly version: number;
+  readonly source: string;
   readonly markers: readonly EditorMarker[];
-  readonly markerVersion: number;
-  readonly sourceValue: string;
-  readonly sourceVersion: number;
 }
 
 export interface EditorProgram {
@@ -35,13 +34,12 @@ type ParseCacheEntry = {
 };
 
 export class EditorModel {
+  private version = 0;
   private readonly markers: MarkerType[] = [];
-  private markerVersion = 0;
-  private sourceVersion = 0;
   private snapshot: EditorSnapshot;
   private parseCache: ParseCacheEntry | null = null;
 
-  constructor(private sourceValue: string = '') {
+  constructor(private source: string = '') {
     this.snapshot = this.readSnapshot();
   }
 
@@ -50,16 +48,16 @@ export class EditorModel {
   }
 
   getSource() {
-    return this.sourceValue;
+    return this.source;
   }
 
   setSource(nextValue: string) {
-    if (nextValue === this.sourceValue) {
+    if (nextValue === this.source) {
       return false;
     }
 
-    this.sourceValue = nextValue;
-    this.sourceVersion += 1;
+    this.version += 1;
+    this.source = nextValue;
     this.snapshot = this.readSnapshot();
     return true;
   }
@@ -70,7 +68,6 @@ export class EditorModel {
     }
 
     this.markers.length = 0;
-    this.markerVersion += 1;
     this.snapshot = this.readSnapshot();
     return true;
   }
@@ -110,14 +107,13 @@ export class EditorModel {
       delete this.markers[lineNumber];
     }
 
-    this.markerVersion += 1;
     this.snapshot = this.readSnapshot();
   }
 
   private parseCurrentSource() {
     const cached = this.parseCache;
 
-    if (cached?.version === this.sourceVersion) {
+    if (cached?.version === this.version) {
       if (cached.result instanceof Error) {
         throw cached.result;
       }
@@ -125,16 +121,16 @@ export class EditorModel {
     }
 
     try {
-      const node = parse(this.sourceValue + '\n');
+      const node = parse(this.source + '\n');
       const result = {
         markerLineMap: buildMarkerLineMap(node),
         node,
       };
-      this.parseCache = { version: this.sourceVersion, result };
+      this.parseCache = { version: this.version, result };
       return result;
     } catch (err) {
       const result = err instanceof Error ? err : new Error(String(err));
-      this.parseCache = { version: this.sourceVersion, result };
+      this.parseCache = { version: this.version, result };
       throw result;
     }
   }
@@ -154,10 +150,9 @@ export class EditorModel {
     });
 
     return {
+      version: this.version,
+      source: this.source,
       markers,
-      markerVersion: this.markerVersion,
-      sourceValue: this.sourceValue,
-      sourceVersion: this.sourceVersion,
     };
   }
 }

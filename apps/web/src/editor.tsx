@@ -35,7 +35,7 @@ export default memo(function Editor({
   runProgram: () => void;
   isReadOnly: boolean;
 }) {
-  const { highlightedNode, markers, setValue, sourceValue, toggleMarker } =
+  const { highlightedNode, markers, setValue, source, toggleMarker } =
     useEditor();
   const decorationsRef =
     useRef<MonacoEditor.IEditorDecorationsCollection | null>(null);
@@ -168,7 +168,7 @@ export default memo(function Editor({
   return (
     <div className={styles.editor}>
       <Monaco
-        value={sourceValue}
+        value={source}
         language="start"
         theme="start-light"
         beforeMount={onBeforeMount}
