@@ -38,7 +38,7 @@ interface RuntimeView extends RuntimeState<BrowserPresentationSnapshot> {
   isRewound: boolean;
 }
 
-function createStartEnvironmentStore(
+function createInterpreterStore(
   interpreter: Interpreter<BrowserPresentationSnapshot>,
   history: RuntimeHistory<BrowserPresentationSnapshot>
 ) {
@@ -112,7 +112,7 @@ export function useStartEnvironment() {
     new RuntimeHistory<BrowserPresentationSnapshot>()
   );
   const { current: store } = useRef(
-    createStartEnvironmentStore(interpreter, history)
+    createInterpreterStore(interpreter, history)
   );
   const runtimeView = useSyncExternalStore(store.subscribe, store.getView);
   const globalsRegisteredRef = useRef(false);
