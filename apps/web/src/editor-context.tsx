@@ -11,7 +11,6 @@ import {
   createContext,
   useCallback,
   useContext,
-  useMemo,
   useRef,
   useState,
   useSyncExternalStore,
@@ -32,7 +31,9 @@ interface EditorContextValue {
   parseValue(): Node;
   highlightedNode: Node | null;
   markers: MarkerType[];
+  markerVersion: number;
   sourceValue: string;
+  sourceVersion: number;
   toggleMarker(lineNumber: number): void;
 }
 
@@ -50,16 +51,23 @@ type ParseCacheEntry = {
 
 interface EditorSnapshot {
   markers: MarkerType[];
+  markerVersion: number;
   sourceValue: string;
   sourceVersion: number;
 }
 
 function createEditorStore(initialSourceValue: string) {
   const events = new EventTarget();
-  let markers: MarkerType[] = [];
+  const markers: MarkerType[] = [];
+  let markerVersion = 0;
   let sourceValue = initialSourceValue;
   let sourceVersion = 0;
-  let snapshot: EditorSnapshot = { markers, sourceValue, sourceVersion };
+  let snapshot: EditorSnapshot = {
+    markers,
+    markerVersion,
+    sourceValue,
+    sourceVersion,
+  };
 
   function subscribe(listener: () => void) {
     events.addEventListener('change', listener);
@@ -69,7 +77,7 @@ function createEditorStore(initialSourceValue: string) {
   }
 
   function publish() {
-    snapshot = { markers, sourceValue, sourceVersion };
+    snapshot = { markers, markerVersion, sourceValue, sourceVersion };
     events.dispatchEvent(new Event('change'));
   }
 
@@ -84,6 +92,7 @@ function createEditorStore(initialSourceValue: string) {
 
   function clearMarkers() {
     markers.length = 0;
+    markerVersion += 1;
     publish();
   }
 
@@ -96,6 +105,7 @@ function createEditorStore(initialSourceValue: string) {
       // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
       delete markers[lineNumber];
     }
+    markerVersion += 1;
     publish();
   }
 
@@ -260,10 +270,8 @@ export function useEditor() {
 export function EditorProvider({ children }: { children: ReactNode }) {
   const [highlightedNode, setHighlightedNode] = useState<Node | null>(null);
   const { current: editorStore } = useRef(createEditorStore(boxScript));
-  const { markers, sourceValue } = useSyncExternalStore(
-    editorStore.subscribe,
-    editorStore.getSnapshot
-  );
+  const { markers, markerVersion, sourceValue, sourceVersion } =
+    useSyncExternalStore(editorStore.subscribe, editorStore.getSnapshot);
   const parseCacheRef = useRef<ParseCacheEntry | null>(null);
 
   const parseCurrentValue = useCallback(() => {
@@ -344,30 +352,19 @@ export function EditorProvider({ children }: { children: ReactNode }) {
     [editorStore]
   );
 
-  const contextValue = useMemo<EditorContextValue>(
-    () => ({
-      getMarkers,
-      getValue,
-      highlightedNode,
-      highlightNode,
-      markers,
-      parseValue,
-      setValue,
-      sourceValue,
-      toggleMarker,
-    }),
-    [
-      getMarkers,
-      getValue,
-      highlightedNode,
-      highlightNode,
-      markers,
-      parseValue,
-      setValue,
-      sourceValue,
-      toggleMarker,
-    ]
-  );
+  const contextValue: EditorContextValue = {
+    getMarkers,
+    getValue,
+    highlightedNode,
+    highlightNode,
+    markers,
+    markerVersion,
+    parseValue,
+    setValue,
+    sourceValue,
+    sourceVersion,
+    toggleMarker,
+  };
 
   return (
     <EditorContext.Provider value={contextValue}>

@@ -37,6 +37,7 @@ export default memo(function Editor({
 }) {
   const {
     highlightedNode,
+    markerVersion,
     markers,
     setValue,
     sourceValue,
@@ -157,7 +158,7 @@ export default memo(function Editor({
 
   useLayoutEffect(() => {
     updateDecorations();
-  }, [updateDecorations]);
+  }, [markerVersion, updateDecorations]);
 
   const options = useMemo<MonacoEditor.IStandaloneEditorConstructionOptions>(
     () => ({
