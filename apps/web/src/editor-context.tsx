@@ -48,10 +48,18 @@ type ParseCacheEntry = {
     | Error;
 };
 
-function createEditorSourceStore(initialValue: string) {
+interface EditorSnapshot {
+  markers: MarkerType[];
+  sourceValue: string;
+  sourceVersion: number;
+}
+
+function createEditorStore(initialSourceValue: string) {
   const events = new EventTarget();
-  let value = initialValue;
-  let version = 0;
+  let markers: MarkerType[] = [];
+  let sourceValue = initialSourceValue;
+  let sourceVersion = 0;
+  let snapshot: EditorSnapshot = { markers, sourceValue, sourceVersion };
 
   function subscribe(listener: () => void) {
     events.addEventListener('change', listener);
@@ -60,19 +68,44 @@ function createEditorSourceStore(initialValue: string) {
     };
   }
 
-  function setValue(nextValue: string) {
-    if (nextValue === value) {
-      return;
-    }
-
-    version += 1;
-    value = nextValue;
+  function publish() {
+    snapshot = { markers, sourceValue, sourceVersion };
     events.dispatchEvent(new Event('change'));
   }
 
+  function setValue(nextValue: string) {
+    if (nextValue === sourceValue) {
+      return;
+    }
+    sourceValue = nextValue;
+    sourceVersion += 1;
+    publish();
+  }
+
+  function clearMarkers() {
+    markers.length = 0;
+    publish();
+  }
+
+  function cycleMarker(lineNumber: number) {
+    if (!markers[lineNumber]) {
+      markers[lineNumber] = 'breakpoint';
+    } else if (markers[lineNumber] === 'breakpoint') {
+      markers[lineNumber] = 'snapshot';
+    } else {
+      // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+      delete markers[lineNumber];
+    }
+    publish();
+  }
+
   return {
-    getValue: () => value,
-    getVersion: () => version,
+    getSnapshot: () => snapshot,
+    getMarkers: () => markers,
+    getValue: () => sourceValue,
+    getVersion: () => sourceVersion,
+    clearMarkers,
+    cycleMarker,
     setValue,
     subscribe,
   };
@@ -226,22 +259,15 @@ export function useEditor() {
 
 export function EditorProvider({ children }: { children: ReactNode }) {
   const [highlightedNode, setHighlightedNode] = useState<Node | null>(null);
-  const [markers, setMarkersState] = useState<MarkerType[]>([]);
-  const { current: sourceStore } = useRef(createEditorSourceStore(boxScript));
-  const sourceValue = useSyncExternalStore(
-    sourceStore.subscribe,
-    sourceStore.getValue
+  const { current: editorStore } = useRef(createEditorStore(boxScript));
+  const { markers, sourceValue } = useSyncExternalStore(
+    editorStore.subscribe,
+    editorStore.getSnapshot
   );
-  const markersRef = useRef(markers);
   const parseCacheRef = useRef<ParseCacheEntry | null>(null);
 
-  const replaceMarkers = useCallback((nextMarkers: MarkerType[]) => {
-    markersRef.current = nextMarkers;
-    setMarkersState(nextMarkers);
-  }, []);
-
   const parseCurrentValue = useCallback(() => {
-    const version = sourceStore.getVersion();
+    const version = editorStore.getVersion();
     const cached = parseCacheRef.current;
 
     if (cached?.version === version) {
@@ -252,7 +278,7 @@ export function EditorProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      const node = parse(sourceStore.getValue() + '\n');
+      const node = parse(editorStore.getValue() + '\n');
       const result = {
         markerLineMap: buildMarkerLineMap(node),
         node,
@@ -264,7 +290,7 @@ export function EditorProvider({ children }: { children: ReactNode }) {
       parseCacheRef.current = { version, result };
       throw result;
     }
-  }, [sourceStore]);
+  }, [editorStore]);
 
   const resolveMarkerLineNumber = useCallback(
     (lineNumber: number) => {
@@ -274,48 +300,30 @@ export function EditorProvider({ children }: { children: ReactNode }) {
     [parseCurrentValue]
   );
 
-  const cycleMarker = useCallback(
-    (lineNumber: number) => {
-      const nextMarkers = markersRef.current.slice();
-
-      if (!nextMarkers[lineNumber]) {
-        nextMarkers[lineNumber] = 'breakpoint';
-      } else if (nextMarkers[lineNumber] === 'breakpoint') {
-        nextMarkers[lineNumber] = 'snapshot';
-      } else {
-        // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-        delete nextMarkers[lineNumber];
-      }
-
-      replaceMarkers(nextMarkers);
-    },
-    [replaceMarkers]
-  );
-
   const toggleMarker = useCallback(
     (lineNumber: number) => {
-      const markers = markersRef.current;
+      const markers = editorStore.getMarkers();
 
       if (markers[lineNumber]) {
-        cycleMarker(lineNumber);
+        editorStore.cycleMarker(lineNumber);
         return;
       }
 
       try {
         const resolvedLineNumber = resolveMarkerLineNumber(lineNumber);
         if (resolvedLineNumber !== null) {
-          cycleMarker(resolvedLineNumber);
+          editorStore.cycleMarker(resolvedLineNumber);
         }
       } catch {
         // leave invalid source unmarked
       }
     },
-    [cycleMarker, resolveMarkerLineNumber]
+    [editorStore, resolveMarkerLineNumber]
   );
 
-  const getMarkers = useCallback(() => markersRef.current, []);
+  const getMarkers = useCallback(() => editorStore.getMarkers(), [editorStore]);
 
-  const getValue = useCallback(() => sourceStore.getValue(), [sourceStore]);
+  const getValue = useCallback(() => editorStore.getValue(), [editorStore]);
 
   const highlightNode = useCallback((node: Node | null) => {
     setHighlightedNode(node);
@@ -329,11 +337,11 @@ export function EditorProvider({ children }: { children: ReactNode }) {
   const setValue = useCallback(
     (value: string, options?: SetEditorValueOptions) => {
       if (options?.clearMarkers) {
-        replaceMarkers([]);
+        editorStore.clearMarkers();
       }
-      sourceStore.setValue(value);
+      editorStore.setValue(value);
     },
-    [replaceMarkers, sourceStore]
+    [editorStore]
   );
 
   const contextValue = useMemo<EditorContextValue>(
