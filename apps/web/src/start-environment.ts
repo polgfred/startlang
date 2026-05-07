@@ -10,12 +10,14 @@ import {
   type RuntimeEffect,
   type RuntimeState,
 } from '@startlang/lang-core/interpreter';
+import { rootFrame } from '@startlang/lang-core/nodes';
 import { runtimeGlobals } from '@startlang/lang-core/runtime-globals';
 import { RuntimeHistory } from '@startlang/lang-core/runtime-history';
 import {
   InputSuspension,
   isBreakpointSuspension,
 } from '@startlang/lang-core/suspension';
+import type { IndexType } from '@startlang/lang-core/types';
 import {
   useCallback,
   useEffect,
@@ -285,17 +287,61 @@ export function useStartEnvironment() {
 
   const isBreakpointSuspended = isBreakpointSuspension(runtimeView.suspension);
   const isInputSuspended = runtimeView.suspension instanceof InputSuspension;
+  const canContinueFromSnapshot =
+    !runtimeView.isSuspended && runtimeView.topFrame !== rootFrame;
   const isProgramActive =
-    runtimeView.isRunning || runtimeView.isSuspended || runtimeView.isRewound;
+    runtimeView.isRunning ||
+    runtimeView.isSuspended ||
+    runtimeView.isRewound ||
+    canContinueFromSnapshot;
+  const canEditInspectorValues =
+    isBreakpointSuspended || runtimeView.isRewound || canContinueFromSnapshot;
+
+  const updateInspectorValue = useCallback(
+    (
+      scope: 'global' | 'local',
+      name: string,
+      indexes: readonly IndexType[],
+      value: unknown
+    ) => {
+      if (
+        history.isRewound &&
+        !window.confirm(
+          'Changing this value will discard later snapshots and continue from here.'
+        )
+      ) {
+        return false;
+      }
+
+      setError(null);
+      if (scope === 'global') {
+        if (indexes.length > 0) {
+          interpreter.setGlobalVariableIndex(name, indexes, value);
+        } else {
+          interpreter.setGlobalVariable(name, value);
+        }
+      } else if (indexes.length > 0) {
+        interpreter.setLocalVariableIndex(name, indexes, value);
+      } else {
+        interpreter.setLocalVariable(name, value);
+      }
+      history.replaceCurrent(interpreter.captureState());
+      finishInterpreterAction();
+      return true;
+    },
+    [finishInterpreterAction, history, interpreter]
+  );
+
   const runOrResume = useCallback(() => {
     if (isBreakpointSuspension(interpreter.suspension)) {
       return resumeBreakpoint();
     }
-    if (history.isRewound) {
+    if (history.isRewound || canContinueFromSnapshot) {
       return continueFromSnapshot();
     }
     return runProgram();
   }, [
+    canContinueFromSnapshot,
     continueFromSnapshot,
     history,
     interpreter,
@@ -311,18 +357,21 @@ export function useStartEnvironment() {
     host,
     inputState,
     interpreter,
+    canEditInspectorValues,
     isRunDisabled: runtimeView.isRunning || isInputSuspended,
     isStopDisabled: !isProgramActive,
     isEditorReadOnly: isProgramActive,
     outputTab,
     runtimeVersion: runtimeView.version,
     runProgram,
-    runLabel: isBreakpointSuspended ? 'Continue' : 'Run',
+    runLabel:
+      isBreakpointSuspended || canContinueFromSnapshot ? 'Continue' : 'Run',
     runOrResume,
     setOutputTab,
     setShowInspector,
     showInspector,
     stopProgram,
+    updateInspectorValue,
     updateSlider,
   };
 }

@@ -63,6 +63,8 @@ export default function App() {
                 history={env.history}
                 interpreter={env.interpreter}
                 runtimeVersion={env.runtimeVersion}
+                canEditValues={env.canEditInspectorValues}
+                onValueChange={env.updateInspectorValue}
                 updateSlider={env.updateSlider}
               />
             </div>
