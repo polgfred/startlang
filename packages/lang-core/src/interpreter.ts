@@ -1,4 +1,4 @@
-import { castDraft, original, produce, type Draft, type Producer } from 'immer';
+import { castDraft, original, produce, type Producer } from 'immer';
 
 import { emptyMarkerMap, type MarkerMap } from './editor-markers.js';
 import { DataHandler, installHandlers } from './handlers/index.js';
