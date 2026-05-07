@@ -71,7 +71,6 @@ function createEditorSourceStore(initialValue: string) {
   }
 
   return {
-    getSnapshot: () => value,
     getValue: () => value,
     getVersion: () => version,
     setValue,
@@ -231,7 +230,7 @@ export function EditorProvider({ children }: { children: ReactNode }) {
   const { current: sourceStore } = useRef(createEditorSourceStore(boxScript));
   const sourceValue = useSyncExternalStore(
     sourceStore.subscribe,
-    sourceStore.getSnapshot
+    sourceStore.getValue
   );
   const markersRef = useRef(markers);
   const parseCacheRef = useRef<ParseCacheEntry | null>(null);
