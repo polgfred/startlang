@@ -37,6 +37,15 @@ export class RuntimeHistory<THostSnapshot = unknown> {
     return entry;
   }
 
+  replaceCurrent(state: RuntimeState<THostSnapshot>) {
+    if (!this.current) {
+      return;
+    }
+
+    this.truncateAfterCurrent();
+    this.entries[this.index] = state;
+  }
+
   truncateAfterCurrent() {
     this.entries.splice(this.index + 1);
   }

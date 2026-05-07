@@ -282,16 +282,21 @@ export class Interpreter<THostSnapshot = unknown> {
 
   setVariable(name: string, value: unknown) {
     if (this.topNamespace !== rootNamespace) {
-      this.topNamespace = this.topNamespace.swap(
-        produce(this.topNamespace.head, (draft) => {
-          draft[name] = value;
-        })
-      );
+      this.setTopNamespaceVariable(name, value);
     } else {
-      this.globalNamespace = produce(this.globalNamespace, (draft) => {
-        draft[name] = value;
-      });
+      this.setGlobalVariable(name, value);
     }
+  }
+
+  setGlobalVariable(name: string, value: unknown) {
+    this.globalNamespace = produce(this.globalNamespace, (draft) => {
+      draft[name] = value;
+    });
+  }
+
+  setLocalVariable(name: string, value: unknown) {
+    this.requireLocalVariable(name);
+    this.setTopNamespaceVariable(name, value);
   }
 
   getVariableIndex(name: string, indexes: readonly IndexType[]) {
@@ -306,20 +311,76 @@ export class Interpreter<THostSnapshot = unknown> {
     indexes: readonly IndexType[],
     value: unknown
   ) {
-    const currentValue = this.getVariable(name);
-    this.setVariable(
+    this.setVariable(name, this.produceIndexedValue(name, indexes, value));
+  }
+
+  setGlobalVariableIndex(
+    name: string,
+    indexes: readonly IndexType[],
+    value: unknown
+  ) {
+    this.setGlobalVariable(
       name,
-      produce(currentValue, (draft: unknown) => {
-        indexes.reduce((draft, index, i) => {
-          const handler = this.getHandler(original(draft));
-          if (i === indexes.length - 1) {
-            handler.setIndex(draft, index, value);
-          } else {
-            return handler.getIndex(draft, index);
-          }
-        }, draft);
+      this.produceIndexedValueFrom(this.globalNamespace[name], indexes, value)
+    );
+  }
+
+  setLocalVariableIndex(
+    name: string,
+    indexes: readonly IndexType[],
+    value: unknown
+  ) {
+    const currentValue = this.requireLocalVariable(name);
+    this.setTopNamespaceVariable(
+      name,
+      this.produceIndexedValueFrom(currentValue, indexes, value)
+    );
+  }
+
+  private setTopNamespaceVariable(name: string, value: unknown) {
+    this.topNamespace = this.topNamespace.swap(
+      produce(this.topNamespace.head, (draft) => {
+        draft[name] = value;
       })
     );
+  }
+
+  private requireLocalVariable(name: string) {
+    if (this.topNamespace === rootNamespace) {
+      throw new Error(`local variable ${name} not found`);
+    }
+
+    const namespace = this.topNamespace.head;
+    if (!(name in namespace)) {
+      throw new Error(`local variable ${name} not found`);
+    }
+
+    return namespace[name];
+  }
+
+  private produceIndexedValue(
+    name: string,
+    indexes: readonly IndexType[],
+    value: unknown
+  ) {
+    return this.produceIndexedValueFrom(this.getVariable(name), indexes, value);
+  }
+
+  private produceIndexedValueFrom(
+    currentValue: unknown,
+    indexes: readonly IndexType[],
+    value: unknown
+  ) {
+    return produce(currentValue, (draft: unknown) => {
+      indexes.reduce((draft, index, i) => {
+        const handler = this.getHandler(original(draft));
+        if (i === indexes.length - 1) {
+          handler.setIndex(draft, index, value);
+        } else {
+          return handler.getIndex(draft, index);
+        }
+      }, draft);
+    });
   }
 
   evalUnaryOp(op: string, right: unknown) {

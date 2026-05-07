@@ -617,6 +617,34 @@ describe('core language suspensions and snapshots', () => {
     expect(history.isRewound).toBe(false);
   });
 
+  it('replaces a restored snapshot and discards future history', async () => {
+    const interpreter = new Interpreter();
+    const history = new RuntimeHistory();
+    recordSnapshots(interpreter, history);
+
+    const result = await interpreter.run(
+      parseSnippet(`
+      value = 0
+      snapshot
+      value = 1
+      snapshot
+      value = 2
+      `)
+    );
+
+    expect(result.status).toBe('completed');
+    expect(history.entries).toHaveLength(2);
+
+    interpreter.restoreState(history.moveTo(0));
+    interpreter.setGlobalVariable('value', 99);
+    history.replaceCurrent(interpreter.captureState());
+
+    expect(history.entries).toHaveLength(1);
+    expect(history.index).toBe(0);
+    expect(history.isRewound).toBe(false);
+    expect(history.current?.globalNamespace.value).toBe(99);
+  });
+
   it('takes marker snapshots and breakpoint suspensions at node entry', async () => {
     const markers: MarkerType[] = [];
     const source = [

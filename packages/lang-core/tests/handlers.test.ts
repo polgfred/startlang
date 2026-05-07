@@ -65,6 +65,39 @@ describe('data handlers', () => {
     });
   });
 
+  it('updates global and local variables explicitly', () => {
+    const interpreter = new Interpreter();
+
+    interpreter.setGlobalVariable('shared', { values: [1, 2] });
+    interpreter.pushNamespace((draft) => {
+      draft.shared = { values: [3, 4] };
+    });
+
+    interpreter.setGlobalVariableIndex('shared', ['values', 1], 10);
+    interpreter.setLocalVariableIndex('shared', ['values', 2], 40);
+
+    expect(interpreter.globalNamespace.shared).toEqual({ values: [10, 2] });
+    expect(interpreter.topNamespace.head.shared).toEqual({ values: [3, 40] });
+    expect(interpreter.getVariable('shared')).toEqual({ values: [3, 40] });
+  });
+
+  it('requires explicit local updates to target existing locals', () => {
+    const interpreter = new Interpreter();
+
+    expect(() => interpreter.setLocalVariable('missing', 1)).toThrow(
+      'local variable missing not found'
+    );
+
+    interpreter.pushNamespace();
+
+    expect(() => interpreter.setLocalVariable('missing', 1)).toThrow(
+      'local variable missing not found'
+    );
+    expect(() => interpreter.setLocalVariableIndex('missing', [1], 1)).toThrow(
+      'local variable missing not found'
+    );
+  });
+
   it('exposes list and record iteration values', () => {
     const interpreter = new Interpreter();
 
