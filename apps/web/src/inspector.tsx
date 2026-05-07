@@ -207,6 +207,7 @@ function ValueNode({
     : isRecord
       ? Object.keys(value as RecordType).length
       : 0;
+  const hasPagingControls = visible > 12 || visible < childCount;
 
   if (isList) {
     for (let i = 0; i < Math.min(visible, value.length); i++) {
@@ -281,7 +282,7 @@ function ValueNode({
       {isExpandable && isOpen && (
         <div className={styles.children}>
           {children}
-          {childCount > 0 && (
+          {hasPagingControls && (
             <div
               className={styles.moreRow}
               style={{ '--depth': depth + 1 } as CSSProperties}

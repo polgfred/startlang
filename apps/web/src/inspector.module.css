@@ -34,7 +34,8 @@
 
 .grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: 1fr;
+  grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
   gap: 12px;
   align-items: stretch;
   flex: 1 1 auto;
@@ -91,9 +92,9 @@
   display: grid;
   grid-template-columns: minmax(120px, 34%) minmax(0, 1fr);
   gap: 8px;
-  align-items: start;
-  min-height: 30px;
-  padding: 3px 0 3px calc(var(--depth) * 18px);
+  align-items: center;
+  min-height: 28px;
+  padding: 2px 0 2px calc(var(--depth) * 18px);
   border-bottom: 1px solid var(--color-border-subtle);
 }
 
@@ -114,10 +115,13 @@
 
 .nodeValue {
   min-width: 0;
+  line-height: 1.25;
 }
 
 .summary,
 .scalar {
+  display: block;
+  min-width: 0;
   overflow-wrap: anywhere;
 }
 
@@ -127,8 +131,8 @@
 
 .disclosureButton,
 .disclosureSpacer {
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   flex: 0 0 auto;
 }
 
@@ -154,7 +158,14 @@
   outline-offset: 1px;
 }
 
-.valuePreview,
+.valuePreview {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px;
+  align-items: center;
+  min-width: 0;
+}
+
 .editor {
   display: flex;
   flex-wrap: wrap;
@@ -196,6 +207,11 @@
 .actionButton,
 .moreButton {
   font-size: 12px;
+}
+
+.actionButton {
+  height: 22px;
+  padding: 0 6px;
 }
 
 .editError {
@@ -253,19 +269,7 @@
   margin-right: 6px;
 }
 
-@media (min-width: 1200px) and (min-height: 720px) {
-  .grid {
-    grid-template-columns: 1fr;
-    grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
-  }
-}
-
 @media (max-width: 900px) {
-  .grid {
-    grid-template-columns: 1fr;
-    grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
-  }
-
   .nodeRow {
     grid-template-columns: minmax(90px, 38%) minmax(0, 1fr);
   }
