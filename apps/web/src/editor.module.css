@@ -19,8 +19,17 @@
   font-size: 40px;
 }
 
+.editor :global(.start-current::before) {
+  display: block;
+  margin-top: 6px;
+  color: red;
+  content: '\25B6';
+  font-size: 16px;
+  line-height: 19px;
+}
+
 .editor :global(.start-highlight) {
   width: 5px !important;
   margin-left: 12px;
-  background-color: color-mix(in srgb, var(--color-primary) 50%, transparent);
+  background-color: color-mix(in srgb, var(--color-primary) 32%, transparent);
 }

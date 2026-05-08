@@ -79,6 +79,20 @@ export default memo(function Editor({
           linesDecorationsClassName: 'start-highlight',
         },
       });
+      nextDecorations.push({
+        range: {
+          startLineNumber: highlightedNode.location.start.line,
+          startColumn: 1,
+          endLineNumber: highlightedNode.location.start.line,
+          endColumn: 1,
+        },
+        options: {
+          glyphMarginClassName: 'start-current',
+          glyphMarginHoverMessage: {
+            value: 'Paused here.',
+          },
+        },
+      });
     }
 
     markers.forEach(({ lineNumber, marker }) => {
