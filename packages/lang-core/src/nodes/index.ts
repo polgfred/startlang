@@ -5,6 +5,8 @@ export * from './binary-op.js';
 export * from './block.js';
 export * from './break.js';
 export * from './call.js';
+export * from './delete-index.js';
+export * from './delete.js';
 export * from './exit.js';
 export * from './for-in.js';
 export * from './for.js';

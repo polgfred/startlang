@@ -154,6 +154,35 @@ describe('core language snippets', () => {
     ]);
   });
 
+  it('deletes variables and indexed values', async () => {
+    const calls: unknown[][] = [];
+    const interpreter = await runSnippet(
+      `
+      item = "gone"
+      letters = ["a", "b", "c"]
+      person = { name = "Lily", stats = { age = 17 } }
+      delete item
+      delete letters[2]
+      delete person.stats.age
+      spy item, letters, person
+      `,
+      {
+        spy(_interpreter, args) {
+          calls.push(args);
+        },
+      }
+    );
+
+    expect(interpreter.getVariable('item')).toBeUndefined();
+    expect(calls).toEqual([
+      [
+        undefined,
+        ['a', 'c'],
+        { name: 'Lily', stats: {} },
+      ],
+    ]);
+  });
+
   it('dispatches data methods from the first argument type', async () => {
     const calls: unknown[][] = [];
 

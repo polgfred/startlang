@@ -5,6 +5,8 @@
     BlockNode,
     BreakNode,
     CallNode,
+    DeleteIndexNode,
+    DeleteNode,
     ExitNode,
     ForInNode,
     ForNode,
@@ -166,6 +168,7 @@ Statement
   = SetStatement
   / FlowStatement
   / LetStatement
+  / DeleteStatement
   / CallStatement
 
 ConfigOption = DottedSymbol
@@ -186,6 +189,13 @@ LetStatement
       return indexes.length > 0
         ? buildIndex(name, indexes, value)
         : new LetNode(name, value).at(location());
+    }
+
+DeleteStatement
+  = delete _ name:Symbol _ indexes:Indexes {
+      return indexes.length > 0
+        ? new DeleteIndexNode(name, indexes).at(location())
+        : new DeleteNode(name).at(location());
     }
 
 CallStatement
@@ -432,6 +442,8 @@ next = @"next" WB
 
 return = @"return" WB
 
+delete = @"delete" WB
+
 let = @"let" WB
 
 and = @"and" WB
@@ -463,6 +475,7 @@ Reserved
   / break
   / next
   / return
+  / delete
   / let
   / and
   / or
