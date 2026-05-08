@@ -94,6 +94,32 @@ describe('marker maps', () => {
     expect(markerMap(repeatNode)).toBeUndefined();
   });
 
+  it('assigns source locations to each branch in an if chain', () => {
+    const source = `
+      if false then
+        print "then"
+      else if false then
+        print "else-if"
+      else
+        print "else"
+      end
+      `;
+    const rootNode = parse(`${source}\n`);
+    const ifNode = (rootNode as BlockNode).elems[0] as IfNode;
+    const thenPrintNode = (ifNode.thenBody as BlockNode).elems[0];
+    const elseIfNode = ifNode.elseBody as IfNode;
+    const elseIfPrintNode = (elseIfNode.thenBody as BlockNode).elems[0];
+    const elseNode = elseIfNode.elseBody as BlockNode;
+    const elsePrintNode = elseNode.elems[0];
+
+    expect(ifNode.location.start.line).toBe(2);
+    expect(thenPrintNode.location.start.line).toBe(3);
+    expect(elseIfNode.location.start.line).toBe(4);
+    expect(elseIfPrintNode.location.start.line).toBe(5);
+    expect(elseNode.location.start.line).toBe(7);
+    expect(elsePrintNode.location.start.line).toBe(7);
+  });
+
   it('resolves clicked lines to marker owner start lines', () => {
     const source = `
       repeat 3 do
