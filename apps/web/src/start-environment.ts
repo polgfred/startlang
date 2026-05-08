@@ -8,6 +8,7 @@ import { rootShapeGroup } from '@startlang/lang-browser/shapes';
 import {
   Interpreter,
   type RuntimeEffect,
+  type RunResult,
   type RuntimeState,
 } from '@startlang/lang-core/interpreter';
 import { rootFrame } from '@startlang/lang-core/nodes';
@@ -232,6 +233,15 @@ export function useStartEnvironment() {
     [finishInterpreterAction, history, interpreter]
   );
 
+  const captureFinalState = useCallback(
+    (result: RunResult) => {
+      if (result.status === 'completed' && history.length > 0) {
+        history.push(interpreter.captureState());
+      }
+    },
+    [history, interpreter]
+  );
+
   const runProgram = useCallback(async () => {
     setError(null);
     highlightNode(null);
@@ -243,11 +253,13 @@ export function useStartEnvironment() {
       host.restoreOriginalSettings();
       const { markerMap, node } = parseProgram();
       interpreter.setMarkerMap(markerMap);
-      await interpreter.run(node);
+      const result = await interpreter.run(node);
+      captureFinalState(result);
     } finally {
       finishInterpreterAction();
     }
   }, [
+    captureFinalState,
     finishInterpreterAction,
     history,
     highlightNode,
@@ -260,11 +272,12 @@ export function useStartEnvironment() {
     setError(null);
 
     try {
-      await interpreter.resume(undefined);
+      const result = await interpreter.resume(undefined);
+      captureFinalState(result);
     } finally {
       finishInterpreterAction();
     }
-  }, [finishInterpreterAction, interpreter]);
+  }, [captureFinalState, finishInterpreterAction, interpreter]);
 
   const continueFromSnapshot = useCallback(async () => {
     setError(null);
@@ -272,11 +285,18 @@ export function useStartEnvironment() {
 
     try {
       history.truncateAfterCurrent();
-      await interpreter.runLoop();
+      const result = await interpreter.runLoop();
+      captureFinalState(result);
     } finally {
       finishInterpreterAction();
     }
-  }, [finishInterpreterAction, highlightNode, history, interpreter]);
+  }, [
+    captureFinalState,
+    finishInterpreterAction,
+    highlightNode,
+    history,
+    interpreter,
+  ]);
 
   const stopProgram = useCallback(() => {
     setError(null);
