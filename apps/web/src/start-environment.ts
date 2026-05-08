@@ -302,9 +302,10 @@ export function useStartEnvironment() {
   const stopProgram = useCallback(() => {
     setError(null);
     interpreter.stop();
+    history.clear();
     highlightNode(null);
     finishInterpreterAction();
-  }, [finishInterpreterAction, highlightNode, interpreter]);
+  }, [finishInterpreterAction, highlightNode, history, interpreter]);
 
   const isBreakpointSuspended = isBreakpointSuspension(runtimeView.suspension);
   const isInputSuspended = runtimeView.suspension instanceof InputSuspension;
