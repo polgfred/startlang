@@ -18,4 +18,8 @@ export class Cons<T> {
     }
     return this.tail;
   }
+
+  popOrNull() {
+    return this.tail;
+  }
 }

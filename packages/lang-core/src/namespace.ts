@@ -144,7 +144,7 @@ export class RuntimeNamespace {
     if (!this.locals) {
       throw new Error('cannot pop local namespace');
     }
-    this.locals = this.locals.tail;
+    this.locals = this.locals.popOrNull();
   }
 
   getVariable(name: string) {
