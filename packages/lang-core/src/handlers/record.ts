@@ -34,7 +34,7 @@ export class RecordHandler extends DataHandler {
   }
 
   deleteIndex(value: WritableDraft<RecordType>, index: string) {
-    delete value[index];
+    Reflect.deleteProperty(value, index);
   }
 
   getIterable(value: RecordType) {

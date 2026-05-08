@@ -88,7 +88,7 @@ export default memo(function Inspector({
           <NamespaceInspector
             title="Locals"
             scope="local"
-            namespace={interpreter.topNamespace.head}
+            namespace={interpreter.localNamespace}
             canEditValues={canEditValues}
             onValueChange={onValueChange}
             onValueDelete={onValueDelete}

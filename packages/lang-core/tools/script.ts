@@ -177,7 +177,7 @@ async function main() {
   if (options.ns) {
     output({
       globalNamespace: interp.globalNamespace,
-      topNamespace: interp.topNamespace,
+      localNamespaces: interp.localNamespaces,
       lastResult: interp.lastResult,
     });
   }

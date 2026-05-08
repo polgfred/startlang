@@ -86,20 +86,20 @@ describe('data handlers', () => {
     interpreter.setLocalVariableIndex('shared', ['values', 2], 40);
 
     expect(interpreter.globalNamespace.shared).toEqual({ values: [10, 2] });
-    expect(interpreter.topNamespace.head.shared).toEqual({ values: [3, 40] });
+    expect(interpreter.localNamespace.shared).toEqual({ values: [3, 40] });
     expect(interpreter.getVariable('shared')).toEqual({ values: [3, 40] });
 
     interpreter.deleteGlobalVariableIndex('shared', ['values', 1]);
     interpreter.deleteLocalVariableIndex('shared', ['values', 2]);
 
     expect(interpreter.globalNamespace.shared).toEqual({ values: [2] });
-    expect(interpreter.topNamespace.head.shared).toEqual({ values: [3] });
+    expect(interpreter.localNamespace.shared).toEqual({ values: [3] });
 
     interpreter.deleteGlobalVariable('shared');
     interpreter.deleteLocalVariable('shared');
 
     expect(interpreter.globalNamespace.shared).toBeUndefined();
-    expect(interpreter.topNamespace.head.shared).toBeUndefined();
+    expect(interpreter.localNamespace.shared).toBeUndefined();
   });
 
   it('requires explicit local updates to target existing locals', () => {
@@ -139,7 +139,7 @@ describe('data handlers', () => {
 
     interpreter.deleteVariable('value');
 
-    expect(interpreter.topNamespace.head.value).toBeUndefined();
+    expect(interpreter.localNamespace.value).toBeUndefined();
     expect(interpreter.getVariable('value')).toBe(1);
   });
 
