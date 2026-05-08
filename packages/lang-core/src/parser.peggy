@@ -161,10 +161,10 @@ WhileBlock
       return new WhileNode(cond, body).at(location());
     }
 
-Params = Symbol|.., (_ "," EOL? _)|
+Params "parameter names" = Symbol|1.., (_ "," EOL? _)|
 
 BeginBlock
-  = begin _ name:Symbol _ params:("(" EOL? _ @Params EOL? ")")? _ body:DoBody {
+  = begin _ name:Symbol _ params:("(" EOL? _ @Params? EOL? ")")? _ body:DoBody {
       return new BeginNode(name, params ?? [], body).at(location());
     }
 
@@ -209,11 +209,11 @@ CallStatement
   //      - this fixes the case of "print (1+2)/3"
   //  2- try to match zero or more parenthesized arguments
   //  3- match a bare call with no parens or args
-  = name:Symbol _ args:Values & { return args.length > 0; } body:(_ @DoBody)? {
+  = name:Symbol _ args:Values body:(_ @DoBody)? {
       return new CallStatementNode(name, args, body).at(location());
     }
-  / name:Symbol _ "(" EOL? _ args:Values EOL? _ ")" body:(_ @DoBody)? {
-      return new CallStatementNode(name, args, body).at(location());
+  / name:Symbol _ "(" EOL? _ args:Values? EOL? _ ")" body:(_ @DoBody)? {
+      return new CallStatementNode(name, args ?? [], body).at(location());
     }
   / name:Symbol body:(_ @DoBody)? {
       return new CallStatementNode(name, [], body).at(location());
@@ -221,7 +221,7 @@ CallStatement
 
 // Values
 
-Values = Value|.., (_ "," EOL? _)|
+Values = Value|1.., (_ "," EOL? _)|
 
 Value "a value" = ConjExpr
 
@@ -301,26 +301,26 @@ UnaryOp
 // Lists and Records
 
 ListExpr
-  = "[" EOL? _ values:Values EOL? _ "]" {
-      return new ListNode(values).at(location());
+  = "[" EOL? _ values:Values? EOL? _ "]" {
+      return new ListNode(values ?? []).at(location());
     }
   / RecordExpr
 
-Pair = key:DottedSymbol _ "=" _ value:Value { return { key, value }; }
+Pair "a record field" = key:DottedSymbol _ "=" _ value:Value { return { key, value }; }
 
-Pairs = Pair|.., (_ "," EOL? _)|
+Pairs "record fields" = Pair|1.., (_ "," EOL? _)|
 
 RecordExpr
-  = "{" EOL? _ pairs:Pairs EOL? _ "}" {
-      return new RecordNode(pairs).at(location());
+  = "{" EOL? _ pairs:Pairs? EOL? _ "}" {
+      return new RecordNode(pairs ?? []).at(location());
     }
   / CallExpr
 
 // Invocation
 
 CallExpr
-  = name:Symbol _ "(" EOL? _ args:Values EOL? _ ")" {
-      return new CallExpressionNode(name, args, null).at(location());
+  = name:Symbol _ "(" EOL? _ args:Values? EOL? _ ")" {
+      return new CallExpressionNode(name, args ?? [], null).at(location());
     }
   / IndexExpr
 
@@ -342,7 +342,7 @@ Indexes
 
 IndexSegment
   // allow successive indexes separated by commas, e.g. lst[0,1,2]
-  = "[" _ @Value|.., (_ "," _)| _ "]"
+  = "[" _ @Value|1.., (_ "," _)| _ "]"
   / "." _ index:Digits { return new LiteralNode(Number(index)).at(location()); }
   / "." _ name:Symbol { return new LiteralNode(name).at(location()); }
 
@@ -394,7 +394,7 @@ Digits = $[0-9]+
 
 // Symbols
 
-DottedSymbol "a dotted name" = $(Name|.., "."|)
+DottedSymbol "a dotted name" = $(Name|1.., "."|)
 
 Symbol "a name" = $(!Reserved Name)
 
