@@ -14,199 +14,56 @@ type IndexHandlerResolver = (value: unknown) => IndexHandler;
 const emptyObject: NamespaceType = Object.freeze(Object.create(null));
 
 export class Namespace {
-  globalNamespace: NamespaceType = emptyObject;
-  localNamespaces: Cons<NamespaceType> | null = null;
+  constructor(
+    private readonly getHandler: IndexHandlerResolver,
+    public readonly values: NamespaceType = emptyObject
+  ) {}
 
-  constructor(private readonly getHandler: IndexHandlerResolver) {}
-
-  get localNamespace() {
-    return this.localNamespaces?.head ?? emptyObject;
+  has(name: string) {
+    return name in this.values;
   }
 
-  reset() {
-    this.globalNamespace = emptyObject;
-    this.localNamespaces = null;
+  get(name: string) {
+    return this.values[name];
   }
 
-  popOut() {
-    this.localNamespaces = null;
-  }
-
-  push(producer?: Producer<Record<string, unknown>>) {
-    const namespace = producer ? produce(emptyObject, producer) : emptyObject;
-    this.localNamespaces = this.localNamespaces
-      ? this.localNamespaces.push(namespace)
-      : new Cons(namespace);
-  }
-
-  pop() {
-    if (!this.localNamespaces) {
-      throw new Error('cannot pop local namespace');
-    }
-    this.localNamespaces = this.localNamespaces.tail;
-  }
-
-  getVariable(name: string) {
-    if (name in this.localNamespace) {
-      return this.localNamespace[name];
-    } else {
-      return this.globalNamespace[name];
-    }
-  }
-
-  setVariable(name: string, value: unknown) {
-    if (this.localNamespaces) {
-      this.setTopVariable(name, value);
-    } else {
-      this.setGlobalVariable(name, value);
-    }
-  }
-
-  deleteVariable(name: string) {
-    if (this.localNamespaces) {
-      this.deleteTopVariable(name);
-    } else {
-      this.deleteGlobalVariable(name);
-    }
-  }
-
-  setGlobalVariable(name: string, value: unknown) {
-    this.globalNamespace = produce(this.globalNamespace, (draft) => {
-      draft[name] = value;
-    });
-  }
-
-  deleteGlobalVariable(name: string) {
-    this.globalNamespace = produce(this.globalNamespace, (draft) => {
-      Reflect.deleteProperty(draft, name);
-    });
-  }
-
-  setLocalVariable(name: string, value: unknown) {
-    this.requireLocalVariable(name);
-    this.setTopVariable(name, value);
-  }
-
-  deleteLocalVariable(name: string) {
-    this.requireLocalVariable(name);
-    this.deleteTopVariable(name);
-  }
-
-  getVariableIndex(name: string, indexes: readonly IndexType[]) {
-    return indexes.reduce((value, index) => {
-      const handler = this.getHandler(value);
-      return handler.getIndex(value, index);
-    }, this.getVariable(name));
-  }
-
-  setVariableIndex(
-    name: string,
-    indexes: readonly IndexType[],
-    value: unknown
-  ) {
-    this.setVariable(name, this.produceIndexedValue(name, indexes, value));
-  }
-
-  deleteVariableIndex(name: string, indexes: readonly IndexType[]) {
-    this.setVariable(name, this.produceDeletedIndexedValue(name, indexes));
-  }
-
-  setGlobalVariableIndex(
-    name: string,
-    indexes: readonly IndexType[],
-    value: unknown
-  ) {
-    this.setGlobalVariable(
-      name,
-      this.produceIndexedValueFrom(this.globalNamespace[name], indexes, value)
-    );
-  }
-
-  deleteGlobalVariableIndex(name: string, indexes: readonly IndexType[]) {
-    this.setGlobalVariable(
-      name,
-      this.produceDeletedIndexedValueFrom(this.globalNamespace[name], indexes)
-    );
-  }
-
-  setLocalVariableIndex(
-    name: string,
-    indexes: readonly IndexType[],
-    value: unknown
-  ) {
-    const currentValue = this.requireLocalVariable(name);
-    this.setTopVariable(
-      name,
-      this.produceIndexedValueFrom(currentValue, indexes, value)
-    );
-  }
-
-  deleteLocalVariableIndex(name: string, indexes: readonly IndexType[]) {
-    const currentValue = this.requireLocalVariable(name);
-    this.setTopVariable(
-      name,
-      this.produceDeletedIndexedValueFrom(currentValue, indexes)
-    );
-  }
-
-  restore(
-    globalNamespace: NamespaceType,
-    localNamespaces: Cons<NamespaceType> | null
-  ) {
-    this.globalNamespace = globalNamespace;
-    this.localNamespaces = localNamespaces;
-  }
-
-  private setTopVariable(name: string, value: unknown) {
-    if (!this.localNamespaces) {
-      throw new Error('local namespace not found');
-    }
-
-    this.localNamespaces = this.localNamespaces.swap(
-      produce(this.localNamespaces.head, (draft) => {
+  set(name: string, value: unknown) {
+    return new Namespace(
+      this.getHandler,
+      produce(this.values, (draft) => {
         draft[name] = value;
       })
     );
   }
 
-  private deleteTopVariable(name: string) {
-    if (!this.localNamespaces) {
-      throw new Error('local namespace not found');
-    }
-
-    this.localNamespaces = this.localNamespaces.swap(
-      produce(this.localNamespaces.head, (draft) => {
+  delete(name: string) {
+    return new Namespace(
+      this.getHandler,
+      produce(this.values, (draft) => {
         Reflect.deleteProperty(draft, name);
       })
     );
   }
 
-  private requireLocalVariable(name: string) {
-    if (!this.localNamespaces) {
-      throw new Error(`local variable ${name} not found`);
-    }
-
-    const namespace = this.localNamespaces.head;
-    if (!(name in namespace)) {
-      throw new Error(`local variable ${name} not found`);
-    }
-
-    return namespace[name];
+  getIndex(name: string, indexes: readonly IndexType[]) {
+    return indexes.reduce((value, index) => {
+      const handler = this.getHandler(value);
+      return handler.getIndex(value, index);
+    }, this.get(name));
   }
 
-  private produceIndexedValue(
-    name: string,
-    indexes: readonly IndexType[],
-    value: unknown
-  ) {
-    return this.produceIndexedValueFrom(this.getVariable(name), indexes, value);
+  setIndex(name: string, indexes: readonly IndexType[], value: unknown) {
+    return this.set(
+      name,
+      this.produceIndexedValueFrom(this.get(name), indexes, value)
+    );
   }
 
-  private produceDeletedIndexedValue(
-    name: string,
-    indexes: readonly IndexType[]
-  ) {
-    return this.produceDeletedIndexedValueFrom(this.getVariable(name), indexes);
+  deleteIndex(name: string, indexes: readonly IndexType[]) {
+    return this.set(
+      name,
+      this.produceDeletedIndexedValueFrom(this.get(name), indexes)
+    );
   }
 
   private produceIndexedValueFrom(
@@ -241,4 +98,193 @@ export class Namespace {
       }, draft);
     });
   }
+}
+
+export class RuntimeNamespace {
+  private global: Namespace;
+  private locals: Cons<Namespace> | null = null;
+
+  constructor(private readonly getHandler: IndexHandlerResolver) {
+    this.global = new Namespace(getHandler);
+  }
+
+  get globalNamespace() {
+    return this.global.values;
+  }
+
+  get localNamespace() {
+    return this.locals?.head.values ?? emptyObject;
+  }
+
+  get localNamespaces(): Cons<NamespaceType> | null {
+    return mapNamespaceStack(this.locals, (namespace) => namespace.values);
+  }
+
+  reset() {
+    this.global = new Namespace(this.getHandler);
+    this.locals = null;
+  }
+
+  popOut() {
+    this.locals = null;
+  }
+
+  push(producer?: Producer<Record<string, unknown>>) {
+    const values = producer ? produce(emptyObject, producer) : emptyObject;
+    const namespace = new Namespace(this.getHandler, values);
+    this.locals = this.locals ? this.locals.push(namespace) : new Cons(namespace);
+  }
+
+  pop() {
+    if (!this.locals) {
+      throw new Error('cannot pop local namespace');
+    }
+    this.locals = this.locals.tail;
+  }
+
+  getVariable(name: string) {
+    if (this.locals?.head.has(name)) {
+      return this.locals.head.get(name);
+    } else {
+      return this.global.get(name);
+    }
+  }
+
+  setVariable(name: string, value: unknown) {
+    if (this.locals) {
+      this.setTopNamespace(this.locals.head.set(name, value));
+    } else {
+      this.setGlobalVariable(name, value);
+    }
+  }
+
+  deleteVariable(name: string) {
+    if (this.locals) {
+      this.setTopNamespace(this.locals.head.delete(name));
+    } else {
+      this.deleteGlobalVariable(name);
+    }
+  }
+
+  setGlobalVariable(name: string, value: unknown) {
+    this.global = this.global.set(name, value);
+  }
+
+  deleteGlobalVariable(name: string) {
+    this.global = this.global.delete(name);
+  }
+
+  setLocalVariable(name: string, value: unknown) {
+    this.requireLocalNamespace(name);
+    this.setTopNamespace(this.requireTopNamespace().set(name, value));
+  }
+
+  deleteLocalVariable(name: string) {
+    this.requireLocalNamespace(name);
+    this.setTopNamespace(this.requireTopNamespace().delete(name));
+  }
+
+  getVariableIndex(name: string, indexes: readonly IndexType[]) {
+    if (this.locals?.head.has(name)) {
+      return this.locals.head.getIndex(name, indexes);
+    } else {
+      return this.global.getIndex(name, indexes);
+    }
+  }
+
+  setVariableIndex(
+    name: string,
+    indexes: readonly IndexType[],
+    value: unknown
+  ) {
+    this.setVariable(
+      name,
+      this.withResolvedVariable(name).setIndex(name, indexes, value).get(name)
+    );
+  }
+
+  deleteVariableIndex(name: string, indexes: readonly IndexType[]) {
+    this.setVariable(
+      name,
+      this.withResolvedVariable(name).deleteIndex(name, indexes).get(name)
+    );
+  }
+
+  setGlobalVariableIndex(
+    name: string,
+    indexes: readonly IndexType[],
+    value: unknown
+  ) {
+    this.global = this.global.setIndex(name, indexes, value);
+  }
+
+  deleteGlobalVariableIndex(name: string, indexes: readonly IndexType[]) {
+    this.global = this.global.deleteIndex(name, indexes);
+  }
+
+  setLocalVariableIndex(
+    name: string,
+    indexes: readonly IndexType[],
+    value: unknown
+  ) {
+    this.requireLocalNamespace(name);
+    this.setTopNamespace(
+      this.requireTopNamespace().setIndex(name, indexes, value)
+    );
+  }
+
+  deleteLocalVariableIndex(name: string, indexes: readonly IndexType[]) {
+    this.requireLocalNamespace(name);
+    this.setTopNamespace(this.requireTopNamespace().deleteIndex(name, indexes));
+  }
+
+  restore(
+    globalNamespace: NamespaceType,
+    localNamespaces: Cons<NamespaceType> | null
+  ) {
+    this.global = new Namespace(this.getHandler, globalNamespace);
+    this.locals = mapNamespaceStack(
+      localNamespaces,
+      (values) => new Namespace(this.getHandler, values)
+    );
+  }
+
+  private requireTopNamespace() {
+    if (!this.locals) {
+      throw new Error('local namespace not found');
+    }
+    return this.locals.head;
+  }
+
+  private requireLocalNamespace(name: string) {
+    if (!this.locals) {
+      throw new Error(`local variable ${name} not found`);
+    }
+
+    const namespace = this.locals.head;
+    if (!namespace.has(name)) {
+      throw new Error(`local variable ${name} not found`);
+    }
+    return namespace;
+  }
+
+  private setTopNamespace(namespace: Namespace) {
+    if (!this.locals) {
+      throw new Error('local namespace not found');
+    }
+    this.locals = this.locals.swap(namespace);
+  }
+
+  private withResolvedVariable(name: string) {
+    return new Namespace(this.getHandler).set(name, this.getVariable(name));
+  }
+}
+
+function mapNamespaceStack<T, U>(
+  stack: Cons<T> | null,
+  mapper: (value: T) => U
+): Cons<U> | null {
+  return stack
+    ? new Cons(mapper(stack.head), mapNamespaceStack(stack.tail, mapper))
+    : null;
 }

@@ -3,7 +3,7 @@ import { castDraft, produce, type Producer } from 'immer';
 import { emptyMarkerMap, type MarkerMap } from './editor-markers.js';
 import { DataHandler, installHandlers } from './handlers/index.js';
 import { NullPresentationHost, type SupportsSnapshots } from './host.js';
-import { Namespace } from './namespace.js';
+import { RuntimeNamespace } from './namespace.js';
 import {
   Frame,
   Node,
@@ -60,7 +60,7 @@ export type RunResult =
 
 export class Interpreter<THostSnapshot = unknown> {
   dataHandlers: DataHandler[] = [];
-  namespace = new Namespace((value) => this.getHandler(value));
+  namespace = new RuntimeNamespace((value) => this.getHandler(value));
   runtimeFunctions: RuntimeFunctions = emptyObject;
   globalFunctions: GlobalFunctions = emptyObject;
   topFrame = rootFrame;
