@@ -74,9 +74,7 @@ function publishSyntaxMarkers(
   monaco.editor.setModelMarkers(
     model,
     syntaxMarkerOwner,
-    diagnostics.map((diagnostic) =>
-      createMarker(diagnostic, model, monaco)
-    )
+    diagnostics.map((diagnostic) => createMarker(diagnostic, model, monaco))
   );
 }
 

@@ -137,7 +137,9 @@ export class RuntimeNamespace {
   push(producer?: Producer<Record<string, unknown>>) {
     const values = producer ? produce(emptyObject, producer) : emptyObject;
     const namespace = new Namespace(this.getHandler, values);
-    this.locals = this.locals ? this.locals.push(namespace) : new Cons(namespace);
+    this.locals = this.locals
+      ? this.locals.push(namespace)
+      : new Cons(namespace);
   }
 
   pop() {
@@ -243,10 +245,7 @@ export class RuntimeNamespace {
     this.setTopNamespace(this.requireTopNamespace().deleteIndex(name, indexes));
   }
 
-  restore(
-    globalNamespace: Namespace,
-    localNamespaces: Cons<Namespace> | null
-  ) {
+  restore(globalNamespace: Namespace, localNamespaces: Cons<Namespace> | null) {
     this.global = globalNamespace;
     this.locals = localNamespaces;
   }

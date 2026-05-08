@@ -20,9 +20,7 @@ describe('syntax diagnostics', () => {
   });
 
   it('describes invalid begin parameters as parameter names', () => {
-    const [diagnostic] = getSyntaxDiagnostics(
-      'begin random_color(1) do\nend'
-    );
+    const [diagnostic] = getSyntaxDiagnostics('begin random_color(1) do\nend');
 
     expect(diagnostic?.message).toContain('parameter names');
   });
@@ -34,9 +32,7 @@ describe('syntax diagnostics', () => {
   });
 
   it('requires whitespace between range keywords and values', () => {
-    const [diagnostic] = getSyntaxDiagnostics(
-      'for i=1to10by2do\nprint i\nend'
-    );
+    const [diagnostic] = getSyntaxDiagnostics('for i=1to10by2do\nprint i\nend');
 
     expect(diagnostic?.message).toContain('whitespace');
   });
