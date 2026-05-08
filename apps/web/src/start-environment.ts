@@ -11,6 +11,7 @@ import {
   type RunResult,
   type RuntimeState,
 } from '@startlang/lang-core/interpreter';
+import type { Node } from '@startlang/lang-core/nodes';
 import { runtimeGlobals } from '@startlang/lang-core/runtime-globals';
 import { RuntimeHistory } from '@startlang/lang-core/runtime-history';
 import {
@@ -30,6 +31,7 @@ import {
 import { useEditor } from './editor-context.jsx';
 
 type OutputTab = 'graphics' | 'text';
+type InspectorScope = 'global' | 'local';
 
 interface RuntimeStatus {
   isComplete: boolean;
@@ -53,6 +55,27 @@ type RuntimeMode =
   | 'breakpoint'
   | 'rewound'
   | 'continuable';
+
+interface RuntimeEnvironment {
+  host: BrowserPresentationHost;
+  interpreter: Interpreter<BrowserPresentationSnapshot>;
+  history: RuntimeHistory<BrowserPresentationSnapshot>;
+  store: ReturnType<typeof createInterpreterStore>;
+}
+
+interface OutputPresence {
+  hasGraphicsOutput: boolean;
+  hasTextOutput: boolean;
+}
+
+interface RuntimeControls {
+  canEditInspectorValues: boolean;
+  isRunDisabled: boolean;
+  isStepDisabled: boolean;
+  isStopDisabled: boolean;
+  isEditorReadOnly: boolean;
+  runLabel: 'Continue' | 'Run';
+}
 
 function getRuntimeMode(status: RuntimeStatus): RuntimeMode {
   if (status.isRunning) {
@@ -84,6 +107,31 @@ function isRuntimeModeRunnable(mode: RuntimeMode) {
 
 function isRuntimeModeContinuable(mode: RuntimeMode) {
   return mode === 'breakpoint' || mode === 'rewound' || mode === 'continuable';
+}
+
+function getRuntimeControls(mode: RuntimeMode): RuntimeControls {
+  const isActive = isRuntimeModeActive(mode);
+
+  return {
+    canEditInspectorValues: isRuntimeModeEditable(mode),
+    isRunDisabled: !isRuntimeModeRunnable(mode),
+    isStepDisabled: mode !== 'breakpoint' && mode !== 'idle',
+    isStopDisabled: !isActive,
+    isEditorReadOnly: isActive,
+    runLabel: isRuntimeModeContinuable(mode) ? 'Continue' : 'Run',
+  };
+}
+
+function getRuntimeStatus(
+  interpreter: Interpreter<BrowserPresentationSnapshot>,
+  history: RuntimeHistory<BrowserPresentationSnapshot>
+): RuntimeStatus {
+  return {
+    isComplete: interpreter.isComplete,
+    isRunning: interpreter.isRunning,
+    isRewound: history.isRewound,
+    suspension: interpreter.suspension,
+  };
 }
 
 function createInterpreterStore(
@@ -128,6 +176,47 @@ function createInterpreterStore(
   };
 }
 
+function createRuntimeEnvironment(): RuntimeEnvironment {
+  const host = new BrowserPresentationHost();
+  const interpreter = new Interpreter(host);
+  const history = new RuntimeHistory<BrowserPresentationSnapshot>();
+
+  interpreter.registerGlobals(browserPresentationGlobals);
+  interpreter.registerGlobals(runtimeGlobals);
+
+  return {
+    host,
+    interpreter,
+    history,
+    store: createInterpreterStore(interpreter, history),
+  };
+}
+
+function useRuntimeEnvironment() {
+  const runtimeRef = useRef<RuntimeEnvironment | null>(null);
+
+  if (runtimeRef.current === null) {
+    runtimeRef.current = createRuntimeEnvironment();
+  }
+
+  return runtimeRef.current;
+}
+
+function getOutputPresence(
+  snapshot: BrowserPresentationSnapshot,
+  hasInput: boolean
+): OutputPresence {
+  return {
+    hasGraphicsOutput:
+      snapshot.shapes.length > 0 ||
+      snapshot.currentShapeGroup.head !== rootShapeGroup,
+    hasTextOutput:
+      snapshot.outputCells.length > 0 ||
+      snapshot.currentCell.head !== rootCell ||
+      hasInput,
+  };
+}
+
 function chooseOutputTab(
   current: OutputTab,
   hasGraphicsOutput: boolean,
@@ -148,6 +237,49 @@ function waitForAnimationFrame() {
   });
 }
 
+function setInspectorVariable(
+  interpreter: Interpreter<BrowserPresentationSnapshot>,
+  scope: InspectorScope,
+  name: string,
+  indexes: readonly IndexType[],
+  value: unknown
+) {
+  if (scope === 'global') {
+    if (indexes.length > 0) {
+      interpreter.setGlobalVariableIndex(name, indexes, value);
+    } else {
+      interpreter.setGlobalVariable(name, value);
+    }
+  } else {
+    if (indexes.length > 0) {
+      interpreter.setLocalVariableIndex(name, indexes, value);
+    } else {
+      interpreter.setLocalVariable(name, value);
+    }
+  }
+}
+
+function deleteInspectorVariable(
+  interpreter: Interpreter<BrowserPresentationSnapshot>,
+  scope: InspectorScope,
+  name: string,
+  indexes: readonly IndexType[]
+) {
+  if (scope === 'global') {
+    if (indexes.length > 0) {
+      interpreter.deleteGlobalVariableIndex(name, indexes);
+    } else {
+      interpreter.deleteGlobalVariable(name);
+    }
+  } else {
+    if (indexes.length > 0) {
+      interpreter.deleteLocalVariableIndex(name, indexes);
+    } else {
+      interpreter.deleteLocalVariable(name);
+    }
+  }
+}
+
 export function useStartEnvironment() {
   const { highlightNode, parseProgram } = useEditor();
 
@@ -155,45 +287,28 @@ export function useStartEnvironment() {
   const [showInspector, setShowInspector] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  const { current: host } = useRef(new BrowserPresentationHost());
-  const { current: interpreter } = useRef(new Interpreter(host));
-  const { current: history } = useRef(
-    new RuntimeHistory<BrowserPresentationSnapshot>()
-  );
-  const { current: store } = useRef(
-    createInterpreterStore(interpreter, history)
-  );
+  const { host, interpreter, history, store } = useRuntimeEnvironment();
   const runtimeView = useSyncExternalStore(store.subscribe, store.getView);
   const runtimeMode = getRuntimeMode(runtimeView);
-  const globalsRegisteredRef = useRef(false);
-
-  if (!globalsRegisteredRef.current) {
-    interpreter.registerGlobals(browserPresentationGlobals);
-    interpreter.registerGlobals(runtimeGlobals);
-    globalsRegisteredRef.current = true;
-  }
+  const runtimeControls = useMemo(
+    () => getRuntimeControls(runtimeMode),
+    [runtimeMode]
+  );
 
   const syncOutputTab = useCallback(() => {
-    const nextHasGraphicsOutput =
-      host.shapes.length > 0 || host.currentGroup.head !== rootShapeGroup;
-    const nextHasTextOutput =
-      host.cells.length > 0 ||
-      host.currentCell.head !== rootCell ||
-      interpreter.suspension instanceof InputSuspension;
+    const { hasGraphicsOutput, hasTextOutput } = getOutputPresence(
+      host.takeSnapshot(),
+      interpreter.suspension instanceof InputSuspension
+    );
 
     setOutputTab((current) =>
-      chooseOutputTab(current, nextHasGraphicsOutput, nextHasTextOutput)
+      chooseOutputTab(current, hasGraphicsOutput, hasTextOutput)
     );
   }, [host, interpreter]);
 
   const syncHighlight = useCallback(() => {
-    const mode = getRuntimeMode({
-      isComplete: interpreter.isComplete,
-      isRunning: interpreter.isRunning,
-      isRewound: history.isRewound,
-      suspension: interpreter.suspension,
-    });
-    if (mode === 'breakpoint' || mode === 'rewound' || mode === 'continuable') {
+    const mode = getRuntimeMode(getRuntimeStatus(interpreter, history));
+    if (isRuntimeModeEditable(mode)) {
       highlightNode(interpreter.topFrame.head.node);
     } else {
       highlightNode(null);
@@ -224,7 +339,14 @@ export function useStartEnvironment() {
     [history, interpreter, store, syncOutputTab]
   );
 
-  interpreter.effectHandler = handleRuntimeEffect;
+  useEffect(() => {
+    interpreter.effectHandler = handleRuntimeEffect;
+    return () => {
+      if (interpreter.effectHandler === handleRuntimeEffect) {
+        interpreter.effectHandler = null;
+      }
+    };
+  }, [handleRuntimeEffect, interpreter]);
 
   useEffect(() => {
     const handleAppError = (event: PromiseRejectionEvent) => {
@@ -295,13 +417,10 @@ export function useStartEnvironment() {
     [runtimeView.suspension, resumeInput]
   );
 
-  const hasGraphicsOutput =
-    runtimeView.hostSnapshot.shapes.length > 0 ||
-    runtimeView.hostSnapshot.currentShapeGroup.head !== rootShapeGroup;
-  const hasTextOutput =
-    runtimeView.hostSnapshot.outputCells.length > 0 ||
-    runtimeView.hostSnapshot.currentCell.head !== rootCell ||
-    inputState !== null;
+  const { hasGraphicsOutput, hasTextOutput } = getOutputPresence(
+    runtimeView.hostSnapshot,
+    inputState !== null
+  );
 
   const updateSlider = useCallback(
     (index: number) => {
@@ -311,31 +430,27 @@ export function useStartEnvironment() {
     [finishInterpreterAction, history, interpreter]
   );
 
-  const runProgram = useCallback(async () => {
-    history.clear();
-    host.clearDisplay();
-    host.clearOutputBuffer();
-
-    await performInterpreterAction(() => {
+  const startProgram = useCallback(
+    async (runParsedProgram: (node: Node) => Promise<RunResult>) => {
+      history.clear();
       host.restoreOriginalSettings();
-      const { markerMap, node } = parseProgram();
-      interpreter.setMarkerMap(markerMap);
-      return interpreter.run(node);
-    });
-  }, [history, host, interpreter, parseProgram, performInterpreterAction]);
+
+      await performInterpreterAction(() => {
+        const { markerMap, node } = parseProgram();
+        interpreter.setMarkerMap(markerMap);
+        return runParsedProgram(node);
+      });
+    },
+    [history, host, interpreter, parseProgram, performInterpreterAction]
+  );
+
+  const runProgram = useCallback(async () => {
+    await startProgram((node) => interpreter.run(node));
+  }, [interpreter, startProgram]);
 
   const stepIntoProgram = useCallback(async () => {
-    history.clear();
-    host.clearDisplay();
-    host.clearOutputBuffer();
-
-    await performInterpreterAction(() => {
-      host.restoreOriginalSettings();
-      const { markerMap, node } = parseProgram();
-      interpreter.setMarkerMap(markerMap);
-      return interpreter.runToNextStatement(node);
-    });
-  }, [history, host, interpreter, parseProgram, performInterpreterAction]);
+    await startProgram((node) => interpreter.runToNextStatement(node));
+  }, [interpreter, startProgram]);
 
   const resumeBreakpoint = useCallback(async () => {
     await performInterpreterAction(() => interpreter.resume(undefined));
@@ -345,22 +460,16 @@ export function useStartEnvironment() {
     switch (runtimeMode) {
       case 'idle':
         return stepIntoProgram();
-      case 'breakpoint': {
+      case 'breakpoint':
         await performInterpreterAction(() => interpreter.stepToNextStatement());
         return;
-      }
       case 'continuable':
       case 'input':
       case 'rewound':
       case 'running':
         return;
     }
-  }, [
-    interpreter,
-    performInterpreterAction,
-    runtimeMode,
-    stepIntoProgram,
-  ]);
+  }, [interpreter, performInterpreterAction, runtimeMode, stepIntoProgram]);
 
   const continueFromSnapshot = useCallback(async () => {
     await performInterpreterAction(() => {
@@ -377,34 +486,14 @@ export function useStartEnvironment() {
     finishInterpreterAction();
   }, [finishInterpreterAction, highlightNode, history, interpreter]);
 
-  const updateInspectorValue = useCallback(
-    (
-      scope: 'global' | 'local',
-      name: string,
-      indexes: readonly IndexType[],
-      value: unknown
-    ) => {
-      if (
-        history.isRewound &&
-        !window.confirm(
-          'Changing this value will discard later snapshots and continue from here.'
-        )
-      ) {
+  const commitInspectorMutation = useCallback(
+    (message: string, mutate: () => void) => {
+      if (history.isRewound && !window.confirm(message)) {
         return false;
       }
 
       setError(null);
-      if (scope === 'global') {
-        if (indexes.length > 0) {
-          interpreter.setGlobalVariableIndex(name, indexes, value);
-        } else {
-          interpreter.setGlobalVariable(name, value);
-        }
-      } else if (indexes.length > 0) {
-        interpreter.setLocalVariableIndex(name, indexes, value);
-      } else {
-        interpreter.setLocalVariable(name, value);
-      }
+      mutate();
       history.replaceCurrent(interpreter.captureState());
       finishInterpreterAction();
       return true;
@@ -412,34 +501,33 @@ export function useStartEnvironment() {
     [finishInterpreterAction, history, interpreter]
   );
 
-  const deleteInspectorValue = useCallback(
-    (scope: 'global' | 'local', name: string, indexes: readonly IndexType[]) => {
-      if (
-        history.isRewound &&
-        !window.confirm(
-          'Deleting this value will discard later snapshots and continue from here.'
-        )
-      ) {
-        return false;
-      }
-
-      setError(null);
-      if (scope === 'global') {
-        if (indexes.length > 0) {
-          interpreter.deleteGlobalVariableIndex(name, indexes);
-        } else {
-          interpreter.deleteGlobalVariable(name);
+  const updateInspectorValue = useCallback(
+    (
+      scope: InspectorScope,
+      name: string,
+      indexes: readonly IndexType[],
+      value: unknown
+    ) => {
+      return commitInspectorMutation(
+        'Changing this value will discard later snapshots and continue from here.',
+        () => {
+          setInspectorVariable(interpreter, scope, name, indexes, value);
         }
-      } else if (indexes.length > 0) {
-        interpreter.deleteLocalVariableIndex(name, indexes);
-      } else {
-        interpreter.deleteLocalVariable(name);
-      }
-      history.replaceCurrent(interpreter.captureState());
-      finishInterpreterAction();
-      return true;
+      );
     },
-    [finishInterpreterAction, history, interpreter]
+    [commitInspectorMutation, interpreter]
+  );
+
+  const deleteInspectorValue = useCallback(
+    (scope: InspectorScope, name: string, indexes: readonly IndexType[]) => {
+      return commitInspectorMutation(
+        'Deleting this value will discard later snapshots and continue from here.',
+        () => {
+          deleteInspectorVariable(interpreter, scope, name, indexes);
+        }
+      );
+    },
+    [commitInspectorMutation, interpreter]
   );
 
   const runOrResume = useCallback(() => {
@@ -464,15 +552,9 @@ export function useStartEnvironment() {
     host,
     inputState,
     interpreter,
-    canEditInspectorValues: isRuntimeModeEditable(runtimeMode),
-    isRunDisabled: !isRuntimeModeRunnable(runtimeMode),
-    isStepDisabled: runtimeMode !== 'breakpoint' && runtimeMode !== 'idle',
-    isStopDisabled: !isRuntimeModeActive(runtimeMode),
-    isEditorReadOnly: isRuntimeModeActive(runtimeMode),
     outputTab,
     runtimeVersion: runtimeView.version,
     runProgram,
-    runLabel: isRuntimeModeContinuable(runtimeMode) ? 'Continue' : 'Run',
     runOrResume,
     setOutputTab,
     setShowInspector,
@@ -482,5 +564,6 @@ export function useStartEnvironment() {
     deleteInspectorValue,
     updateInspectorValue,
     updateSlider,
+    ...runtimeControls,
   };
 }
