@@ -51,6 +51,7 @@ export default memo(function Inspector({
   ) => boolean;
   updateSlider: (index: number) => void;
 }) {
+  const hasLocals = interpreter.localNamespaces !== null;
   const handleSliderChange = useCallback(
     (event: ChangeEvent<HTMLInputElement>) => {
       updateSlider(Number(event.target.value));
@@ -76,7 +77,7 @@ export default memo(function Inspector({
       </div>
       {error && <ErrorInspector error={error} />}
       {history.length > 0 && (
-        <div className={styles.grid}>
+        <div className={clsx(styles.grid, !hasLocals && styles.singleGrid)}>
           <NamespaceInspector
             title="Globals"
             scope="global"
@@ -85,14 +86,16 @@ export default memo(function Inspector({
             onValueChange={onValueChange}
             onValueDelete={onValueDelete}
           />
-          <NamespaceInspector
-            title="Locals"
-            scope="local"
-            namespace={interpreter.localNamespace}
-            canEditValues={canEditValues}
-            onValueChange={onValueChange}
-            onValueDelete={onValueDelete}
-          />
+          {hasLocals && (
+            <NamespaceInspector
+              title="Locals"
+              scope="local"
+              namespace={interpreter.localNamespace}
+              canEditValues={canEditValues}
+              onValueChange={onValueChange}
+              onValueDelete={onValueDelete}
+            />
+          )}
         </div>
       )}
     </div>

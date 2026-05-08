@@ -44,6 +44,10 @@
   overflow: hidden;
 }
 
+.singleGrid {
+  grid-template-rows: minmax(0, 1fr);
+}
+
 .namespace {
   display: flex;
   flex-direction: column;
