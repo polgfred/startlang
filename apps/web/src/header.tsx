@@ -188,6 +188,8 @@ export default memo(function Header({
   runExample,
   runProgram,
   runLabel,
+  stepProgram,
+  isStepDisabled,
   stopProgram,
   isStopDisabled,
 }: {
@@ -201,6 +203,8 @@ export default memo(function Header({
   runExample: () => void;
   runProgram: () => void;
   runLabel: string;
+  stepProgram: () => void;
+  isStepDisabled: boolean;
   stopProgram: () => void;
   isStopDisabled: boolean;
 }) {
@@ -240,6 +244,17 @@ export default memo(function Header({
           )}
         >
           {runLabel}
+        </Button>
+        <Button
+          disabled={isStepDisabled}
+          onClick={stepProgram}
+          className={clsx(
+            controls.button,
+            styles.headerButton,
+            styles.stepButton
+          )}
+        >
+          Step
         </Button>
         <Button
           disabled={isStopDisabled}

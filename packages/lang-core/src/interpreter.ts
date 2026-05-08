@@ -14,6 +14,7 @@ import {
 } from './nodes/index.js';
 import {
   breakpointSuspension,
+  isBreakpointSuspension,
   isRuntimeSuspension,
   type RuntimeSuspension,
 } from './suspension.js';
@@ -70,6 +71,7 @@ export class Interpreter<THostSnapshot = unknown> {
   pendingEffects: RuntimeEffect[] = [];
   effectHandler: RuntimeEffectHandler | null = null;
   markersMap: MarkerMap = emptyMarkerMap;
+  private shouldStepToNextStatement = false;
 
   constructor(
     public readonly host: SupportsSnapshots<THostSnapshot> = new NullPresentationHost() as SupportsSnapshots<THostSnapshot>
@@ -165,10 +167,31 @@ export class Interpreter<THostSnapshot = unknown> {
       throw new Error('interpreter is not suspended');
     }
 
+    this.resumeSuspension(response);
+    return this.runLoop();
+  }
+
+  async stepToNextStatement() {
+    if (!isBreakpointSuspension(this.suspension)) {
+      throw new Error('interpreter is not suspended on a breakpoint');
+    }
+
+    this.resumeSuspension(undefined);
+    this.shouldStepToNextStatement = true;
+    try {
+      return await this.runLoop();
+    } finally {
+      this.shouldStepToNextStatement = false;
+    }
+  }
+
+  private resumeSuspension(response: unknown) {
     const suspension = this.suspension;
     this.suspension = null;
+    if (!suspension) {
+      throw new Error('interpreter is not suspended');
+    }
     suspension.resume(this, response);
-    return this.runLoop();
   }
 
   setEffect(effect: RuntimeEffect) {
@@ -242,11 +265,21 @@ export class Interpreter<THostSnapshot = unknown> {
     } else {
       this.pushFrame(node.makeFrame());
       const marker = this.markersMap(node);
-      if (marker) {
+      // pushNode is the interpreter's node-entry point, so this catches the
+      // next statement without re-pausing when expression frames return to
+      // their enclosing statement.
+      const shouldSuspendForStep =
+        this.shouldStepToNextStatement && node.isStatement;
+      if (marker || shouldSuspendForStep) {
         this.setEffect(snapshotEffect);
+      }
+      if (marker) {
         if (marker === 'breakpoint') {
           this.suspension = breakpointSuspension;
         }
+      }
+      if (shouldSuspendForStep) {
+        this.suspension = breakpointSuspension;
       }
     }
   }

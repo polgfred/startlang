@@ -1,6 +1,12 @@
 import { EditorModel } from '@startlang/lang-core/editor-model';
 import { Interpreter } from '@startlang/lang-core/interpreter';
-import { BlockNode, IfNode, RepeatNode } from '@startlang/lang-core/nodes';
+import {
+  BlockNode,
+  CallExpressionNode,
+  IfNode,
+  LetNode,
+  RepeatNode,
+} from '@startlang/lang-core/nodes';
 import { parse } from '@startlang/lang-core/parser.peggy';
 import { isBreakpointSuspension } from '@startlang/lang-core/suspension';
 import type { MarkerType } from '@startlang/lang-core/types';
@@ -167,6 +173,104 @@ describe('marker maps', () => {
     interpreter.setMarkerMap(mapMarkers(rootNode, []));
 
     expect(performance.now() - startedAt).toBeLessThan(100);
+  });
+
+  it('marks block-level nodes as statements without marking expression nodes', () => {
+    const rootNode = parse(['value = abs(-1)', 'print value', ''].join('\n'));
+    const [letNode, printNode] = (rootNode as BlockNode).elems;
+    const callExpression = (letNode as LetNode).value;
+
+    expect(letNode.isStatement).toBe(true);
+    expect(printNode.isStatement).toBe(true);
+    expect(callExpression).toBeInstanceOf(CallExpressionNode);
+    expect(callExpression.isStatement).toBe(false);
+  });
+
+  it('steps from a breakpoint to the next statement without stopping in expressions', async () => {
+    const source = [
+      'value = 1',
+      'value = (1 + 2) * 3',
+      'value = value + 1',
+      '',
+    ].join('\n');
+    const markers: MarkerType[] = [];
+    const rootNode = parse(source);
+    const interpreter = new Interpreter();
+
+    markers[1] = 'breakpoint';
+    interpreter.setMarkerMap(mapMarkers(rootNode, markers));
+
+    let result = await interpreter.run(rootNode);
+
+    if (result.status !== 'suspended') {
+      throw new Error(`expected suspension, got ${result.status}`);
+    }
+    expect(isBreakpointSuspension(result.suspension)).toBe(true);
+    expect(interpreter.topFrame.head.node.location.start.line).toBe(1);
+
+    result = await interpreter.stepToNextStatement();
+
+    if (result.status !== 'suspended') {
+      throw new Error(`expected suspension, got ${result.status}`);
+    }
+    expect(isBreakpointSuspension(result.suspension)).toBe(true);
+    expect(interpreter.topFrame.head.node.location.start.line).toBe(2);
+    expect(interpreter.topFrame.head.node.isStatement).toBe(true);
+    expect(interpreter.getVariable('value')).toBe(1);
+
+    result = await interpreter.stepToNextStatement();
+
+    if (result.status !== 'suspended') {
+      throw new Error(`expected suspension, got ${result.status}`);
+    }
+    expect(isBreakpointSuspension(result.suspension)).toBe(true);
+    expect(interpreter.topFrame.head.node.location.start.line).toBe(3);
+    expect(interpreter.topFrame.head.node.isStatement).toBe(true);
+    expect(interpreter.getVariable('value')).toBe(9);
+
+    result = await interpreter.stepToNextStatement();
+
+    expect(result.status).toBe('completed');
+    expect(interpreter.getVariable('value')).toBe(10);
+  });
+
+  it('steps from a false if condition to its else-if statement', async () => {
+    const source = [
+      'value = 0',
+      'if false then',
+      '  value = 1',
+      'else if true then',
+      '  value = 2',
+      'end',
+      '',
+    ].join('\n');
+    const markers: MarkerType[] = [];
+    const rootNode = parse(source);
+    const interpreter = new Interpreter();
+
+    markers[2] = 'breakpoint';
+    interpreter.setMarkerMap(mapMarkers(rootNode, markers));
+
+    let result = await interpreter.run(rootNode);
+
+    if (result.status !== 'suspended') {
+      throw new Error(`expected suspension, got ${result.status}`);
+    }
+    expect(interpreter.topFrame.head.node.location.start.line).toBe(2);
+
+    result = await interpreter.stepToNextStatement();
+
+    if (result.status !== 'suspended') {
+      throw new Error(`expected suspension, got ${result.status}`);
+    }
+    expect(interpreter.topFrame.head.node.location.start.line).toBe(4);
+
+    result = await interpreter.stepToNextStatement();
+
+    if (result.status !== 'suspended') {
+      throw new Error(`expected suspension, got ${result.status}`);
+    }
+    expect(interpreter.topFrame.head.node.location.start.line).toBe(5);
   });
 
   it('reads marker values from the live marker array', async () => {

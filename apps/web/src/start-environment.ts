@@ -334,6 +334,18 @@ export function useStartEnvironment() {
     }
   }, [captureFinalState, finishInterpreterAction, highlightNode, interpreter]);
 
+  const stepToNextStatement = useCallback(async () => {
+    setError(null);
+    highlightNode(null);
+
+    try {
+      const result = await interpreter.stepToNextStatement();
+      captureFinalState(result);
+    } finally {
+      finishInterpreterAction();
+    }
+  }, [captureFinalState, finishInterpreterAction, highlightNode, interpreter]);
+
   const continueFromSnapshot = useCallback(async () => {
     setError(null);
     highlightNode(null);
@@ -450,6 +462,7 @@ export function useStartEnvironment() {
     interpreter,
     canEditInspectorValues: isRuntimeModeEditable(runtimeMode),
     isRunDisabled: !isRuntimeModeRunnable(runtimeMode),
+    isStepDisabled: runtimeMode !== 'breakpoint',
     isStopDisabled: !isRuntimeModeActive(runtimeMode),
     isEditorReadOnly: isRuntimeModeActive(runtimeMode),
     outputTab,
@@ -461,6 +474,7 @@ export function useStartEnvironment() {
     setShowInspector,
     showInspector,
     stopProgram,
+    stepToNextStatement,
     deleteInspectorValue,
     updateInspectorValue,
     updateSlider,

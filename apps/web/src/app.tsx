@@ -22,6 +22,8 @@ export default function App() {
         runExample={env.runProgram}
         runProgram={env.runOrResume}
         runLabel={env.runLabel}
+        stepProgram={env.stepToNextStatement}
+        isStepDisabled={env.isStepDisabled}
         stopProgram={env.stopProgram}
         isStopDisabled={env.isStopDisabled}
       />
