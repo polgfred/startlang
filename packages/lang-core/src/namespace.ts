@@ -1,13 +1,10 @@
 import { original, produce, type Producer } from 'immer';
 
+import type { DataHandler } from './handlers/base.js';
 import type { IndexType, NamespaceType } from './types.js';
 import { Cons } from './utils/cons.js';
 
-interface IndexHandler {
-  getIndex(value: unknown, index: IndexType): unknown;
-  setIndex(value: unknown, index: IndexType, element: unknown): void;
-  deleteIndex(value: unknown, index: IndexType): void;
-}
+type IndexHandler = Pick<DataHandler, 'getIndex' | 'setIndex' | 'deleteIndex'>;
 
 type IndexHandlerResolver = (value: unknown) => IndexHandler;
 
