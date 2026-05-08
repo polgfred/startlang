@@ -59,6 +59,18 @@ export type RunResult =
   | { status: 'completed' }
   | { status: 'suspended'; suspension: RuntimeSuspension };
 
+export class RuntimeError extends Error {
+  constructor(
+    err: unknown,
+    public readonly node: Node
+  ) {
+    super(err instanceof Error ? err.message : String(err), {
+      cause: err,
+    });
+    this.name = 'RuntimeError';
+  }
+}
+
 export class Interpreter<THostSnapshot = unknown> {
   dataHandlers: DataHandler[] = [];
   namespace = new RuntimeNamespace((value) => this.getHandler(value));
@@ -153,10 +165,20 @@ export class Interpreter<THostSnapshot = unknown> {
           return { status: 'completed' };
         }
 
-        const result = this.topFrame.head.visit(this);
-        if (result instanceof Promise) {
-          await result;
-        } else if (isRuntimeSuspension(result)) {
+        const frame = this.topFrame.head;
+        let result;
+        try {
+          result = frame.visit(this);
+          if (result instanceof Promise) {
+            result = await result;
+          }
+        } catch (err) {
+          throw err instanceof RuntimeError
+            ? err
+            : new RuntimeError(err, frame.node);
+        }
+
+        if (isRuntimeSuspension(result)) {
           this.suspension = result;
         }
 

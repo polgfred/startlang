@@ -1,4 +1,4 @@
-import { Interpreter } from '@startlang/lang-core/interpreter';
+import { Interpreter, RuntimeError } from '@startlang/lang-core/interpreter';
 import { parse } from '@startlang/lang-core/parser.peggy';
 import { runtimeGlobals } from '@startlang/lang-core/runtime-globals';
 import type { RuntimeFunctions } from '@startlang/lang-core/types';
@@ -262,6 +262,18 @@ describe('core language snippets', () => {
     await expect(runSnippet('bad = format(1, "bogus")')).rejects.toThrow(
       'invalid format: bogus'
     );
+  });
+
+  it('attaches the current source node to runtime errors', async () => {
+    await expect(runSnippet('bad = 1 + "1"')).rejects.toMatchObject({
+      node: {
+        location: {
+          start: { line: 1 },
+        },
+      },
+    });
+
+    await expect(runSnippet('missing()')).rejects.toBeInstanceOf(RuntimeError);
   });
 
   it('runs if, else-if, and else branches', async () => {
