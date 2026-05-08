@@ -109,15 +109,23 @@ export class RuntimeNamespace {
   }
 
   get globalNamespace() {
+    return this.global;
+  }
+
+  get globalValues() {
     return this.global.values;
   }
 
   get localNamespace() {
-    return this.locals?.head.values ?? emptyObject;
+    return this.locals?.head ?? null;
   }
 
-  get localNamespaces(): Cons<NamespaceType> | null {
-    return mapNamespaceStack(this.locals, (namespace) => namespace.values);
+  get localValues() {
+    return this.localNamespace?.values ?? emptyObject;
+  }
+
+  get localNamespaces() {
+    return this.locals;
   }
 
   reset() {
@@ -239,14 +247,11 @@ export class RuntimeNamespace {
   }
 
   restore(
-    globalNamespace: NamespaceType,
-    localNamespaces: Cons<NamespaceType> | null
+    globalNamespace: Namespace,
+    localNamespaces: Cons<Namespace> | null
   ) {
-    this.global = new Namespace(this.getHandler, globalNamespace);
-    this.locals = mapNamespaceStack(
-      localNamespaces,
-      (values) => new Namespace(this.getHandler, values)
-    );
+    this.global = globalNamespace;
+    this.locals = localNamespaces;
   }
 
   private requireTopNamespace() {
@@ -278,13 +283,4 @@ export class RuntimeNamespace {
   private withResolvedVariable(name: string) {
     return new Namespace(this.getHandler).set(name, this.getVariable(name));
   }
-}
-
-function mapNamespaceStack<T, U>(
-  stack: Cons<T> | null,
-  mapper: (value: T) => U
-): Cons<U> | null {
-  return stack
-    ? new Cons(mapper(stack.head), mapNamespaceStack(stack.tail, mapper))
-    : null;
 }

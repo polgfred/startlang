@@ -3,7 +3,7 @@ import { castDraft, produce, type Producer } from 'immer';
 import { emptyMarkerMap, type MarkerMap } from './editor-markers.js';
 import { DataHandler, installHandlers } from './handlers/index.js';
 import { NullPresentationHost, type SupportsSnapshots } from './host.js';
-import { RuntimeNamespace } from './namespace.js';
+import { Namespace, RuntimeNamespace } from './namespace.js';
 import {
   Frame,
   Node,
@@ -17,7 +17,7 @@ import {
   isRuntimeSuspension,
   type RuntimeSuspension,
 } from './suspension.js';
-import type { IndexType, NamespaceType, RuntimeFunctions } from './types.js';
+import type { IndexType, RuntimeFunctions } from './types.js';
 import { Cons } from './utils/cons.js';
 
 type GlobalFunctions = Record<string, BeginNode>;
@@ -28,8 +28,8 @@ export type { SupportsSnapshots } from './host.js';
 
 export interface RuntimeState<THostSnapshot = unknown> {
   globalFunctions: GlobalFunctions;
-  globalNamespace: NamespaceType;
-  localNamespaces: Cons<NamespaceType> | null;
+  globalNamespace: Namespace;
+  localNamespaces: Cons<Namespace> | null;
   topFrame: Cons<Frame>;
   lastResult: unknown;
   suspension: RuntimeSuspension | null;
@@ -94,11 +94,11 @@ export class Interpreter<THostSnapshot = unknown> {
   }
 
   get globalNamespace() {
-    return this.namespace.globalNamespace;
+    return this.namespace.globalValues;
   }
 
   get localNamespace() {
-    return this.namespace.localNamespace;
+    return this.namespace.localValues;
   }
 
   get localNamespaces() {
@@ -385,7 +385,7 @@ export class Interpreter<THostSnapshot = unknown> {
   captureState(): RuntimeState<THostSnapshot> {
     return {
       globalFunctions: this.globalFunctions,
-      globalNamespace: this.globalNamespace,
+      globalNamespace: this.namespace.globalNamespace,
       localNamespaces: this.localNamespaces,
       topFrame: this.topFrame,
       lastResult: this.lastResult,

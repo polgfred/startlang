@@ -642,7 +642,7 @@ describe('core language suspensions and snapshots', () => {
     expect(history.entries).toHaveLength(1);
     expect(history.index).toBe(0);
     expect(history.isRewound).toBe(false);
-    expect(history.current?.globalNamespace.value).toBe(99);
+    expect(history.current?.globalNamespace.values.value).toBe(99);
   });
 
   it('takes marker snapshots and breakpoint suspensions at node entry', async () => {
