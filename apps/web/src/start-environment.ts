@@ -11,7 +11,6 @@ import {
   type RunResult,
   type RuntimeState,
 } from '@startlang/lang-core/interpreter';
-import { rootFrame } from '@startlang/lang-core/nodes';
 import { runtimeGlobals } from '@startlang/lang-core/runtime-globals';
 import { RuntimeHistory } from '@startlang/lang-core/runtime-history';
 import {
@@ -33,10 +32,10 @@ import { useEditor } from './editor-context.jsx';
 type OutputTab = 'graphics' | 'text';
 
 interface RuntimeStatus {
+  isComplete: boolean;
   isRunning: boolean;
   isRewound: boolean;
   suspension: RuntimeState<BrowserPresentationSnapshot>['suspension'];
-  topFrame: RuntimeState<BrowserPresentationSnapshot>['topFrame'];
 }
 
 interface RuntimeView
@@ -64,7 +63,7 @@ function getRuntimeMode(status: RuntimeStatus): RuntimeMode {
     return 'breakpoint';
   } else if (status.isRewound) {
     return 'rewound';
-  } else if (status.topFrame !== rootFrame) {
+  } else if (!status.isComplete) {
     return 'continuable';
   } else {
     return 'idle';
@@ -100,6 +99,7 @@ function createInterpreterStore(
       ...interpreter.captureState(),
       historyLength: history.length,
       historyIndex: history.index,
+      isComplete: interpreter.isComplete,
       isRunning: interpreter.isRunning,
       isSuspended: interpreter.isSuspended,
       isRewound: history.isRewound,
@@ -188,10 +188,10 @@ export function useStartEnvironment() {
 
   const syncHighlight = useCallback(() => {
     const mode = getRuntimeMode({
+      isComplete: interpreter.isComplete,
       isRunning: interpreter.isRunning,
       isRewound: history.isRewound,
       suspension: interpreter.suspension,
-      topFrame: interpreter.topFrame,
     });
     if (mode === 'breakpoint' || mode === 'rewound' || mode === 'continuable') {
       highlightNode(interpreter.topFrame.head.node);

@@ -91,6 +91,10 @@ export class Interpreter<THostSnapshot = unknown> {
     return this.suspension !== null;
   }
 
+  get isComplete() {
+    return this.topFrame === rootFrame;
+  }
+
   run(node: Node) {
     this.globalFunctions = emptyObject;
     this.globalNamespace = emptyObject;
