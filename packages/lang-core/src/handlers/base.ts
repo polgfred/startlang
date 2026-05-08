@@ -20,6 +20,10 @@ export abstract class DataHandler {
     throw new Error('not supported');
   }
 
+  deleteIndex(value: unknown, index: IndexType): void {
+    throw new Error('not supported');
+  }
+
   getIterable(value: unknown): ListType {
     throw new Error('not supported');
   }

@@ -292,15 +292,34 @@ export class Interpreter<THostSnapshot = unknown> {
     }
   }
 
+  deleteVariable(name: string) {
+    if (this.topNamespace !== rootNamespace) {
+      this.deleteTopNamespaceVariable(name);
+    } else {
+      this.deleteGlobalVariable(name);
+    }
+  }
+
   setGlobalVariable(name: string, value: unknown) {
     this.globalNamespace = produce(this.globalNamespace, (draft) => {
       draft[name] = value;
     });
   }
 
+  deleteGlobalVariable(name: string) {
+    this.globalNamespace = produce(this.globalNamespace, (draft) => {
+      delete draft[name];
+    });
+  }
+
   setLocalVariable(name: string, value: unknown) {
     this.requireLocalVariable(name);
     this.setTopNamespaceVariable(name, value);
+  }
+
+  deleteLocalVariable(name: string) {
+    this.requireLocalVariable(name);
+    this.deleteTopNamespaceVariable(name);
   }
 
   getVariableIndex(name: string, indexes: readonly IndexType[]) {
@@ -318,6 +337,10 @@ export class Interpreter<THostSnapshot = unknown> {
     this.setVariable(name, this.produceIndexedValue(name, indexes, value));
   }
 
+  deleteVariableIndex(name: string, indexes: readonly IndexType[]) {
+    this.setVariable(name, this.produceDeletedIndexedValue(name, indexes));
+  }
+
   setGlobalVariableIndex(
     name: string,
     indexes: readonly IndexType[],
@@ -326,6 +349,13 @@ export class Interpreter<THostSnapshot = unknown> {
     this.setGlobalVariable(
       name,
       this.produceIndexedValueFrom(this.globalNamespace[name], indexes, value)
+    );
+  }
+
+  deleteGlobalVariableIndex(name: string, indexes: readonly IndexType[]) {
+    this.setGlobalVariable(
+      name,
+      this.produceDeletedIndexedValueFrom(this.globalNamespace[name], indexes)
     );
   }
 
@@ -341,10 +371,26 @@ export class Interpreter<THostSnapshot = unknown> {
     );
   }
 
+  deleteLocalVariableIndex(name: string, indexes: readonly IndexType[]) {
+    const currentValue = this.requireLocalVariable(name);
+    this.setTopNamespaceVariable(
+      name,
+      this.produceDeletedIndexedValueFrom(currentValue, indexes)
+    );
+  }
+
   private setTopNamespaceVariable(name: string, value: unknown) {
     this.topNamespace = this.topNamespace.swap(
       produce(this.topNamespace.head, (draft) => {
         draft[name] = value;
+      })
+    );
+  }
+
+  private deleteTopNamespaceVariable(name: string) {
+    this.topNamespace = this.topNamespace.swap(
+      produce(this.topNamespace.head, (draft) => {
+        Reflect.deleteProperty(draft, name);
       })
     );
   }
@@ -370,6 +416,13 @@ export class Interpreter<THostSnapshot = unknown> {
     return this.produceIndexedValueFrom(this.getVariable(name), indexes, value);
   }
 
+  private produceDeletedIndexedValue(
+    name: string,
+    indexes: readonly IndexType[]
+  ) {
+    return this.produceDeletedIndexedValueFrom(this.getVariable(name), indexes);
+  }
+
   private produceIndexedValueFrom(
     currentValue: unknown,
     indexes: readonly IndexType[],
@@ -380,6 +433,22 @@ export class Interpreter<THostSnapshot = unknown> {
         const handler = this.getHandler(original(draft));
         if (i === indexes.length - 1) {
           handler.setIndex(draft, index, value);
+        } else {
+          return handler.getIndex(draft, index);
+        }
+      }, draft);
+    });
+  }
+
+  private produceDeletedIndexedValueFrom(
+    currentValue: unknown,
+    indexes: readonly IndexType[]
+  ) {
+    return produce(currentValue, (draft: unknown) => {
+      indexes.reduce((draft, index, i) => {
+        const handler = this.getHandler(original(draft));
+        if (i === indexes.length - 1) {
+          handler.deleteIndex(draft, index);
         } else {
           return handler.getIndex(draft, index);
         }

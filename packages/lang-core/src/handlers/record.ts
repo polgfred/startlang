@@ -33,6 +33,10 @@ export class RecordHandler extends DataHandler {
     value[index] = element;
   }
 
+  deleteIndex(value: WritableDraft<RecordType>, index: string) {
+    delete value[index];
+  }
+
   getIterable(value: RecordType) {
     return Object.keys(value);
   }

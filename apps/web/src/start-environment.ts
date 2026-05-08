@@ -396,6 +396,36 @@ export function useStartEnvironment() {
     [finishInterpreterAction, history, interpreter]
   );
 
+  const deleteInspectorValue = useCallback(
+    (scope: 'global' | 'local', name: string, indexes: readonly IndexType[]) => {
+      if (
+        history.isRewound &&
+        !window.confirm(
+          'Deleting this value will discard later snapshots and continue from here.'
+        )
+      ) {
+        return false;
+      }
+
+      setError(null);
+      if (scope === 'global') {
+        if (indexes.length > 0) {
+          interpreter.deleteGlobalVariableIndex(name, indexes);
+        } else {
+          interpreter.deleteGlobalVariable(name);
+        }
+      } else if (indexes.length > 0) {
+        interpreter.deleteLocalVariableIndex(name, indexes);
+      } else {
+        interpreter.deleteLocalVariable(name);
+      }
+      history.replaceCurrent(interpreter.captureState());
+      finishInterpreterAction();
+      return true;
+    },
+    [finishInterpreterAction, history, interpreter]
+  );
+
   const runOrResume = useCallback(() => {
     switch (runtimeMode) {
       case 'breakpoint':
@@ -431,6 +461,7 @@ export function useStartEnvironment() {
     setShowInspector,
     showInspector,
     stopProgram,
+    deleteInspectorValue,
     updateInspectorValue,
     updateSlider,
   };

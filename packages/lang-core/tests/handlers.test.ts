@@ -41,9 +41,12 @@ describe('data handlers', () => {
     expect(() => interpreter.getHandler('abc').getIterable('abc')).toThrow(
       'not supported'
     );
+    expect(() => interpreter.getHandler('abc').deleteIndex('abc', 1)).toThrow(
+      'not supported'
+    );
   });
 
-  it('gets and sets indexes through type handlers', () => {
+  it('gets, sets, and deletes indexes through type handlers', () => {
     const interpreter = new Interpreter();
 
     interpreter.setVariable('list', [10, 20, [30, 40]]);
@@ -63,6 +66,12 @@ describe('data handlers', () => {
     expect(interpreter.getVariable('record')).toEqual({
       user: { name: 'Grace' },
     });
+
+    interpreter.deleteVariableIndex('list', [3, 1]);
+    interpreter.deleteVariableIndex('record', ['user', 'name']);
+
+    expect(interpreter.getVariable('list')).toEqual([10, 20, [40]]);
+    expect(interpreter.getVariable('record')).toEqual({ user: {} });
   });
 
   it('updates global and local variables explicitly', () => {
@@ -79,6 +88,18 @@ describe('data handlers', () => {
     expect(interpreter.globalNamespace.shared).toEqual({ values: [10, 2] });
     expect(interpreter.topNamespace.head.shared).toEqual({ values: [3, 40] });
     expect(interpreter.getVariable('shared')).toEqual({ values: [3, 40] });
+
+    interpreter.deleteGlobalVariableIndex('shared', ['values', 1]);
+    interpreter.deleteLocalVariableIndex('shared', ['values', 2]);
+
+    expect(interpreter.globalNamespace.shared).toEqual({ values: [2] });
+    expect(interpreter.topNamespace.head.shared).toEqual({ values: [3] });
+
+    interpreter.deleteGlobalVariable('shared');
+    interpreter.deleteLocalVariable('shared');
+
+    expect(interpreter.globalNamespace.shared).toBeUndefined();
+    expect(interpreter.topNamespace.head.shared).toBeUndefined();
   });
 
   it('requires explicit local updates to target existing locals', () => {
@@ -96,6 +117,30 @@ describe('data handlers', () => {
     expect(() => interpreter.setLocalVariableIndex('missing', [1], 1)).toThrow(
       'local variable missing not found'
     );
+    expect(() => interpreter.deleteLocalVariable('missing')).toThrow(
+      'local variable missing not found'
+    );
+    expect(() => interpreter.deleteLocalVariableIndex('missing', [1])).toThrow(
+      'local variable missing not found'
+    );
+  });
+
+  it('deletes variables in the active namespace', () => {
+    const interpreter = new Interpreter();
+
+    interpreter.setVariable('value', 1);
+    interpreter.deleteVariable('value');
+    expect(interpreter.getVariable('value')).toBeUndefined();
+
+    interpreter.setGlobalVariable('value', 1);
+    interpreter.pushNamespace((draft) => {
+      draft.value = 2;
+    });
+
+    interpreter.deleteVariable('value');
+
+    expect(interpreter.topNamespace.head.value).toBeUndefined();
+    expect(interpreter.getVariable('value')).toBe(1);
   });
 
   it('exposes list and record iteration values', () => {

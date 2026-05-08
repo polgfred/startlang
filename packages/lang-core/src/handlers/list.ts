@@ -36,6 +36,11 @@ export class ListHandler extends DataHandler {
     value[index] = element;
   }
 
+  deleteIndex(value: WritableDraft<ListType>, index: number) {
+    index = adjustIndex(index, value.length);
+    value.splice(index, 1);
+  }
+
   getIterable(value: ListType) {
     return value;
   }

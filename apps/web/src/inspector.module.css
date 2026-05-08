@@ -166,6 +166,12 @@
   min-width: 0;
 }
 
+.actionGroup {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+}
+
 .editor {
   display: flex;
   flex-wrap: wrap;

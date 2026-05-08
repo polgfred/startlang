@@ -30,6 +30,7 @@ export default memo(function Inspector({
   interpreter,
   canEditValues,
   onValueChange,
+  onValueDelete,
   updateSlider,
 }: {
   error: Error | null;
@@ -42,6 +43,11 @@ export default memo(function Inspector({
     name: string,
     indexes: readonly IndexType[],
     value: unknown
+  ) => boolean;
+  onValueDelete: (
+    scope: InspectorScope,
+    name: string,
+    indexes: readonly IndexType[]
   ) => boolean;
   updateSlider: (index: number) => void;
 }) {
@@ -77,6 +83,7 @@ export default memo(function Inspector({
             namespace={interpreter.globalNamespace}
             canEditValues={canEditValues}
             onValueChange={onValueChange}
+            onValueDelete={onValueDelete}
           />
           <NamespaceInspector
             title="Locals"
@@ -84,6 +91,7 @@ export default memo(function Inspector({
             namespace={interpreter.topNamespace.head}
             canEditValues={canEditValues}
             onValueChange={onValueChange}
+            onValueDelete={onValueDelete}
           />
         </div>
       )}
@@ -119,6 +127,7 @@ const NamespaceInspector = memo(function NamespaceInspector({
   namespace,
   canEditValues,
   onValueChange,
+  onValueDelete,
 }: {
   title: string;
   scope: InspectorScope;
@@ -129,6 +138,11 @@ const NamespaceInspector = memo(function NamespaceInspector({
     name: string,
     indexes: readonly IndexType[],
     value: unknown
+  ) => boolean;
+  onValueDelete: (
+    scope: InspectorScope,
+    name: string,
+    indexes: readonly IndexType[]
   ) => boolean;
 }) {
   const entries = Object.entries(namespace);
@@ -154,6 +168,7 @@ const NamespaceInspector = memo(function NamespaceInspector({
               depth={0}
               canEditValues={canEditValues}
               onValueChange={onValueChange}
+              onValueDelete={onValueDelete}
             />
           ))}
         </div>
@@ -171,6 +186,7 @@ function ValueNode({
   depth,
   canEditValues,
   onValueChange,
+  onValueDelete,
 }: {
   label: string;
   value: unknown;
@@ -184,6 +200,11 @@ function ValueNode({
     name: string,
     indexes: readonly IndexType[],
     value: unknown
+  ) => boolean;
+  onValueDelete: (
+    scope: InspectorScope,
+    name: string,
+    indexes: readonly IndexType[]
   ) => boolean;
 }) {
   const isList = Array.isArray(value);
@@ -222,6 +243,7 @@ function ValueNode({
           depth={depth + 1}
           canEditValues={canEditValues}
           onValueChange={onValueChange}
+          onValueDelete={onValueDelete}
         />
       );
     }
@@ -240,6 +262,7 @@ function ValueNode({
           depth={depth + 1}
           canEditValues={canEditValues}
           onValueChange={onValueChange}
+          onValueDelete={onValueDelete}
         />
       );
     }
@@ -267,13 +290,34 @@ function ValueNode({
         </div>
         <div className={styles.nodeValue}>
           {isExpandable ? (
-            <span className={styles.summary}>{summaryFor(value)}</span>
+            <span className={styles.valuePreview}>
+              <span className={styles.summary}>{summaryFor(value)}</span>
+              {canEditValues && (
+                <span className={styles.actionGroup}>
+                  <Button
+                    onClick={() => {
+                      onValueDelete(scope, variableName, indexes);
+                    }}
+                    className={clsx(
+                      controls.button,
+                      controls.buttonBare,
+                      styles.actionButton
+                    )}
+                  >
+                    Delete
+                  </Button>
+                </span>
+              )}
+            </span>
           ) : (
             <PrimitiveEditor
               value={value}
               disabled={!canEditValues}
               onChange={(nextValue) => {
                 return onValueChange(scope, variableName, indexes, nextValue);
+              }}
+              onDelete={() => {
+                return onValueDelete(scope, variableName, indexes);
               }}
             />
           )}
@@ -327,10 +371,12 @@ function PrimitiveEditor({
   value,
   disabled,
   onChange,
+  onDelete,
 }: {
   value: unknown;
   disabled: boolean;
   onChange: (value: unknown) => boolean;
+  onDelete: () => boolean;
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [draft, setDraft] = useState(() => editableTextFor(value));
@@ -408,18 +454,30 @@ function PrimitiveEditor({
       <span className={styles.valuePreview}>
         <span className={styles.scalar}>{displayValueFor(value)}</span>
         {!disabled && (
-          <Button
-            onClick={() => {
-              setIsEditing(true);
-            }}
-            className={clsx(
-              controls.button,
-              controls.buttonBare,
-              styles.actionButton
-            )}
-          >
-            Edit
-          </Button>
+          <span className={styles.actionGroup}>
+            <Button
+              onClick={() => {
+                setIsEditing(true);
+              }}
+              className={clsx(
+                controls.button,
+                controls.buttonBare,
+                styles.actionButton
+              )}
+            >
+              Edit
+            </Button>
+            <Button
+              onClick={onDelete}
+              className={clsx(
+                controls.button,
+                controls.buttonBare,
+                styles.actionButton
+              )}
+            >
+              Delete
+            </Button>
+          </span>
         )}
       </span>
     );

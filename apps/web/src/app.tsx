@@ -66,6 +66,7 @@ export default function App() {
                 runtimeVersion={env.runtimeVersion}
                 canEditValues={env.canEditInspectorValues}
                 onValueChange={env.updateInspectorValue}
+                onValueDelete={env.deleteInspectorValue}
                 updateSlider={env.updateSlider}
               />
             </div>
