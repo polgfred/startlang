@@ -32,4 +32,18 @@ describe('syntax diagnostics', () => {
 
     expect(diagnostic?.message).toContain('a dotted name');
   });
+
+  it('requires whitespace between range keywords and values', () => {
+    const [diagnostic] = getSyntaxDiagnostics(
+      'for i=1to10by2do\nprint i\nend'
+    );
+
+    expect(diagnostic?.message).toContain('whitespace');
+  });
+
+  it('requires bracket indexes to contain values', () => {
+    const [diagnostic] = getSyntaxDiagnostics('x[] = 1');
+
+    expect(diagnostic?.message).toContain('a value');
+  });
 });

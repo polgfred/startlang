@@ -119,52 +119,52 @@ ControlBlock
   / WhileBlock
   / BeginBlock
 
-IfBody = if _ cond:Value _ then EOL body:Block {
+IfBody = if __ cond:Value __ then EOL body:Block {
   // capture the location here so we're mapping to the right lines
   return [cond, body, location()];
 }
 
 IfBlock
   // one-line if/then[/else]
-  = if _ cond:Value _ then _ tbody:Statement fbody:(_ else _ @Statement)? {
+  = if __ cond:Value __ then __ tbody:Statement fbody:(__ else __ @Statement)? {
       return buildIfTree([[cond, tbody, location()]], fbody);
     }
   // if/then[/else if/...][/else]
-  / cases:IfBody|1.., (_ else _)| fbody:(_ else EOL @Block)? _ end {
+  / cases:IfBody|1.., (_ else __)| fbody:(_ else EOL @Block)? _ end {
       return buildIfTree(cases, fbody);
     }
 
 DoBody
-  = do _ @statement:Statement
+  = do __ @statement:Statement
   / do EOL @body:Block _ end
 
 RepeatBlock
-  = repeat times:(_ @times:Value)? _ body:DoBody {
+  = repeat times:(__ @times:Value)? __ body:DoBody {
       return new RepeatNode(times, body).at(location());
     }
 
-Range = @initial:Value _ to _ @limit:Value @step:(_ by _ @Value)?
+Range = @initial:Value __ to __ @limit:Value @step:(__ by __ @Value)?
 
 ForBlock
   // for i from a to b by c
-  = for _ name:Symbol _ "=" _ range:Range _ body:DoBody {
+  = for __ name:Symbol _ "=" _ range:Range __ body:DoBody {
       const [initial, limit, step] = range;
       return new ForNode(name, initial, limit, step, body).at(location());
     }
   // for i in x
-  / for _ name:Symbol _ in _ iterable:Value _ body:DoBody {
+  / for __ name:Symbol __ in __ iterable:Value __ body:DoBody {
       return new ForInNode(name, iterable, body).at(location());
     }
 
 WhileBlock
-  = while _ cond:Value _ body:DoBody {
+  = while __ cond:Value __ body:DoBody {
       return new WhileNode(cond, body).at(location());
     }
 
 Params "parameter names" = Symbol|1.., (_ "," EOL? _)|
 
 BeginBlock
-  = begin _ name:Symbol _ params:("(" EOL? _ @Params? EOL? ")")? _ body:DoBody {
+  = begin __ name:Symbol params:(_ "(" EOL? _ @Params? EOL? ")")? __ body:DoBody {
       return new BeginNode(name, params ?? [], body).at(location());
     }
 
@@ -178,7 +178,7 @@ Statement
 ConfigOption = DottedSymbol
 
 SetStatement
-  = set _ option:ConfigOption _ "=" _ value:Value {
+  = set __ option:ConfigOption _ "=" _ value:Value {
       return new SetNode(option, value).at(location());
     }
 
@@ -186,18 +186,18 @@ FlowStatement
   = exit { return new ExitNode().at(location()); }
   / break { return new BreakNode().at(location()); }
   / next { return new NextNode().at(location()); }
-  / return result:(_ @Value)? { return new ReturnNode(result).at(location()); }
+  / return result:(__ @Value)? { return new ReturnNode(result).at(location()); }
 
 LetStatement
-  = (let _)? name:Symbol _ indexes:Indexes _ "=" _ value:Value {
-      return indexes.length > 0
+  = (let __)? name:Symbol _ indexes:Indexes? _ "=" _ value:Value {
+      return indexes
         ? buildIndex(name, indexes, value)
         : new LetNode(name, value).at(location());
     }
 
 DeleteStatement
-  = delete _ name:Symbol _ indexes:Indexes {
-      return indexes.length > 0
+  = delete __ name:Symbol _ indexes:Indexes? {
+      return indexes
         ? new DeleteIndexNode(name, indexes).at(location())
         : new DeleteNode(name).at(location());
     }
@@ -209,10 +209,10 @@ CallStatement
   //      - this fixes the case of "print (1+2)/3"
   //  2- try to match zero or more parenthesized arguments
   //  3- match a bare call with no parens or args
-  = name:Symbol _ args:Values body:(_ @DoBody)? {
+  = name:Symbol __ args:Values body:(__ @DoBody)? {
       return new CallStatementNode(name, args, body).at(location());
     }
-  / name:Symbol _ "(" EOL? _ args:Values? EOL? _ ")" body:(_ @DoBody)? {
+  / name:Symbol _ "(" EOL? _ args:Values? EOL? _ ")" body:(__ @DoBody)? {
       return new CallStatementNode(name, args ?? [], body).at(location());
     }
   / name:Symbol body:(_ @DoBody)? {
@@ -228,7 +228,7 @@ Value "a value" = ConjExpr
 // Conditions
 
 ConjExpr
-  = first:NotExpr rest:(_ @ConjOp _ @NotExpr)* {
+  = first:NotExpr rest:(__ @ConjOp __ @NotExpr)* {
       return buildLogicalExpr(first, rest);
     }
 
@@ -237,7 +237,7 @@ ConjOp
   / or
 
 NotExpr
-  = not _ right:RelExpr { return new LogicalNotNode(right).at(location()); }
+  = not __ right:RelExpr { return new LogicalNotNode(right).at(location()); }
   / RelExpr
 
 RelExpr
@@ -327,15 +327,15 @@ CallExpr
 // Indexes
 
 IndexExpr
-  = name:Symbol _ indexes:Indexes {
-      return indexes.length > 0
+  = name:Symbol indexes:(_ @Indexes)? {
+      return indexes
         ? buildIndex(name, indexes)
         : new VarNode(name).at(location());
     }
   / PrimaryExpr
 
 Indexes
-  = segments:IndexSegment* {
+  = segments:IndexSegment|1..| {
       // flatten segments into a single chain of indexes
       return segments.flat();
     }
@@ -490,5 +490,7 @@ Reserved
 WB = ![a-z_]i
 
 _ "whitespace" = [ \t]* (";" [^\n]*)?
+
+__ "whitespace" = [ \t]+ (";" [^\n]*)?
 
 EOL "end of line" = (_ "\n")+
