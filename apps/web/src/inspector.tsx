@@ -298,13 +298,15 @@ function ValueNode({
                     onClick={() => {
                       onValueDelete(scope, variableName, indexes);
                     }}
+                    aria-label="Delete value"
+                    title="Delete"
                     className={clsx(
                       controls.button,
                       controls.buttonBare,
-                      styles.actionButton
+                      styles.iconActionButton
                     )}
                   >
-                    Delete
+                    <TrashIcon />
                   </Button>
                 </span>
               )}
@@ -459,23 +461,27 @@ function PrimitiveEditor({
               onClick={() => {
                 setIsEditing(true);
               }}
+              aria-label="Edit value"
+              title="Edit"
               className={clsx(
                 controls.button,
                 controls.buttonBare,
-                styles.actionButton
+                styles.iconActionButton
               )}
             >
-              Edit
+              <PencilIcon />
             </Button>
             <Button
               onClick={onDelete}
+              aria-label="Delete value"
+              title="Delete"
               className={clsx(
                 controls.button,
                 controls.buttonBare,
-                styles.actionButton
+                styles.iconActionButton
               )}
             >
-              Delete
+              <TrashIcon />
             </Button>
           </span>
         )}
@@ -595,4 +601,35 @@ function parseEditedValue(originalValue: unknown, draft: string) {
   }
 
   return draft;
+}
+
+function PencilIcon() {
+  return (
+    <svg
+      className={styles.actionIcon}
+      viewBox="0 0 16 16"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path d="M3 11.5 2.5 14l2.5-.5 7.1-7.1-2-2L3 11.5Z" />
+      <path d="m9.4 3.7 1-1a1.4 1.4 0 0 1 2 0l.9.9a1.4 1.4 0 0 1 0 2l-1 1-2.9-2.9Z" />
+    </svg>
+  );
+}
+
+function TrashIcon() {
+  return (
+    <svg
+      className={styles.actionIcon}
+      viewBox="0 0 16 16"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path d="M3 4.5h10" />
+      <path d="M6.5 4.5v-1h3v1" />
+      <path d="M5 6v6.5A1.5 1.5 0 0 0 6.5 14h3A1.5 1.5 0 0 0 11 12.5V6" />
+      <path d="M7 7.5v4" />
+      <path d="M9 7.5v4" />
+    </svg>
+  );
 }
