@@ -248,6 +248,55 @@
   font-size: 12px;
 }
 
+.errorPanel {
+  flex: 0 0 auto;
+  margin-top: 10px;
+  padding: 10px 12px;
+  color: var(--color-text);
+  background: rgba(170, 0, 0, 0.06);
+  border: 1px solid rgba(170, 0, 0, 0.24);
+  border-left: 4px solid var(--color-error);
+  border-radius: 4px;
+}
+
+.errorHeader {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.errorMark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  color: var(--color-surface);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  background: var(--color-error);
+  border-radius: 50%;
+}
+
+.errorTitle {
+  margin: 0;
+  color: var(--color-error);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.errorMessage {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.4;
+  white-space: pre-wrap;
+}
+
 .moreRow {
   padding: 4px 0 4px calc(var(--depth) * 18px + 26px);
 }

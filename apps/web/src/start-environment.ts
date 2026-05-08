@@ -389,11 +389,17 @@ export function useStartEnvironment() {
       try {
         const result = await action();
         captureFinalState(result);
+      } catch (err) {
+        const error = err instanceof Error ? err : new Error(String(err));
+        interpreter.stop();
+        captureFinalState({ status: 'completed' });
+        setError(error);
+        setShowInspector(true);
       } finally {
         finishInterpreterAction();
       }
     },
-    [captureFinalState, finishInterpreterAction, highlightNode]
+    [captureFinalState, finishInterpreterAction, highlightNode, interpreter]
   );
 
   const resumeInput = useCallback(
@@ -432,16 +438,33 @@ export function useStartEnvironment() {
 
   const startProgram = useCallback(
     async (runParsedProgram: (node: Node) => Promise<RunResult>) => {
+      let program: ReturnType<typeof parseProgram>;
+      try {
+        program = parseProgram();
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        setError(new Error(message));
+        setShowInspector(true);
+        highlightNode(null);
+        return;
+      }
+
       history.clear();
       host.restoreOriginalSettings();
 
       await performInterpreterAction(() => {
-        const { markerMap, node } = parseProgram();
-        interpreter.setMarkerMap(markerMap);
-        return runParsedProgram(node);
+        interpreter.setMarkerMap(program.markerMap);
+        return runParsedProgram(program.node);
       });
     },
-    [history, host, interpreter, parseProgram, performInterpreterAction]
+    [
+      highlightNode,
+      history,
+      host,
+      interpreter,
+      parseProgram,
+      performInterpreterAction,
+    ]
   );
 
   const runProgram = useCallback(async () => {

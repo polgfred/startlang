@@ -104,23 +104,15 @@ export default memo(function Inspector({
 
 function ErrorInspector({ error }: { error: Error }) {
   return (
-    <table className={styles.table}>
-      <thead>
-        <tr>
-          <th colSpan={2}>
-            <h3 className={styles.title}>Error</h3>
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <th className={styles.nameCell}>Message</th>
-          <td className={clsx(styles.valueCell, styles.error)}>
-            {error.message}
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <section className={styles.errorPanel} aria-live="polite">
+      <div className={styles.errorHeader}>
+        <span className={styles.errorMark} aria-hidden="true">
+          !
+        </span>
+        <h3 className={styles.errorTitle}>Error</h3>
+      </div>
+      <p className={styles.errorMessage}>{error.message}</p>
+    </section>
   );
 }
 
