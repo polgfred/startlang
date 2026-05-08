@@ -34,12 +34,12 @@
 {
   // take a series of tests, and (optionally) a final else body, and construct an if-tree
   function buildIfTree(tests, elseBody) {
-    const [condition, thenBody] = tests.shift();
+    const [condition, thenBody, loc] = tests.shift();
     if (tests.length > 0) {
       // insert the next-level tree into the false slot
       elseBody = buildIfTree(tests, elseBody);
     }
-    return new IfNode(condition, thenBody, elseBody).at(location());
+    return new IfNode(condition, thenBody, elseBody).at(loc);
   }
 
   // take a chain of equal-precedence exprs and construct a left-folding tree
@@ -119,12 +119,15 @@ ControlBlock
   / WhileBlock
   / BeginBlock
 
-IfBody = if _ @cond:Value _ then EOL @body:Block
+IfBody = if _ cond:Value _ then EOL body:Block {
+  // capture the location here so we're mapping to the right lines
+  return [cond, body, location()];
+}
 
 IfBlock
   // one-line if/then[/else]
   = if _ cond:Value _ then _ tbody:Statement fbody:(_ else _ @Statement)? {
-      return buildIfTree([[cond, tbody]], fbody);
+      return buildIfTree([[cond, tbody, location()]], fbody);
     }
   // if/then[/else if/...][/else]
   / cases:IfBody|1.., (_ else _)| fbody:(_ else EOL @Block)? _ end {
