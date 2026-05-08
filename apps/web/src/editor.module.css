@@ -27,9 +27,3 @@
   font-size: 16px;
   line-height: 19px;
 }
-
-.editor :global(.start-highlight) {
-  width: 5px !important;
-  margin-left: 12px;
-  background-color: color-mix(in srgb, var(--color-primary) 32%, transparent);
-}

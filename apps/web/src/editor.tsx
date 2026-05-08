@@ -67,43 +67,29 @@ export default memo(function Editor({
 
     const nextDecorations: MonacoEditor.IModelDeltaDecoration[] = [];
     if (highlightedNode) {
-      nextDecorations.push(
-        {
-          range: {
-            startLineNumber: highlightedNode.location.start.line,
-            startColumn: highlightedNode.location.start.column,
-            endLineNumber: highlightedNode.location.end.line,
-            endColumn: highlightedNode.location.end.column,
+      nextDecorations.push({
+        range: {
+          startLineNumber: highlightedNode.location.start.line,
+          startColumn: 1,
+          endLineNumber: highlightedNode.location.start.line,
+          endColumn: 1,
+        },
+        options: {
+          glyphMarginClassName: 'start-current',
+          glyphMargin: {
+            position: 3,
+            persistLane: true,
           },
-          options: {
-            isWholeLine: true,
-            linesDecorationsClassName: 'start-highlight',
+          glyphMarginHoverMessage: {
+            value: 'Paused here.',
           },
         },
-        {
-          range: {
-            startLineNumber: highlightedNode.location.start.line,
-            startColumn: 1,
-            endLineNumber: highlightedNode.location.start.line,
-            endColumn: 1,
-          },
-          options: {
-            glyphMarginClassName: 'start-current',
-            glyphMargin: {
-              position: 3,
-              persistLane: true,
-            },
-            glyphMarginHoverMessage: {
-              value: 'Paused here.',
-            },
-          },
-        },
-      );
+      });
     }
 
-    nextDecorations.push(...markers.map(({ lineNumber, marker }) => {
+    for (const { lineNumber, marker } of markers) {
       const label = marker === 'breakpoint' ? 'Breakpoint' : 'Snapshot';
-      return {
+      nextDecorations.push({
         range: {
           startLineNumber: lineNumber,
           startColumn: 1,
@@ -123,8 +109,8 @@ export default memo(function Editor({
             }.`,
           },
         },
-      };
-    }));
+      });
+    }
 
     decorations.set(nextDecorations);
   }, [highlightedNode, markers]);
