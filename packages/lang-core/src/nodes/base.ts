@@ -22,6 +22,7 @@ const nullLocation: SourceLocation = {
 
 export abstract class Node {
   location: SourceLocation = nullLocation;
+  readonly isStatement: boolean = false;
 
   at(location: SourceLocation): this {
     this.location = location;

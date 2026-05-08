@@ -3,6 +3,8 @@ import { Interpreter } from '../interpreter.js';
 import { Frame, Node } from './base.js';
 
 export class RepeatNode extends Node {
+  override readonly isStatement = true;
+
   constructor(
     public readonly times: Node | null,
     public readonly body: Node

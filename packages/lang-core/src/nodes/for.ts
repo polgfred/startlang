@@ -3,6 +3,8 @@ import { Interpreter } from '../interpreter.js';
 import { Frame, Node } from './base.js';
 
 export class ForNode extends Node {
+  override readonly isStatement = true;
+
   constructor(
     public readonly name: string,
     public readonly initial: Node,

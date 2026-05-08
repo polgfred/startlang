@@ -4,6 +4,8 @@ import { IndexType } from '../types.js';
 import { Frame, Node } from './base.js';
 
 export class LetIndexNode extends Node {
+  override readonly isStatement = true;
+
   constructor(
     public readonly name: string,
     public readonly indexes: readonly Node[],

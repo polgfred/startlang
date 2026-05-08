@@ -2,7 +2,7 @@ import { Interpreter } from '../interpreter.js';
 
 import { Frame, Node } from './base.js';
 
-export class CallNode extends Node {
+export abstract class CallNode extends Node {
   constructor(
     public readonly name: string,
     public readonly args: readonly Node[],
@@ -14,6 +14,12 @@ export class CallNode extends Node {
   makeFrame() {
     return new CallFrame(this);
   }
+}
+
+export class CallExpressionNode extends CallNode {}
+
+export class CallStatementNode extends CallNode {
+  override readonly isStatement = true;
 }
 
 export class CallFrame extends Frame {

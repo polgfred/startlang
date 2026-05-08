@@ -3,6 +3,8 @@ import { Interpreter } from '../interpreter.js';
 import { Frame, Node } from './base.js';
 
 export class IfNode extends Node {
+  override readonly isStatement = true;
+
   constructor(
     public readonly condition: Node,
     public readonly thenBody: Node,

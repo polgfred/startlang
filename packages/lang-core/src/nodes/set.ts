@@ -3,6 +3,8 @@ import { Interpreter } from '../interpreter.js';
 import { Frame, Node } from './base.js';
 
 export class SetNode extends Node {
+  override readonly isStatement = true;
+
   constructor(
     readonly option: string,
     readonly value: Node

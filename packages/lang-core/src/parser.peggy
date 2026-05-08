@@ -4,7 +4,8 @@
     BinaryOpNode,
     BlockNode,
     BreakNode,
-    CallNode,
+    CallExpressionNode,
+    CallStatementNode,
     DeleteIndexNode,
     DeleteNode,
     ExitNode,
@@ -206,13 +207,13 @@ CallStatement
   //  2- try to match zero or more parenthesized arguments
   //  3- match a bare call with no parens or args
   = name:Symbol _ args:Values & { return args.length > 0; } body:(_ @DoBody)? {
-      return new CallNode(name, args, body).at(location());
+      return new CallStatementNode(name, args, body).at(location());
     }
   / name:Symbol _ "(" EOL? _ args:Values EOL? _ ")" body:(_ @DoBody)? {
-      return new CallNode(name, args, body).at(location());
+      return new CallStatementNode(name, args, body).at(location());
     }
   / name:Symbol body:(_ @DoBody)? {
-      return new CallNode(name, [], body).at(location());
+      return new CallStatementNode(name, [], body).at(location());
     }
 
 // Values
@@ -316,7 +317,7 @@ RecordExpr
 
 CallExpr
   = name:Symbol _ "(" EOL? _ args:Values EOL? _ ")" {
-      return new CallNode(name, args, null).at(location());
+      return new CallExpressionNode(name, args, null).at(location());
     }
   / IndexExpr
 

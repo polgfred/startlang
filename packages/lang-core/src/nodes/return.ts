@@ -3,6 +3,8 @@ import { Interpreter } from '../interpreter.js';
 import { Frame, Node } from './base.js';
 
 export class ReturnNode extends Node {
+  override readonly isStatement = true;
+
   constructor(public readonly result: Node | null) {
     super();
   }

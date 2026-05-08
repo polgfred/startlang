@@ -3,6 +3,8 @@ import { Interpreter } from '../interpreter.js';
 import { Frame, Node } from './base.js';
 
 export class BreakNode extends Node {
+  override readonly isStatement = true;
+
   makeFrame() {
     return new BreakFrame(this);
   }
