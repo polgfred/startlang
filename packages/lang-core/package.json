@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./diagnostics": "./src/diagnostics.ts",
     "./host": "./src/host.ts",
     "./editor-model": "./src/editor-model.ts",
     "./interpreter": "./src/interpreter.ts",

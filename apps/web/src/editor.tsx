@@ -3,6 +3,7 @@ import type { editor as MonacoEditor } from 'monaco-editor';
 import { memo, useCallback, useLayoutEffect, useMemo, useRef } from 'react';
 
 import { setupLanguage, useEditor } from './editor-context.jsx';
+import { createStartSyntaxValidator } from './editor-diagnostics.js';
 import styles from './editor.module.css';
 
 function createEditorLayoutScheduler(editor: MonacoEditor.ICodeEditor) {
@@ -119,12 +120,14 @@ export default memo(function Editor({
     (editor, monaco) => {
       const layoutScheduler = createEditorLayoutScheduler(editor);
       const cleanupEditorLayout = observeEditorLayout(layoutScheduler);
+      const syntaxValidator = createStartSyntaxValidator(editor, monaco);
       layoutSchedulerRef.current = layoutScheduler;
 
       decorationsRef.current = editor.createDecorationsCollection([]);
       updateDecorations();
 
       editor.onDidDispose(() => {
+        syntaxValidator.dispose();
         cleanupEditorLayout();
         if (layoutSchedulerRef.current === layoutScheduler) {
           layoutSchedulerRef.current = null;
