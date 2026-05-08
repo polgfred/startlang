@@ -69,6 +69,7 @@ const languageDefinition: languages.IMonarchLanguage = {
     'else',
     'end',
     'exit',
+    'delete',
     'for',
     'from',
     'if',
