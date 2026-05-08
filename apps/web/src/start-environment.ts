@@ -32,13 +32,59 @@ import { useEditor } from './editor-context.jsx';
 
 type OutputTab = 'graphics' | 'text';
 
-interface RuntimeView extends RuntimeState<BrowserPresentationSnapshot> {
+interface RuntimeStatus {
+  isRunning: boolean;
+  isRewound: boolean;
+  suspension: RuntimeState<BrowserPresentationSnapshot>['suspension'];
+  topFrame: RuntimeState<BrowserPresentationSnapshot>['topFrame'];
+}
+
+interface RuntimeView
+  extends RuntimeState<BrowserPresentationSnapshot>, RuntimeStatus {
   version: number;
   historyLength: number;
   historyIndex: number;
-  isRunning: boolean;
   isSuspended: boolean;
-  isRewound: boolean;
+}
+
+type RuntimeMode =
+  | 'idle'
+  | 'running'
+  | 'input'
+  | 'breakpoint'
+  | 'rewound'
+  | 'continuable';
+
+function getRuntimeMode(status: RuntimeStatus): RuntimeMode {
+  if (status.isRunning) {
+    return 'running';
+  } else if (status.suspension instanceof InputSuspension) {
+    return 'input';
+  } else if (isBreakpointSuspension(status.suspension)) {
+    return 'breakpoint';
+  } else if (status.isRewound) {
+    return 'rewound';
+  } else if (status.topFrame !== rootFrame) {
+    return 'continuable';
+  } else {
+    return 'idle';
+  }
+}
+
+function isRuntimeModeActive(mode: RuntimeMode) {
+  return mode !== 'idle';
+}
+
+function isRuntimeModeEditable(mode: RuntimeMode) {
+  return mode === 'breakpoint' || mode === 'rewound' || mode === 'continuable';
+}
+
+function isRuntimeModeRunnable(mode: RuntimeMode) {
+  return mode !== 'running' && mode !== 'input';
+}
+
+function isRuntimeModeContinuable(mode: RuntimeMode) {
+  return mode === 'breakpoint' || mode === 'rewound' || mode === 'continuable';
 }
 
 function createInterpreterStore(
@@ -118,6 +164,7 @@ export function useStartEnvironment() {
     createInterpreterStore(interpreter, history)
   );
   const runtimeView = useSyncExternalStore(store.subscribe, store.getView);
+  const runtimeMode = getRuntimeMode(runtimeView);
   const globalsRegisteredRef = useRef(false);
 
   if (!globalsRegisteredRef.current) {
@@ -140,7 +187,13 @@ export function useStartEnvironment() {
   }, [host, interpreter]);
 
   const syncHighlight = useCallback(() => {
-    if (isBreakpointSuspension(interpreter.suspension) || history.isRewound) {
+    const mode = getRuntimeMode({
+      isRunning: interpreter.isRunning,
+      isRewound: history.isRewound,
+      suspension: interpreter.suspension,
+      topFrame: interpreter.topFrame,
+    });
+    if (mode === 'breakpoint' || mode === 'rewound' || mode === 'continuable') {
       highlightNode(interpreter.topFrame.head.node);
     } else {
       highlightNode(null);
@@ -192,17 +245,27 @@ export function useStartEnvironment() {
     };
   }, []);
 
+  const captureFinalState = useCallback(
+    (result: RunResult) => {
+      if (result.status === 'completed' && history.length > 0) {
+        history.push(interpreter.captureState());
+      }
+    },
+    [history, interpreter]
+  );
+
   const resumeInput = useCallback(
     async (value: string) => {
       setError(null);
 
       try {
-        await interpreter.resume(value);
+        const result = await interpreter.resume(value);
+        captureFinalState(result);
       } finally {
         finishInterpreterAction();
       }
     },
-    [finishInterpreterAction, interpreter]
+    [captureFinalState, finishInterpreterAction, interpreter]
   );
 
   const inputState = useMemo(
@@ -231,15 +294,6 @@ export function useStartEnvironment() {
       finishInterpreterAction();
     },
     [finishInterpreterAction, history, interpreter]
-  );
-
-  const captureFinalState = useCallback(
-    (result: RunResult) => {
-      if (result.status === 'completed' && history.length > 0) {
-        history.push(interpreter.captureState());
-      }
-    },
-    [history, interpreter]
   );
 
   const runProgram = useCallback(async () => {
@@ -307,18 +361,6 @@ export function useStartEnvironment() {
     finishInterpreterAction();
   }, [finishInterpreterAction, highlightNode, history, interpreter]);
 
-  const isBreakpointSuspended = isBreakpointSuspension(runtimeView.suspension);
-  const isInputSuspended = runtimeView.suspension instanceof InputSuspension;
-  const canContinueFromSnapshot =
-    !runtimeView.isSuspended && runtimeView.topFrame !== rootFrame;
-  const isProgramActive =
-    runtimeView.isRunning ||
-    runtimeView.isSuspended ||
-    runtimeView.isRewound ||
-    canContinueFromSnapshot;
-  const canEditInspectorValues =
-    isBreakpointSuspended || runtimeView.isRewound || canContinueFromSnapshot;
-
   const updateInspectorValue = useCallback(
     (
       scope: 'global' | 'local',
@@ -355,21 +397,18 @@ export function useStartEnvironment() {
   );
 
   const runOrResume = useCallback(() => {
-    if (isBreakpointSuspension(interpreter.suspension)) {
-      return resumeBreakpoint();
+    switch (runtimeMode) {
+      case 'breakpoint':
+        return resumeBreakpoint();
+      case 'rewound':
+      case 'continuable':
+        return continueFromSnapshot();
+      case 'idle':
+      case 'running':
+      case 'input':
+        return runProgram();
     }
-    if (history.isRewound || canContinueFromSnapshot) {
-      return continueFromSnapshot();
-    }
-    return runProgram();
-  }, [
-    canContinueFromSnapshot,
-    continueFromSnapshot,
-    history,
-    interpreter,
-    resumeBreakpoint,
-    runProgram,
-  ]);
+  }, [continueFromSnapshot, resumeBreakpoint, runProgram, runtimeMode]);
 
   return {
     error,
@@ -379,15 +418,14 @@ export function useStartEnvironment() {
     host,
     inputState,
     interpreter,
-    canEditInspectorValues,
-    isRunDisabled: runtimeView.isRunning || isInputSuspended,
-    isStopDisabled: !isProgramActive,
-    isEditorReadOnly: isProgramActive,
+    canEditInspectorValues: isRuntimeModeEditable(runtimeMode),
+    isRunDisabled: !isRuntimeModeRunnable(runtimeMode),
+    isStopDisabled: !isRuntimeModeActive(runtimeMode),
+    isEditorReadOnly: isRuntimeModeActive(runtimeMode),
     outputTab,
     runtimeVersion: runtimeView.version,
     runProgram,
-    runLabel:
-      isBreakpointSuspended || canContinueFromSnapshot ? 'Continue' : 'Run',
+    runLabel: isRuntimeModeContinuable(runtimeMode) ? 'Continue' : 'Run',
     runOrResume,
     setOutputTab,
     setShowInspector,
