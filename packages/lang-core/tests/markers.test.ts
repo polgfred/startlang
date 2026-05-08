@@ -234,6 +234,22 @@ describe('marker maps', () => {
     expect(interpreter.getVariable('value')).toBe(10);
   });
 
+  it('starts a program by stepping to its first statement', async () => {
+    const source = ['value = abs(-1)', 'value = value + 1', ''].join('\n');
+    const rootNode = parse(source);
+    const interpreter = new Interpreter();
+
+    const result = await interpreter.runToNextStatement(rootNode);
+
+    if (result.status !== 'suspended') {
+      throw new Error(`expected suspension, got ${result.status}`);
+    }
+    expect(isBreakpointSuspension(result.suspension)).toBe(true);
+    expect(interpreter.topFrame.head.node.location.start.line).toBe(1);
+    expect(interpreter.topFrame.head.node.isStatement).toBe(true);
+    expect(interpreter.getVariable('value')).toBeUndefined();
+  });
+
   it('steps from a false if condition to its else-if statement', async () => {
     const source = [
       'value = 0',

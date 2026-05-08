@@ -254,18 +254,33 @@ export function useStartEnvironment() {
     [history, interpreter]
   );
 
-  const resumeInput = useCallback(
-    async (value: string) => {
+  const performInterpreterAction = useCallback(
+    async (
+      action: () => Promise<RunResult>,
+      options: { clearHighlight?: boolean } = {}
+    ) => {
       setError(null);
+      if (options.clearHighlight ?? true) {
+        highlightNode(null);
+      }
 
       try {
-        const result = await interpreter.resume(value);
+        const result = await action();
         captureFinalState(result);
       } finally {
         finishInterpreterAction();
       }
     },
-    [captureFinalState, finishInterpreterAction, interpreter]
+    [captureFinalState, finishInterpreterAction, highlightNode]
+  );
+
+  const resumeInput = useCallback(
+    async (value: string) => {
+      await performInterpreterAction(() => interpreter.resume(value), {
+        clearHighlight: false,
+      });
+    },
+    [interpreter, performInterpreterAction]
   );
 
   const inputState = useMemo(
@@ -297,73 +312,62 @@ export function useStartEnvironment() {
   );
 
   const runProgram = useCallback(async () => {
-    setError(null);
-    highlightNode(null);
     history.clear();
     host.clearDisplay();
     host.clearOutputBuffer();
 
-    try {
+    await performInterpreterAction(() => {
       host.restoreOriginalSettings();
       const { markerMap, node } = parseProgram();
       interpreter.setMarkerMap(markerMap);
-      const result = await interpreter.run(node);
-      captureFinalState(result);
-    } finally {
-      finishInterpreterAction();
-    }
-  }, [
-    captureFinalState,
-    finishInterpreterAction,
-    history,
-    highlightNode,
-    host,
-    interpreter,
-    parseProgram,
-  ]);
+      return interpreter.run(node);
+    });
+  }, [history, host, interpreter, parseProgram, performInterpreterAction]);
+
+  const stepIntoProgram = useCallback(async () => {
+    history.clear();
+    host.clearDisplay();
+    host.clearOutputBuffer();
+
+    await performInterpreterAction(() => {
+      host.restoreOriginalSettings();
+      const { markerMap, node } = parseProgram();
+      interpreter.setMarkerMap(markerMap);
+      return interpreter.runToNextStatement(node);
+    });
+  }, [history, host, interpreter, parseProgram, performInterpreterAction]);
 
   const resumeBreakpoint = useCallback(async () => {
-    setError(null);
-    highlightNode(null);
-
-    try {
-      const result = await interpreter.resume(undefined);
-      captureFinalState(result);
-    } finally {
-      finishInterpreterAction();
-    }
-  }, [captureFinalState, finishInterpreterAction, highlightNode, interpreter]);
+    await performInterpreterAction(() => interpreter.resume(undefined));
+  }, [interpreter, performInterpreterAction]);
 
   const stepToNextStatement = useCallback(async () => {
-    setError(null);
-    highlightNode(null);
-
-    try {
-      const result = await interpreter.stepToNextStatement();
-      captureFinalState(result);
-    } finally {
-      finishInterpreterAction();
-    }
-  }, [captureFinalState, finishInterpreterAction, highlightNode, interpreter]);
-
-  const continueFromSnapshot = useCallback(async () => {
-    setError(null);
-    highlightNode(null);
-
-    try {
-      history.truncateAfterCurrent();
-      const result = await interpreter.runLoop();
-      captureFinalState(result);
-    } finally {
-      finishInterpreterAction();
+    switch (runtimeMode) {
+      case 'idle':
+        return stepIntoProgram();
+      case 'breakpoint': {
+        await performInterpreterAction(() => interpreter.stepToNextStatement());
+        return;
+      }
+      case 'continuable':
+      case 'input':
+      case 'rewound':
+      case 'running':
+        return;
     }
   }, [
-    captureFinalState,
-    finishInterpreterAction,
-    highlightNode,
-    history,
     interpreter,
+    performInterpreterAction,
+    runtimeMode,
+    stepIntoProgram,
   ]);
+
+  const continueFromSnapshot = useCallback(async () => {
+    await performInterpreterAction(() => {
+      history.truncateAfterCurrent();
+      return interpreter.runLoop();
+    });
+  }, [history, interpreter, performInterpreterAction]);
 
   const stopProgram = useCallback(() => {
     setError(null);
@@ -462,7 +466,7 @@ export function useStartEnvironment() {
     interpreter,
     canEditInspectorValues: isRuntimeModeEditable(runtimeMode),
     isRunDisabled: !isRuntimeModeRunnable(runtimeMode),
-    isStepDisabled: runtimeMode !== 'breakpoint',
+    isStepDisabled: runtimeMode !== 'breakpoint' && runtimeMode !== 'idle',
     isStopDisabled: !isRuntimeModeActive(runtimeMode),
     isEditorReadOnly: isRuntimeModeActive(runtimeMode),
     outputTab,

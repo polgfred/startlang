@@ -117,6 +117,21 @@ export class Interpreter<THostSnapshot = unknown> {
     return this.runLoop();
   }
 
+  async runToNextStatement(node: Node) {
+    this.globalFunctions = emptyObject;
+    this.namespace.reset();
+    this.topFrame = rootFrame.push(node.makeFrame());
+    this.lastResult = null;
+    this.suspension = null;
+    this.pendingEffects = [];
+    this.shouldStepToNextStatement = true;
+    try {
+      return await this.runLoop();
+    } finally {
+      this.shouldStepToNextStatement = false;
+    }
+  }
+
   runIncremental(node: Node) {
     this.topFrame = rootFrame.push(node.makeFrame());
     this.lastResult = null;
