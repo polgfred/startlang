@@ -68,21 +68,23 @@ export default memo(function Editor({
 
     const nextDecorations: MonacoEditor.IModelDeltaDecoration[] = [];
     if (highlightedNode) {
+      const { kind, node } = highlightedNode;
       nextDecorations.push({
         range: {
-          startLineNumber: highlightedNode.location.start.line,
+          startLineNumber: node.location.start.line,
           startColumn: 1,
-          endLineNumber: highlightedNode.location.start.line,
+          endLineNumber: node.location.start.line,
           endColumn: 1,
         },
         options: {
-          glyphMarginClassName: 'start-current',
+          glyphMarginClassName:
+            kind === 'error' ? 'start-error' : 'start-current',
           glyphMargin: {
             position: 3,
             persistLane: true,
           },
           glyphMarginHoverMessage: {
-            value: 'Paused here.',
+            value: kind === 'error' ? 'Error here.' : 'Paused here.',
           },
         },
       });

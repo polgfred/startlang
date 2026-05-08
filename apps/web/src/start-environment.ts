@@ -7,6 +7,7 @@ import { rootCell } from '@startlang/lang-browser/cells';
 import { rootShapeGroup } from '@startlang/lang-browser/shapes';
 import {
   Interpreter,
+  RuntimeError,
   type RuntimeEffect,
   type RunResult,
   type RuntimeState,
@@ -237,6 +238,10 @@ function waitForAnimationFrame() {
   });
 }
 
+function normalizeError(err: unknown) {
+  return err instanceof Error ? err : new Error(String(err));
+}
+
 function setInspectorVariable(
   interpreter: Interpreter<BrowserPresentationSnapshot>,
   scope: InspectorScope,
@@ -321,6 +326,19 @@ export function useStartEnvironment() {
     store.publish();
   }, [store, syncHighlight, syncOutputTab]);
 
+  const finishRuntimeError = useCallback(
+    (error: Error) => {
+      syncOutputTab();
+      if (error instanceof RuntimeError) {
+        highlightNode(error.node, 'error');
+      } else {
+        syncHighlight();
+      }
+      store.publish();
+    },
+    [highlightNode, store, syncHighlight, syncOutputTab]
+  );
+
   const handleRuntimeEffect = useCallback(
     async (effect: RuntimeEffect) => {
       switch (effect.kind) {
@@ -389,17 +407,23 @@ export function useStartEnvironment() {
       try {
         const result = await action();
         captureFinalState(result);
+        finishInterpreterAction();
       } catch (err) {
-        const error = err instanceof Error ? err : new Error(String(err));
+        const error = normalizeError(err);
         interpreter.stop();
         captureFinalState({ status: 'completed' });
         setError(error);
         setShowInspector(true);
-      } finally {
-        finishInterpreterAction();
+        finishRuntimeError(error);
       }
     },
-    [captureFinalState, finishInterpreterAction, highlightNode, interpreter]
+    [
+      captureFinalState,
+      finishInterpreterAction,
+      finishRuntimeError,
+      highlightNode,
+      interpreter,
+    ]
   );
 
   const resumeInput = useCallback(
@@ -442,8 +466,7 @@ export function useStartEnvironment() {
       try {
         program = parseProgram();
       } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
-        setError(new Error(message));
+        setError(normalizeError(err));
         setShowInspector(true);
         highlightNode(null);
         return;

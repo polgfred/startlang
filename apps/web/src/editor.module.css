@@ -27,3 +27,13 @@
   font-size: 16px;
   line-height: 19px;
 }
+
+.editor :global(.start-error::before) {
+  display: block;
+  margin-top: 5px;
+  color: var(--color-error);
+  content: '\2716';
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 19px;
+}

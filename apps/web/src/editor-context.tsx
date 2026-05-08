@@ -22,15 +22,22 @@ interface SetEditorValueOptions {
   clearMarkers?: boolean;
 }
 
+export type EditorHighlightKind = 'current' | 'error';
+
+export interface EditorHighlight {
+  readonly kind: EditorHighlightKind;
+  readonly node: Node;
+}
+
 interface EditorContextValue {
   getValue(): string;
   setValue(value: string, options?: SetEditorValueOptions): void;
   parseProgram(): EditorProgram;
-  highlightNode(node: Node | null): void;
+  highlightNode(node: Node | null, kind?: EditorHighlightKind): void;
   toggleMarker(lineNumber: number): void;
   source: string;
   markers: readonly EditorMarker[];
-  highlightedNode: Node | null;
+  highlightedNode: EditorHighlight | null;
 }
 
 const EditorContext = createContext<EditorContextValue | null>(null);
@@ -231,7 +238,8 @@ export function useEditor() {
 }
 
 export function EditorProvider({ children }: { children: ReactNode }) {
-  const [highlightedNode, setHighlightedNode] = useState<Node | null>(null);
+  const [highlightedNode, setHighlightedNode] =
+    useState<EditorHighlight | null>(null);
   const { current: editorStore } = useRef(createEditorStore(boxScript));
   const { markers, source } = useSyncExternalStore(
     editorStore.subscribe,
@@ -247,9 +255,12 @@ export function EditorProvider({ children }: { children: ReactNode }) {
 
   const getValue = useCallback(() => editorStore.getValue(), [editorStore]);
 
-  const highlightNode = useCallback((node: Node | null) => {
-    setHighlightedNode(node);
-  }, []);
+  const highlightNode = useCallback(
+    (node: Node | null, kind: EditorHighlightKind = 'current') => {
+      setHighlightedNode(node ? { kind, node } : null);
+    },
+    []
+  );
 
   const parseProgram = useCallback(
     () => editorStore.parseProgram(),
@@ -262,6 +273,7 @@ export function EditorProvider({ children }: { children: ReactNode }) {
         editorStore.clearMarkers();
       }
       editorStore.setValue(value);
+      setHighlightedNode(null);
     },
     [editorStore]
   );
