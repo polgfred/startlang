@@ -270,6 +270,7 @@ export function useStartEnvironment() {
 
   const resumeBreakpoint = useCallback(async () => {
     setError(null);
+    highlightNode(null);
 
     try {
       const result = await interpreter.resume(undefined);
@@ -277,7 +278,7 @@ export function useStartEnvironment() {
     } finally {
       finishInterpreterAction();
     }
-  }, [captureFinalState, finishInterpreterAction, interpreter]);
+  }, [captureFinalState, finishInterpreterAction, highlightNode, interpreter]);
 
   const continueFromSnapshot = useCallback(async () => {
     setError(null);

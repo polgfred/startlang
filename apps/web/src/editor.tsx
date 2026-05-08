@@ -67,37 +67,43 @@ export default memo(function Editor({
 
     const nextDecorations: MonacoEditor.IModelDeltaDecoration[] = [];
     if (highlightedNode) {
-      nextDecorations.push({
-        range: {
-          startLineNumber: highlightedNode.location.start.line,
-          startColumn: highlightedNode.location.start.column,
-          endLineNumber: highlightedNode.location.end.line,
-          endColumn: highlightedNode.location.end.column,
-        },
-        options: {
-          isWholeLine: true,
-          linesDecorationsClassName: 'start-highlight',
-        },
-      });
-      nextDecorations.push({
-        range: {
-          startLineNumber: highlightedNode.location.start.line,
-          startColumn: 1,
-          endLineNumber: highlightedNode.location.start.line,
-          endColumn: 1,
-        },
-        options: {
-          glyphMarginClassName: 'start-current',
-          glyphMarginHoverMessage: {
-            value: 'Paused here.',
+      nextDecorations.push(
+        {
+          range: {
+            startLineNumber: highlightedNode.location.start.line,
+            startColumn: highlightedNode.location.start.column,
+            endLineNumber: highlightedNode.location.end.line,
+            endColumn: highlightedNode.location.end.column,
+          },
+          options: {
+            isWholeLine: true,
+            linesDecorationsClassName: 'start-highlight',
           },
         },
-      });
+        {
+          range: {
+            startLineNumber: highlightedNode.location.start.line,
+            startColumn: 1,
+            endLineNumber: highlightedNode.location.start.line,
+            endColumn: 1,
+          },
+          options: {
+            glyphMarginClassName: 'start-current',
+            glyphMargin: {
+              position: 3,
+              persistLane: true,
+            },
+            glyphMarginHoverMessage: {
+              value: 'Paused here.',
+            },
+          },
+        },
+      );
     }
 
-    markers.forEach(({ lineNumber, marker }) => {
+    nextDecorations.push(...markers.map(({ lineNumber, marker }) => {
       const label = marker === 'breakpoint' ? 'Breakpoint' : 'Snapshot';
-      nextDecorations.push({
+      return {
         range: {
           startLineNumber: lineNumber,
           startColumn: 1,
@@ -107,14 +113,18 @@ export default memo(function Editor({
         options: {
           isWholeLine: true,
           glyphMarginClassName: `start-${marker}`,
+          glyphMargin: {
+            position: 1,
+            persistLane: true,
+          },
           glyphMarginHoverMessage: {
             value: `${label}: click to ${
               marker === 'breakpoint' ? 'change to snapshot' : 'clear'
             }.`,
           },
         },
-      });
-    });
+      };
+    }));
 
     decorations.set(nextDecorations);
   }, [highlightedNode, markers]);
