@@ -8,7 +8,8 @@
 ;
 
 ; ask for the upper limit
-upper = num(input("Upper limit:", "100"))
+input upper_text "Upper limit:" "100"
+upper = num(upper_text)
 
 ; create a list to mark composite (non-prime) numbers
 composite = []

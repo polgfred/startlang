@@ -3,10 +3,13 @@ import process from 'node:process';
 import readline from 'node:readline';
 import { inspect } from 'node:util';
 
-import { Interpreter, type RunResult } from '@startlang/lang-core/interpreter';
+import {
+  Interpreter,
+  type RunResult,
+  type RuntimePause,
+} from '@startlang/lang-core/interpreter';
 import { parse, SyntaxError } from '@startlang/lang-core/parser.peggy';
 import { runtimeGlobals } from '@startlang/lang-core/runtime-globals';
-import { InputSuspension } from '@startlang/lang-core/suspension';
 import type { RuntimeFunctions } from '@startlang/lang-core/types';
 
 async function runUntilComplete(
@@ -14,14 +17,16 @@ async function runUntilComplete(
   rl: readline.Interface,
   result: RunResult
 ) {
-  while (result.status === 'suspended') {
-    const { suspension } = result;
-    if (suspension instanceof InputSuspension) {
-      rl.setPrompt(suspension.prompt);
+  while (result.status === 'paused') {
+    const { pause } = result;
+    if (pause.kind === 'input') {
+      rl.setPrompt(pause.prompt || '> ');
       rl.prompt();
-      return suspension;
+      return pause;
+    } else if (pause.kind === 'breakpoint' || pause.kind === 'pause') {
+      result = await interp.continue();
     } else {
-      throw new Error(`unsupported suspension: ${suspension.kind}`);
+      throw new Error(`unsupported pause: ${pause.kind}`);
     }
   }
   return null;
@@ -61,13 +66,13 @@ async function main() {
   } satisfies RuntimeFunctions);
 
   let lines: string[] = [];
-  let pendingInput: InputSuspension | null = null;
+  let pendingInput: RuntimePause | null = null;
 
   promptForCommand();
   for await (const line of rl) {
     if (pendingInput) {
       try {
-        const result = await interp.resume(line);
+        const result = await interp.continueWithInput(line);
         pendingInput = await runUntilComplete(interp, rl, result);
       } catch (err) {
         console.error(formatError(err));

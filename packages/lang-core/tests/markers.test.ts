@@ -8,13 +8,19 @@ import {
   RepeatNode,
 } from '@startlang/lang-core/nodes';
 import { parse } from '@startlang/lang-core/parser.peggy';
-import { isBreakpointSuspension } from '@startlang/lang-core/suspension';
 import type { MarkerType } from '@startlang/lang-core/types';
 import { describe, expect, it } from 'vitest';
 
 import { buildMarkerLineMap, mapMarkers } from '../src/editor-markers.js';
 
 describe('marker maps', () => {
+  function expectPaused(result: Awaited<ReturnType<Interpreter['run']>>) {
+    if (result.status !== 'paused') {
+      throw new Error(`expected pause, got ${result.status}`);
+    }
+    return result.pause;
+  }
+
   it('keeps editor-owned markers behind a run-ready marker map', () => {
     const model = new EditorModel(`
       repeat 3 do
@@ -53,16 +59,13 @@ describe('marker maps', () => {
 
     const result = await interpreter.run(node);
 
-    if (result.status !== 'suspended') {
-      throw new Error(`expected suspension, got ${result.status}`);
-    }
-    expect(isBreakpointSuspension(result.suspension)).toBe(true);
+    expect(expectPaused(result).kind).toBe('breakpoint');
     expect(interpreter.topFrame.head.node.location.start.line).toBe(3);
 
     model.toggleMarker(3);
     model.toggleMarker(3);
 
-    const resumed = await interpreter.resume(undefined);
+    const resumed = await interpreter.continue();
 
     expect(resumed.status).toBe('completed');
     expect(interpreter.getVariable('x')).toBe(3);
@@ -228,28 +231,19 @@ describe('marker maps', () => {
 
     let result = await interpreter.run(rootNode);
 
-    if (result.status !== 'suspended') {
-      throw new Error(`expected suspension, got ${result.status}`);
-    }
-    expect(isBreakpointSuspension(result.suspension)).toBe(true);
+    expect(expectPaused(result).kind).toBe('breakpoint');
     expect(interpreter.topFrame.head.node.location.start.line).toBe(1);
 
     result = await interpreter.stepToNextStatement();
 
-    if (result.status !== 'suspended') {
-      throw new Error(`expected suspension, got ${result.status}`);
-    }
-    expect(isBreakpointSuspension(result.suspension)).toBe(true);
+    expect(expectPaused(result).kind).toBe('step');
     expect(interpreter.topFrame.head.node.location.start.line).toBe(2);
     expect(interpreter.topFrame.head.node.isStatement).toBe(true);
     expect(interpreter.getVariable('value')).toBe(1);
 
     result = await interpreter.stepToNextStatement();
 
-    if (result.status !== 'suspended') {
-      throw new Error(`expected suspension, got ${result.status}`);
-    }
-    expect(isBreakpointSuspension(result.suspension)).toBe(true);
+    expect(expectPaused(result).kind).toBe('step');
     expect(interpreter.topFrame.head.node.location.start.line).toBe(3);
     expect(interpreter.topFrame.head.node.isStatement).toBe(true);
     expect(interpreter.getVariable('value')).toBe(9);
@@ -267,10 +261,7 @@ describe('marker maps', () => {
 
     const result = await interpreter.runToNextStatement(rootNode);
 
-    if (result.status !== 'suspended') {
-      throw new Error(`expected suspension, got ${result.status}`);
-    }
-    expect(isBreakpointSuspension(result.suspension)).toBe(true);
+    expect(expectPaused(result).kind).toBe('step');
     expect(interpreter.topFrame.head.node.location.start.line).toBe(1);
     expect(interpreter.topFrame.head.node.isStatement).toBe(true);
     expect(interpreter.getVariable('value')).toBeUndefined();
@@ -295,23 +286,17 @@ describe('marker maps', () => {
 
     let result = await interpreter.run(rootNode);
 
-    if (result.status !== 'suspended') {
-      throw new Error(`expected suspension, got ${result.status}`);
-    }
+    expect(expectPaused(result).kind).toBe('breakpoint');
     expect(interpreter.topFrame.head.node.location.start.line).toBe(2);
 
     result = await interpreter.stepToNextStatement();
 
-    if (result.status !== 'suspended') {
-      throw new Error(`expected suspension, got ${result.status}`);
-    }
+    expect(expectPaused(result).kind).toBe('step');
     expect(interpreter.topFrame.head.node.location.start.line).toBe(4);
 
     result = await interpreter.stepToNextStatement();
 
-    if (result.status !== 'suspended') {
-      throw new Error(`expected suspension, got ${result.status}`);
-    }
+    expect(expectPaused(result).kind).toBe('step');
     expect(interpreter.topFrame.head.node.location.start.line).toBe(5);
   });
 
@@ -331,27 +316,21 @@ describe('marker maps', () => {
 
     let result = await interpreter.run(rootNode);
 
-    if (result.status !== 'suspended') {
-      throw new Error(`expected suspension, got ${result.status}`);
-    }
-    expect(isBreakpointSuspension(result.suspension)).toBe(true);
+    expect(expectPaused(result).kind).toBe('breakpoint');
     expect(interpreter.topFrame.head.node.location.start.line).toBe(2);
 
     delete markers[2];
     markers[3] = 'breakpoint';
 
-    result = await interpreter.resume(undefined);
+    result = await interpreter.continue();
 
-    if (result.status !== 'suspended') {
-      throw new Error(`expected suspension, got ${result.status}`);
-    }
-    expect(isBreakpointSuspension(result.suspension)).toBe(true);
+    expect(expectPaused(result).kind).toBe('breakpoint');
     expect(interpreter.topFrame.head.node.location.start.line).toBe(3);
     expect(interpreter.getVariable('x')).toBe(0);
 
     delete markers[3];
 
-    result = await interpreter.resume(undefined);
+    result = await interpreter.continue();
 
     expect(result.status).toBe('completed');
     expect(interpreter.getVariable('x')).toBe(3);

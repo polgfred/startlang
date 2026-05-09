@@ -4,11 +4,14 @@ import process from 'node:process';
 import readline from 'node:readline';
 import { inspect, parseArgs } from 'node:util';
 
-import { Interpreter, type RunResult } from '@startlang/lang-core/interpreter';
+import {
+  Interpreter,
+  type RunResult,
+  type RuntimePause,
+} from '@startlang/lang-core/interpreter';
 import type { Node } from '@startlang/lang-core/nodes';
 import { parse, type ParseOptions } from '@startlang/lang-core/parser.peggy';
 import { runtimeGlobals } from '@startlang/lang-core/runtime-globals';
-import { InputSuspension } from '@startlang/lang-core/suspension';
 import type { RuntimeFunctions } from '@startlang/lang-core/types';
 
 interface ScriptOptions {
@@ -88,15 +91,21 @@ async function runUntilComplete(
   question: Question,
   result: RunResult
 ) {
-  while (result.status === 'suspended') {
-    const { suspension } = result;
-    if (suspension instanceof InputSuspension) {
-      const answer = await question(suspension.prompt);
-      result = await interp.resume(answer);
+  while (result.status === 'paused') {
+    const { pause } = result;
+    if (pause.kind === 'input') {
+      const answer = await question(pause.prompt || '> ');
+      result = await interp.continueWithInput(answer);
+    } else if (isContinuablePause(pause)) {
+      result = await interp.continue();
     } else {
-      throw new Error(`unsupported suspension: ${suspension.kind}`);
+      throw new Error(`unsupported pause: ${pause.kind}`);
     }
   }
+}
+
+function isContinuablePause(pause: RuntimePause) {
+  return pause.kind === 'breakpoint' || pause.kind === 'pause';
 }
 
 function isNodeError(err: unknown): err is NodeJS.ErrnoException {

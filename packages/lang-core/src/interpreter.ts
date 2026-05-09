@@ -12,12 +12,6 @@ import {
   VarNode,
   rootFrame,
 } from './nodes/index.js';
-import {
-  breakpointSuspension,
-  isBreakpointSuspension,
-  isRuntimeSuspension,
-  type RuntimeSuspension,
-} from './suspension.js';
 import type { IndexType, RuntimeFunctions } from './types.js';
 import { Cons } from './utils/cons.js';
 
@@ -33,7 +27,6 @@ export interface RuntimeState<THostSnapshot = unknown> {
   localNamespaces: Cons<Namespace> | null;
   topFrame: Cons<Frame>;
   lastResult: unknown;
-  suspension: RuntimeSuspension | null;
   hostSnapshot: THostSnapshot;
 }
 
@@ -55,9 +48,15 @@ export type RuntimeEffectHandler = (
   effect: RuntimeEffect
 ) => void | Promise<void>;
 
+export type RuntimePause =
+  | { kind: 'breakpoint' }
+  | { kind: 'input'; prompt: string; initial: string }
+  | { kind: 'pause' }
+  | { kind: 'step' };
+
 export type RunResult =
   | { status: 'completed' }
-  | { status: 'suspended'; suspension: RuntimeSuspension };
+  | { status: 'paused'; pause: RuntimePause };
 
 export class RuntimeError extends Error {
   constructor(
@@ -79,28 +78,26 @@ export class Interpreter<THostSnapshot = unknown> {
   topFrame = rootFrame;
   lastResult: unknown = null;
   isRunning: boolean = false;
-  suspension: RuntimeSuspension | null = null;
+  pauseReason: RuntimePause | null = null;
   pendingEffects: RuntimeEffect[] = [];
   effectHandler: RuntimeEffectHandler | null = null;
   markersMap: MarkerMap = emptyMarkerMap;
   private shouldStepToNextStatement = false;
+  private pendingInput: string | null = null;
 
   constructor(
     public readonly host: SupportsSnapshots<THostSnapshot> = new NullPresentationHost() as SupportsSnapshots<THostSnapshot>
   ) {
     installHandlers(this);
     this.registerGlobals({
-      pause() {
-        return breakpointSuspension;
-      },
       snapshot(interpreter) {
         interpreter.setEffect(snapshotEffect);
       },
     });
   }
 
-  get isSuspended() {
-    return this.suspension !== null;
+  get isPaused() {
+    return this.pauseReason !== null;
   }
 
   get isComplete() {
@@ -124,7 +121,8 @@ export class Interpreter<THostSnapshot = unknown> {
     this.namespace.reset();
     this.topFrame = rootFrame.push(node.makeFrame());
     this.lastResult = null;
-    this.suspension = null;
+    this.pauseReason = null;
+    this.pendingInput = null;
     this.pendingEffects = [];
     return this.runLoop();
   }
@@ -134,7 +132,8 @@ export class Interpreter<THostSnapshot = unknown> {
     this.namespace.reset();
     this.topFrame = rootFrame.push(node.makeFrame());
     this.lastResult = null;
-    this.suspension = null;
+    this.pauseReason = null;
+    this.pendingInput = null;
     this.pendingEffects = [];
     this.shouldStepToNextStatement = true;
     try {
@@ -147,7 +146,8 @@ export class Interpreter<THostSnapshot = unknown> {
   runIncremental(node: Node) {
     this.topFrame = rootFrame.push(node.makeFrame());
     this.lastResult = null;
-    this.suspension = null;
+    this.pauseReason = null;
+    this.pendingInput = null;
     this.pendingEffects = [];
     return this.runLoop();
   }
@@ -156,9 +156,9 @@ export class Interpreter<THostSnapshot = unknown> {
     this.isRunning = true;
     try {
       while (true) {
-        if (this.suspension) {
+        if (this.pauseReason) {
           this.isRunning = false;
-          return { status: 'suspended', suspension: this.suspension };
+          return { status: 'paused', pause: this.pauseReason };
         }
         if (this.topFrame === rootFrame) {
           this.isRunning = false;
@@ -178,10 +178,6 @@ export class Interpreter<THostSnapshot = unknown> {
             : new RuntimeError(err, frame.node);
         }
 
-        if (isRuntimeSuspension(result)) {
-          this.suspension = result;
-        }
-
         const effects = this.pendingEffects;
         if (effects.length > 0) {
           this.pendingEffects = [];
@@ -199,21 +195,47 @@ export class Interpreter<THostSnapshot = unknown> {
     }
   }
 
-  resume(response: unknown) {
-    if (!this.suspension) {
-      throw new Error('interpreter is not suspended');
+  continue() {
+    if (!this.pauseReason) {
+      return this.runLoop();
+    }
+    if (this.pauseReason.kind === 'input' && this.pendingInput === null) {
+      throw new Error('interpreter is waiting for input');
     }
 
-    this.resumeSuspension(response);
+    this.pauseReason = null;
     return this.runLoop();
   }
 
-  async stepToNextStatement() {
-    if (!isBreakpointSuspension(this.suspension)) {
-      throw new Error('interpreter is not suspended on a breakpoint');
+  continueWithInput(value: string) {
+    this.provideInput(value);
+    return this.continue();
+  }
+
+  provideInput(value: string) {
+    if (this.pauseReason?.kind !== 'input') {
+      throw new Error('interpreter is not waiting for input');
     }
 
-    this.resumeSuspension(undefined);
+    this.pendingInput = value;
+  }
+
+  consumeInput() {
+    if (this.pendingInput === null) {
+      throw new Error('input value was not provided');
+    }
+
+    const value = this.pendingInput;
+    this.pendingInput = null;
+    return value;
+  }
+
+  async stepToNextStatement() {
+    if (!this.pauseReason || this.pauseReason.kind === 'input') {
+      throw new Error('interpreter is not paused at a continuable statement');
+    }
+
+    this.pauseReason = null;
     this.shouldStepToNextStatement = true;
     try {
       return await this.runLoop();
@@ -222,21 +244,13 @@ export class Interpreter<THostSnapshot = unknown> {
     }
   }
 
-  private resumeSuspension(response: unknown) {
-    const suspension = this.suspension;
-    this.suspension = null;
-    if (!suspension) {
-      throw new Error('interpreter is not suspended');
-    }
-    suspension.resume(this, response);
-  }
-
   setEffect(effect: RuntimeEffect) {
     this.pendingEffects.push(effect);
   }
 
   stop() {
-    this.suspension = null;
+    this.pauseReason = null;
+    this.pendingInput = null;
     this.pendingEffects = [];
     this.isRunning = false;
     this.popOut();
@@ -268,8 +282,12 @@ export class Interpreter<THostSnapshot = unknown> {
     });
   }
 
-  pushFrame(frame: Frame) {
+  pushFrame(frame: Frame, enterNode = true) {
     this.topFrame = this.topFrame.push(frame);
+    if (enterNode && frame.node.isStatement) {
+      this.onStatementPush(frame.node);
+    }
+    frame.onEnter(this);
   }
 
   swapFrame<T extends Frame>(
@@ -290,7 +308,7 @@ export class Interpreter<THostSnapshot = unknown> {
   }
 
   popFrame() {
-    this.topFrame.head.dispose(this);
+    this.topFrame.head.onExit(this);
     this.topFrame = this.topFrame.pop();
   }
 
@@ -301,24 +319,28 @@ export class Interpreter<THostSnapshot = unknown> {
       this.lastResult = this.getVariable(node.name);
     } else {
       this.pushFrame(node.makeFrame());
-      const marker = this.markersMap(node);
-      // pushNode is the interpreter's node-entry point, so this catches the
-      // next statement without re-pausing when expression frames return to
-      // their enclosing statement.
-      const shouldSuspendForStep =
-        this.shouldStepToNextStatement && node.isStatement;
-      if (marker || shouldSuspendForStep) {
-        this.setEffect(snapshotEffect);
-      }
-      if (marker) {
-        if (marker === 'breakpoint') {
-          this.suspension = breakpointSuspension;
-        }
-      }
-      if (shouldSuspendForStep) {
-        this.suspension = breakpointSuspension;
-      }
     }
+  }
+
+  onStatementPush(node: Node) {
+    const marker = this.markersMap(node);
+    // pushNode is the interpreter's node-entry point, so this catches the next
+    // statement without re-pausing when expression frames return to their
+    // enclosing statement.
+    const shouldPauseForStep = this.shouldStepToNextStatement;
+    if (marker || shouldPauseForStep) {
+      this.setEffect(snapshotEffect);
+    }
+
+    if (shouldPauseForStep) {
+      this.pauseReason = { kind: 'step' };
+    } else if (marker === 'breakpoint') {
+      this.pauseReason = { kind: 'breakpoint' };
+    }
+  }
+
+  pauseAtNode(pause: RuntimePause) {
+    this.pauseReason = pause;
   }
 
   popOut() {
@@ -459,7 +481,6 @@ export class Interpreter<THostSnapshot = unknown> {
       localNamespaces: this.localNamespaces,
       topFrame: this.topFrame,
       lastResult: this.lastResult,
-      suspension: this.suspension,
       hostSnapshot: this.host.takeSnapshot(),
     };
   }
@@ -469,7 +490,9 @@ export class Interpreter<THostSnapshot = unknown> {
     this.namespace.restore(state.globalNamespace, state.localNamespaces);
     this.topFrame = state.topFrame;
     this.lastResult = state.lastResult;
-    this.suspension = state.suspension;
+    this.pauseReason = null;
+    this.pendingInput = null;
+    this.topFrame.head.onEnter(this);
     this.host.restoreSnapshot(state.hostSnapshot);
   }
 

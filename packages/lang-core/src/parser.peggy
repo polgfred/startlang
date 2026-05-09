@@ -12,6 +12,7 @@
     ForInNode,
     ForNode,
     IfNode,
+    InputNode,
     LetIndexNode,
     LetNode,
     ListNode,
@@ -19,6 +20,7 @@
     LogicalOpNode,
     LogicalNotNode,
     NextNode,
+    PauseNode,
     RecordNode,
     RepeatNode,
     ReturnNode,
@@ -171,6 +173,7 @@ BeginBlock
 Statement
   = SetStatement
   / FlowStatement
+  / InputStatement
   / LetStatement
   / DeleteStatement
   / CallStatement
@@ -186,7 +189,13 @@ FlowStatement
   = exit { return new ExitNode().at(location()); }
   / break { return new BreakNode().at(location()); }
   / next { return new NextNode().at(location()); }
+  / pause { return new PauseNode().at(location()); }
   / return result:(__ @Value)? { return new ReturnNode(result).at(location()); }
+
+InputStatement
+  = input __ name:Symbol __ prompt:StaticString initial:(__ @StaticString)? {
+      return new InputNode(name, prompt, initial ?? '').at(location());
+    }
 
 LetStatement
   = (let __)? name:Symbol _ indexes:Indexes? _ "=" _ value:Value {
@@ -358,6 +367,9 @@ PrimaryExpr
 String "a string"
   = "\"" segments:StringSegment* "\"" { return buildString(segments); }
 
+StaticString "a static string"
+  = "\"" chars:Char* "\"" { return chars.join(''); }
+
 StringSegment
   = chars:Char+ { return new LiteralNode(chars.join('')).at(location()); }
   / "{" _ @val:Value _ "}"
@@ -450,6 +462,10 @@ delete = @"delete" WB
 
 let = @"let" WB
 
+input = @"input" WB
+
+pause = @"pause" WB
+
 and = @"and" WB
 
 or = @"or" WB
@@ -481,6 +497,8 @@ Reserved
   / return
   / delete
   / let
+  / input
+  / pause
   / and
   / or
   / not

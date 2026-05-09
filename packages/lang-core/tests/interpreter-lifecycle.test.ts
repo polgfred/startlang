@@ -2,11 +2,7 @@ import { Interpreter, type RunResult } from '@startlang/lang-core/interpreter';
 import { parse } from '@startlang/lang-core/parser.peggy';
 import { RuntimeHistory } from '@startlang/lang-core/runtime-history';
 import { runtimeGlobals } from '@startlang/lang-core/runtime-globals';
-import {
-  InputSuspension,
-  isBreakpointSuspension,
-} from '@startlang/lang-core/suspension';
-import type { RuntimeSuspension } from '@startlang/lang-core/suspension';
+import type { RuntimePause } from '@startlang/lang-core/interpreter';
 import type { MarkerType } from '@startlang/lang-core/types';
 import { describe, expect, it } from 'vitest';
 
@@ -24,43 +20,121 @@ function recordSnapshots(interpreter: Interpreter, history: RuntimeHistory) {
   };
 }
 
-function expectSuspended(result: RunResult): RuntimeSuspension {
-  expect(result.status).toBe('suspended');
-  if (result.status !== 'suspended') {
-    throw new Error('expected suspension');
+function expectPaused(result: RunResult): RuntimePause {
+  expect(result.status).toBe('paused');
+  if (result.status !== 'paused') {
+    throw new Error('expected pause');
   }
-  return result.suspension;
+  return result.pause;
 }
 
-function expectInputSuspension(suspension: RuntimeSuspension): InputSuspension {
-  expect(suspension).toBeInstanceOf(InputSuspension);
-  if (!(suspension instanceof InputSuspension)) {
-    throw new Error('expected input suspension');
+function expectInputPause(pause: RuntimePause) {
+  expect(pause.kind).toBe('input');
+  if (pause.kind !== 'input') {
+    throw new Error('expected input pause');
   }
-  return suspension;
+  return pause;
+}
+
+function expectPauseKind(result: RunResult, kind: RuntimePause['kind']) {
+  expect(expectPaused(result).kind).toBe(kind);
 }
 
 describe('interpreter lifecycle', () => {
-  it('suspends for input and resumes into the awaiting expression', async () => {
+  it('pauses for input and continues with the provided value', async () => {
     const interpreter = new Interpreter();
     interpreter.registerGlobals(runtimeGlobals);
 
     const result = await interpreter.run(
       parseSnippet(`
-      name = input("Name?", "Ada")
+      input name "Name?" "Ada"
       greeting = "Hello, {name}"
       `)
     );
 
-    const suspension = expectInputSuspension(expectSuspended(result));
-    expect(suspension.prompt).toBe('Name?');
-    expect(suspension.initial).toBe('Ada');
+    const pause = expectInputPause(expectPaused(result));
+    expect(pause.prompt).toBe('Name?');
+    expect(pause.initial).toBe('Ada');
 
-    const resumed = await interpreter.resume('Grace');
+    const resumed = await interpreter.continueWithInput('Grace');
 
     expect(resumed.status).toBe('completed');
     expect(interpreter.getVariable('name')).toBe('Grace');
     expect(interpreter.getVariable('greeting')).toBe('Hello, Grace');
+  });
+
+  it('can provide input before continuing', async () => {
+    const interpreter = new Interpreter();
+
+    const result = await interpreter.run(
+      parseSnippet(`
+      input name "Name?"
+      `)
+    );
+
+    expectInputPause(expectPaused(result));
+
+    interpreter.provideInput('Grace');
+    const resumed = await interpreter.continue();
+
+    expect(resumed.status).toBe('completed');
+    expect(interpreter.getVariable('name')).toBe('Grace');
+  });
+
+  it('does not stop twice when an input statement has a breakpoint', async () => {
+    const markers: MarkerType[] = [];
+    const source = [
+      'value = 1',
+      'input name "Name?" "Ada"',
+      'value = 2',
+      '',
+    ].join('\n');
+    const rootNode = parse(source);
+    const interpreter = new Interpreter();
+
+    markers[2] = 'breakpoint';
+    interpreter.setMarkerMap(mapMarkers(rootNode, markers));
+
+    const result = await interpreter.run(rootNode);
+
+    const pause = expectInputPause(expectPaused(result));
+    expect(pause.prompt).toBe('Name?');
+    expect(interpreter.topFrame.head.node.location.start.line).toBe(2);
+
+    const resumed = await interpreter.continueWithInput('Grace');
+
+    expect(resumed.status).toBe('completed');
+    expect(interpreter.getVariable('name')).toBe('Grace');
+    expect(interpreter.getVariable('value')).toBe(2);
+  });
+
+  it('restores intrinsic input pauses from the current node', async () => {
+    const markers: MarkerType[] = [];
+    const source = ['input name "Name?" "Ada"', 'value = 1', ''].join('\n');
+    const rootNode = parse(source);
+    const interpreter = new Interpreter();
+    const history = new RuntimeHistory();
+    recordSnapshots(interpreter, history);
+
+    markers[1] = 'snapshot';
+    interpreter.setMarkerMap(mapMarkers(rootNode, markers));
+
+    const result = await interpreter.run(rootNode);
+
+    expectInputPause(expectPaused(result));
+    expect(history.entries).toHaveLength(1);
+
+    interpreter.stop();
+    interpreter.restoreState(history.moveTo(0));
+
+    const pause = expectInputPause(interpreter.pauseReason!);
+    expect(pause.initial).toBe('Ada');
+
+    const resumed = await interpreter.continueWithInput('Grace');
+
+    expect(resumed.status).toBe('completed');
+    expect(interpreter.getVariable('name')).toBe('Grace');
+    expect(interpreter.getVariable('value')).toBe(1);
   });
 
   it('takes explicit snapshots and restores interpreter and host state', async () => {
@@ -105,16 +179,16 @@ describe('interpreter lifecycle', () => {
       `)
     );
 
-    expect(isBreakpointSuspension(expectSuspended(result))).toBe(true);
+    expectPauseKind(result, 'pause');
     expect(interpreter.getVariable('value')).toBe(1);
 
-    const resumed = await interpreter.resume(undefined);
+    const resumed = await interpreter.continue();
 
     expect(resumed.status).toBe('completed');
     expect(interpreter.getVariable('value')).toBe(2);
   });
 
-  it('stops a suspended program and starts cleanly on the next run', async () => {
+  it('stops a paused program and starts cleanly on the next run', async () => {
     const interpreter = new Interpreter();
 
     const result = await interpreter.run(
@@ -125,16 +199,13 @@ describe('interpreter lifecycle', () => {
       `)
     );
 
-    expect(isBreakpointSuspension(expectSuspended(result))).toBe(true);
+    expectPauseKind(result, 'pause');
     expect(interpreter.getVariable('value')).toBe(1);
 
     interpreter.stop();
 
     expect(interpreter.isComplete).toBe(true);
-    expect(interpreter.suspension).toBeNull();
-    expect(() => interpreter.resume(undefined)).toThrow(
-      'interpreter is not suspended'
-    );
+    expect(interpreter.pauseReason).toBeNull();
 
     const rerun = await interpreter.run(
       parseSnippet(`
@@ -159,21 +230,21 @@ describe('interpreter lifecycle', () => {
 
     let result = await interpreter.runToNextStatement(rootNode);
 
-    expect(isBreakpointSuspension(expectSuspended(result))).toBe(true);
+    expectPauseKind(result, 'step');
     expect(interpreter.topFrame.head.node.location.start.line).toBe(2);
     expect(history.entries).toHaveLength(1);
     expect(history.current?.globalNamespace.values.value).toBeUndefined();
 
     result = await interpreter.stepToNextStatement();
 
-    expect(isBreakpointSuspension(expectSuspended(result))).toBe(true);
+    expectPauseKind(result, 'step');
     expect(interpreter.topFrame.head.node.location.start.line).toBe(3);
     expect(history.entries).toHaveLength(2);
     expect(history.current?.globalNamespace.values.value).toBe(1);
 
     result = await interpreter.stepToNextStatement();
 
-    expect(isBreakpointSuspension(expectSuspended(result))).toBe(true);
+    expectPauseKind(result, 'step');
     expect(interpreter.topFrame.head.node.location.start.line).toBe(4);
     expect(history.entries).toHaveLength(3);
     expect(history.current?.globalNamespace.values.value).toBe(2);
@@ -252,7 +323,7 @@ describe('interpreter lifecycle', () => {
     expect(history.current?.globalNamespace.values.value).toBe(99);
   });
 
-  it('takes marker snapshots and breakpoint suspensions at node entry', async () => {
+  it('takes marker snapshots and breakpoint pauses at node entry', async () => {
     const markers: MarkerType[] = [];
     const source = [
       'value = 0',
@@ -271,11 +342,11 @@ describe('interpreter lifecycle', () => {
 
     const result = await interpreter.run(rootNode);
 
-    expect(isBreakpointSuspension(expectSuspended(result))).toBe(true);
+    expectPauseKind(result, 'breakpoint');
     expect(history.entries).toHaveLength(2);
     expect(interpreter.getVariable('value')).toBe(1);
 
-    const resumed = await interpreter.resume(undefined);
+    const resumed = await interpreter.continue();
 
     expect(resumed.status).toBe('completed');
     expect(interpreter.getVariable('value')).toBe(2);

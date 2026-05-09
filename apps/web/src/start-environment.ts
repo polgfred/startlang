@@ -9,16 +9,13 @@ import {
   Interpreter,
   RuntimeError,
   type RuntimeEffect,
+  type RuntimePause,
   type RunResult,
   type RuntimeState,
 } from '@startlang/lang-core/interpreter';
 import type { Node } from '@startlang/lang-core/nodes';
 import { runtimeGlobals } from '@startlang/lang-core/runtime-globals';
 import { RuntimeHistory } from '@startlang/lang-core/runtime-history';
-import {
-  InputSuspension,
-  isBreakpointSuspension,
-} from '@startlang/lang-core/suspension';
 import type { IndexType } from '@startlang/lang-core/types';
 import {
   useCallback,
@@ -38,7 +35,7 @@ interface RuntimeStatus {
   isComplete: boolean;
   isRunning: boolean;
   isRewound: boolean;
-  suspension: RuntimeState<BrowserPresentationSnapshot>['suspension'];
+  pauseReason: RuntimePause | null;
 }
 
 interface RuntimeView
@@ -46,7 +43,7 @@ interface RuntimeView
   version: number;
   historyLength: number;
   historyIndex: number;
-  isSuspended: boolean;
+  isPaused: boolean;
 }
 
 export type RuntimeMode =
@@ -81,9 +78,9 @@ interface RuntimeControls {
 function getRuntimeMode(status: RuntimeStatus): RuntimeMode {
   if (status.isRunning) {
     return 'running';
-  } else if (status.suspension instanceof InputSuspension) {
+  } else if (status.pauseReason?.kind === 'input') {
     return 'input';
-  } else if (isBreakpointSuspension(status.suspension)) {
+  } else if (status.pauseReason) {
     return 'breakpoint';
   } else if (status.isRewound) {
     return 'rewound';
@@ -131,7 +128,7 @@ function getRuntimeStatus(
     isComplete: interpreter.isComplete,
     isRunning: interpreter.isRunning,
     isRewound: history.isRewound,
-    suspension: interpreter.suspension,
+    pauseReason: interpreter.pauseReason,
   };
 }
 
@@ -150,8 +147,9 @@ function createInterpreterStore(
       historyIndex: history.index,
       isComplete: interpreter.isComplete,
       isRunning: interpreter.isRunning,
-      isSuspended: interpreter.isSuspended,
+      isPaused: interpreter.isPaused,
       isRewound: history.isRewound,
+      pauseReason: interpreter.pauseReason,
     };
   }
 
@@ -303,7 +301,7 @@ export function useStartEnvironment() {
   const syncOutputTab = useCallback(() => {
     const { hasGraphicsOutput, hasTextOutput } = getOutputPresence(
       host.takeSnapshot(),
-      interpreter.suspension instanceof InputSuspension
+      interpreter.pauseReason?.kind === 'input'
     );
 
     setOutputTab((current) =>
@@ -428,23 +426,26 @@ export function useStartEnvironment() {
 
   const resumeInput = useCallback(
     async (value: string) => {
-      await performInterpreterAction(() => interpreter.resume(value), {
-        clearHighlight: false,
-      });
+      await performInterpreterAction(
+        () => interpreter.continueWithInput(value),
+        {
+          clearHighlight: false,
+        }
+      );
     },
     [interpreter, performInterpreterAction]
   );
 
   const inputState = useMemo(
     () =>
-      runtimeView.suspension instanceof InputSuspension
+      runtimeView.pauseReason?.kind === 'input'
         ? {
-            prompt: runtimeView.suspension.prompt,
-            initial: runtimeView.suspension.initial,
+            prompt: runtimeView.pauseReason.prompt,
+            initial: runtimeView.pauseReason.initial,
             onInputComplete: resumeInput,
           }
         : null,
-    [runtimeView.suspension, resumeInput]
+    [runtimeView.pauseReason, resumeInput]
   );
 
   const { hasGraphicsOutput, hasTextOutput } = getOutputPresence(
@@ -499,7 +500,7 @@ export function useStartEnvironment() {
   }, [interpreter, startProgram]);
 
   const resumeBreakpoint = useCallback(async () => {
-    await performInterpreterAction(() => interpreter.resume(undefined));
+    await performInterpreterAction(() => interpreter.continue());
   }, [interpreter, performInterpreterAction]);
 
   const stepToNextStatement = useCallback(async () => {

@@ -12,7 +12,7 @@ async function runSnippet(source: string, globals: RuntimeFunctions = {}) {
   const result = await interpreter.run(parse(`${source}\n`));
 
   if (result.status !== 'completed') {
-    throw new Error(`unexpected suspension: ${result.suspension.kind}`);
+    throw new Error(`unexpected pause: ${result.pause.kind}`);
   }
 
   return interpreter;

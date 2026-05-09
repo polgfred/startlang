@@ -6,11 +6,14 @@ import readline from 'node:readline';
 import { pathToFileURL } from 'node:url';
 import { inspect, parseArgs } from 'node:util';
 
-import { Interpreter, type RunResult } from '@startlang/lang-core/interpreter';
+import {
+  Interpreter,
+  type RunResult,
+  type RuntimePause,
+} from '@startlang/lang-core/interpreter';
 import type { Node } from '@startlang/lang-core/nodes';
 import { parse, type ParseOptions } from '@startlang/lang-core/parser.peggy';
 import { runtimeGlobals } from '@startlang/lang-core/runtime-globals';
-import { InputSuspension } from '@startlang/lang-core/suspension';
 
 import {
   BrowserPresentationHost,
@@ -30,7 +33,9 @@ interface ScriptOptions {
   ns?: boolean;
 }
 
-type SuspensionQuestion = (suspension: InputSuspension) => Promise<string>;
+type PauseQuestion = (
+  pause: Extract<RuntimePause, { kind: 'input' }>
+) => Promise<string>;
 
 function output(obj: unknown) {
   console.log(inspect(obj, { colors: true, depth: null }));
@@ -89,16 +94,16 @@ function parseCliArgs() {
 function createQuestioner(
   rl: readline.Interface,
   shouldPrompt = process.stdin.isTTY
-): SuspensionQuestion {
+): PauseQuestion {
   const inputLines = rl[Symbol.asyncIterator]();
 
-  return async (suspension) => {
+  return async (pause) => {
     if (shouldPrompt) {
-      rl.setPrompt(suspension.prompt);
+      rl.setPrompt(pause.prompt);
       rl.prompt();
     }
     const { value, done } = await inputLines.next();
-    return done ? suspension.initial : value;
+    return done ? pause.initial : value;
   };
 }
 
@@ -106,17 +111,19 @@ async function runUntilComplete(
   interp: Interpreter,
   host: BrowserPresentationHost,
   renderer: ConsoleOutputRenderer,
-  question: SuspensionQuestion,
+  question: PauseQuestion,
   result: RunResult
 ) {
-  while (result.status === 'suspended') {
-    const { suspension } = result;
-    if (suspension instanceof InputSuspension) {
+  while (result.status === 'paused') {
+    const { pause } = result;
+    if (pause.kind === 'input') {
       renderer.flush(host);
-      const answer = await question(suspension);
-      result = await interp.resume(answer);
+      const answer = await question(pause);
+      result = await interp.continueWithInput(answer);
+    } else if (pause.kind === 'breakpoint' || pause.kind === 'pause') {
+      result = await interp.continue();
     } else {
-      throw new Error(`unsupported suspension: ${suspension.kind}`);
+      throw new Error(`unsupported pause: ${pause.kind}`);
     }
   }
 

@@ -4,7 +4,6 @@ import path from 'node:path';
 import { Interpreter, type RunResult } from '@startlang/lang-core/interpreter';
 import { parse } from '@startlang/lang-core/parser.peggy';
 import { runtimeGlobals } from '@startlang/lang-core/runtime-globals';
-import { InputSuspension } from '@startlang/lang-core/suspension';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -32,15 +31,15 @@ async function runUntilComplete(
   interpreter: Interpreter,
   result: RunResult
 ): Promise<void> {
-  while (result.status === 'suspended') {
-    const { suspension } = result;
+  while (result.status === 'paused') {
+    const { pause } = result;
 
-    if (suspension instanceof InputSuspension) {
-      result = await interpreter.resume(suspension.initial);
+    if (pause.kind === 'input') {
+      result = await interpreter.continueWithInput(pause.initial);
       continue;
     }
 
-    throw new Error(`unsupported suspension: ${suspension.kind}`);
+    throw new Error(`unsupported pause: ${pause.kind}`);
   }
 }
 
@@ -109,9 +108,9 @@ async function playNumguessWithBinarySearch() {
   let lastGuess: number | null = null;
   let result = await interpreter.run(parse(source));
 
-  while (result.status === 'suspended') {
-    if (!(result.suspension instanceof InputSuspension)) {
-      throw new Error(`unsupported suspension: ${result.suspension.kind}`);
+  while (result.status === 'paused') {
+    if (result.pause.kind !== 'input') {
+      throw new Error(`unsupported pause: ${result.pause.kind}`);
     }
 
     if (lastGuess !== null) {
@@ -128,7 +127,7 @@ async function playNumguessWithBinarySearch() {
     const guess = Math.floor((lo + hi) / 2);
     guesses.push(guess);
     lastGuess = guess;
-    result = await interpreter.resume(String(guess));
+    result = await interpreter.continueWithInput(String(guess));
   }
 
   return { guesses, host, interpreter };
@@ -384,7 +383,7 @@ describe('browser examples', () => {
   ])('%s renders graphics output', async (name, shapeCount) => {
     const { host, interpreter } = await runExample(name);
 
-    expect(interpreter.isSuspended).toBe(false);
+    expect(interpreter.isPaused).toBe(false);
     expect(host.shapes).toHaveLength(shapeCount);
   });
 
@@ -397,7 +396,7 @@ describe('browser examples', () => {
     const { host, interpreter } = await runExample(name);
     const text = getOutputText(host).join('\n');
 
-    expect(interpreter.isSuspended).toBe(false);
+    expect(interpreter.isPaused).toBe(false);
     for (const expected of expectedText) {
       expect(text).toContain(expected);
     }
@@ -406,7 +405,7 @@ describe('browser examples', () => {
   it('sieve.start renders a prime/composite table', async () => {
     const { host, interpreter } = await runExample('sieve.start');
 
-    expect(interpreter.isSuspended).toBe(false);
+    expect(interpreter.isPaused).toBe(false);
     expect(host.cells).toHaveLength(1);
     expect(host.cells[0]).toBeInstanceOf(GridCell);
 
@@ -435,7 +434,7 @@ describe('browser examples', () => {
     const { guesses, host, interpreter } = await playNumguessWithBinarySearch();
     const text = getOutputText(host).join('\n');
 
-    expect(interpreter.isSuspended).toBe(false);
+    expect(interpreter.isPaused).toBe(false);
     expect(guesses.length).toBeLessThanOrEqual(10);
     expect(text).toContain('You guessed it!');
     expect(text).not.toContain('Sorry, out of guesses.');

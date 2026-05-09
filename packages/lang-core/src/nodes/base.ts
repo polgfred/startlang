@@ -1,7 +1,6 @@
 import { immerable } from 'immer';
 
 import { Interpreter } from '../interpreter.js';
-import type { RuntimeSuspension } from '../suspension.js';
 import { Cons } from '../utils/cons.js';
 
 interface SourceOffset {
@@ -39,11 +38,12 @@ export abstract class Frame {
 
   constructor(public readonly node: Node) {}
 
-  abstract visit(
-    interpreter: Interpreter
-  ): void | Promise<void> | RuntimeSuspension;
+  abstract visit(interpreter: Interpreter): void | Promise<void>;
 
-  dispose(interpreter: Interpreter) {}
+  onEnter(interpreter: Interpreter) {}
+
+  onExit(interpreter: Interpreter) {}
+
   isFlowBoundary(flow: 'loop' | 'call'): boolean {
     return false;
   }

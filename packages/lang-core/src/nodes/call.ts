@@ -55,7 +55,7 @@ export class CallFrame extends Frame {
         const result = func(interpreter, this.args, this.node);
         interpreter.swapFrame(this, 3);
         if (result instanceof Frame) {
-          interpreter.pushFrame(result);
+          interpreter.pushFrame(result, false);
         } else if (result) {
           return result;
         }
@@ -105,7 +105,7 @@ class CallGlobalFrame extends Frame {
     }
   }
 
-  dispose(interpreter: Interpreter) {
+  override onExit(interpreter: Interpreter) {
     interpreter.popNamespace();
   }
 

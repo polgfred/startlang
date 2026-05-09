@@ -6,9 +6,12 @@
 ;
 
 ; ask for the principal, rate, and time
-principal = num(input("How much to invest?", "100000"))
-rate = num(input("What percent interest each year?", "5"))
-years = num(input("How many years?", "10"))
+input principal_text "How much to invest?" "100000"
+input rate_text "What percent interest each year?" "5"
+input years_text "How many years?" "10"
+principal = num(principal_text)
+rate = num(rate_text)
+years = num(years_text)
 
 ; draw a data table
 table do

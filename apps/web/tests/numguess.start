@@ -11,7 +11,7 @@ print "Your guesses:"
 
 repeat 10 do
   ; ask for a guess
-  let guess = input("Guess a number between 1 and 100:")
+  input guess "Guess a number between 1 and 100:"
 
   ; if you didn't enter anything, just quit
   if guess = "" then
