@@ -30,12 +30,43 @@
   align-items: center;
   gap: 8px;
   min-height: 64px;
-  padding: 0 16px;
+  padding: 0 18px;
 }
 
 .brand {
-  margin-right: 16px;
+  margin-right: 18px;
   font-weight: 700;
+  color: color-mix(in srgb, var(--color-primary) 58%, var(--color-text));
+  letter-spacing: 0.04em;
+}
+
+.exampleTrigger {
+  gap: 8px;
+  height: 34px;
+  min-width: auto;
+  padding: 0 12px;
+  color: var(--color-text);
+  background: var(--color-secondary-selected);
+  border-color: transparent;
+  box-shadow: inset 0 0 0 1px var(--color-border-subtle);
+}
+
+.exampleTrigger::after {
+  width: 0;
+  height: 0;
+  content: '';
+  border-top: 5px solid currentColor;
+  border-right: 4px solid transparent;
+  border-left: 4px solid transparent;
+  opacity: 0.72;
+}
+
+.exampleTrigger:hover:not(:disabled):not([data-disabled]) {
+  background: color-mix(in srgb, var(--color-secondary-selected) 55%, var(--color-surface));
+}
+
+.exampleTrigger[data-popup-open] {
+  background: var(--color-primary-soft);
 }
 
 .statusPill {
@@ -102,6 +133,13 @@
   min-width: 112px;
 }
 
+.headerButton:disabled,
+.headerButton[data-disabled] {
+  color: color-mix(in srgb, var(--color-disabled-text) 70%, transparent);
+  background: color-mix(in srgb, var(--color-surface) 52%, transparent);
+  border-color: var(--color-border);
+}
+
 .headerButton:hover:not(:disabled):not([data-disabled]) {
   background: color-mix(in srgb, var(--color-header) 65%, var(--color-surface));
 }
@@ -156,11 +194,23 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+}
+
+.socialLink:hover {
+  background: var(--color-secondary-hover);
+}
+
+.socialLink:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
 }
 
 .socialIcon {
   display: block;
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   background: var(--color-primary);
 }

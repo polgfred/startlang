@@ -161,7 +161,13 @@ const CodeMenu = memo(function CodeMenu({
 
   return (
     <Menu.Root>
-      <Menu.Trigger className={clsx(controls.button, controls.buttonText)}>
+      <Menu.Trigger
+        className={clsx(
+          controls.button,
+          controls.buttonText,
+          styles.exampleTrigger
+        )}
+      >
         Examples
       </Menu.Trigger>
       <Menu.Portal>

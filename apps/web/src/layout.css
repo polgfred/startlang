@@ -9,6 +9,7 @@
   --color-secondary: #455a64;
   --color-text: #263238;
   --color-surface: #fff;
+  --color-app-background: #eef2f3;
   --color-header: #f7f9fa;
   --color-warning: #ed6c02;
   --color-error: #aa0000;
@@ -29,6 +30,7 @@
   --shadow-menu:
     0 8px 24px rgba(38, 50, 56, 0.16),
     0 2px 8px rgba(38, 50, 56, 0.08);
+  --shadow-button-soft: 0 1px 2px rgba(38, 50, 56, 0.12);
   --shadow-button: 0 2px 4px rgba(38, 50, 56, 0.2);
 }
 

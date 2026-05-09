@@ -10,7 +10,8 @@
   cursor: pointer;
   background: transparent;
   border: 1px solid var(--color-secondary);
-  border-radius: 4px;
+  border-radius: 6px;
+  box-shadow: var(--shadow-button-soft);
 }
 
 .button:hover {
@@ -28,6 +29,7 @@
   cursor: default;
   background: transparent;
   border-color: var(--color-disabled-border);
+  box-shadow: none;
 }
 
 .buttonPrimary {
