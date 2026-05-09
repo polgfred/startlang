@@ -49,7 +49,7 @@ interface RuntimeView
   isSuspended: boolean;
 }
 
-type RuntimeMode =
+export type RuntimeMode =
   | 'idle'
   | 'running'
   | 'input'
@@ -599,6 +599,7 @@ export function useStartEnvironment() {
     inputState,
     interpreter,
     outputTab,
+    runtimeMode,
     runtimeVersion: runtimeView.version,
     runProgram,
     runOrResume,

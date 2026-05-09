@@ -37,3 +37,10 @@
   font-weight: 700;
   line-height: 19px;
 }
+
+.editor :global(.monaco-editor-overlaymessage),
+.editor :global(.monaco-editor-overlaymessage .message),
+.editor :global(.monaco-editor-overlaymessage .message p) {
+  font-family: var(--font-ui);
+  font-size: 14px;
+}

@@ -15,6 +15,7 @@ import victorScript from '../tests/victor.start';
 import controls from './controls.module.css';
 import { useEditor } from './editor-context.jsx';
 import styles from './header.module.css';
+import type { RuntimeMode } from './start-environment.js';
 
 type OutputTab = 'graphics' | 'text';
 
@@ -127,6 +128,22 @@ const exampleScripts = [
   },
 ];
 
+function getRuntimeStatusLabel(runtimeMode: RuntimeMode) {
+  switch (runtimeMode) {
+    case 'running':
+      return 'Running';
+    case 'input':
+      return 'Waiting';
+    case 'breakpoint':
+    case 'continuable':
+      return 'Paused';
+    case 'rewound':
+      return 'Rewound';
+    case 'idle':
+      return null;
+  }
+}
+
 const CodeMenu = memo(function CodeMenu({
   runProgram,
 }: {
@@ -192,6 +209,7 @@ export default memo(function Header({
   isStepDisabled,
   stopProgram,
   isStopDisabled,
+  runtimeMode,
 }: {
   outputTab: OutputTab;
   setOutputTab: (value: OutputTab) => void;
@@ -207,13 +225,22 @@ export default memo(function Header({
   isStepDisabled: boolean;
   stopProgram: () => void;
   isStopDisabled: boolean;
+  runtimeMode: RuntimeMode;
 }) {
   const toggleInspector = useCallback(() => {
     setShowInspector(!showInspector);
   }, [setShowInspector, showInspector]);
+  const runtimeStatusLabel = getRuntimeStatusLabel(runtimeMode);
 
   return (
-    <header className={styles.header}>
+    <header
+      className={clsx(
+        styles.header,
+        runtimeMode !== 'idle' && styles.headerActive,
+        runtimeMode === 'running' && styles.headerRunning,
+        runtimeMode === 'input' && styles.headerWaiting
+      )}
+    >
       <div className={styles.toolbar}>
         <div className={styles.brand}>START</div>
         <CodeMenu runProgram={runExample} />
@@ -267,6 +294,18 @@ export default memo(function Header({
         >
           Stop
         </Button>
+        {runtimeStatusLabel && (
+          <div
+            className={clsx(
+              styles.statusPill,
+              runtimeMode === 'running' && styles.statusPillRunning
+            )}
+            aria-live="polite"
+          >
+            <span className={styles.statusDot} aria-hidden="true" />
+            {runtimeStatusLabel}
+          </div>
+        )}
       </div>
       <div className={styles.toolbar}>
         <a

@@ -202,7 +202,7 @@ export default memo(function Editor({
       minimap: { enabled: false },
       readOnly: isReadOnly,
       readOnlyMessage: {
-        value: 'Stop the program before editing source code.',
+        value: 'Exit the program before editing source code.',
       },
       scrollBeyondLastLine: false,
     }),

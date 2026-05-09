@@ -3,6 +3,9 @@
   --font-mono: 'Atkinson Hyperlegible Mono', ui-monospace, monospace;
   --color-primary: #6b9da0;
   --color-primary-hover: #5f8f92;
+  --color-running: #217a8b;
+  --color-running-soft: rgba(33, 122, 139, 0.09);
+  --color-waiting: #eaddb8;
   --color-secondary: #455a64;
   --color-text: #263238;
   --color-surface: #fff;

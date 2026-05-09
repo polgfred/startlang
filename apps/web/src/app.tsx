@@ -1,3 +1,5 @@
+import clsx from 'clsx';
+
 import styles from './app.module.css';
 import Editor from './editor.jsx';
 import Graphics from './graphics.jsx';
@@ -26,6 +28,7 @@ export default function App() {
         isStepDisabled={env.isStepDisabled}
         stopProgram={env.stopProgram}
         isStopDisabled={env.isStopDisabled}
+        runtimeMode={env.runtimeMode}
       />
       <main className={styles.body}>
         <div className={styles.main}>
@@ -40,11 +43,12 @@ export default function App() {
           </section>
           <section className={styles.pane}>
             <div
-              className={`${styles.panel} ${
+              className={clsx(
+                styles.panel,
                 env.outputTab === 'text'
                   ? styles.scrollPanel
                   : styles.hiddenPanel
-              }`}
+              )}
             >
               {env.outputTab === 'graphics' && (
                 <Graphics shapes={env.host.getInProgressShapes()} />
@@ -60,7 +64,7 @@ export default function App() {
         </div>
         {env.showInspector && (
           <section className={styles.inspectorPane}>
-            <div className={`${styles.panel} ${styles.hiddenPanel}`}>
+            <div className={clsx(styles.panel, styles.hiddenPanel)}>
               <Inspector
                 error={env.error}
                 history={env.history}
