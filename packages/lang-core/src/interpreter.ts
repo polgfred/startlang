@@ -282,9 +282,9 @@ export class Interpreter<THostSnapshot = unknown> {
     });
   }
 
-  pushFrame(frame: Frame, enterNode = true) {
+  pushFrame(frame: Frame) {
     this.topFrame = this.topFrame.push(frame);
-    if (enterNode && frame.node.isStatement) {
+    if (frame.node.isStatement) {
       this.onStatementPush(frame.node);
     }
     frame.onEnter(this);

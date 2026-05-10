@@ -53,16 +53,12 @@ export class CallFrame extends Frame {
       case 2: {
         const func = interpreter.getRuntimeFunction(name, this.args);
         const result = func(interpreter, this.args, this.node);
-        interpreter.swapFrame(this, 3);
         if (result instanceof Frame) {
-          interpreter.pushFrame(result, false);
-        } else if (result) {
+          interpreter.swapFrame(result);
+        } else {
+          interpreter.popFrame();
           return result;
         }
-        break;
-      }
-      case 3: {
-        interpreter.popFrame();
         break;
       }
     }
