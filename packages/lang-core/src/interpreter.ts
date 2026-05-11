@@ -308,6 +308,12 @@ export class Interpreter<THostSnapshot = unknown> {
     );
   }
 
+  replaceFrame(frame: Frame) {
+    this.topFrame.head.onExit(this);
+    this.topFrame = this.topFrame.swap(frame);
+    frame.onEnter(this);
+  }
+
   popFrame() {
     this.topFrame.head.onExit(this);
     this.topFrame = this.topFrame.pop();

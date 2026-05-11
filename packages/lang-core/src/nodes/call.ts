@@ -37,7 +37,7 @@ export class CallFrame extends Frame {
           interpreter.swapFrame(this, 1);
           interpreter.pushNode(args[this.count]);
         } else if (name in interpreter.globalFunctions) {
-          interpreter.swapFrame(new CallGlobalFrame(this.node, this.args));
+          interpreter.replaceFrame(new CallGlobalFrame(this.node, this.args));
         } else {
           interpreter.swapFrame(this, 2);
         }
@@ -54,7 +54,7 @@ export class CallFrame extends Frame {
         const func = interpreter.getRuntimeFunction(name, this.args);
         const result = func(interpreter, this.args, this.node);
         if (result instanceof Frame) {
-          interpreter.swapFrame(result);
+          interpreter.replaceFrame(result);
         } else {
           interpreter.popFrame();
           return result;
@@ -91,11 +91,6 @@ class CallGlobalFrame extends CallBodyFrame {
     switch (this.state) {
       case 0: {
         const func = interpreter.globalFunctions[name];
-        interpreter.pushNamespace((draft) => {
-          for (let i = 0; i < func.params.length; i++) {
-            draft[func.params[i]] = this.args[i];
-          }
-        });
         interpreter.swapFrame(this, 1);
         interpreter.pushNode(func.body);
         break;
@@ -105,6 +100,16 @@ class CallGlobalFrame extends CallBodyFrame {
         break;
       }
     }
+  }
+
+  override onEnter(interpreter: Interpreter): void {
+    const { name } = this.node;
+    const func = interpreter.globalFunctions[name];
+    interpreter.pushNamespace((draft) => {
+      for (let i = 0; i < func.params.length; i++) {
+        draft[func.params[i]] = this.args[i];
+      }
+    });
   }
 
   override onExit(interpreter: Interpreter) {
