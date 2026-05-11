@@ -32,7 +32,7 @@ export abstract class Node {
 }
 
 export type UnwindSignal = 'break' | 'next' | 'return';
-export type UnwindAction = 'pass' | 'stop' | 'stop-after';
+export type UnwindAction = 'stop' | 'stop-after';
 
 export abstract class Frame {
   static [immerable] = true;
@@ -47,8 +47,8 @@ export abstract class Frame {
 
   onExit(interpreter: Interpreter) {}
 
-  onUnwind(signal: UnwindSignal): UnwindAction {
-    return 'pass';
+  onUnwind(signal: UnwindSignal): UnwindAction | undefined {
+    return;
   }
 }
 

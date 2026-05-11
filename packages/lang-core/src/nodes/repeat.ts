@@ -1,6 +1,6 @@
 import { Interpreter } from '../interpreter.js';
 
-import { Frame, Node, UnwindAction, UnwindSignal } from './base.js';
+import { Frame, Node, type UnwindSignal } from './base.js';
 
 export class RepeatNode extends Node {
   override readonly isStatement = true;
@@ -65,9 +65,8 @@ class RepeatTimesFrame extends Frame {
     }
   }
 
-  override onUnwind(signal: UnwindSignal): UnwindAction {
+  override onUnwind(signal: UnwindSignal) {
     if (signal === 'break') return 'stop-after';
     if (signal === 'next') return 'stop';
-    return 'pass';
   }
 }

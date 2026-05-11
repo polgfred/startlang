@@ -1,6 +1,6 @@
 import { Interpreter } from '../interpreter.js';
 
-import { Frame, Node, UnwindAction, UnwindSignal } from './base.js';
+import { Frame, Node, type UnwindAction, type UnwindSignal } from './base.js';
 
 export abstract class CallNode extends Node {
   constructor(
