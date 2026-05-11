@@ -31,6 +31,9 @@ export abstract class Node {
   abstract makeFrame(): Frame;
 }
 
+export type UnwindSignal = 'break' | 'next' | 'return';
+export type UnwindAction = 'pass' | 'stop' | 'stop-after';
+
 export abstract class Frame {
   static [immerable] = true;
 
@@ -44,8 +47,8 @@ export abstract class Frame {
 
   onExit(interpreter: Interpreter) {}
 
-  isFlowBoundary(flow: 'loop' | 'call'): boolean {
-    return false;
+  onUnwind(signal: UnwindSignal): UnwindAction {
+    return 'pass';
   }
 }
 

@@ -22,7 +22,7 @@ export class ReturnFrame extends Frame {
   declare node: ReturnNode;
 
   visit(interpreter: Interpreter) {
-    interpreter.popOver('call');
+    interpreter.unwind('return');
   }
 }
 
@@ -38,7 +38,7 @@ export class ReturnValueFrame extends Frame {
         break;
       }
       case 1: {
-        interpreter.popOver('call');
+        interpreter.unwind('return');
         break;
       }
     }

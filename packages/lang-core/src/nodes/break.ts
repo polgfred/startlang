@@ -14,6 +14,6 @@ export class BreakFrame extends Frame {
   declare node: BreakNode;
 
   visit(interpreter: Interpreter) {
-    interpreter.popOver('loop');
+    interpreter.unwind('break');
   }
 }

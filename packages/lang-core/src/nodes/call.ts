@@ -1,6 +1,6 @@
 import { Interpreter } from '../interpreter.js';
 
-import { Frame, Node } from './base.js';
+import { Frame, Node, UnwindAction, UnwindSignal } from './base.js';
 
 export abstract class CallNode extends Node {
   constructor(
@@ -64,14 +64,20 @@ export class CallFrame extends Frame {
     }
   }
 
-  isFlowBoundary(flow: 'loop' | 'call') {
-    return true;
+  override onUnwind(signal: UnwindSignal): UnwindAction {
+    return 'stop-after';
   }
 }
 
-class CallGlobalFrame extends Frame {
+export abstract class CallBodyFrame extends Frame {
   declare node: CallNode;
 
+  override onUnwind(signal: UnwindSignal): UnwindAction {
+    return 'stop-after';
+  }
+}
+
+class CallGlobalFrame extends CallBodyFrame {
   constructor(
     node: CallNode,
     readonly args: unknown[]
@@ -103,17 +109,5 @@ class CallGlobalFrame extends Frame {
 
   override onExit(interpreter: Interpreter) {
     interpreter.popNamespace();
-  }
-
-  isFlowBoundary(flow: 'loop' | 'call') {
-    return flow === 'call';
-  }
-}
-
-export abstract class CallBodyFrame extends Frame {
-  declare node: CallNode;
-
-  isFlowBoundary(flow: 'loop' | 'call') {
-    return flow === 'call';
   }
 }

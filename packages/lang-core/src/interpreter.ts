@@ -9,6 +9,7 @@ import {
   Node,
   BeginNode,
   LiteralNode,
+  UnwindSignal,
   VarNode,
   rootFrame,
 } from './nodes/index.js';
@@ -348,22 +349,16 @@ export class Interpreter<THostSnapshot = unknown> {
     this.namespace.popOut();
   }
 
-  popOver(flow: 'loop' | 'call') {
+  unwind(signal: UnwindSignal) {
     while (this.topFrame !== rootFrame) {
-      const isBoundary = this.topFrame.head.isFlowBoundary(flow);
-      this.popFrame();
-      if (isBoundary) {
-        break;
-      }
-    }
-  }
-
-  popUntil(flow: 'loop' | 'call') {
-    while (this.topFrame !== rootFrame) {
-      if (this.topFrame.head.isFlowBoundary(flow)) {
-        break;
+      const action = this.topFrame.head.onUnwind(signal);
+      if (action === 'stop') {
+        return;
       }
       this.popFrame();
+      if (action === 'stop-after') {
+        return;
+      }
     }
   }
 

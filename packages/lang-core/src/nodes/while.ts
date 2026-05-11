@@ -1,6 +1,6 @@
 import { Interpreter } from '../interpreter.js';
 
-import { Frame, Node } from './base.js';
+import { Frame, Node, UnwindAction, UnwindSignal } from './base.js';
 
 export class WhileNode extends Node {
   override readonly isStatement = true;
@@ -41,7 +41,9 @@ export class WhileFrame extends Frame {
     }
   }
 
-  isFlowBoundary(flow: 'loop' | 'call') {
-    return flow === 'loop';
+  override onUnwind(signal: UnwindSignal): UnwindAction {
+    if (signal === 'break') return 'stop-after';
+    if (signal === 'next') return 'stop';
+    return 'pass';
   }
 }
