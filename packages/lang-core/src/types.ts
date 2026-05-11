@@ -6,7 +6,7 @@ export interface RuntimeFunction {
     interpreter: Interpreter,
     args: any, // eslint-disable-line @typescript-eslint/no-explicit-any
     node: CallNode
-  ): void | Promise<void> | Frame;
+  ): Frame | void;
 }
 
 export type RuntimeFunctions = Readonly<Record<string, RuntimeFunction>>;

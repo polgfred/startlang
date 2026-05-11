@@ -41,7 +41,7 @@ export abstract class Frame {
 
   constructor(public readonly node: Node) {}
 
-  abstract visit(interpreter: Interpreter): void | Promise<void>;
+  abstract visit(interpreter: Interpreter): void;
 
   onEnter(interpreter: Interpreter) {}
 

@@ -167,12 +167,8 @@ export class Interpreter<THostSnapshot = unknown> {
         }
 
         const frame = this.topFrame.head;
-        let result;
         try {
-          result = frame.visit(this);
-          if (result instanceof Promise) {
-            result = await result;
-          }
+          frame.visit(this);
         } catch (err) {
           throw err instanceof RuntimeError
             ? err
