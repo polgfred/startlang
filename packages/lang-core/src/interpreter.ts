@@ -250,7 +250,7 @@ export class Interpreter<THostSnapshot = unknown> {
     this.pendingInput = null;
     this.pendingEffects = [];
     this.isRunning = false;
-    this.popOut();
+    this.exit();
   }
 
   registerHandler(handler: DataHandler) {
@@ -346,9 +346,10 @@ export class Interpreter<THostSnapshot = unknown> {
     this.pauseReason = pause;
   }
 
-  popOut() {
-    this.topFrame = rootFrame;
-    this.namespace.popOut();
+  exit() {
+    while (this.topFrame !== rootFrame) {
+      this.popFrame();
+    }
   }
 
   unwind(signal: UnwindSignal) {

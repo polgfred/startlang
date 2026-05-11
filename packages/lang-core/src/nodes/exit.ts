@@ -14,6 +14,6 @@ export class ExitFrame extends Frame {
   declare node: ExitNode;
 
   visit(interpreter: Interpreter) {
-    interpreter.popOut();
+    interpreter.exit();
   }
 }

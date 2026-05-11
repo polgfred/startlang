@@ -130,10 +130,6 @@ export class RuntimeNamespace {
     this.locals = null;
   }
 
-  popOut() {
-    this.locals = null;
-  }
-
   push(producer?: Producer<Record<string, unknown>>) {
     const values = producer ? produce(emptyObject, producer) : emptyObject;
     const namespace = new Namespace(this.getHandler, values);
