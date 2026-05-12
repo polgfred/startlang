@@ -1,10 +1,10 @@
 import type { RuntimeFunctions } from '../types.js';
 import { adjustIndex } from '../utils/index.js';
 
-import { define, oneOf, T } from './types.js';
+import { define, T } from './types.js';
 
 export const coreFunctions: RuntimeFunctions = {
-  len: define([oneOf(T.string, T.list, T.record)], (interpreter, [value]) => {
+  len: define([T.oneOf(T.string, T.list, T.record)], (interpreter, [value]) => {
     if (typeof value === 'string' || Array.isArray(value)) {
       interpreter.setResult(value.length);
     } else {
@@ -13,7 +13,7 @@ export const coreFunctions: RuntimeFunctions = {
   }),
 
   range: define(
-    [oneOf(T.string, T.list), T.number, T.number],
+    [T.oneOf(T.string, T.list), T.number, T.number],
     (interpreter, [value, start, end]) => {
       start = adjustIndex(start, value.length);
       end = adjustIndex(end, value.length);

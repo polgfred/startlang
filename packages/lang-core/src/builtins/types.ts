@@ -21,6 +21,8 @@ function make<T>(
   return { name, check };
 }
 
+type Literal = string | number | boolean | null;
+
 export const T = {
   number: make('number', (v): v is number => typeof v === 'number'),
   string: make('string', (v): v is string => typeof v === 'string'),
@@ -32,24 +34,34 @@ export const T = {
       typeof v === 'object' && v !== null && !Array.isArray(v)
   ),
   any: make('any', (_v): _v is unknown => true),
+
+  literal<const Values extends readonly Literal[]>(
+    ...values: Values
+  ): TypeSpec<Values[number]> {
+    const allowed = new Set<Literal>(values);
+    return make(
+      values.map(String).join('|'),
+      (v): v is Values[number] => allowed.has(v as Literal)
+    );
+  },
+
+  optional<U>(spec: TypeSpec<U>): TypeSpec<U | undefined> {
+    return {
+      name: spec.name,
+      check: (v): v is U | undefined => v === undefined || spec.check(v),
+      optional: true,
+    };
+  },
+
+  oneOf<Specs extends readonly TypeSpec[]>(
+    ...specs: Specs
+  ): TypeSpec<ValueOf<Specs[number]>> {
+    return make(
+      specs.map((s) => s.name).join('|'),
+      (v): v is ValueOf<Specs[number]> => specs.some((s) => s.check(v))
+    );
+  },
 };
-
-export function optional<T>(spec: TypeSpec<T>): TypeSpec<T | undefined> {
-  return {
-    name: spec.name,
-    check: (v): v is T | undefined => v === undefined || spec.check(v),
-    optional: true,
-  };
-}
-
-export function oneOf<Specs extends readonly TypeSpec[]>(
-  ...specs: Specs
-): TypeSpec<ValueOf<Specs[number]>> {
-  return make(
-    specs.map((s) => s.name).join('|'),
-    (v): v is ValueOf<Specs[number]> => specs.some((s) => s.check(v))
-  );
-}
 
 export type Signature = {
   readonly params: readonly TypeSpec[];

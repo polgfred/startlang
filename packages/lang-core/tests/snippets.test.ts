@@ -261,7 +261,7 @@ describe('core language snippets', () => {
       'cannot convert nope to number'
     );
     await expect(runSnippet('bad = format(1, "bogus")')).rejects.toThrow(
-      'invalid format: bogus'
+      'argument 2 should be decimal|percent|currency, got string'
     );
   });
 
