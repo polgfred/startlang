@@ -1,5 +1,5 @@
 import deepEqual from 'deep-equal';
-import { type WritableDraft } from 'immer';
+import type { WritableDraft } from 'immer';
 
 import { Interpreter } from '../interpreter.js';
 import type { RuntimeFunctions, RecordType } from '../types.js';
@@ -10,7 +10,7 @@ export const emptyRecord: RecordType = Object.freeze(Object.create(null));
 
 export class RecordHandler extends DataHandler {
   constructor(interpreter: Interpreter) {
-    super(interpreter, {}, tableMethods);
+    super(interpreter, {}, recordMethods);
   }
 
   shouldHandle(value: unknown) {
@@ -55,7 +55,7 @@ export class RecordHandler extends DataHandler {
   }
 }
 
-const tableMethods: RuntimeFunctions = {
+const recordMethods: RuntimeFunctions = {
   len(interpreter, [value]: [RecordType]) {
     interpreter.setResult(Object.keys(value).length);
   },
