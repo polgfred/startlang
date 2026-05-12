@@ -1,3 +1,4 @@
+import { isIndex } from '../handlers/base.js';
 import { Interpreter } from '../interpreter.js';
 import type { IndexType } from '../types.js';
 
@@ -39,10 +40,7 @@ export class VarIndexFrame extends Frame {
       }
       case 1: {
         interpreter.swapFrame<this>(0, (draft) => {
-          if (
-            typeof interpreter.lastResult !== 'number' &&
-            typeof interpreter.lastResult !== 'string'
-          ) {
+          if (!isIndex(interpreter.lastResult)) {
             throw new Error(`invalid index: ${interpreter.lastResult}`);
           }
           draft.indexes[this.count] = interpreter.lastResult;

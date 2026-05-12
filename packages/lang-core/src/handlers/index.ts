@@ -7,7 +7,7 @@ import { NumberHandler } from './number.js';
 import { RecordHandler } from './record.js';
 import { StringHandler } from './string.js';
 
-export { DataHandler } from './base.js';
+export { DataHandler, isIndex } from './base.js';
 
 export function installHandlers(interpreter: Interpreter) {
   interpreter.registerHandler(new NoneHandler(interpreter));

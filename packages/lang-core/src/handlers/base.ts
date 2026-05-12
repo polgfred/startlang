@@ -1,6 +1,10 @@
 import { Interpreter } from '../interpreter.js';
 import type { IndexType, ListType, RuntimeFunctions } from '../types.js';
 
+export function isIndex(value: unknown): value is IndexType {
+  return typeof value === 'number' || typeof value === 'string';
+}
+
 export abstract class DataHandler {
   constructor(
     protected readonly interpreter: Interpreter,
