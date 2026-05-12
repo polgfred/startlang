@@ -1,51 +1,53 @@
 import type { RuntimeFunctions } from '../types.js';
 
+import { define, optional, T } from './types.js';
+
 export const mathFunctions: RuntimeFunctions = {
-  abs(interpreter, [value]: [number]) {
+  abs: define([T.number], (interpreter, [value]) => {
     interpreter.setResult(Math.abs(value));
-  },
+  }),
 
-  acos(interpreter, [n]: [number]) {
+  acos: define([T.number], (interpreter, [n]) => {
     interpreter.setResult((Math.acos(n) * 180) / Math.PI);
-  },
+  }),
 
-  asin(interpreter, [value]: [number]) {
+  asin: define([T.number], (interpreter, [value]) => {
     interpreter.setResult((Math.asin(value) * 180) / Math.PI);
-  },
+  }),
 
-  atan(interpreter, [value]: [number]) {
+  atan: define([T.number], (interpreter, [value]) => {
     interpreter.setResult((Math.atan(value) * 180) / Math.PI);
-  },
+  }),
 
-  bitand(interpreter, [left, right]: [number, number]) {
+  bitand: define([T.number, T.number], (interpreter, [left, right]) => {
     interpreter.setResult(left & right);
-  },
+  }),
 
-  bitnot(interpreter, [value]: [number]) {
+  bitnot: define([T.number], (interpreter, [value]) => {
     interpreter.setResult(~value);
-  },
+  }),
 
-  bitor(interpreter, [left, right]: [number, number]) {
+  bitor: define([T.number, T.number], (interpreter, [left, right]) => {
     interpreter.setResult(left | right);
-  },
+  }),
 
-  bitxor(interpreter, [left, right]: [number, number]) {
+  bitxor: define([T.number, T.number], (interpreter, [left, right]) => {
     interpreter.setResult(left ^ right);
-  },
+  }),
 
-  cbrt(interpreter, [value]: [number]) {
+  cbrt: define([T.number], (interpreter, [value]) => {
     interpreter.setResult(Math.cbrt(value));
-  },
+  }),
 
-  cos(interpreter, [value]: [number]) {
+  cos: define([T.number], (interpreter, [value]) => {
     interpreter.setResult(Math.cos((value * Math.PI) / 180));
-  },
+  }),
 
-  exp(interpreter, [value]: [number]) {
+  exp: define([T.number], (interpreter, [value]) => {
     interpreter.setResult(Math.exp(value));
-  },
+  }),
 
-  log(interpreter, [value, base]: [number, number?]) {
+  log: define([T.number, optional(T.number)], (interpreter, [value, base]) => {
     if (base === undefined) {
       interpreter.setResult(Math.log(value));
     } else if (base === 10) {
@@ -53,22 +55,29 @@ export const mathFunctions: RuntimeFunctions = {
     } else {
       interpreter.setResult(Math.log(value) / Math.log(base));
     }
-  },
+  }),
 
-  rand(interpreter, args: [] | [number, number]) {
+  rand(interpreter, args: readonly unknown[]) {
     if (args.length === 0) {
       interpreter.setResult(Math.random());
-    } else {
-      const [lo, hi] = args;
-      interpreter.setResult(Math.floor(Math.random() * (hi - lo + 1)) + lo);
+      return;
     }
+    if (
+      args.length !== 2 ||
+      typeof args[0] !== 'number' ||
+      typeof args[1] !== 'number'
+    ) {
+      throw new Error('rand expects 0 arguments or 2 number arguments');
+    }
+    const [lo, hi] = args as [number, number];
+    interpreter.setResult(Math.floor(Math.random() * (hi - lo + 1)) + lo);
   },
 
-  round(interpreter, [value]: [number]) {
+  round: define([T.number], (interpreter, [value]) => {
     interpreter.setResult(Math.round(value));
-  },
+  }),
 
-  format(interpreter, [value, style]: [number, string]) {
+  format: define([T.number, T.string], (interpreter, [value, style]) => {
     switch (style) {
       case 'decimal': {
         const formatter = new Intl.NumberFormat(undefined, {
@@ -96,17 +105,17 @@ export const mathFunctions: RuntimeFunctions = {
         throw new Error(`invalid format: ${style}`);
       }
     }
-  },
+  }),
 
-  sin(interpreter, [value]: [number]) {
+  sin: define([T.number], (interpreter, [value]) => {
     interpreter.setResult(Math.sin((value * Math.PI) / 180));
-  },
+  }),
 
-  sqrt(interpreter, [value]: [number]) {
+  sqrt: define([T.number], (interpreter, [value]) => {
     interpreter.setResult(Math.sqrt(value));
-  },
+  }),
 
-  tan(interpreter, [value]: [number]) {
+  tan: define([T.number], (interpreter, [value]) => {
     interpreter.setResult(Math.tan((value * Math.PI) / 180));
-  },
+  }),
 };

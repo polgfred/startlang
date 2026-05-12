@@ -265,6 +265,24 @@ describe('core language snippets', () => {
     );
   });
 
+  it('validates builtin argument types and arity', async () => {
+    await expect(runSnippet('bad = abs("hi")')).rejects.toThrow(
+      'argument 1 should be number, got string'
+    );
+    await expect(runSnippet('bad = len(42)')).rejects.toThrow(
+      'argument 1 should be string|list|record, got number'
+    );
+    await expect(runSnippet('bad = sqrt(1, 2)')).rejects.toThrow(
+      'expected 1 argument(s), got 2'
+    );
+    await expect(runSnippet('bad = log(1, "ten")')).rejects.toThrow(
+      'argument 2 should be number, got string'
+    );
+    await expect(runSnippet('bad = rand(5)')).rejects.toThrow(
+      'rand expects 0 arguments or 2 number arguments'
+    );
+  });
+
   it('attaches the current source node to runtime errors', async () => {
     await expect(runSnippet('bad = 1 + "1"')).rejects.toMatchObject({
       node: {

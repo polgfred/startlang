@@ -1,36 +1,27 @@
-import type { RecordType, RuntimeFunctions } from '../types.js';
+import type { RuntimeFunctions } from '../types.js';
 import { adjustIndex } from '../utils/index.js';
 
-function isRecord(value: unknown): value is RecordType {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
+import { define, oneOf, T } from './types.js';
 
 export const coreFunctions: RuntimeFunctions = {
-  len(interpreter, [value]: [unknown]) {
+  len: define([oneOf(T.string, T.list, T.record)], (interpreter, [value]) => {
     if (typeof value === 'string' || Array.isArray(value)) {
       interpreter.setResult(value.length);
-    } else if (isRecord(value)) {
+    } else {
       interpreter.setResult(Object.keys(value).length);
-    } else {
-      throw new Error(
-        `len doesn't work on ${interpreter.getHandler(value).typeName}`
-      );
     }
-  },
+  }),
 
-  range(interpreter, [value, start, end]: [unknown, number, number]) {
-    if (typeof value === 'string') {
+  range: define(
+    [oneOf(T.string, T.list), T.number, T.number],
+    (interpreter, [value, start, end]) => {
       start = adjustIndex(start, value.length);
       end = adjustIndex(end, value.length);
-      interpreter.setResult(value.substring(start, end + 1));
-    } else if (Array.isArray(value)) {
-      start = adjustIndex(start, value.length);
-      end = adjustIndex(end, value.length);
-      interpreter.setResult(value.slice(start, end + 1));
-    } else {
-      throw new Error(
-        `range doesn't work on ${interpreter.getHandler(value).typeName}`
-      );
+      if (typeof value === 'string') {
+        interpreter.setResult(value.substring(start, end + 1));
+      } else {
+        interpreter.setResult(value.slice(start, end + 1));
+      }
     }
-  },
+  ),
 };
