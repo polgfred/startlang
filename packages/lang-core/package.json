@@ -14,6 +14,7 @@
     "./nodes": "./src/nodes/index.ts",
     "./nodes/*": "./src/nodes/*.ts",
     "./handlers/*": "./src/handlers/*.ts",
+    "./builtins/types": "./src/builtins/types.ts",
     "./utils/*": "./src/utils/*.ts"
   },
   "scripts": {

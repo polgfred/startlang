@@ -39,9 +39,8 @@ export const T = {
     ...values: Values
   ): TypeSpec<Values[number]> {
     const allowed = new Set<Literal>(values);
-    return make(
-      values.map(String).join('|'),
-      (v): v is Values[number] => allowed.has(v as Literal)
+    return make(values.map(String).join('|'), (v): v is Values[number] =>
+      allowed.has(v as Literal)
     );
   },
 
@@ -67,13 +66,18 @@ export type Signature = {
   readonly params: readonly TypeSpec[];
   readonly impl: (
     interpreter: Interpreter,
-    args: readonly unknown[]
+    args: readonly unknown[],
+    node: CallNode
   ) => Frame | void;
 };
 
 export function signature<const S extends readonly TypeSpec[]>(
   params: S,
-  impl: (interpreter: Interpreter, args: ValuesOf<S>) => Frame | void
+  impl: (
+    interpreter: Interpreter,
+    args: ValuesOf<S>,
+    node: CallNode
+  ) => Frame | void
 ): Signature {
   return {
     params,
@@ -112,7 +116,8 @@ function describeArgs(
 function invoke(
   signature: Signature,
   interpreter: Interpreter,
-  args: readonly unknown[]
+  args: readonly unknown[],
+  node: CallNode
 ): Frame | void {
   const required = signature.params.filter((s) => !s.optional).length;
   const max = signature.params.length;
@@ -129,7 +134,7 @@ function invoke(
       );
     }
   }
-  return signature.impl(interpreter, args);
+  return signature.impl(interpreter, args, node);
 }
 
 export function define<const S extends readonly TypeSpec[]>(
@@ -139,6 +144,27 @@ export function define<const S extends readonly TypeSpec[]>(
   return defineOverloads(signature(params, impl));
 }
 
+const emptyRecord: RecordType = Object.freeze(Object.create(null));
+
+export function defineWithProps<const S extends readonly TypeSpec[]>(
+  positional: S,
+  impl: (
+    interpreter: Interpreter,
+    props: RecordType,
+    args: ValuesOf<S>,
+    node: CallNode
+  ) => Frame | void
+): RuntimeFunction {
+  return defineOverloads(
+    signature(positional, (interp, args, node) =>
+      impl(interp, emptyRecord, args, node)
+    ),
+    signature([T.record, ...positional], (interp, [props, ...args], node) =>
+      impl(interp, props, args, node)
+    )
+  );
+}
+
 export function defineOverloads(...signatures: Signature[]): RuntimeFunction {
   if (signatures.length === 0) {
     throw new Error('defineOverloads requires at least one signature');
@@ -146,14 +172,14 @@ export function defineOverloads(...signatures: Signature[]): RuntimeFunction {
   return (
     interpreter: Interpreter,
     args: readonly unknown[],
-    _node: CallNode
+    node: CallNode
   ) => {
     if (signatures.length === 1) {
-      return invoke(signatures[0], interpreter, args);
+      return invoke(signatures[0], interpreter, args, node);
     }
     for (const s of signatures) {
       if (matchesSignature(s, args)) {
-        return s.impl(interpreter, args);
+        return s.impl(interpreter, args, node);
       }
     }
     const expected = signatures.map(describeSignature).join(' | ');

@@ -4,7 +4,7 @@ import type { CallNode, Frame } from './nodes';
 export interface RuntimeFunction {
   (
     interpreter: Interpreter,
-    args: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    args: readonly unknown[],
     node: CallNode
   ): Frame | void;
 }

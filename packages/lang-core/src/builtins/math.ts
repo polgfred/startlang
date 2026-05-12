@@ -47,15 +47,18 @@ export const mathFunctions: RuntimeFunctions = {
     interpreter.setResult(Math.exp(value));
   }),
 
-  log: define([T.number, T.optional(T.number)], (interpreter, [value, base]) => {
-    if (base === undefined) {
-      interpreter.setResult(Math.log(value));
-    } else if (base === 10) {
-      interpreter.setResult(Math.log10(value));
-    } else {
-      interpreter.setResult(Math.log(value) / Math.log(base));
+  log: define(
+    [T.number, T.optional(T.number)],
+    (interpreter, [value, base]) => {
+      if (base === undefined) {
+        interpreter.setResult(Math.log(value));
+      } else if (base === 10) {
+        interpreter.setResult(Math.log10(value));
+      } else {
+        interpreter.setResult(Math.log(value) / Math.log(base));
+      }
     }
-  }),
+  ),
 
   rand: defineOverloads(
     signature([], (interpreter) => {
