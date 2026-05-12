@@ -1,6 +1,6 @@
 import type { RuntimeFunctions } from '../types.js';
 
-import { define, optional, T } from './types.js';
+import { define, defineOverloads, optional, signature, T } from './types.js';
 
 export const mathFunctions: RuntimeFunctions = {
   abs: define([T.number], (interpreter, [value]) => {
@@ -57,21 +57,14 @@ export const mathFunctions: RuntimeFunctions = {
     }
   }),
 
-  rand(interpreter, args: readonly unknown[]) {
-    if (args.length === 0) {
+  rand: defineOverloads(
+    signature([], (interpreter) => {
       interpreter.setResult(Math.random());
-      return;
-    }
-    if (
-      args.length !== 2 ||
-      typeof args[0] !== 'number' ||
-      typeof args[1] !== 'number'
-    ) {
-      throw new Error('rand expects 0 arguments or 2 number arguments');
-    }
-    const [lo, hi] = args as [number, number];
-    interpreter.setResult(Math.floor(Math.random() * (hi - lo + 1)) + lo);
-  },
+    }),
+    signature([T.number, T.number], (interpreter, [lo, hi]) => {
+      interpreter.setResult(Math.floor(Math.random() * (hi - lo + 1)) + lo);
+    })
+  ),
 
   round: define([T.number], (interpreter, [value]) => {
     interpreter.setResult(Math.round(value));

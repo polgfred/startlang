@@ -279,7 +279,7 @@ describe('core language snippets', () => {
       'argument 2 should be number, got string'
     );
     await expect(runSnippet('bad = rand(5)')).rejects.toThrow(
-      'rand expects 0 arguments or 2 number arguments'
+      'no matching signature, expected () | (number, number), got (number)'
     );
   });
 

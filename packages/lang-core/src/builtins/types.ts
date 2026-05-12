@@ -51,30 +51,101 @@ export function oneOf<Specs extends readonly TypeSpec[]>(
   );
 }
 
+export type Signature = {
+  readonly params: readonly TypeSpec[];
+  readonly impl: (
+    interpreter: Interpreter,
+    args: readonly unknown[]
+  ) => Frame | void;
+};
+
+export function signature<const S extends readonly TypeSpec[]>(
+  params: S,
+  impl: (interpreter: Interpreter, args: ValuesOf<S>) => Frame | void
+): Signature {
+  return {
+    params,
+    impl: impl as Signature['impl'],
+  };
+}
+
+function matchesSignature(
+  signature: Signature,
+  args: readonly unknown[]
+): boolean {
+  const required = signature.params.filter((s) => !s.optional).length;
+  const max = signature.params.length;
+  if (args.length < required || args.length > max) return false;
+  for (let i = 0; i < args.length; i++) {
+    if (!signature.params[i].check(args[i])) return false;
+  }
+  return true;
+}
+
+function describeSignature(signature: Signature): string {
+  const parts = signature.params.map((s) =>
+    s.optional ? `${s.name}?` : s.name
+  );
+  return `(${parts.join(', ')})`;
+}
+
+function describeArgs(
+  interpreter: Interpreter,
+  args: readonly unknown[]
+): string {
+  const parts = args.map((a) => interpreter.getHandler(a).typeName);
+  return `(${parts.join(', ')})`;
+}
+
+function invoke(
+  signature: Signature,
+  interpreter: Interpreter,
+  args: readonly unknown[]
+): Frame | void {
+  const required = signature.params.filter((s) => !s.optional).length;
+  const max = signature.params.length;
+  if (args.length < required || args.length > max) {
+    const expected = required === max ? `${required}` : `${required}-${max}`;
+    throw new Error(`expected ${expected} argument(s), got ${args.length}`);
+  }
+  for (let i = 0; i < args.length; i++) {
+    const spec = signature.params[i];
+    if (!spec.check(args[i])) {
+      const actual = interpreter.getHandler(args[i]).typeName;
+      throw new Error(
+        `argument ${i + 1} should be ${spec.name}, got ${actual}`
+      );
+    }
+  }
+  return signature.impl(interpreter, args);
+}
+
 export function define<const S extends readonly TypeSpec[]>(
   params: S,
   impl: (interpreter: Interpreter, args: ValuesOf<S>) => Frame | void
 ): RuntimeFunction {
-  const required = params.filter((s) => !s.optional).length;
-  const max = params.length;
+  return defineOverloads(signature(params, impl));
+}
+
+export function defineOverloads(...signatures: Signature[]): RuntimeFunction {
+  if (signatures.length === 0) {
+    throw new Error('defineOverloads requires at least one signature');
+  }
   return (
     interpreter: Interpreter,
     args: readonly unknown[],
     _node: CallNode
   ) => {
-    if (args.length < required || args.length > max) {
-      const expected = required === max ? `${required}` : `${required}-${max}`;
-      throw new Error(`expected ${expected} argument(s), got ${args.length}`);
+    if (signatures.length === 1) {
+      return invoke(signatures[0], interpreter, args);
     }
-    for (let i = 0; i < args.length; i++) {
-      const spec = params[i];
-      if (!spec.check(args[i])) {
-        const actual = interpreter.getHandler(args[i]).typeName;
-        throw new Error(
-          `argument ${i + 1} should be ${spec.name}, got ${actual}`
-        );
+    for (const s of signatures) {
+      if (matchesSignature(s, args)) {
+        return s.impl(interpreter, args);
       }
     }
-    return impl(interpreter, args as ValuesOf<S>);
+    const expected = signatures.map(describeSignature).join(' | ');
+    const got = describeArgs(interpreter, args);
+    throw new Error(`no matching signature, expected ${expected}, got ${got}`);
   };
 }
