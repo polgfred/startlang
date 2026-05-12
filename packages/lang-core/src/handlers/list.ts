@@ -1,5 +1,5 @@
 import deepEqual from 'deep-equal';
-import { type WritableDraft } from 'immer';
+import type { WritableDraft } from 'immer';
 
 import { Interpreter } from '../interpreter.js';
 import type { ListType, RuntimeFunctions } from '../types.js';
@@ -71,6 +71,10 @@ const listMethods: RuntimeFunctions = {
   },
 
   join(interpreter, [value, sep]: [ListType, string]) {
-    interpreter.setResult(value.join(sep));
+    const prettyValues = value.map((v) => {
+      const handler = interpreter.getHandler(v);
+      return handler.getPrettyValue(v);
+    });
+    interpreter.setResult(prettyValues.join(sep));
   },
 };
