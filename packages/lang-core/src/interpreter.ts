@@ -178,10 +178,12 @@ export class Interpreter<THostSnapshot = unknown> {
         const effects = this.pendingEffects;
         if (effects.length > 0) {
           this.pendingEffects = [];
-          for (const effect of effects) {
-            const result = this.effectHandler?.(effect);
-            if (result instanceof Promise) {
-              await result;
+          if (this.effectHandler) {
+            for (const effect of effects) {
+              const result = this.effectHandler(effect);
+              if (result instanceof Promise) {
+                await result;
+              }
             }
           }
         }
