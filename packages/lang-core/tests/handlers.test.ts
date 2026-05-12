@@ -158,7 +158,7 @@ describe('data handlers', () => {
   it('reports missing runtime functions', () => {
     const interpreter = new Interpreter();
 
-    expect(() => interpreter.getRuntimeFunction('missing', [])).toThrow(
+    expect(() => interpreter.getRuntimeFunction('missing')).toThrow(
       'function missing not found'
     );
   });

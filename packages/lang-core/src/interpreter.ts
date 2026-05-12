@@ -1,5 +1,6 @@
 import { castDraft, produce, type Producer } from 'immer';
 
+import { installBuiltins } from './builtins/index.js';
 import { emptyMarkerMap, type MarkerMap } from './editor-markers.js';
 import { DataHandler, installHandlers } from './handlers/index.js';
 import { NullPresentationHost, type SupportsSnapshots } from './host.js';
@@ -90,6 +91,7 @@ export class Interpreter<THostSnapshot = unknown> {
     public readonly host: SupportsSnapshots<THostSnapshot> = new NullPresentationHost() as SupportsSnapshots<THostSnapshot>
   ) {
     installHandlers(this);
+    installBuiltins(this);
     this.registerGlobals({
       snapshot(interpreter) {
         interpreter.setEffect(snapshotEffect);
@@ -257,7 +259,6 @@ export class Interpreter<THostSnapshot = unknown> {
 
   registerHandler(handler: DataHandler) {
     this.dataHandlers.push(handler);
-    this.registerGlobals(handler.globals);
   }
 
   getHandler(value: unknown) {
@@ -456,17 +457,11 @@ export class Interpreter<THostSnapshot = unknown> {
     return leftHandler.evalBinaryOp(op, left, right);
   }
 
-  getRuntimeFunction(name: string, args: unknown[]) {
-    if (args.length > 0) {
-      const handler = this.getHandler(args[0]);
-      if (name in handler.methods) {
-        return handler.methods[name];
-      }
+  getRuntimeFunction(name: string) {
+    if (!(name in this.runtimeFunctions)) {
+      throw new Error(`function ${name} not found`);
     }
-    if (name in this.runtimeFunctions) {
-      return this.runtimeFunctions[name];
-    }
-    throw new Error(`function ${name} not found`);
+    return this.runtimeFunctions[name];
   }
 
   setResult(value: unknown) {

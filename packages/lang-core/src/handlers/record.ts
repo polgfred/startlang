@@ -1,17 +1,14 @@
 import deepEqual from 'deep-equal';
 import type { WritableDraft } from 'immer';
 
-import { Interpreter } from '../interpreter.js';
-import type { RuntimeFunctions, RecordType } from '../types.js';
+import type { RecordType } from '../types.js';
 
 import { DataHandler } from './base.js';
 
 export const emptyRecord: RecordType = Object.freeze(Object.create(null));
 
 export class RecordHandler extends DataHandler {
-  constructor(interpreter: Interpreter) {
-    super(interpreter, {}, recordMethods);
-  }
+  readonly typeName = 'record';
 
   shouldHandle(value: unknown) {
     return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -54,13 +51,3 @@ export class RecordHandler extends DataHandler {
     }
   }
 }
-
-const recordMethods: RuntimeFunctions = {
-  len(interpreter, [value]: [RecordType]) {
-    interpreter.setResult(Object.keys(value).length);
-  },
-
-  keys(interpreter, [value]: [RecordType]) {
-    interpreter.setResult(Object.keys(value));
-  },
-};

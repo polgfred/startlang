@@ -1,13 +1,9 @@
-import { Interpreter } from '../interpreter.js';
-import type { RuntimeFunctions } from '../types.js';
 import { adjustIndex } from '../utils/index.js';
 
 import { DataHandler } from './base.js';
 
 export class StringHandler extends DataHandler {
-  constructor(interpreter: Interpreter) {
-    super(interpreter, {}, stringMethods);
-  }
+  readonly typeName = 'string';
 
   shouldHandle(value: unknown) {
     return typeof value === 'string';
@@ -39,28 +35,3 @@ export class StringHandler extends DataHandler {
     }
   }
 }
-
-const stringMethods: RuntimeFunctions = {
-  num(interpreter, [value]: [string]) {
-    const num = Number(value);
-    if (isNaN(num)) {
-      throw new Error(`cannot convert ${value} to number`);
-    } else {
-      interpreter.setResult(num);
-    }
-  },
-
-  len(interpreter, [value]: [string]) {
-    interpreter.setResult(value.length);
-  },
-
-  range(interpreter, [value, start, end]: [string, number, number]) {
-    start = adjustIndex(start, value.length);
-    end = adjustIndex(end, value.length);
-    interpreter.setResult(value.substring(start, end + 1));
-  },
-
-  split(interpreter, [value, sep]: [string, string]) {
-    interpreter.setResult(value.split(sep));
-  },
-};

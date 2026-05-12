@@ -1,6 +1,8 @@
 import { DataHandler } from './base.js';
 
 export class BooleanHandler extends DataHandler {
+  readonly typeName = 'boolean';
+
   shouldHandle(value: unknown) {
     return typeof value === 'boolean';
   }

@@ -1,8 +1,7 @@
 import deepEqual from 'deep-equal';
 import type { WritableDraft } from 'immer';
 
-import { Interpreter } from '../interpreter.js';
-import type { ListType, RuntimeFunctions } from '../types.js';
+import type { ListType } from '../types.js';
 import { adjustIndex } from '../utils/index.js';
 
 import { DataHandler } from './base.js';
@@ -10,9 +9,7 @@ import { DataHandler } from './base.js';
 export const emptyList: ListType = Object.freeze([]);
 
 export class ListHandler extends DataHandler {
-  constructor(interpreter: Interpreter) {
-    super(interpreter, {}, listMethods);
-  }
+  readonly typeName = 'list';
 
   shouldHandle(value: unknown) {
     return Array.isArray(value);
@@ -58,23 +55,3 @@ export class ListHandler extends DataHandler {
     }
   }
 }
-
-const listMethods: RuntimeFunctions = {
-  len(interpreter, [value]: [ListType]) {
-    interpreter.setResult(value.length);
-  },
-
-  range(interpreter, [value, start, end]: [ListType, number, number]) {
-    start = adjustIndex(start, value.length);
-    end = adjustIndex(end, value.length);
-    interpreter.setResult(value.slice(start, end + 1));
-  },
-
-  join(interpreter, [value, sep]: [ListType, string]) {
-    const prettyValues = value.map((v) => {
-      const handler = interpreter.getHandler(v);
-      return handler.getPrettyValue(v);
-    });
-    interpreter.setResult(prettyValues.join(sep));
-  },
-};

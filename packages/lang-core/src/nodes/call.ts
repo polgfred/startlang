@@ -51,7 +51,7 @@ export class CallFrame extends Frame {
         break;
       }
       case 2: {
-        const func = interpreter.getRuntimeFunction(name, this.args);
+        const func = interpreter.getRuntimeFunction(name);
         const result = func(interpreter, this.args, this.node);
         if (result instanceof Frame) {
           interpreter.replaceFrame(result);
