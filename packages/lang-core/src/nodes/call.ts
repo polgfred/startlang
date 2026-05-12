@@ -34,17 +34,17 @@ export class CallFrame extends Frame {
     switch (this.state) {
       case 0: {
         if (this.count < args.length) {
-          interpreter.swapFrame(this, 1);
+          interpreter.swapFrame(1);
           interpreter.pushNode(args[this.count]);
         } else if (name in interpreter.globalFunctions) {
           interpreter.replaceFrame(new CallGlobalFrame(this.node, this.args));
         } else {
-          interpreter.swapFrame(this, 2);
+          interpreter.swapFrame(2);
         }
         break;
       }
       case 1: {
-        interpreter.swapFrame(this, 0, (draft) => {
+        interpreter.swapFrame<this>(0, (draft) => {
           draft.args[this.count] = interpreter.lastResult;
           draft.count++;
         });
@@ -90,7 +90,7 @@ class CallGlobalFrame extends CallBodyFrame {
     switch (this.state) {
       case 0: {
         const func = interpreter.globalFunctions[name];
-        interpreter.swapFrame(this, 1);
+        interpreter.swapFrame(1);
         interpreter.pushNode(func.body);
         break;
       }

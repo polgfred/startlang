@@ -475,7 +475,7 @@ class BuildCellFrame extends CallBodyFrame {
       case 0: {
         if (body) {
           host.beginCellContainer(this.cell);
-          interpreter.swapFrame(this, 1);
+          interpreter.swapFrame(1);
           interpreter.pushNode(body);
         } else {
           interpreter.popFrame();
@@ -483,7 +483,7 @@ class BuildCellFrame extends CallBodyFrame {
         break;
       }
       case 1: {
-        interpreter.swapFrame(this, 2);
+        interpreter.swapFrame(2);
         addPresentationCell(interpreter, host.endCellContainer());
         break;
       }
@@ -511,7 +511,7 @@ class BuildShapeGroupFrame extends CallBodyFrame {
       case 0: {
         if (body) {
           host.beginShapeGroup(this.group);
-          interpreter.swapFrame(this, 1);
+          interpreter.swapFrame(1);
           interpreter.pushNode(body);
         } else {
           interpreter.popFrame();
@@ -519,7 +519,7 @@ class BuildShapeGroupFrame extends CallBodyFrame {
         break;
       }
       case 1: {
-        interpreter.swapFrame(this, 2);
+        interpreter.swapFrame(2);
         addPresentationShape(interpreter, host.endShapeGroup());
         break;
       }

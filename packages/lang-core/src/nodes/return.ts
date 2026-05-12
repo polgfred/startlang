@@ -32,7 +32,7 @@ export class ReturnValueFrame extends Frame {
   visit(interpreter: Interpreter) {
     switch (this.state) {
       case 0: {
-        interpreter.swapFrame(this, 1);
+        interpreter.swapFrame(1);
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         interpreter.pushNode(this.node.result!);
         break;

@@ -39,7 +39,7 @@ export class LogicalAndFrame extends Frame {
 
     switch (this.state) {
       case 0: {
-        interpreter.swapFrame(this, 1);
+        interpreter.swapFrame(1);
         interpreter.pushNode(left);
         break;
       }
@@ -48,7 +48,7 @@ export class LogicalAndFrame extends Frame {
           interpreter.setResult(false);
           interpreter.popFrame();
         } else {
-          interpreter.swapFrame(this, 2);
+          interpreter.swapFrame(2);
           interpreter.pushNode(right);
         }
         break;
@@ -70,7 +70,7 @@ export class LogicalOrFrame extends Frame {
 
     switch (this.state) {
       case 0: {
-        interpreter.swapFrame(this, 1);
+        interpreter.swapFrame(1);
         interpreter.pushNode(left);
         break;
       }
@@ -79,7 +79,7 @@ export class LogicalOrFrame extends Frame {
           interpreter.setResult(true);
           interpreter.popFrame();
         } else {
-          interpreter.swapFrame(this, 2);
+          interpreter.swapFrame(2);
           interpreter.pushNode(right);
         }
         break;
@@ -99,7 +99,7 @@ export class LogicalNotFrame extends Frame {
   visit(interpreter: Interpreter) {
     switch (this.state) {
       case 0: {
-        interpreter.swapFrame(this, 1);
+        interpreter.swapFrame(1);
         interpreter.pushNode(this.node.value);
         break;
       }

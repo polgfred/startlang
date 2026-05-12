@@ -287,13 +287,12 @@ export class Interpreter<THostSnapshot = unknown> {
     frame.onEnter(this);
   }
 
-  swapFrame<T extends Frame>(
-    frame: T,
-    state: number | null = null,
+  swapFrame<T extends Frame = Frame>(
+    state: number | null,
     producer?: Producer<T>
   ) {
     this.topFrame = this.topFrame.swap(
-      produce(frame, (draft) => {
+      produce(this.topFrame.head as T, (draft) => {
         if (state !== null) {
           draft.state = state;
         }

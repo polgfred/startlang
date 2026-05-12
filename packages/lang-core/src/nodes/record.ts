@@ -30,15 +30,15 @@ export class RecordFrame extends Frame {
     switch (this.state) {
       case 0: {
         if (this.count < pairs.length) {
-          interpreter.swapFrame(this, 1);
+          interpreter.swapFrame(1);
           interpreter.pushNode(pairs[this.count].value);
         } else {
-          interpreter.swapFrame(this, 2);
+          interpreter.swapFrame(2);
         }
         break;
       }
       case 1: {
-        interpreter.swapFrame(this, 0, (draft) => {
+        interpreter.swapFrame<this>(0, (draft) => {
           draft.items[pairs[this.count].key] = interpreter.lastResult;
           draft.count++;
         });

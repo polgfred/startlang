@@ -25,7 +25,7 @@ export class SetFrame extends Frame {
 
     switch (this.state) {
       case 0: {
-        interpreter.swapFrame(this, 1);
+        interpreter.swapFrame(1);
         interpreter.pushNode(value);
         break;
       }

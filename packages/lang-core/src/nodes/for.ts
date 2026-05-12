@@ -32,12 +32,12 @@ export class ForFrame extends Frame {
 
     switch (this.state) {
       case 0: {
-        interpreter.swapFrame(this, 1);
+        interpreter.swapFrame(1);
         interpreter.pushNode(initial);
         break;
       }
       case 1: {
-        interpreter.swapFrame(this, 2, (draft) => {
+        interpreter.swapFrame<this>(2, (draft) => {
           draft.index = Number(interpreter.lastResult);
         });
         interpreter.pushNode(limit);
@@ -45,19 +45,19 @@ export class ForFrame extends Frame {
       }
       case 2: {
         if (step !== null) {
-          interpreter.swapFrame(this, 3, (draft) => {
+          interpreter.swapFrame<this>(3, (draft) => {
             draft.limit = Number(interpreter.lastResult);
           });
           interpreter.pushNode(step);
         } else {
-          interpreter.swapFrame(this, 4, (draft) => {
+          interpreter.swapFrame<this>(4, (draft) => {
             draft.limit = Number(interpreter.lastResult);
           });
         }
         break;
       }
       case 3: {
-        interpreter.swapFrame(this, 4, (draft) => {
+        interpreter.swapFrame<this>(4, (draft) => {
           draft.step = Number(interpreter.lastResult);
         });
         break;
@@ -67,7 +67,7 @@ export class ForFrame extends Frame {
           this.step > 0 ? this.index <= this.limit : this.index >= this.limit
         ) {
           interpreter.setVariable(name, this.index);
-          interpreter.swapFrame(this, null, (draft) => {
+          interpreter.swapFrame<this>(null, (draft) => {
             draft.index += this.step;
           });
           interpreter.pushNode(body);

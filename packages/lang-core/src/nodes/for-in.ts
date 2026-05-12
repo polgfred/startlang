@@ -32,12 +32,12 @@ export class ForInFrame extends Frame {
 
     switch (this.state) {
       case 0: {
-        interpreter.swapFrame(this, 1);
+        interpreter.swapFrame(1);
         interpreter.pushNode(iterable);
         break;
       }
       case 1: {
-        interpreter.swapFrame(this, 2, (draft) => {
+        interpreter.swapFrame<this>(2, (draft) => {
           const result = interpreter.lastResult;
           const handler = interpreter.getHandler(result);
           draft.iterable = castDraft(handler.getIterable(result));
@@ -47,7 +47,7 @@ export class ForInFrame extends Frame {
       case 2: {
         if (this.count < this.iterable.length) {
           interpreter.setVariable(name, this.iterable[this.count]);
-          interpreter.swapFrame(this, null, (draft) => {
+          interpreter.swapFrame<this>(null, (draft) => {
             draft.count++;
           });
           interpreter.pushNode(body);

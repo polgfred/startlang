@@ -33,15 +33,15 @@ export class LetIndexFrame extends Frame {
     switch (this.state) {
       case 0: {
         if (this.count < indexes.length) {
-          interpreter.swapFrame(this, 1);
+          interpreter.swapFrame(1);
           interpreter.pushNode(indexes[this.count]);
         } else {
-          interpreter.swapFrame(this, 2);
+          interpreter.swapFrame(2);
         }
         break;
       }
       case 1: {
-        interpreter.swapFrame(this, 0, (draft) => {
+        interpreter.swapFrame<this>(0, (draft) => {
           if (
             typeof interpreter.lastResult !== 'number' &&
             typeof interpreter.lastResult !== 'string'
@@ -54,7 +54,7 @@ export class LetIndexFrame extends Frame {
         break;
       }
       case 2: {
-        interpreter.swapFrame(this, 3);
+        interpreter.swapFrame(3);
         interpreter.pushNode(value);
         break;
       }

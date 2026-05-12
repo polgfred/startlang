@@ -26,12 +26,12 @@ export class IfFrame extends Frame {
 
     switch (this.state) {
       case 0: {
-        interpreter.swapFrame(this, 1);
+        interpreter.swapFrame(1);
         interpreter.pushNode(condition);
         break;
       }
       case 1: {
-        interpreter.swapFrame(this, 2);
+        interpreter.swapFrame(2);
         if (interpreter.lastResult) {
           interpreter.pushNode(thenBody);
         } else if (elseBody !== null) {
