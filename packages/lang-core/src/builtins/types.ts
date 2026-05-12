@@ -113,12 +113,11 @@ function describeArgs(
   return `(${parts.join(', ')})`;
 }
 
-function invoke(
+function validateSignature(
   signature: Signature,
   interpreter: Interpreter,
-  args: readonly unknown[],
-  node: CallNode
-): Frame | void {
+  args: readonly unknown[]
+): void {
   const required = signature.params.filter((s) => !s.optional).length;
   const max = signature.params.length;
   if (args.length < required || args.length > max) {
@@ -134,12 +133,15 @@ function invoke(
       );
     }
   }
-  return signature.impl(interpreter, args, node);
 }
 
 export function define<const S extends readonly TypeSpec[]>(
   params: S,
-  impl: (interpreter: Interpreter, args: ValuesOf<S>) => Frame | void
+  impl: (
+    interpreter: Interpreter,
+    args: ValuesOf<S>,
+    node: CallNode
+  ) => Frame | void
 ): RuntimeFunction {
   return defineOverloads(signature(params, impl));
 }
@@ -169,18 +171,14 @@ export function defineOverloads(...signatures: Signature[]): RuntimeFunction {
   if (signatures.length === 0) {
     throw new Error('defineOverloads requires at least one signature');
   }
-  return (
-    interpreter: Interpreter,
-    args: readonly unknown[],
-    node: CallNode
-  ) => {
-    if (signatures.length === 1) {
-      return invoke(signatures[0], interpreter, args, node);
-    }
+  return (interpreter, args, node) => {
     for (const s of signatures) {
       if (matchesSignature(s, args)) {
         return s.impl(interpreter, args, node);
       }
+    }
+    if (signatures.length === 1) {
+      validateSignature(signatures[0], interpreter, args);
     }
     const expected = signatures.map(describeSignature).join(' | ');
     const got = describeArgs(interpreter, args);
