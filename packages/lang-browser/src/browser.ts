@@ -441,14 +441,12 @@ function getPresentationHost(interpreter: Interpreter) {
 
 function addPresentationCell(interpreter: Interpreter, cell: Cell) {
   const host = getPresentationHost(interpreter);
-
   host.addCell(cell);
   interpreter.setEffect(repaintEffect);
 }
 
 function addPresentationShape(interpreter: Interpreter, shape: Shape) {
   const host = getPresentationHost(interpreter);
-
   host.pushShape(shape);
   interpreter.setEffect(repaintEffect);
 }
@@ -661,17 +659,14 @@ export const browserPresentationGlobals: RuntimeFunctions = {
   }),
 
   table: defineWithProps([], (_interpreter, props, _args, node) => {
-    normalizeProps(props, propContexts.none);
     return new BuildCellFrame(node, new GridCell());
   }),
 
   header: defineWithProps([], (_interpreter, props, _args, node) => {
-    normalizeProps(props, propContexts.none);
     return new BuildCellFrame(node, new GridHeaderRowCell());
   }),
 
   row: defineWithProps([], (_interpreter, props, _args, node) => {
-    normalizeProps(props, propContexts.none);
     return new BuildCellFrame(node, new GridRowCell());
   }),
 
