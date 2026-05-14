@@ -50,13 +50,14 @@ async function runExample(name: string): Promise<ExampleResult> {
 
 async function runSource(source: string): Promise<ExampleResult> {
   const host = new BrowserPresentationHost();
-  const interpreter = new Interpreter(host);
+  const interpreter = new Interpreter();
 
   interpreter.registerGlobals(runtimeGlobals);
   interpreter.registerGlobals(buildBrowserGlobals(host));
   interpreter.registerConfigurationHandler((option, value) =>
     host.setConfiguration(option, value)
   );
+  interpreter.registerSnapshotHandler(host);
 
   await runUntilComplete(
     interpreter,
@@ -100,7 +101,7 @@ async function playNumguessWithBinarySearch() {
     'utf8'
   );
   const host = new BrowserPresentationHost();
-  const interpreter = new Interpreter(host);
+  const interpreter = new Interpreter();
   const guesses: number[] = [];
 
   interpreter.registerGlobals(runtimeGlobals);
@@ -108,6 +109,7 @@ async function playNumguessWithBinarySearch() {
   interpreter.registerConfigurationHandler((option, value) =>
     host.setConfiguration(option, value)
   );
+  interpreter.registerSnapshotHandler(host);
 
   let lo = 1;
   let hi = 100;

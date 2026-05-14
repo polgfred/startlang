@@ -3,7 +3,6 @@ import {
   defineWithProps,
   T,
 } from '@startlang/lang-core/builtins/types';
-import type { SupportsSnapshots } from '@startlang/lang-core/host';
 import { Interpreter, repaintEffect } from '@startlang/lang-core/interpreter';
 import { CallBodyFrame, CallNode } from '@startlang/lang-core/nodes';
 import type { RuntimeFunctions } from '@startlang/lang-core/types';
@@ -124,9 +123,7 @@ function selectInheritedGroupProps(props: CanonicalProps) {
   );
 }
 
-export class BrowserPresentationHost
-  implements SupportsSnapshots<BrowserPresentationSnapshot>
-{
+export class BrowserPresentationHost {
   cells: readonly Cell[] = emptyArray;
   currentCell: Cons<Cell> = new Cons(rootCell);
   cellConfig: Cons<CellConfig> = new Cons(initialCellConfig);
@@ -424,13 +421,14 @@ export class BrowserPresentationHost
     };
   }
 
-  restoreSnapshot(snapshot: BrowserPresentationSnapshot) {
-    this.shapes = snapshot.shapes;
-    this.currentCell = snapshot.currentCell;
-    this.cells = snapshot.outputCells;
-    this.currentGroup = snapshot.currentShapeGroup;
-    this.graphicConfig = snapshot.graphicConfig;
-    this.cellConfig = snapshot.cellConfig;
+  restoreSnapshot(snapshot: unknown) {
+    const state = snapshot as BrowserPresentationSnapshot;
+    this.shapes = state.shapes;
+    this.currentCell = state.currentCell;
+    this.cells = state.outputCells;
+    this.currentGroup = state.currentShapeGroup;
+    this.graphicConfig = state.graphicConfig;
+    this.cellConfig = state.cellConfig;
   }
 }
 

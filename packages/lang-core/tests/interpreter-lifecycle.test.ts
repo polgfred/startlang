@@ -139,7 +139,8 @@ describe('interpreter lifecycle', () => {
 
   it('takes explicit snapshots and restores interpreter and host state', async () => {
     const restored: unknown[] = [];
-    const interpreter = new Interpreter({
+    const interpreter = new Interpreter();
+    interpreter.registerSnapshotHandler({
       takeSnapshot() {
         return { saved: true };
       },

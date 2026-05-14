@@ -3,7 +3,6 @@ import { castDraft, produce, type Producer } from 'immer';
 import { installBuiltins } from './builtins/index.js';
 import { emptyMarkerMap, type MarkerMap } from './editor-markers.js';
 import { DataHandler, installHandlers } from './handlers/index.js';
-import { NullHost, type SupportsSnapshots } from './host.js';
 import { Namespace, RuntimeNamespace } from './namespace.js';
 import {
   Frame,
@@ -21,7 +20,10 @@ type GlobalFunctions = Record<string, BeginNode>;
 
 const emptyObject = Object.freeze(Object.create(null));
 
-export type { SupportsSnapshots } from './host.js';
+export interface SnapshotHandler {
+  takeSnapshot: () => unknown;
+  restoreSnapshot: (snapshot: unknown) => void;
+}
 
 export interface RuntimeState {
   globalFunctions: GlobalFunctions;
@@ -87,10 +89,11 @@ export class Interpreter {
   private pendingEffects: RuntimeEffect[] = [];
   private effectHandler: RuntimeEffectHandler | null = null;
   private configurationHandler: ConfigurationHandler | null = null;
+  private snapshotHandler: SnapshotHandler | null = null;
   private shouldStepToNextStatement = false;
   private pendingInput: string | null = null;
 
-  constructor(public readonly host: SupportsSnapshots = new NullHost()) {
+  constructor() {
     installHandlers(this);
     installBuiltins(this);
     this.registerGlobals({
@@ -290,6 +293,10 @@ export class Interpreter {
 
   registerEffectHandler(handler: RuntimeEffectHandler | null) {
     this.effectHandler = handler;
+  }
+
+  registerSnapshotHandler(handler: SnapshotHandler) {
+    this.snapshotHandler = handler;
   }
 
   defineGlobalFunction(node: BeginNode) {
@@ -496,7 +503,7 @@ export class Interpreter {
       localNamespaces: this.localNamespaces,
       topFrame: this.topFrame,
       lastResult: this.lastResult,
-      hostSnapshot: this.host.takeSnapshot(),
+      hostSnapshot: this.snapshotHandler?.takeSnapshot(),
     };
   }
 
@@ -508,7 +515,7 @@ export class Interpreter {
     this.pauseReason = null;
     this.pendingInput = null;
     this.topFrame.head.onEnter(this);
-    this.host.restoreSnapshot(state.hostSnapshot);
+    this.snapshotHandler?.restoreSnapshot(state.hostSnapshot);
   }
 
   clearMarkers() {

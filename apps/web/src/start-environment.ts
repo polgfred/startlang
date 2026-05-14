@@ -1,5 +1,4 @@
 import {
-  type BrowserPresentationSnapshot,
   BrowserPresentationHost,
   buildBrowserGlobals,
 } from '@startlang/lang-browser/browser';
@@ -38,9 +37,7 @@ interface RuntimeStatus {
   pauseReason: RuntimePause | null;
 }
 
-interface RuntimeView
-  extends Omit<RuntimeState, 'hostSnapshot'>, RuntimeStatus {
-  hostSnapshot: BrowserPresentationSnapshot;
+interface RuntimeView extends RuntimeState, RuntimeStatus {
   version: number;
   historyLength: number;
   historyIndex: number;
@@ -141,11 +138,9 @@ function createInterpreterStore(
   let version = 0;
 
   function readView(): RuntimeView {
-    const state = interpreter.captureState();
     return {
       version,
-      ...state,
-      hostSnapshot: state.hostSnapshot as BrowserPresentationSnapshot,
+      ...interpreter.captureState(),
       historyLength: history.length,
       historyIndex: history.index,
       isComplete: interpreter.isComplete,
@@ -180,11 +175,12 @@ function createInterpreterStore(
 
 function createRuntimeEnvironment(): RuntimeEnvironment {
   const host = new BrowserPresentationHost();
-  const interpreter = new Interpreter(host);
+  const interpreter = new Interpreter();
   const history = new RuntimeHistory();
 
   interpreter.registerGlobals(buildBrowserGlobals(host));
   interpreter.registerGlobals(runtimeGlobals);
+  interpreter.registerSnapshotHandler(host);
   interpreter.registerConfigurationHandler((option, value) =>
     host.setConfiguration(option, value)
   );
@@ -208,17 +204,14 @@ function useRuntimeEnvironment() {
 }
 
 function getOutputPresence(
-  snapshot: BrowserPresentationSnapshot,
+  host: BrowserPresentationHost,
   hasInput: boolean
 ): OutputPresence {
   return {
     hasGraphicsOutput:
-      snapshot.shapes.length > 0 ||
-      snapshot.currentShapeGroup.head !== rootShapeGroup,
+      host.shapes.length > 0 || host.currentGroup.head !== rootShapeGroup,
     hasTextOutput:
-      snapshot.outputCells.length > 0 ||
-      snapshot.currentCell.head !== rootCell ||
-      hasInput,
+      host.cells.length > 0 || host.currentCell.head !== rootCell || hasInput,
   };
 }
 
@@ -306,7 +299,7 @@ export function useStartEnvironment() {
 
   const syncOutputTab = useCallback(() => {
     const { hasGraphicsOutput, hasTextOutput } = getOutputPresence(
-      host.takeSnapshot(),
+      host,
       interpreter.pauseReason?.kind === 'input'
     );
 
@@ -453,7 +446,7 @@ export function useStartEnvironment() {
   );
 
   const { hasGraphicsOutput, hasTextOutput } = getOutputPresence(
-    runtimeView.hostSnapshot,
+    host,
     inputState !== null
   );
 

@@ -313,12 +313,13 @@ export async function main() {
 
   const host = new BrowserPresentationHost();
   const renderer = new ConsoleOutputRenderer();
-  const interp = new Interpreter(host);
+  const interp = new Interpreter();
   interp.registerGlobals(runtimeGlobals);
   interp.registerGlobals(buildBrowserGlobals(host));
   interp.registerConfigurationHandler((option, value) =>
     host.setConfiguration(option, value)
   );
+  interp.registerSnapshotHandler(host);
 
   try {
     await runUntilComplete(
