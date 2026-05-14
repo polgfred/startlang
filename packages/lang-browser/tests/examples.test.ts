@@ -8,7 +8,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   BrowserPresentationHost,
-  browserPresentationGlobals,
+  buildBrowserGlobals,
 } from '@startlang/lang-browser/browser';
 import {
   GridCell,
@@ -53,7 +53,10 @@ async function runSource(source: string): Promise<ExampleResult> {
   const interpreter = new Interpreter(host);
 
   interpreter.registerGlobals(runtimeGlobals);
-  interpreter.registerGlobals(browserPresentationGlobals);
+  interpreter.registerGlobals(buildBrowserGlobals(host));
+  interpreter.registerConfigurationHandler((option, value) =>
+    host.setConfiguration(option, value)
+  );
 
   await runUntilComplete(
     interpreter,
@@ -101,7 +104,10 @@ async function playNumguessWithBinarySearch() {
   const guesses: number[] = [];
 
   interpreter.registerGlobals(runtimeGlobals);
-  interpreter.registerGlobals(browserPresentationGlobals);
+  interpreter.registerGlobals(buildBrowserGlobals(host));
+  interpreter.registerConfigurationHandler((option, value) =>
+    host.setConfiguration(option, value)
+  );
 
   let lo = 1;
   let hi = 100;

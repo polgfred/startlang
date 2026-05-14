@@ -3,7 +3,7 @@ import {
   defineWithProps,
   T,
 } from '@startlang/lang-core/builtins/types';
-import type { PresentationHost } from '@startlang/lang-core/host';
+import type { SupportsSnapshots } from '@startlang/lang-core/host';
 import { Interpreter, repaintEffect } from '@startlang/lang-core/interpreter';
 import { CallBodyFrame, CallNode } from '@startlang/lang-core/nodes';
 import type { RuntimeFunctions } from '@startlang/lang-core/types';
@@ -124,7 +124,9 @@ function selectInheritedGroupProps(props: CanonicalProps) {
   );
 }
 
-export class BrowserPresentationHost implements PresentationHost<BrowserPresentationSnapshot> {
+export class BrowserPresentationHost
+  implements SupportsSnapshots<BrowserPresentationSnapshot>
+{
   cells: readonly Cell[] = emptyArray;
   currentCell: Cons<Cell> = new Cons(rootCell);
   cellConfig: Cons<CellConfig> = new Cons(initialCellConfig);
@@ -432,274 +434,254 @@ export class BrowserPresentationHost implements PresentationHost<BrowserPresenta
   }
 }
 
-function getPresentationHost(interpreter: Interpreter) {
-  if (!(interpreter.host instanceof BrowserPresentationHost)) {
-    throw new Error('invalid presentation host for interpreter');
-  }
-  return interpreter.host;
-}
-
-function addPresentationCell(interpreter: Interpreter, cell: Cell) {
-  const host = getPresentationHost(interpreter);
-  host.addCell(cell);
-  interpreter.setEffect(repaintEffect);
-}
-
-function addPresentationShape(interpreter: Interpreter, shape: Shape) {
-  const host = getPresentationHost(interpreter);
-  host.pushShape(shape);
-  interpreter.setEffect(repaintEffect);
-}
-
-class BuildCellFrame extends CallBodyFrame {
-  constructor(
-    node: CallNode,
-    readonly cell: Cell
-  ) {
-    super(node);
-  }
-
-  visit(interpreter: Interpreter) {
-    const host = getPresentationHost(interpreter);
-    const { body } = this.node;
-
-    switch (this.state) {
-      case 0: {
-        if (body) {
-          host.beginCellContainer(this.cell);
-          interpreter.swapFrame(1);
-          interpreter.pushNode(body);
-        } else {
-          interpreter.popFrame();
-        }
-        break;
-      }
-      case 1: {
-        interpreter.swapFrame(2);
-        addPresentationCell(interpreter, host.endCellContainer());
-        break;
-      }
-      case 2: {
-        interpreter.popFrame();
-        break;
-      }
-    }
-  }
-}
-
-class BuildShapeGroupFrame extends CallBodyFrame {
-  constructor(
-    node: CallNode,
-    readonly group: ShapeGroup
-  ) {
-    super(node);
-  }
-
-  visit(interpreter: Interpreter) {
-    const host = getPresentationHost(interpreter);
-    const { body } = this.node;
-
-    switch (this.state) {
-      case 0: {
-        if (body) {
-          host.beginShapeGroup(this.group);
-          interpreter.swapFrame(1);
-          interpreter.pushNode(body);
-        } else {
-          interpreter.popFrame();
-        }
-        break;
-      }
-      case 1: {
-        interpreter.swapFrame(2);
-        addPresentationShape(interpreter, host.endShapeGroup());
-        break;
-      }
-      case 2: {
-        interpreter.popFrame();
-        break;
-      }
-    }
-  }
-}
-
-export const browserPresentationGlobals: RuntimeFunctions = {
-  clear: define([], (interpreter) => {
-    const host = getPresentationHost(interpreter);
-    host.clearDisplay();
-    host.clearOutputBuffer();
+export function buildBrowserGlobals(
+  host: BrowserPresentationHost
+): RuntimeFunctions {
+  function addPresentationCell(interpreter: Interpreter, cell: Cell) {
+    host.addCell(cell);
     interpreter.setEffect(repaintEffect);
-  }),
+  }
 
-  color: define(
-    [T.number, T.number, T.number, T.optional(T.number)],
-    (interpreter, [red, green, blue, alpha = 1]) => {
-      const r = `${Number((red * 100).toFixed(3))}%`;
-      const g = `${Number((green * 100).toFixed(3))}%`;
-      const b = `${Number((blue * 100).toFixed(3))}%`;
-      const a = `${Number((alpha * 100).toFixed(3))}%`;
+  function addPresentationShape(interpreter: Interpreter, shape: Shape) {
+    host.pushShape(shape);
+    interpreter.setEffect(repaintEffect);
+  }
 
-      if (alpha === 1) {
-        interpreter.setResult(`rgb(${r} ${g} ${b})`);
-      } else {
-        interpreter.setResult(`rgb(${r} ${g} ${b} / ${a})`);
+  class BuildCellFrame extends CallBodyFrame {
+    constructor(
+      node: CallNode,
+      readonly cell: Cell
+    ) {
+      super(node);
+    }
+
+    visit(interpreter: Interpreter) {
+      const { body } = this.node;
+
+      switch (this.state) {
+        case 0: {
+          if (body) {
+            host.beginCellContainer(this.cell);
+            interpreter.swapFrame(1);
+            interpreter.pushNode(body);
+          } else {
+            interpreter.popFrame();
+          }
+          break;
+        }
+        case 1: {
+          interpreter.swapFrame(2);
+          addPresentationCell(interpreter, host.endCellContainer());
+          break;
+        }
+        case 2: {
+          interpreter.popFrame();
+          break;
+        }
       }
     }
-  ),
+  }
 
-  rect: defineWithProps(
-    [T.number, T.number, T.number, T.number],
-    (interpreter, props, [x, y, width, height]) => {
-      const host = getPresentationHost(interpreter);
+  class BuildShapeGroupFrame extends CallBodyFrame {
+    constructor(
+      node: CallNode,
+      readonly group: ShapeGroup
+    ) {
+      super(node);
+    }
+
+    visit(interpreter: Interpreter) {
+      const { body } = this.node;
+
+      switch (this.state) {
+        case 0: {
+          if (body) {
+            host.beginShapeGroup(this.group);
+            interpreter.swapFrame(1);
+            interpreter.pushNode(body);
+          } else {
+            interpreter.popFrame();
+          }
+          break;
+        }
+        case 1: {
+          interpreter.swapFrame(2);
+          addPresentationShape(interpreter, host.endShapeGroup());
+          break;
+        }
+        case 2: {
+          interpreter.popFrame();
+          break;
+        }
+      }
+    }
+  }
+
+  return {
+    clear: define([], (interpreter) => {
+      host.clearDisplay();
+      host.clearOutputBuffer();
+      interpreter.setEffect(repaintEffect);
+    }),
+
+    color: define(
+      [T.number, T.number, T.number, T.optional(T.number)],
+      (interpreter, [red, green, blue, alpha = 1]) => {
+        const r = `${Number((red * 100).toFixed(3))}%`;
+        const g = `${Number((green * 100).toFixed(3))}%`;
+        const b = `${Number((blue * 100).toFixed(3))}%`;
+        const a = `${Number((alpha * 100).toFixed(3))}%`;
+
+        if (alpha === 1) {
+          interpreter.setResult(`rgb(${r} ${g} ${b})`);
+        } else {
+          interpreter.setResult(`rgb(${r} ${g} ${b} / ${a})`);
+        }
+      }
+    ),
+
+    rect: defineWithProps(
+      [T.number, T.number, T.number, T.number],
+      (interpreter, props, [x, y, width, height]) => {
+        addPresentationShape(
+          interpreter,
+          new Rect(x, y, width, height, host.getShapeProps(props))
+        );
+      }
+    ),
+
+    circle: defineWithProps(
+      [T.number, T.number, T.number],
+      (interpreter, props, [cx, cy, radius]) => {
+        addPresentationShape(
+          interpreter,
+          new Circle(cx, cy, radius, host.getShapeProps(props))
+        );
+      }
+    ),
+
+    ellipse: defineWithProps(
+      [T.number, T.number, T.number, T.number],
+      (interpreter, props, [cx, cy, rx, ry]) => {
+        addPresentationShape(
+          interpreter,
+          new Ellipse(cx, cy, rx, ry, host.getShapeProps(props))
+        );
+      }
+    ),
+
+    line: defineWithProps(
+      [T.number, T.number, T.number, T.number],
+      (interpreter, props, [x1, y1, x2, y2]) => {
+        addPresentationShape(
+          interpreter,
+          new Line(x1, y1, x2, y2, host.getShapeProps(props))
+        );
+      }
+    ),
+
+    polygon: defineWithProps([T.list], (interpreter, props, [points]) => {
       addPresentationShape(
         interpreter,
-        new Rect(x, y, width, height, host.getShapeProps(props))
+        new Polygon(points as [number, number][], host.getShapeProps(props))
       );
-    }
-  ),
+    }),
 
-  circle: defineWithProps(
-    [T.number, T.number, T.number],
-    (interpreter, props, [cx, cy, radius]) => {
-      const host = getPresentationHost(interpreter);
-      addPresentationShape(
-        interpreter,
-        new Circle(cx, cy, radius, host.getShapeProps(props))
+    text: defineWithProps(
+      [T.number, T.number, T.string],
+      (interpreter, props, [x, y, text]) => {
+        addPresentationShape(
+          interpreter,
+          new Text(
+            x,
+            y,
+            text,
+            host.getTextProps(props, propContexts.text),
+            host.getShapeProps(props, propContexts.text)
+          )
+        );
+      }
+    ),
+
+    group: defineWithProps([], (_interpreter, props, _args, node) => {
+      return new BuildShapeGroupFrame(
+        node,
+        new ShapeGroup(host.getGroupProps(props))
       );
-    }
-  ),
+    }),
 
-  ellipse: defineWithProps(
-    [T.number, T.number, T.number, T.number],
-    (interpreter, props, [cx, cy, rx, ry]) => {
-      const host = getPresentationHost(interpreter);
-      addPresentationShape(
-        interpreter,
-        new Ellipse(cx, cy, rx, ry, host.getShapeProps(props))
-      );
-    }
-  ),
+    heading: defineWithProps(
+      [T.any, T.optional(T.number)],
+      (interpreter, props, [value, level = 1]) => {
+        const handler = interpreter.getHandler(value);
+        addPresentationCell(
+          interpreter,
+          new ValueCell(
+            handler.getPrettyValue(value),
+            host.getValueProps(props, `h${level}`),
+            host.getValueTextProps(props)
+          )
+        );
+      }
+    ),
 
-  line: defineWithProps(
-    [T.number, T.number, T.number, T.number],
-    (interpreter, props, [x1, y1, x2, y2]) => {
-      const host = getPresentationHost(interpreter);
-      addPresentationShape(
-        interpreter,
-        new Line(x1, y1, x2, y2, host.getShapeProps(props))
-      );
-    }
-  ),
-
-  polygon: defineWithProps([T.list], (interpreter, props, [points]) => {
-    const host = getPresentationHost(interpreter);
-    addPresentationShape(
-      interpreter,
-      new Polygon(points as [number, number][], host.getShapeProps(props))
-    );
-  }),
-
-  text: defineWithProps(
-    [T.number, T.number, T.string],
-    (interpreter, props, [x, y, text]) => {
-      const host = getPresentationHost(interpreter);
-      addPresentationShape(
-        interpreter,
-        new Text(
-          x,
-          y,
-          text,
-          host.getTextProps(props, propContexts.text),
-          host.getShapeProps(props, propContexts.text)
-        )
-      );
-    }
-  ),
-
-  group: defineWithProps([], (interpreter, props, _args, node) => {
-    const host = getPresentationHost(interpreter);
-    return new BuildShapeGroupFrame(
-      node,
-      new ShapeGroup(host.getGroupProps(props))
-    );
-  }),
-
-  heading: defineWithProps(
-    [T.any, T.optional(T.number)],
-    (interpreter, props, [value, level = 1]) => {
-      const host = getPresentationHost(interpreter);
+    print: defineWithProps([T.any], (interpreter, props, [value]) => {
       const handler = interpreter.getHandler(value);
       addPresentationCell(
         interpreter,
         new ValueCell(
           handler.getPrettyValue(value),
-          host.getValueProps(props, `h${level}`),
+          host.getValueProps(props),
           host.getValueTextProps(props)
         )
       );
-    }
-  ),
+    }),
 
-  print: defineWithProps([T.any], (interpreter, props, [value]) => {
-    const host = getPresentationHost(interpreter);
-    const handler = interpreter.getHandler(value);
-    addPresentationCell(
-      interpreter,
-      new ValueCell(
-        handler.getPrettyValue(value),
-        host.getValueProps(props),
-        host.getValueTextProps(props)
-      )
-    );
-  }),
+    stack: defineWithProps([], (_interpreter, props, _args, node) => {
+      return new BuildCellFrame(node, new StackCell(host.getStackProps(props)));
+    }),
 
-  stack: defineWithProps([], (interpreter, props, _args, node) => {
-    const host = getPresentationHost(interpreter);
-    return new BuildCellFrame(node, new StackCell(host.getStackProps(props)));
-  }),
+    table: defineWithProps([], (_interpreter, _props, _args, node) => {
+      return new BuildCellFrame(node, new GridCell());
+    }),
 
-  table: defineWithProps([], (_interpreter, props, _args, node) => {
-    return new BuildCellFrame(node, new GridCell());
-  }),
+    header: defineWithProps([], (_interpreter, _props, _args, node) => {
+      return new BuildCellFrame(node, new GridHeaderRowCell());
+    }),
 
-  header: defineWithProps([], (_interpreter, props, _args, node) => {
-    return new BuildCellFrame(node, new GridHeaderRowCell());
-  }),
+    row: defineWithProps([], (_interpreter, _props, _args, node) => {
+      return new BuildCellFrame(node, new GridRowCell());
+    }),
 
-  row: defineWithProps([], (_interpreter, props, _args, node) => {
-    return new BuildCellFrame(node, new GridRowCell());
-  }),
+    cell: defineWithProps(
+      [T.optional(T.any)],
+      (interpreter, props, [value], node) => {
+        if (!host.isBuildingGridRow()) {
+          throw new Error('cell can only be used inside a table row');
+        }
 
-  cell: defineWithProps(
-    [T.optional(T.any)],
-    (interpreter, props, [value], node) => {
-      const host = getPresentationHost(interpreter);
+        const slot = new GridSlotCell(host.getCellProps(props));
 
-      if (!host.isBuildingGridRow()) {
-        throw new Error('cell can only be used inside a table row');
-      }
+        if (node.body) {
+          return new BuildCellFrame(node, slot);
+        }
 
-      const slot = new GridSlotCell(host.getCellProps(props));
-
-      if (node.body) {
-        return new BuildCellFrame(node, slot);
-      }
-
-      const handler = interpreter.getHandler(value);
-      addPresentationCell(
-        interpreter,
-        slot.addChild(
-          new ValueCell(
-            handler.getPrettyValue(value),
-            host.getValueProps(
-              props,
-              initialValueProps.variant,
-              propContexts.cellValue
-            ),
-            host.getValueTextProps(props, propContexts.cellValue)
+        const handler = interpreter.getHandler(value);
+        addPresentationCell(
+          interpreter,
+          slot.addChild(
+            new ValueCell(
+              handler.getPrettyValue(value),
+              host.getValueProps(
+                props,
+                initialValueProps.variant,
+                propContexts.cellValue
+              ),
+              host.getValueTextProps(props, propContexts.cellValue)
+            )
           )
-        )
-      );
-    }
-  ),
-};
+        );
+      }
+    ),
+  };
+}

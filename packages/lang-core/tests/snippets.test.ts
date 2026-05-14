@@ -472,18 +472,12 @@ describe('core language snippets', () => {
     expect(calls).toEqual([['inside']]);
   });
 
-  it('routes set statements to the presentation host', async () => {
+  it('routes set statements through the registered configuration handler', async () => {
     const settings: unknown[][] = [];
-    const host = {
-      takeSnapshot() {
-        return {};
-      },
-      restoreSnapshot() {},
-      setConfiguration(name: string, value: unknown) {
-        settings.push([name, value]);
-      },
-    };
-    const interpreter = new Interpreter(host);
+    const interpreter = new Interpreter();
+    interpreter.registerConfigurationHandler((name, value) => {
+      settings.push([name, value]);
+    });
 
     const result = await interpreter.run(
       parseSnippet(`

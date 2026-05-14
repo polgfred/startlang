@@ -3,31 +3,10 @@ export interface SupportsSnapshots<T = unknown> {
   restoreSnapshot(snapshot: T): void;
 }
 
-export interface PresentationHost<
-  TSnapshot = unknown,
-> extends SupportsSnapshots<TSnapshot> {
-  restoreOriginalSettings(): void;
-  clearDisplay(): void;
-  clearOutputBuffer(): void;
-  setConfiguration(name: string, value: unknown): void;
-}
-
-export type NullPresentationSnapshot = Record<string, never>;
-
-export class NullPresentationHost implements PresentationHost<NullPresentationSnapshot> {
-  restoreOriginalSettings() {}
-
-  clearDisplay() {}
-
-  clearOutputBuffer() {}
-
-  setConfiguration(name: string, value: unknown) {
-    throw new Error(`could not set presentation configuration option: ${name}`);
+export class NullHost implements SupportsSnapshots<undefined> {
+  takeSnapshot() {
+    return undefined;
   }
 
-  takeSnapshot(): NullPresentationSnapshot {
-    return {};
-  }
-
-  restoreSnapshot(snapshot: NullPresentationSnapshot) {}
+  restoreSnapshot(_snapshot: undefined) {}
 }

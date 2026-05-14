@@ -1,5 +1,4 @@
 import { Button } from '@base-ui/react/button';
-import type { BrowserPresentationSnapshot } from '@startlang/lang-browser/browser';
 import type { Interpreter } from '@startlang/lang-core/interpreter';
 import type { RuntimeHistory } from '@startlang/lang-core/runtime-history';
 import type {
@@ -34,7 +33,7 @@ export default memo(function Inspector({
   updateSlider,
 }: {
   error: Error | null;
-  history: RuntimeHistory<BrowserPresentationSnapshot>;
+  history: RuntimeHistory;
   interpreter: Interpreter;
   runtimeVersion: number;
   canEditValues: boolean;

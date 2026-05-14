@@ -31,8 +31,7 @@ export class SetFrame extends Frame {
       }
       case 1: {
         try {
-          // @ts-expect-error the host needs to handle this
-          interpreter.host.setConfiguration(option, interpreter.lastResult);
+          interpreter.applyConfiguration(option, interpreter.lastResult);
         } catch (err) {
           throw new Error(
             `could not set configuration: ${err instanceof Error ? err.message : err}`

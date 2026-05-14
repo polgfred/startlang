@@ -3,7 +3,7 @@ import { castDraft, produce, type Producer } from 'immer';
 import { installBuiltins } from './builtins/index.js';
 import { emptyMarkerMap, type MarkerMap } from './editor-markers.js';
 import { DataHandler, installHandlers } from './handlers/index.js';
-import { NullPresentationHost, type SupportsSnapshots } from './host.js';
+import { NullHost, type SupportsSnapshots } from './host.js';
 import { Namespace, RuntimeNamespace } from './namespace.js';
 import {
   Frame,
@@ -23,13 +23,13 @@ const emptyObject = Object.freeze(Object.create(null));
 
 export type { SupportsSnapshots } from './host.js';
 
-export interface RuntimeState<THostSnapshot = unknown> {
+export interface RuntimeState {
   globalFunctions: GlobalFunctions;
   globalNamespace: Namespace;
   localNamespaces: Cons<Namespace> | null;
   topFrame: Cons<Frame>;
   lastResult: unknown;
-  hostSnapshot: THostSnapshot;
+  hostSnapshot: unknown;
 }
 
 export type RuntimeEffectKind = 'repaint' | 'snapshot';
@@ -72,7 +72,9 @@ export class RuntimeError extends Error {
   }
 }
 
-export class Interpreter<THostSnapshot = unknown> {
+export type ConfigurationHandler = (option: string, value: unknown) => void;
+
+export class Interpreter {
   dataHandlers: DataHandler[] = [];
   namespace = new RuntimeNamespace((value) => this.getHandler(value));
   runtimeFunctions: RuntimeFunctions = emptyObject;
@@ -84,11 +86,12 @@ export class Interpreter<THostSnapshot = unknown> {
   pendingEffects: RuntimeEffect[] = [];
   effectHandler: RuntimeEffectHandler | null = null;
   markersMap: MarkerMap = emptyMarkerMap;
+  private configurationHandler: ConfigurationHandler | null = null;
   private shouldStepToNextStatement = false;
   private pendingInput: string | null = null;
 
   constructor(
-    public readonly host: SupportsSnapshots<THostSnapshot> = new NullPresentationHost() as SupportsSnapshots<THostSnapshot>
+    public readonly host: SupportsSnapshots = new NullHost()
   ) {
     installHandlers(this);
     installBuiltins(this);
@@ -274,6 +277,17 @@ export class Interpreter<THostSnapshot = unknown> {
     this.runtimeFunctions = produce(this.runtimeFunctions, (draft) => {
       Object.assign(draft, funcs);
     });
+  }
+
+  registerConfigurationHandler(handler: ConfigurationHandler) {
+    this.configurationHandler = handler;
+  }
+
+  applyConfiguration(option: string, value: unknown) {
+    if (!this.configurationHandler) {
+      throw new Error(`no host handler registered for 'set ${option}'`);
+    }
+    this.configurationHandler(option, value);
   }
 
   defineGlobalFunction(node: BeginNode) {
@@ -468,7 +482,7 @@ export class Interpreter<THostSnapshot = unknown> {
     this.lastResult = value;
   }
 
-  captureState(): RuntimeState<THostSnapshot> {
+  captureState(): RuntimeState {
     return {
       globalFunctions: this.globalFunctions,
       globalNamespace: this.namespace.globalNamespace,
@@ -479,7 +493,7 @@ export class Interpreter<THostSnapshot = unknown> {
     };
   }
 
-  restoreState(state: RuntimeState<THostSnapshot>) {
+  restoreState(state: RuntimeState) {
     this.globalFunctions = state.globalFunctions;
     this.namespace.restore(state.globalNamespace, state.localNamespaces);
     this.topFrame = state.topFrame;

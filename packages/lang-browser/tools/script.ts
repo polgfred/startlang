@@ -17,7 +17,7 @@ import { runtimeGlobals } from '@startlang/lang-core/runtime-globals';
 
 import {
   BrowserPresentationHost,
-  browserPresentationGlobals,
+  buildBrowserGlobals,
 } from '@startlang/lang-browser/browser';
 import {
   type Cell,
@@ -315,7 +315,10 @@ export async function main() {
   const renderer = new ConsoleOutputRenderer();
   const interp = new Interpreter(host);
   interp.registerGlobals(runtimeGlobals);
-  interp.registerGlobals(browserPresentationGlobals);
+  interp.registerGlobals(buildBrowserGlobals(host));
+  interp.registerConfigurationHandler((option, value) =>
+    host.setConfiguration(option, value)
+  );
 
   try {
     await runUntilComplete(

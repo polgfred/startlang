@@ -1,7 +1,7 @@
 import {
   type BrowserPresentationSnapshot,
   BrowserPresentationHost,
-  browserPresentationGlobals,
+  buildBrowserGlobals,
 } from '@startlang/lang-browser/browser';
 import { rootCell } from '@startlang/lang-browser/cells';
 import { rootShapeGroup } from '@startlang/lang-browser/shapes';
@@ -39,7 +39,8 @@ interface RuntimeStatus {
 }
 
 interface RuntimeView
-  extends RuntimeState<BrowserPresentationSnapshot>, RuntimeStatus {
+  extends Omit<RuntimeState, 'hostSnapshot'>, RuntimeStatus {
+  hostSnapshot: BrowserPresentationSnapshot;
   version: number;
   historyLength: number;
   historyIndex: number;
@@ -56,8 +57,8 @@ export type RuntimeMode =
 
 interface RuntimeEnvironment {
   host: BrowserPresentationHost;
-  interpreter: Interpreter<BrowserPresentationSnapshot>;
-  history: RuntimeHistory<BrowserPresentationSnapshot>;
+  interpreter: Interpreter;
+  history: RuntimeHistory;
   store: ReturnType<typeof createInterpreterStore>;
 }
 
@@ -121,8 +122,8 @@ function getRuntimeControls(mode: RuntimeMode): RuntimeControls {
 }
 
 function getRuntimeStatus(
-  interpreter: Interpreter<BrowserPresentationSnapshot>,
-  history: RuntimeHistory<BrowserPresentationSnapshot>
+  interpreter: Interpreter,
+  history: RuntimeHistory
 ): RuntimeStatus {
   return {
     isComplete: interpreter.isComplete,
@@ -133,16 +134,18 @@ function getRuntimeStatus(
 }
 
 function createInterpreterStore(
-  interpreter: Interpreter<BrowserPresentationSnapshot>,
-  history: RuntimeHistory<BrowserPresentationSnapshot>
+  interpreter: Interpreter,
+  history: RuntimeHistory
 ) {
   const events = new EventTarget();
   let version = 0;
 
   function readView(): RuntimeView {
+    const state = interpreter.captureState();
     return {
       version,
-      ...interpreter.captureState(),
+      ...state,
+      hostSnapshot: state.hostSnapshot as BrowserPresentationSnapshot,
       historyLength: history.length,
       historyIndex: history.index,
       isComplete: interpreter.isComplete,
@@ -178,10 +181,13 @@ function createInterpreterStore(
 function createRuntimeEnvironment(): RuntimeEnvironment {
   const host = new BrowserPresentationHost();
   const interpreter = new Interpreter(host);
-  const history = new RuntimeHistory<BrowserPresentationSnapshot>();
+  const history = new RuntimeHistory();
 
-  interpreter.registerGlobals(browserPresentationGlobals);
+  interpreter.registerGlobals(buildBrowserGlobals(host));
   interpreter.registerGlobals(runtimeGlobals);
+  interpreter.registerConfigurationHandler((option, value) =>
+    host.setConfiguration(option, value)
+  );
 
   return {
     host,
@@ -241,7 +247,7 @@ function normalizeError(err: unknown) {
 }
 
 function setInspectorVariable(
-  interpreter: Interpreter<BrowserPresentationSnapshot>,
+  interpreter: Interpreter,
   scope: InspectorScope,
   name: string,
   indexes: readonly IndexType[],
@@ -263,7 +269,7 @@ function setInspectorVariable(
 }
 
 function deleteInspectorVariable(
-  interpreter: Interpreter<BrowserPresentationSnapshot>,
+  interpreter: Interpreter,
   scope: InspectorScope,
   name: string,
   indexes: readonly IndexType[]

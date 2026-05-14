@@ -1,7 +1,7 @@
 import type { RuntimeState } from './interpreter.js';
 
-export class RuntimeHistory<THostSnapshot = unknown> {
-  entries: RuntimeState<THostSnapshot>[] = [];
+export class RuntimeHistory {
+  entries: RuntimeState[] = [];
   index = 0;
 
   get length() {
@@ -21,7 +21,7 @@ export class RuntimeHistory<THostSnapshot = unknown> {
     this.index = 0;
   }
 
-  push(state: RuntimeState<THostSnapshot>) {
+  push(state: RuntimeState) {
     this.entries.splice(this.index + 1);
     this.entries.push(state);
     this.index = this.entries.length - 1;
@@ -37,7 +37,7 @@ export class RuntimeHistory<THostSnapshot = unknown> {
     return entry;
   }
 
-  replaceCurrent(state: RuntimeState<THostSnapshot>) {
+  replaceCurrent(state: RuntimeState) {
     if (!this.current) {
       return;
     }
