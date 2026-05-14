@@ -287,7 +287,7 @@ describe('interpreter lifecycle', () => {
     expect(history.isRewound).toBe(true);
 
     history.truncateAfterCurrent();
-    const resumed = await interpreter.runLoop();
+    const resumed = await interpreter.continue();
 
     expect(resumed.status).toBe('completed');
     expect(interpreter.getVariable('value')).toBe(3);

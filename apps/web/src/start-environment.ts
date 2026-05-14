@@ -517,7 +517,7 @@ export function useStartEnvironment() {
   const continueFromSnapshot = useCallback(async () => {
     await performInterpreterAction(() => {
       history.truncateAfterCurrent();
-      return interpreter.runLoop();
+      return interpreter.continue();
     });
   }, [history, interpreter, performInterpreterAction]);
 

@@ -123,25 +123,45 @@ export class Interpreter {
     return this.namespace.localNamespaces;
   }
 
-  run(program: Program) {
-    this.globalFunctions = Object.freeze({ ...program.functions });
-    this.namespace.reset();
-    this.topFrame = rootFrame.push(program.main.makeFrame());
-    this.lastResult = null;
-    this.pauseReason = null;
-    this.pendingInput = null;
-    this.pendingEffects = [];
+  run(program: Program): Promise<RunResult> {
+    this.prepareToRun(program, { incremental: false });
     return this.runLoop();
   }
 
-  async runToNextStatement(program: Program) {
-    this.globalFunctions = Object.freeze({ ...program.functions });
-    this.namespace.reset();
+  runToNextStatement(program: Program): Promise<RunResult> {
+    this.prepareToRun(program, { incremental: false });
+    return this.runStepping();
+  }
+
+  // Merges program.functions into the existing global function table
+  // (last-write-wins). Each call is its own compilation unit; existing
+  // definitions from prior calls remain in scope.
+  runIncremental(program: Program): Promise<RunResult> {
+    this.prepareToRun(program, { incremental: true });
+    return this.runLoop();
+  }
+
+  private prepareToRun(
+    program: Program,
+    { incremental }: { incremental: boolean }
+  ) {
+    if (incremental) {
+      this.globalFunctions = Object.freeze({
+        ...this.globalFunctions,
+        ...program.functions,
+      });
+    } else {
+      this.globalFunctions = Object.freeze({ ...program.functions });
+      this.namespace.reset();
+    }
     this.topFrame = rootFrame.push(program.main.makeFrame());
     this.lastResult = null;
     this.pauseReason = null;
     this.pendingInput = null;
     this.pendingEffects = [];
+  }
+
+  private async runStepping(): Promise<RunResult> {
     this.shouldStepToNextStatement = true;
     try {
       return await this.runLoop();
@@ -150,23 +170,7 @@ export class Interpreter {
     }
   }
 
-  // Merges program.functions into the existing global function table
-  // (last-write-wins). Each call is its own compilation unit; existing
-  // definitions from prior calls remain in scope.
-  runIncremental(program: Program) {
-    this.globalFunctions = Object.freeze({
-      ...this.globalFunctions,
-      ...program.functions,
-    });
-    this.topFrame = rootFrame.push(program.main.makeFrame());
-    this.lastResult = null;
-    this.pauseReason = null;
-    this.pendingInput = null;
-    this.pendingEffects = [];
-    return this.runLoop();
-  }
-
-  async runLoop(): Promise<RunResult> {
+  private async runLoop(): Promise<RunResult> {
     this.isRunning = true;
     try {
       while (true) {
@@ -242,18 +246,13 @@ export class Interpreter {
     return value;
   }
 
-  async stepToNextStatement() {
+  stepToNextStatement(): Promise<RunResult> {
     if (!this.pauseReason || this.pauseReason.kind === 'input') {
       throw new Error('interpreter is not paused at a continuable statement');
     }
 
     this.pauseReason = null;
-    this.shouldStepToNextStatement = true;
-    try {
-      return await this.runLoop();
-    } finally {
-      this.shouldStepToNextStatement = false;
-    }
+    return this.runStepping();
   }
 
   setEffect(effect: RuntimeEffect) {
