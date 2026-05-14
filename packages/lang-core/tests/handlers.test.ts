@@ -155,11 +155,9 @@ describe('data handlers', () => {
     ).toEqual(['b', 'a']);
   });
 
-  it('reports missing runtime functions', () => {
+  it('returns undefined for missing runtime functions', () => {
     const interpreter = new Interpreter();
 
-    expect(() => interpreter.getRuntimeFunction('missing')).toThrow(
-      'function missing not found'
-    );
+    expect(interpreter.getRuntimeFunction('missing')).toBeUndefined();
   });
 });

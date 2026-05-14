@@ -93,7 +93,7 @@ async function main() {
       promptForCommand();
       continue;
     } else if (line === '.dump') {
-      console.log(inspect(Object.keys(interp.globalFunctions)));
+      console.log(inspect(interp.getGlobalFunctionNames()));
       console.log(inspect(interp.globalNamespace));
       rl.prompt();
       continue;

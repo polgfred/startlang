@@ -1,5 +1,6 @@
 import { Interpreter } from '../interpreter.js';
 
+import { BeginNode } from './begin.js';
 import { Frame, Node, type UnwindAction, type UnwindSignal } from './base.js';
 
 export abstract class CallNode extends Node {
@@ -36,10 +37,15 @@ export class CallFrame extends Frame {
         if (this.count < args.length) {
           interpreter.swapFrame(1);
           interpreter.pushNode(args[this.count]);
-        } else if (name in interpreter.globalFunctions) {
-          interpreter.replaceFrame(new CallGlobalFrame(this.node, this.args));
         } else {
-          interpreter.swapFrame(2);
+          const func = interpreter.getGlobalFunction(name);
+          if (func) {
+            interpreter.replaceFrame(
+              new CallGlobalFrame(this.node, this.args, func)
+            );
+          } else {
+            interpreter.swapFrame(2);
+          }
         }
         break;
       }
@@ -52,6 +58,9 @@ export class CallFrame extends Frame {
       }
       case 2: {
         const func = interpreter.getRuntimeFunction(name);
+        if (!func) {
+          throw new Error(`function ${name} not found`);
+        }
         const result = func(interpreter, this.args, this.node);
         if (result instanceof Frame) {
           interpreter.replaceFrame(result);
@@ -79,19 +88,17 @@ export abstract class CallBodyFrame extends Frame {
 class CallGlobalFrame extends CallBodyFrame {
   constructor(
     node: CallNode,
-    readonly args: unknown[]
+    readonly args: unknown[],
+    readonly func: BeginNode
   ) {
     super(node);
   }
 
   visit(interpreter: Interpreter) {
-    const { name } = this.node;
-
     switch (this.state) {
       case 0: {
-        const func = interpreter.globalFunctions[name];
         interpreter.swapFrame(1);
-        interpreter.pushNode(func.body);
+        interpreter.pushNode(this.func.body);
         break;
       }
       case 1: {
@@ -102,11 +109,9 @@ class CallGlobalFrame extends CallBodyFrame {
   }
 
   override onEnter(interpreter: Interpreter): void {
-    const { name } = this.node;
-    const func = interpreter.globalFunctions[name];
     interpreter.pushNamespace((draft) => {
-      for (let i = 0; i < func.params.length; i++) {
-        draft[func.params[i]] = this.args[i];
+      for (let i = 0; i < this.func.params.length; i++) {
+        draft[this.func.params[i]] = this.args[i];
       }
     });
   }

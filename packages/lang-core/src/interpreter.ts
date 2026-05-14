@@ -14,7 +14,7 @@ import {
   VarNode,
   rootFrame,
 } from './nodes/index.js';
-import type { IndexType, RuntimeFunctions } from './types.js';
+import type { IndexType, RuntimeFunction, RuntimeFunctions } from './types.js';
 import { Cons } from './utils/cons.js';
 
 type GlobalFunctions = Record<string, BeginNode>;
@@ -75,13 +75,13 @@ export class RuntimeError extends Error {
 export type ConfigurationHandler = (option: string, value: unknown) => void;
 
 export class Interpreter {
-  namespace = new RuntimeNamespace((value) => this.getHandler(value));
-  runtimeFunctions: RuntimeFunctions = emptyObject;
-  globalFunctions: GlobalFunctions = emptyObject;
   topFrame = rootFrame;
   lastResult: unknown = null;
   isRunning: boolean = false;
   pauseReason: RuntimePause | null = null;
+  private namespace = new RuntimeNamespace((value) => this.getHandler(value));
+  private runtimeFunctions: RuntimeFunctions = emptyObject;
+  private globalFunctions: GlobalFunctions = emptyObject;
   private dataHandlers: DataHandler[] = [];
   private markersMap: MarkerMap = emptyMarkerMap;
   private pendingEffects: RuntimeEffect[] = [];
@@ -90,9 +90,7 @@ export class Interpreter {
   private shouldStepToNextStatement = false;
   private pendingInput: string | null = null;
 
-  constructor(
-    public readonly host: SupportsSnapshots = new NullHost()
-  ) {
+  constructor(public readonly host: SupportsSnapshots = new NullHost()) {
     installHandlers(this);
     installBuiltins(this);
     this.registerGlobals({
@@ -475,11 +473,16 @@ export class Interpreter {
     return leftHandler.evalBinaryOp(op, left, right);
   }
 
-  getRuntimeFunction(name: string) {
-    if (!(name in this.runtimeFunctions)) {
-      throw new Error(`function ${name} not found`);
-    }
+  getRuntimeFunction(name: string): RuntimeFunction | undefined {
     return this.runtimeFunctions[name];
+  }
+
+  getGlobalFunction(name: string): BeginNode | undefined {
+    return this.globalFunctions[name];
+  }
+
+  getGlobalFunctionNames(): readonly string[] {
+    return Object.keys(this.globalFunctions);
   }
 
   setResult(value: unknown) {
