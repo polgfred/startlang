@@ -13,11 +13,11 @@ function parseSnippet(source: string) {
 }
 
 function recordSnapshots(interpreter: Interpreter, history: RuntimeHistory) {
-  interpreter.effectHandler = (effect) => {
+  interpreter.registerEffectHandler((effect) => {
     if (effect.kind === 'snapshot') {
       history.push(interpreter.captureState());
     }
-  };
+  });
 }
 
 function expectPaused(result: RunResult): RuntimePause {

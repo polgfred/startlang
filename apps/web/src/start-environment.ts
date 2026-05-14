@@ -362,11 +362,9 @@ export function useStartEnvironment() {
   );
 
   useEffect(() => {
-    interpreter.effectHandler = handleRuntimeEffect;
+    interpreter.registerEffectHandler(handleRuntimeEffect);
     return () => {
-      if (interpreter.effectHandler === handleRuntimeEffect) {
-        interpreter.effectHandler = null;
-      }
+      interpreter.registerEffectHandler(null);
     };
   }, [handleRuntimeEffect, interpreter]);
 

@@ -75,7 +75,6 @@ export class RuntimeError extends Error {
 export type ConfigurationHandler = (option: string, value: unknown) => void;
 
 export class Interpreter {
-  dataHandlers: DataHandler[] = [];
   namespace = new RuntimeNamespace((value) => this.getHandler(value));
   runtimeFunctions: RuntimeFunctions = emptyObject;
   globalFunctions: GlobalFunctions = emptyObject;
@@ -83,9 +82,10 @@ export class Interpreter {
   lastResult: unknown = null;
   isRunning: boolean = false;
   pauseReason: RuntimePause | null = null;
-  pendingEffects: RuntimeEffect[] = [];
-  effectHandler: RuntimeEffectHandler | null = null;
-  markersMap: MarkerMap = emptyMarkerMap;
+  private dataHandlers: DataHandler[] = [];
+  private markersMap: MarkerMap = emptyMarkerMap;
+  private pendingEffects: RuntimeEffect[] = [];
+  private effectHandler: RuntimeEffectHandler | null = null;
   private configurationHandler: ConfigurationHandler | null = null;
   private shouldStepToNextStatement = false;
   private pendingInput: string | null = null;
@@ -288,6 +288,10 @@ export class Interpreter {
       throw new Error(`no host handler registered for 'set ${option}'`);
     }
     this.configurationHandler(option, value);
+  }
+
+  registerEffectHandler(handler: RuntimeEffectHandler | null) {
+    this.effectHandler = handler;
   }
 
   defineGlobalFunction(node: BeginNode) {
