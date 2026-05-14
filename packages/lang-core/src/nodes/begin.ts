@@ -1,5 +1,3 @@
-import { Interpreter } from '../interpreter.js';
-
 import { Frame, Node } from './base.js';
 
 export class BeginNode extends Node {
@@ -13,16 +11,7 @@ export class BeginNode extends Node {
     super();
   }
 
-  makeFrame() {
-    return new BeginFrame(this);
-  }
-}
-
-export class BeginFrame extends Frame {
-  declare node: BeginNode;
-
-  visit(interpreter: Interpreter) {
-    interpreter.defineGlobalFunction(this.node);
-    interpreter.popFrame();
+  makeFrame(): Frame {
+    throw new Error('BeginNode is a static declaration and cannot be executed');
   }
 }

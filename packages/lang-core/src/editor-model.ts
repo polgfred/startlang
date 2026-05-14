@@ -3,8 +3,8 @@ import {
   type MarkerLineMap,
   type MarkerMap,
 } from './editor-markers.js';
-import type { Node } from './nodes/index.js';
 import { parse } from './parser.peggy';
+import { Program } from './program.js';
 import type { MarkerType } from './types.js';
 
 export interface EditorMarker {
@@ -20,7 +20,7 @@ export interface EditorSnapshot {
 
 export interface EditorProgram {
   readonly markerMap: MarkerMap;
-  readonly node: Node;
+  readonly program: Program;
 }
 
 type ParseCacheEntry = {
@@ -28,7 +28,7 @@ type ParseCacheEntry = {
   result:
     | {
         markerLineMap: MarkerLineMap;
-        node: Node;
+        program: Program;
       }
     | Error;
 };
@@ -88,12 +88,12 @@ export class EditorModel {
   }
 
   parseProgram(): EditorProgram {
-    const { markerLineMap, node } = this.parseCurrentSource();
+    const { markerLineMap, program } = this.parseCurrentSource();
     return {
       markerMap: markerLineMap.mapMarkers(
         (lineNumber) => this.markers[lineNumber]
       ),
-      node,
+      program,
     };
   }
 
@@ -121,10 +121,10 @@ export class EditorModel {
     }
 
     try {
-      const node = parse(this.source + '\n');
+      const program = parse(this.source + '\n');
       const result = {
-        markerLineMap: buildMarkerLineMap(node),
-        node,
+        markerLineMap: buildMarkerLineMap(program),
+        program,
       };
       this.parseCache = { version: this.version, result };
       return result;

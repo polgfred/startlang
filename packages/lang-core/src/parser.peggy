@@ -31,6 +31,7 @@
     VarNode,
     WhileNode,
   } from './nodes/index.js';
+  import { Program } from './program.js';
 }}
 
 {
@@ -99,13 +100,38 @@
       return new LetIndexNode(name, indexes, value).at(location());
     }
   }
+
+  // partition top-level elements into a function table and a main block,
+  // erroring on duplicate function names
+  function buildProgram(elems) {
+    const functions = Object.create(null);
+    const mainElems = [];
+    for (const elem of elems) {
+      if (elem instanceof BeginNode) {
+        if (functions[elem.name]) {
+          error(`function '${elem.name}' is already defined`, elem.location);
+        }
+        functions[elem.name] = elem;
+      } else {
+        mainElems.push(elem);
+      }
+    }
+    return new Program(functions, new BlockNode(mainElems).at(location()));
+  }
 }
 
 // Grammar
 
-start = EOL? @block:Block
+start = EOL? @program:Program
 
 // Top-level
+
+Program
+  = elems:(_ @ProgramElement EOL)* { return buildProgram(elems); }
+
+ProgramElement
+  = BeginBlock
+  / BlockElement
 
 Block
   = elems:(_ @BlockElement EOL)* { return new BlockNode(elems).at(location()); }
@@ -119,7 +145,6 @@ ControlBlock
   / RepeatBlock
   / ForBlock
   / WhileBlock
-  / BeginBlock
 
 IfBody = if __ cond:Value __ then EOL body:Block {
   // capture the location here so we're mapping to the right lines

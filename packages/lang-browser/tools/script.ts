@@ -11,7 +11,7 @@ import {
   type RunResult,
   type RuntimePause,
 } from '@startlang/lang-core/interpreter';
-import type { Node } from '@startlang/lang-core/nodes';
+import type { Program } from '@startlang/lang-core/program';
 import { parse, type ParseOptions } from '@startlang/lang-core/parser.peggy';
 import { runtimeGlobals } from '@startlang/lang-core/runtime-globals';
 
@@ -292,16 +292,16 @@ export async function main() {
 
   const source = await readSource(sourceArg);
 
-  let node: Node;
+  let program: Program;
   try {
-    node = parse(source, parserOptions);
+    program = parse(source, parserOptions);
   } catch (err) {
     console.log(formatError(err));
     process.exit();
   }
 
   if (options.ast) {
-    output(node);
+    output(program);
     process.exit();
   }
 
@@ -327,7 +327,7 @@ export async function main() {
       host,
       renderer,
       question,
-      await interp.run(node)
+      await interp.run(program)
     );
   } catch (err) {
     console.log(formatError(err));

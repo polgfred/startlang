@@ -1,6 +1,6 @@
 declare module '*.peggy' {
-  import { Node } from '@startlang/lang-core/nodes/base';
-  export function parse(source: string): Node;
+  import { Program } from '@startlang/lang-core/program';
+  export function parse(source: string): Program;
 }
 
 declare module '*.start' {

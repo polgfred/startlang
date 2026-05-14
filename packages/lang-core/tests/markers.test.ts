@@ -34,8 +34,8 @@ describe('marker maps', () => {
       { lineNumber: 4, marker: 'breakpoint' },
     ]);
 
-    const { markerMap, node } = model.parseProgram();
-    const repeatNode = (node as BlockNode).elems[0] as RepeatNode;
+    const { markerMap, program } = model.parseProgram();
+    const repeatNode = program.main.elems[0] as RepeatNode;
     const insidePrintNode = (repeatNode.body as BlockNode).elems[0];
 
     expect(markerMap(insidePrintNode)).toBe('breakpoint');
@@ -54,10 +54,10 @@ describe('marker maps', () => {
     const interpreter = new Interpreter();
 
     model.toggleMarker(3);
-    const { markerMap, node } = model.parseProgram();
+    const { markerMap, program } = model.parseProgram();
     interpreter.setMarkerMap(markerMap);
 
-    const result = await interpreter.run(node);
+    const result = await interpreter.run(program);
 
     expect(expectPaused(result).kind).toBe('breakpoint');
     expect(interpreter.topFrame.head.node.location.start.line).toBe(3);
@@ -81,8 +81,8 @@ describe('marker maps', () => {
         end
       end
       `;
-    const rootNode = parse(`${source}\n`);
-    const repeatNode = (rootNode as BlockNode).elems[0] as RepeatNode;
+    const program = parse(`${source}\n`);
+    const repeatNode = program.main.elems[0] as RepeatNode;
     const ifNode = (repeatNode.body as BlockNode).elems[0] as IfNode;
     const thenPrintNode = (ifNode.thenBody as BlockNode).elems[0];
     const markers: MarkerType[] = [];
@@ -90,7 +90,7 @@ describe('marker maps', () => {
     markers[3] = 'snapshot';
     markers[4] = 'breakpoint';
 
-    const markerMap = mapMarkers(rootNode, markers);
+    const markerMap = mapMarkers(program, markers);
 
     expect(markerMap(ifNode)).toBe('snapshot');
     expect(markerMap(thenPrintNode)).toBe('breakpoint');
@@ -107,8 +107,8 @@ describe('marker maps', () => {
         print "else"
       end
       `;
-    const rootNode = parse(`${source}\n`);
-    const ifNode = (rootNode as BlockNode).elems[0] as IfNode;
+    const program = parse(`${source}\n`);
+    const ifNode = program.main.elems[0] as IfNode;
     const thenPrintNode = (ifNode.thenBody as BlockNode).elems[0];
     const elseIfNode = ifNode.elseBody as IfNode;
     const elseIfPrintNode = (elseIfNode.thenBody as BlockNode).elems[0];
@@ -132,8 +132,8 @@ describe('marker maps', () => {
 
       print "after"
       `;
-    const rootNode = parse(`${source}\n`);
-    const lineMap = buildMarkerLineMap(rootNode);
+    const program = parse(`${source}\n`);
+    const lineMap = buildMarkerLineMap(program);
 
     expect(lineMap.resolve(2)?.lineNumber).toBe(2);
     expect(lineMap.resolve(3)?.lineNumber).toBe(4);
@@ -150,16 +150,16 @@ describe('marker maps', () => {
 
       print "after"
       `;
-    const rootNode = parse(`${source}\n`);
-    const repeatNode = (rootNode as BlockNode).elems[0] as RepeatNode;
+    const program = parse(`${source}\n`);
+    const repeatNode = program.main.elems[0] as RepeatNode;
     const insidePrintNode = (repeatNode.body as BlockNode).elems[0];
-    const afterPrintNode = (rootNode as BlockNode).elems[1];
+    const afterPrintNode = program.main.elems[1];
     const markers: MarkerType[] = [];
 
     markers[3] = 'breakpoint';
     markers[6] = 'snapshot';
 
-    const markerMap = mapMarkers(rootNode, markers);
+    const markerMap = mapMarkers(program, markers);
 
     expect(markerMap(insidePrintNode)).toBe('breakpoint');
     expect(markerMap(afterPrintNode)).toBe('snapshot');
@@ -195,18 +195,18 @@ describe('marker maps', () => {
         end
       end
       `;
-    const rootNode = parse(`${source}\n`);
+    const program = parse(`${source}\n`);
     const interpreter = new Interpreter();
     const startedAt = performance.now();
 
-    interpreter.setMarkerMap(mapMarkers(rootNode, []));
+    interpreter.setMarkerMap(mapMarkers(program, []));
 
     expect(performance.now() - startedAt).toBeLessThan(100);
   });
 
   it('marks block-level nodes as statements without marking expression nodes', () => {
-    const rootNode = parse(['value = abs(-1)', 'print value', ''].join('\n'));
-    const [letNode, printNode] = (rootNode as BlockNode).elems;
+    const program = parse(['value = abs(-1)', 'print value', ''].join('\n'));
+    const [letNode, printNode] = program.main.elems;
     const callExpression = (letNode as LetNode).value;
 
     expect(letNode.isStatement).toBe(true);
@@ -223,13 +223,13 @@ describe('marker maps', () => {
       '',
     ].join('\n');
     const markers: MarkerType[] = [];
-    const rootNode = parse(source);
+    const program = parse(source);
     const interpreter = new Interpreter();
 
     markers[1] = 'breakpoint';
-    interpreter.setMarkerMap(mapMarkers(rootNode, markers));
+    interpreter.setMarkerMap(mapMarkers(program, markers));
 
-    let result = await interpreter.run(rootNode);
+    let result = await interpreter.run(program);
 
     expect(expectPaused(result).kind).toBe('breakpoint');
     expect(interpreter.topFrame.head.node.location.start.line).toBe(1);
@@ -256,10 +256,10 @@ describe('marker maps', () => {
 
   it('starts a program by stepping to its first statement', async () => {
     const source = ['value = abs(-1)', 'value = value + 1', ''].join('\n');
-    const rootNode = parse(source);
+    const program = parse(source);
     const interpreter = new Interpreter();
 
-    const result = await interpreter.runToNextStatement(rootNode);
+    const result = await interpreter.runToNextStatement(program);
 
     expect(expectPaused(result).kind).toBe('step');
     expect(interpreter.topFrame.head.node.location.start.line).toBe(1);
@@ -278,13 +278,13 @@ describe('marker maps', () => {
       '',
     ].join('\n');
     const markers: MarkerType[] = [];
-    const rootNode = parse(source);
+    const program = parse(source);
     const interpreter = new Interpreter();
 
     markers[2] = 'breakpoint';
-    interpreter.setMarkerMap(mapMarkers(rootNode, markers));
+    interpreter.setMarkerMap(mapMarkers(program, markers));
 
-    let result = await interpreter.run(rootNode);
+    let result = await interpreter.run(program);
 
     expect(expectPaused(result).kind).toBe('breakpoint');
     expect(interpreter.topFrame.head.node.location.start.line).toBe(2);
@@ -308,13 +308,13 @@ describe('marker maps', () => {
       end
       `;
     const markers: MarkerType[] = [];
-    const rootNode = parse(`${source}\n`);
+    const program = parse(`${source}\n`);
     const interpreter = new Interpreter();
 
     markers[2] = 'breakpoint';
-    interpreter.setMarkerMap(mapMarkers(rootNode, markers));
+    interpreter.setMarkerMap(mapMarkers(program, markers));
 
-    let result = await interpreter.run(rootNode);
+    let result = await interpreter.run(program);
 
     expect(expectPaused(result).kind).toBe('breakpoint');
     expect(interpreter.topFrame.head.node.location.start.line).toBe(2);

@@ -7,6 +7,7 @@
     "./editor-model": "./src/editor-model.ts",
     "./interpreter": "./src/interpreter.ts",
     "./parser.peggy": "./src/parser.peggy",
+    "./program": "./src/program.ts",
     "./runtime-history": "./src/runtime-history.ts",
     "./runtime-globals": "./src/runtime-globals.ts",
     "./types": "./src/types.ts",

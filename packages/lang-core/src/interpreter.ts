@@ -1,4 +1,4 @@
-import { castDraft, produce, type Producer } from 'immer';
+import { produce, type Producer } from 'immer';
 
 import { installBuiltins } from './builtins/index.js';
 import { emptyMarkerMap, type MarkerMap } from './editor-markers.js';
@@ -13,6 +13,7 @@ import {
   VarNode,
   rootFrame,
 } from './nodes/index.js';
+import { Program } from './program.js';
 import type { IndexType, RuntimeFunction, RuntimeFunctions } from './types.js';
 import { Cons } from './utils/cons.js';
 
@@ -123,10 +124,10 @@ export class Interpreter {
     return this.namespace.localNamespaces;
   }
 
-  run(node: Node) {
-    this.globalFunctions = emptyObject;
+  run(program: Program) {
+    this.globalFunctions = Object.freeze({ ...program.functions });
     this.namespace.reset();
-    this.topFrame = rootFrame.push(node.makeFrame());
+    this.topFrame = rootFrame.push(program.main.makeFrame());
     this.lastResult = null;
     this.pauseReason = null;
     this.pendingInput = null;
@@ -134,10 +135,10 @@ export class Interpreter {
     return this.runLoop();
   }
 
-  async runToNextStatement(node: Node) {
-    this.globalFunctions = emptyObject;
+  async runToNextStatement(program: Program) {
+    this.globalFunctions = Object.freeze({ ...program.functions });
     this.namespace.reset();
-    this.topFrame = rootFrame.push(node.makeFrame());
+    this.topFrame = rootFrame.push(program.main.makeFrame());
     this.lastResult = null;
     this.pauseReason = null;
     this.pendingInput = null;
@@ -150,8 +151,15 @@ export class Interpreter {
     }
   }
 
-  runIncremental(node: Node) {
-    this.topFrame = rootFrame.push(node.makeFrame());
+  // Merges program.functions into the existing global function table
+  // (last-write-wins). Each call is its own compilation unit; existing
+  // definitions from prior calls remain in scope.
+  runIncremental(program: Program) {
+    this.globalFunctions = Object.freeze({
+      ...this.globalFunctions,
+      ...program.functions,
+    });
+    this.topFrame = rootFrame.push(program.main.makeFrame());
     this.lastResult = null;
     this.pauseReason = null;
     this.pendingInput = null;
@@ -297,12 +305,6 @@ export class Interpreter {
 
   registerSnapshotHandler(handler: SnapshotHandler) {
     this.snapshotHandler = handler;
-  }
-
-  defineGlobalFunction(node: BeginNode) {
-    this.globalFunctions = produce(this.globalFunctions, (draft) => {
-      draft[node.name] = castDraft(node);
-    });
   }
 
   pushFrame(frame: Frame) {

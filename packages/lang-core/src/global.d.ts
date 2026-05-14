@@ -1,5 +1,6 @@
 declare module '*.peggy' {
-  import type { Node, SourceLocation } from './nodes/base.js';
+  import type { SourceLocation } from './nodes/base.js';
+  import type { Program } from './program.js';
 
   export interface ParseOptions {
     ast?: boolean;
@@ -10,5 +11,5 @@ declare module '*.peggy' {
     location: SourceLocation;
   }
 
-  export function parse(source: string, options?: ParseOptions): Node;
+  export function parse(source: string, options?: ParseOptions): Program;
 }

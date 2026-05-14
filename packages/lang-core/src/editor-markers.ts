@@ -1,5 +1,4 @@
 import {
-  BeginNode,
   BlockNode,
   CallNode,
   ForInNode,
@@ -9,6 +8,7 @@ import {
   RepeatNode,
   WhileNode,
 } from './nodes/index.js';
+import { Program } from './program.js';
 import type { MarkerType } from './types.js';
 
 export type MarkerMap = (node: Node) => MarkerType | undefined;
@@ -27,7 +27,7 @@ export interface MarkerLineMap {
   mapMarkers(getMarker: MarkerLineLookup): MarkerMap;
 }
 
-export function buildMarkerLineMap(node: Node): MarkerLineMap {
+export function buildMarkerLineMap(program: Program): MarkerLineMap {
   const nodeToLines = new WeakMap<Node, number[]>();
   const lineToNode = new Map<number, Node>();
   const claimedLines = new Set<number>();
@@ -58,8 +58,7 @@ export function buildMarkerLineMap(node: Node): MarkerLineMap {
       const { end } = child.location;
 
       if (
-        (child instanceof BeginNode ||
-          child instanceof CallNode ||
+        (child instanceof CallNode ||
           child instanceof ForInNode ||
           child instanceof ForNode ||
           child instanceof WhileNode ||
@@ -107,7 +106,10 @@ export function buildMarkerLineMap(node: Node): MarkerLineMap {
     };
   }
 
-  visit(node);
+  visit(program.main);
+  for (const fn of Object.values(program.functions)) {
+    visit(fn.body, fn.body.location.start.line);
+  }
 
   return {
     mapMarkers,
@@ -115,8 +117,8 @@ export function buildMarkerLineMap(node: Node): MarkerLineMap {
   };
 }
 
-export function mapMarkers(node: Node, markers: readonly MarkerType[]) {
-  return buildMarkerLineMap(node).mapMarkers(
+export function mapMarkers(program: Program, markers: readonly MarkerType[]) {
+  return buildMarkerLineMap(program).mapMarkers(
     (lineNumber) => markers[lineNumber]
   );
 }

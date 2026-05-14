@@ -9,7 +9,7 @@ import {
   type RunResult,
   type RuntimePause,
 } from '@startlang/lang-core/interpreter';
-import type { Node } from '@startlang/lang-core/nodes';
+import type { Program } from '@startlang/lang-core/program';
 import { parse, type ParseOptions } from '@startlang/lang-core/parser.peggy';
 import { runtimeGlobals } from '@startlang/lang-core/runtime-globals';
 import type { RuntimeFunctions } from '@startlang/lang-core/types';
@@ -143,16 +143,16 @@ async function main() {
     source = sourceArg + '\n';
   }
 
-  let node: Node;
+  let program: Program;
   try {
-    node = parse(source, parserOptions);
+    program = parse(source, parserOptions);
   } catch (err) {
     console.log(formatError(err));
     process.exit();
   }
 
   if (options.ast) {
-    output(node);
+    output(program);
     process.exit();
   }
 
@@ -178,7 +178,7 @@ async function main() {
   } satisfies RuntimeFunctions);
 
   try {
-    await runUntilComplete(interp, question, await interp.run(node));
+    await runUntilComplete(interp, question, await interp.run(program));
   } catch (err) {
     console.log(formatError(err));
   }

@@ -1,5 +1,5 @@
 declare module '@startlang/lang-core/parser.peggy' {
-  import type { Node } from '@startlang/lang-core/nodes';
+  import type { Program } from '@startlang/lang-core/program';
 
   export interface ParseOptions {
     ast?: boolean;
@@ -8,7 +8,7 @@ declare module '@startlang/lang-core/parser.peggy' {
 
   export class SyntaxError extends Error {}
 
-  export function parse(source: string, options?: ParseOptions): Node;
+  export function parse(source: string, options?: ParseOptions): Program;
 }
 
 declare module '*.module.css' {

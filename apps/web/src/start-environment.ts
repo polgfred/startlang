@@ -12,7 +12,7 @@ import {
   type RunResult,
   type RuntimeState,
 } from '@startlang/lang-core/interpreter';
-import type { Node } from '@startlang/lang-core/nodes';
+import type { Program } from '@startlang/lang-core/program';
 import { runtimeGlobals } from '@startlang/lang-core/runtime-globals';
 import { RuntimeHistory } from '@startlang/lang-core/runtime-history';
 import type { IndexType } from '@startlang/lang-core/types';
@@ -458,10 +458,10 @@ export function useStartEnvironment() {
   );
 
   const startProgram = useCallback(
-    async (runParsedProgram: (node: Node) => Promise<RunResult>) => {
-      let program: ReturnType<typeof parseProgram>;
+    async (runParsedProgram: (program: Program) => Promise<RunResult>) => {
+      let parsed: ReturnType<typeof parseProgram>;
       try {
-        program = parseProgram();
+        parsed = parseProgram();
       } catch (err) {
         setError(normalizeError(err));
         setShowInspector(true);
@@ -473,8 +473,8 @@ export function useStartEnvironment() {
       host.restoreOriginalSettings();
 
       await performInterpreterAction(() => {
-        interpreter.setMarkerMap(program.markerMap);
-        return runParsedProgram(program.node);
+        interpreter.setMarkerMap(parsed.markerMap);
+        return runParsedProgram(parsed.program);
       });
     },
     [
