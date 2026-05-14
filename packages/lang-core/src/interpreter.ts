@@ -27,7 +27,6 @@ export interface SnapshotHandler {
 }
 
 export interface RuntimeState {
-  globalFunctions: GlobalFunctions;
   globalNamespace: Namespace;
   localNamespaces: Cons<Namespace> | null;
   topFrame: Cons<Frame>;
@@ -500,7 +499,6 @@ export class Interpreter {
 
   captureState(): RuntimeState {
     return {
-      globalFunctions: this.globalFunctions,
       globalNamespace: this.namespace.globalNamespace,
       localNamespaces: this.localNamespaces,
       topFrame: this.topFrame,
@@ -510,7 +508,6 @@ export class Interpreter {
   }
 
   restoreState(state: RuntimeState) {
-    this.globalFunctions = state.globalFunctions;
     this.namespace.restore(state.globalNamespace, state.localNamespaces);
     this.topFrame = state.topFrame;
     this.lastResult = state.lastResult;
