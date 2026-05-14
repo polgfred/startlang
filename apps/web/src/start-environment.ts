@@ -337,17 +337,16 @@ export function useStartEnvironment() {
   );
 
   const handleRuntimeEffect = useCallback(
-    async (effect: RuntimeEffect) => {
+    (effect: RuntimeEffect) => {
       switch (effect.kind) {
         case 'snapshot': {
           history.push(interpreter.captureState());
-          break;
+          return;
         }
         case 'repaint': {
           syncOutputTab();
           store.publish();
-          await waitForAnimationFrame();
-          break;
+          return waitForAnimationFrame();
         }
       }
     },
