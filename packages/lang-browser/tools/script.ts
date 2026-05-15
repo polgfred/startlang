@@ -131,22 +131,24 @@ async function runUntilComplete(
 }
 
 async function readSource(sourceArg: string) {
-  const candidates = [
-    sourceArg,
-    path.resolve(import.meta.dirname, '../../..', sourceArg),
-  ];
-
-  for (const candidate of candidates) {
-    try {
-      return await readFile(candidate, 'utf-8');
-    } catch (err) {
-      if (!isNodeError(err) || err.code !== 'ENOENT') {
-        throw err;
-      }
+  try {
+    return await readFile(resolveSourcePath(sourceArg), 'utf-8');
+  } catch (err) {
+    if (!isNodeError(err) || err.code !== 'ENOENT') {
+      throw err;
     }
   }
-
   return `${sourceArg}\n`;
+}
+
+// Resolve relative source paths against the directory the user invoked
+// npm from, not the workspace dir npm chdir'd into.
+function resolveSourcePath(sourceArg: string): string {
+  if (path.isAbsolute(sourceArg)) {
+    return sourceArg;
+  }
+  const cwd = process.env.INIT_CWD ?? process.cwd();
+  return path.resolve(cwd, sourceArg);
 }
 
 function isNodeError(err: unknown): err is NodeJS.ErrnoException {

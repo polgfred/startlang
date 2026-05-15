@@ -1,5 +1,6 @@
 import console from 'node:console';
 import { readFile } from 'node:fs/promises';
+import path from 'node:path';
 import process from 'node:process';
 import readline from 'node:readline';
 import { inspect, parseArgs } from 'node:util';
@@ -112,6 +113,16 @@ function isNodeError(err: unknown): err is NodeJS.ErrnoException {
   return err instanceof Error && 'code' in err;
 }
 
+// Resolve relative source paths against the directory the user invoked
+// npm from, not the workspace dir npm chdir'd into.
+function resolveSourcePath(sourceArg: string): string {
+  if (path.isAbsolute(sourceArg)) {
+    return sourceArg;
+  }
+  const cwd = process.env.INIT_CWD ?? process.cwd();
+  return path.resolve(cwd, sourceArg);
+}
+
 function formatError(err: unknown) {
   return err instanceof Error ? err.stack : err;
 }
@@ -135,7 +146,7 @@ async function main() {
 
   let source;
   try {
-    source = await readFile(sourceArg, 'utf-8');
+    source = await readFile(resolveSourcePath(sourceArg), 'utf-8');
   } catch (err) {
     if (!isNodeError(err) || err.code !== 'ENOENT') {
       throw err;
