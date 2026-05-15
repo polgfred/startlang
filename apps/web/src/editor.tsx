@@ -6,10 +6,11 @@ import { setupLanguage, useEditor } from './editor-context.jsx';
 import { createStartSyntaxValidator } from './editor-diagnostics.js';
 import styles from './editor.module.css';
 
-function createEditorLayoutScheduler(editor: MonacoEditor.ICodeEditor) {
+function createEditorController(editor: MonacoEditor.ICodeEditor) {
+  const decorations = editor.createDecorationsCollection([]);
   let layoutAnimationFrame: number | null = null;
 
-  function schedule() {
+  function scheduleLayout() {
     if (layoutAnimationFrame !== null) {
       return;
     }
@@ -21,6 +22,14 @@ function createEditorLayoutScheduler(editor: MonacoEditor.ICodeEditor) {
     });
   }
 
+  function revealLine(lineNumber: number) {
+    editor.revealLineInCenterIfOutsideViewport(lineNumber);
+  }
+
+  function setDecorations(next: MonacoEditor.IModelDeltaDecoration[]) {
+    decorations.set(next);
+  }
+
   function dispose() {
     if (layoutAnimationFrame !== null) {
       window.cancelAnimationFrame(layoutAnimationFrame);
@@ -28,16 +37,15 @@ function createEditorLayoutScheduler(editor: MonacoEditor.ICodeEditor) {
     }
   }
 
-  return { dispose, schedule };
+  return { dispose, revealLine, scheduleLayout, setDecorations };
 }
 
-type EditorLayoutScheduler = ReturnType<typeof createEditorLayoutScheduler>;
+type EditorController = ReturnType<typeof createEditorController>;
 
-function observeEditorLayout(layoutScheduler: EditorLayoutScheduler) {
-  window.addEventListener('resize', layoutScheduler.schedule, false);
+function observeEditorLayout(scheduleLayout: () => void) {
+  window.addEventListener('resize', scheduleLayout, false);
   return () => {
-    window.removeEventListener('resize', layoutScheduler.schedule, false);
-    layoutScheduler.dispose();
+    window.removeEventListener('resize', scheduleLayout, false);
   };
 }
 
@@ -52,23 +60,22 @@ export default memo(function Editor({
 }) {
   const { highlightedNode, markers, setValue, source, toggleMarker } =
     useEditor();
-  const layoutSchedulerRef = useRef<EditorLayoutScheduler | null>(null);
-  const decorationsRef =
-    useRef<MonacoEditor.IEditorDecorationsCollection | null>(null);
+  const controllerRef = useRef<EditorController | null>(null);
 
   const onBeforeMount: BeforeMount = useCallback((monaco) => {
     setupLanguage(monaco);
   }, []);
 
   const updateDecorations = useCallback(() => {
-    const decorations = decorationsRef.current;
-    if (!decorations) {
+    const controller = controllerRef.current;
+    if (!controller) {
       return;
     }
 
     const nextDecorations: MonacoEditor.IModelDeltaDecoration[] = [];
     if (highlightedNode) {
       const { kind, node } = highlightedNode;
+      controller.revealLine(node.location.start.line);
       nextDecorations.push({
         range: {
           startLineNumber: node.location.start.line,
@@ -115,24 +122,26 @@ export default memo(function Editor({
       });
     }
 
-    decorations.set(nextDecorations);
+    controller.setDecorations(nextDecorations);
   }, [highlightedNode, markers]);
 
   const onEditorMount: OnMount = useCallback(
     (editor, monaco) => {
-      const layoutScheduler = createEditorLayoutScheduler(editor);
-      const cleanupEditorLayout = observeEditorLayout(layoutScheduler);
+      const controller = createEditorController(editor);
+      const cleanupEditorLayout = observeEditorLayout(
+        controller.scheduleLayout
+      );
       const syntaxValidator = createStartSyntaxValidator(editor, monaco);
-      layoutSchedulerRef.current = layoutScheduler;
+      controllerRef.current = controller;
 
-      decorationsRef.current = editor.createDecorationsCollection([]);
       updateDecorations();
 
       editor.onDidDispose(() => {
         syntaxValidator.dispose();
         cleanupEditorLayout();
-        if (layoutSchedulerRef.current === layoutScheduler) {
-          layoutSchedulerRef.current = null;
+        controller.dispose();
+        if (controllerRef.current === controller) {
+          controllerRef.current = null;
         }
       });
 
@@ -191,7 +200,7 @@ export default memo(function Editor({
   }, [updateDecorations]);
 
   useLayoutEffect(() => {
-    layoutSchedulerRef.current?.schedule();
+    controllerRef.current?.scheduleLayout();
   }, [layoutSignal]);
 
   const options = useMemo<MonacoEditor.IStandaloneEditorConstructionOptions>(
