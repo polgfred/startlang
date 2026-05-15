@@ -141,6 +141,32 @@ describe('marker maps', () => {
     expect(lineMap.resolve(6)?.lineNumber).toBe(7);
   });
 
+  it('maps marker lines inside a top-level function body to the body statements', () => {
+    const source = `
+      print "before"
+
+      begin foo do
+        print "in foo"
+      end
+
+      print "after"
+      `;
+    const program = parse(`${source}\n`);
+    const beforePrintNode = program.main.elems[0];
+    const afterPrintNode = program.main.elems[1];
+    const insidePrintNode = (program.functions.foo.body as BlockNode).elems[0];
+    const markers: MarkerType[] = [];
+
+    // line 5 is the `print "in foo"` line inside the function body
+    markers[5] = 'breakpoint';
+
+    const markerMap = mapMarkers(program, markers);
+
+    expect(markerMap(insidePrintNode)).toBe('breakpoint');
+    expect(markerMap(beforePrintNode)).toBeUndefined();
+    expect(markerMap(afterPrintNode)).toBeUndefined();
+  });
+
   it('maps blank lines forward to the next child in the current block', () => {
     const source = `
       repeat 3 do

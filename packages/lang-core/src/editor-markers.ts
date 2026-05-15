@@ -106,10 +106,11 @@ export function buildMarkerLineMap(program: Program): MarkerLineMap {
     };
   }
 
-  visit(program.main);
+  // Visit function bodies first so their inner statements claim their own lines.
   for (const fn of Object.values(program.functions)) {
-    visit(fn.body, fn.body.location.start.line);
+    visit(fn.body);
   }
+  visit(program.main);
 
   return {
     mapMarkers,
