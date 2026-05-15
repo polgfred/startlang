@@ -74,7 +74,7 @@ export const mathFunctions: RuntimeFunctions = {
   }),
 
   format: define(
-    [T.number, T.literal('decimal', 'percent', 'currency')],
+    [T.number, T.enum('decimal', 'percent', 'currency')],
     (interpreter, [value, style]) => {
       switch (style) {
         case 'decimal': {

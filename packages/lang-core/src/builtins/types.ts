@@ -47,7 +47,7 @@ export const T = {
       true
     );
   },
-  literal<Values extends readonly Literal[]>(
+  enum<Values extends readonly Literal[]>(
     ...values: Values
   ): TypeSpec<Values[number]> {
     return make(values.map(String).join('|'), (v): v is Values[number] =>
