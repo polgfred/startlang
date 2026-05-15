@@ -11,8 +11,8 @@ import {
   type RunResult,
   type RuntimePause,
 } from '@startlang/lang-core/interpreter';
-import type { Program } from '@startlang/lang-core/program';
 import { parse, type ParseOptions } from '@startlang/lang-core/parser.peggy';
+import type { Program } from '@startlang/lang-core/program';
 import { runtimeGlobals } from '@startlang/lang-core/runtime-globals';
 
 import {

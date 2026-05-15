@@ -1,5 +1,6 @@
-import { Interpreter } from '@startlang/lang-core/interpreter';
 import { describe, expect, it } from 'vitest';
+
+import { Interpreter } from '@startlang/lang-core/interpreter';
 
 describe('data handlers', () => {
   it('selects handlers and formats values for presentation', () => {

@@ -1,9 +1,9 @@
+import { describe, expect, it, vi } from 'vitest';
+
 import { Interpreter, RuntimeError } from '@startlang/lang-core/interpreter';
-import { CallBodyFrame } from '@startlang/lang-core/nodes';
 import { parse } from '@startlang/lang-core/parser.peggy';
 import { runtimeGlobals } from '@startlang/lang-core/runtime-globals';
 import type { RuntimeFunctions } from '@startlang/lang-core/types';
-import { describe, expect, it, vi } from 'vitest';
 
 async function runSnippet(source: string, globals: RuntimeFunctions = {}) {
   const interpreter = new Interpreter();

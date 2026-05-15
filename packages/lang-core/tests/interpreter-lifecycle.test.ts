@@ -1,12 +1,13 @@
-import { Interpreter, type RunResult } from '@startlang/lang-core/interpreter';
-import { parse } from '@startlang/lang-core/parser.peggy';
-import { RuntimeHistory } from '@startlang/lang-core/runtime-history';
-import { runtimeGlobals } from '@startlang/lang-core/runtime-globals';
-import type { RuntimePause } from '@startlang/lang-core/interpreter';
-import type { MarkerType } from '@startlang/lang-core/types';
 import { describe, expect, it } from 'vitest';
 
 import { mapMarkers } from '../src/editor-markers.js';
+
+import { Interpreter, type RunResult } from '@startlang/lang-core/interpreter';
+import type { RuntimePause } from '@startlang/lang-core/interpreter';
+import { parse } from '@startlang/lang-core/parser.peggy';
+import { runtimeGlobals } from '@startlang/lang-core/runtime-globals';
+import { RuntimeHistory } from '@startlang/lang-core/runtime-history';
+import type { MarkerType } from '@startlang/lang-core/types';
 
 function parseSnippet(source: string) {
   return parse(`${source}\n`);

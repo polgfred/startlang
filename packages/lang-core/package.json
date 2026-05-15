@@ -18,7 +18,7 @@
     "./utils/*": "./src/utils/*.ts"
   },
   "scripts": {
-    "lint": "eslint src tools",
+    "lint": "eslint src tests tools",
     "repl": "tsx --import ./tools/hooks.js ./tools/repl.ts",
     "script": "tsx --import ./tools/hooks.js ./tools/script.ts",
     "test": "vitest run",

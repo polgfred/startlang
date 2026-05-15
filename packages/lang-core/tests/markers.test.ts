@@ -1,3 +1,7 @@
+import { describe, expect, it } from 'vitest';
+
+import { buildMarkerLineMap, mapMarkers } from '../src/editor-markers.js';
+
 import { EditorModel } from '@startlang/lang-core/editor-model';
 import { Interpreter } from '@startlang/lang-core/interpreter';
 import {
@@ -9,9 +13,6 @@ import {
 } from '@startlang/lang-core/nodes';
 import { parse } from '@startlang/lang-core/parser.peggy';
 import type { MarkerType } from '@startlang/lang-core/types';
-import { describe, expect, it } from 'vitest';
-
-import { buildMarkerLineMap, mapMarkers } from '../src/editor-markers.js';
 
 describe('marker maps', () => {
   function expectPaused(result: Awaited<ReturnType<Interpreter['run']>>) {
