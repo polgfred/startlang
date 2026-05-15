@@ -1,6 +1,11 @@
 import type { Interpreter } from '../interpreter.js';
 import type { CallNode, Frame } from '../nodes/index.js';
-import type { ListType, RecordType, RuntimeFunction } from '../types.js';
+import type {
+  ArgsType,
+  ListType,
+  RecordType,
+  RuntimeFunction,
+} from '../types.js';
 
 export type TypeSpec<T = unknown> = {
   readonly name: string;
@@ -66,7 +71,7 @@ export type Signature = {
   readonly params: readonly TypeSpec[];
   readonly impl: (
     interpreter: Interpreter,
-    args: readonly unknown[],
+    args: ArgsType,
     node: CallNode
   ) => Frame | void;
 };
@@ -87,7 +92,7 @@ export function signature<const S extends readonly TypeSpec[]>(
 
 function matchesSignature(
   signature: Signature,
-  args: readonly unknown[]
+  args: ArgsType
 ): boolean {
   const required = signature.params.filter((s) => !s.optional).length;
   const max = signature.params.length;
@@ -107,7 +112,7 @@ function describeSignature(signature: Signature): string {
 
 function describeArgs(
   interpreter: Interpreter,
-  args: readonly unknown[]
+  args: ArgsType
 ): string {
   const parts = args.map((a) => interpreter.getHandler(a).typeName);
   return `(${parts.join(', ')})`;
@@ -116,7 +121,7 @@ function describeArgs(
 function validateSignature(
   signature: Signature,
   interpreter: Interpreter,
-  args: readonly unknown[]
+  args: ArgsType
 ): void {
   const required = signature.params.filter((s) => !s.optional).length;
   const max = signature.params.length;
@@ -179,9 +184,12 @@ export function defineOverloads(...signatures: Signature[]): RuntimeFunction {
     }
     if (signatures.length === 1) {
       validateSignature(signatures[0], interpreter, args);
+    } else {
+      const expected = signatures.map(describeSignature).join(' | ');
+      const got = describeArgs(interpreter, args);
+      throw new Error(
+        `no matching signature, expected ${expected}, got ${got}`
+      );
     }
-    const expected = signatures.map(describeSignature).join(' | ');
-    const got = describeArgs(interpreter, args);
-    throw new Error(`no matching signature, expected ${expected}, got ${got}`);
   };
 }

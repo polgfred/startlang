@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { Interpreter, RuntimeError } from '@startlang/lang-core/interpreter';
 import { parse } from '@startlang/lang-core/parser.peggy';
 import { runtimeGlobals } from '@startlang/lang-core/runtime-globals';
-import type { RuntimeFunctions } from '@startlang/lang-core/types';
+import type { ArgsType, RuntimeFunctions } from '@startlang/lang-core/types';
 
 async function runSnippet(source: string, globals: RuntimeFunctions = {}) {
   const interpreter = new Interpreter();
@@ -25,7 +25,7 @@ function parseSnippet(source: string) {
 
 describe('core language snippets', () => {
   it('evaluates literals, operators, precedence, and interpolation', async () => {
-    const calls: (readonly unknown[])[] = [];
+    const calls: ArgsType[] = [];
 
     await runSnippet(
       `
@@ -61,7 +61,7 @@ describe('core language snippets', () => {
     const boom = vi.fn(() => {
       throw new Error('should not run');
     });
-    const calls: (readonly unknown[])[] = [];
+    const calls: ArgsType[] = [];
 
     await runSnippet(
       `
@@ -93,7 +93,7 @@ describe('core language snippets', () => {
   });
 
   it('builds and indexes lists, records, and strings', async () => {
-    const calls: (readonly unknown[])[] = [];
+    const calls: ArgsType[] = [];
 
     await runSnippet(
       `
@@ -123,7 +123,7 @@ describe('core language snippets', () => {
   });
 
   it('deletes variables and indexed values', async () => {
-    const calls: (readonly unknown[])[] = [];
+    const calls: ArgsType[] = [];
     const interpreter = await runSnippet(
       `
       item = "gone"
@@ -148,7 +148,7 @@ describe('core language snippets', () => {
   });
 
   it('dispatches data methods from the first argument type', async () => {
-    const calls: (readonly unknown[])[] = [];
+    const calls: ArgsType[] = [];
 
     await runSnippet(
       `
@@ -174,7 +174,7 @@ describe('core language snippets', () => {
   });
 
   it('dispatches numeric runtime methods', async () => {
-    const calls: (readonly unknown[])[] = [];
+    const calls: ArgsType[] = [];
 
     await runSnippet(
       `
@@ -201,7 +201,7 @@ describe('core language snippets', () => {
   });
 
   it('dispatches random number runtime functions', async () => {
-    const calls: (readonly unknown[])[] = [];
+    const calls: ArgsType[] = [];
 
     await runSnippet(
       `
@@ -224,7 +224,7 @@ describe('core language snippets', () => {
   });
 
   it('concatenates and compares strings, lists, and records', async () => {
-    const calls: (readonly unknown[])[] = [];
+    const calls: ArgsType[] = [];
 
     await runSnippet(
       `
@@ -296,7 +296,7 @@ describe('core language snippets', () => {
   });
 
   it('runs if, else-if, and else branches', async () => {
-    const calls: (readonly unknown[])[] = [];
+    const calls: ArgsType[] = [];
 
     await runSnippet(
       `
@@ -322,7 +322,7 @@ describe('core language snippets', () => {
   });
 
   it('runs repeat, while, numeric for, and for-in loops', async () => {
-    const calls: (readonly unknown[])[] = [];
+    const calls: ArgsType[] = [];
 
     const interpreter = await runSnippet(
       `
@@ -365,7 +365,7 @@ describe('core language snippets', () => {
   });
 
   it('handles break, next, and exit flow', async () => {
-    const calls: (readonly unknown[])[] = [];
+    const calls: ArgsType[] = [];
 
     await runSnippet(
       `
@@ -390,7 +390,7 @@ describe('core language snippets', () => {
   });
 
   it('defines functions with parameters, returns, nested calls, and local scope', async () => {
-    const calls: (readonly unknown[])[] = [];
+    const calls: ArgsType[] = [];
 
     const interpreter = await runSnippet(
       `
@@ -425,7 +425,7 @@ describe('core language snippets', () => {
   });
 
   it('runs user functions as commands and ignores their return for call flow', async () => {
-    const calls: (readonly unknown[])[] = [];
+    const calls: ArgsType[] = [];
 
     await runSnippet(
       `
@@ -448,7 +448,7 @@ describe('core language snippets', () => {
   });
 
   it('passes do-bodies to runtime command frames', async () => {
-    const calls: (readonly unknown[])[] = [];
+    const calls: ArgsType[] = [];
 
     await runSnippet(
       `

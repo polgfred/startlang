@@ -4,7 +4,7 @@ import type { CallNode, Frame } from './nodes';
 export interface RuntimeFunction {
   (
     interpreter: Interpreter,
-    args: readonly unknown[],
+    args: ArgsType,
     node: CallNode
   ): Frame | void;
 }
@@ -14,6 +14,8 @@ export type RuntimeFunctions = Readonly<Record<string, RuntimeFunction>>;
 export type NamespaceType = Readonly<Record<string, unknown>>;
 
 export type IndexType = number | string;
+
+export type ArgsType = readonly unknown[];
 
 export type ListType = readonly unknown[];
 
