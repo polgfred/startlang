@@ -4,7 +4,7 @@ import { adjustIndex } from '../utils/index.js';
 import { define, T } from './types.js';
 
 export const coreFunctions: RuntimeFunctions = {
-  len: define([T.oneOf(T.string, T.list, T.record)], (interpreter, [value]) => {
+  len: define([T.union(T.string, T.list, T.record)], (interpreter, [value]) => {
     if (typeof value === 'string' || Array.isArray(value)) {
       interpreter.setResult(value.length);
     } else {
@@ -13,7 +13,7 @@ export const coreFunctions: RuntimeFunctions = {
   }),
 
   range: define(
-    [T.oneOf(T.string, T.list), T.number, T.number],
+    [T.union(T.string, T.list), T.number, T.number],
     (interpreter, [value, start, end]) => {
       start = adjustIndex(start, value.length);
       end = adjustIndex(end, value.length);

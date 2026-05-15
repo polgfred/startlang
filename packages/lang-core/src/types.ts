@@ -1,13 +1,11 @@
 import type { Interpreter } from './interpreter';
 import type { CallNode, Frame } from './nodes';
 
-export interface RuntimeFunction {
-  (
-    interpreter: Interpreter,
-    args: ArgsType,
-    node: CallNode
-  ): Frame | void;
-}
+export type RuntimeFunction = (
+  interpreter: Interpreter,
+  args: ArgsType,
+  node: CallNode
+) => Frame | void;
 
 export type RuntimeFunctions = Readonly<Record<string, RuntimeFunction>>;
 

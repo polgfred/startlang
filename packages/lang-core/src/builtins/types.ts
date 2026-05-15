@@ -10,7 +10,7 @@ import type {
 export type TypeSpec<T = unknown> = {
   readonly name: string;
   readonly check: (value: unknown) => value is T;
-  readonly optional?: boolean;
+  readonly optional: boolean;
 };
 
 export type ValueOf<S> = S extends TypeSpec<infer T> ? T : never;
@@ -21,14 +21,16 @@ export type ValuesOf<S extends readonly TypeSpec[]> = {
 
 function make<T>(
   name: string,
-  check: (value: unknown) => value is T
+  check: (value: unknown) => value is T,
+  optional = false
 ): TypeSpec<T> {
-  return { name, check };
+  return { name, check, optional };
 }
 
 type Literal = string | number | boolean | null;
 
 export const T = {
+  any: make('any', (_v): _v is unknown => true),
   number: make('number', (v): v is number => typeof v === 'number'),
   string: make('string', (v): v is string => typeof v === 'string'),
   boolean: make('boolean', (v): v is boolean => typeof v === 'boolean'),
@@ -38,26 +40,21 @@ export const T = {
     (v): v is RecordType =>
       typeof v === 'object' && v !== null && !Array.isArray(v)
   ),
-  any: make('any', (_v): _v is unknown => true),
-
-  literal<const Values extends readonly Literal[]>(
-    ...values: Values
-  ): TypeSpec<Values[number]> {
-    const allowed = new Set<Literal>(values);
-    return make(values.map(String).join('|'), (v): v is Values[number] =>
-      allowed.has(v as Literal)
+  optional<U>(spec: TypeSpec<U>): TypeSpec<U | undefined> {
+    return make(
+      spec.name,
+      (v): v is U | undefined => v === undefined || spec.check(v),
+      true
     );
   },
-
-  optional<U>(spec: TypeSpec<U>): TypeSpec<U | undefined> {
-    return {
-      name: spec.name,
-      check: (v): v is U | undefined => v === undefined || spec.check(v),
-      optional: true,
-    };
+  literal<Values extends readonly Literal[]>(
+    ...values: Values
+  ): TypeSpec<Values[number]> {
+    return make(values.map(String).join('|'), (v): v is Values[number] =>
+      values.includes(v as Literal)
+    );
   },
-
-  oneOf<Specs extends readonly TypeSpec[]>(
+  union<Specs extends readonly TypeSpec[]>(
     ...specs: Specs
   ): TypeSpec<ValueOf<Specs[number]>> {
     return make(
@@ -67,7 +64,7 @@ export const T = {
   },
 };
 
-export type Signature = {
+type Signature = {
   readonly params: readonly TypeSpec[];
   readonly impl: (
     interpreter: Interpreter,
@@ -90,10 +87,7 @@ export function signature<const S extends readonly TypeSpec[]>(
   };
 }
 
-function matchesSignature(
-  signature: Signature,
-  args: ArgsType
-): boolean {
+function matchesSignature(signature: Signature, args: ArgsType): boolean {
   const required = signature.params.filter((s) => !s.optional).length;
   const max = signature.params.length;
   if (args.length < required || args.length > max) return false;
@@ -110,10 +104,7 @@ function describeSignature(signature: Signature): string {
   return `(${parts.join(', ')})`;
 }
 
-function describeArgs(
-  interpreter: Interpreter,
-  args: ArgsType
-): string {
+function describeArgs(interpreter: Interpreter, args: ArgsType): string {
   const parts = args.map((a) => interpreter.getHandler(a).typeName);
   return `(${parts.join(', ')})`;
 }
