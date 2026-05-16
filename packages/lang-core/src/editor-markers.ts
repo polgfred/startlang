@@ -19,6 +19,7 @@ export const emptyMarkerMap: MarkerMap = () => undefined;
 
 export interface MarkerLineMap {
   isMarkable(lineNumber: number): boolean;
+  markableLines(): readonly number[];
   mapMarkers(getMarker: MarkerLineLookup): MarkerMap;
 }
 
@@ -55,6 +56,10 @@ export function buildMarkerLineMap(program: Program): MarkerLineMap {
     return lineToNode.has(lineNumber);
   }
 
+  function markableLines(): readonly number[] {
+    return [...lineToNode.keys()];
+  }
+
   function mapMarkers(getMarker: MarkerLineLookup): MarkerMap {
     return (node) => {
       if (lineToNode.get(node.location.start.line) !== node) {
@@ -71,6 +76,7 @@ export function buildMarkerLineMap(program: Program): MarkerLineMap {
 
   return {
     isMarkable,
+    markableLines,
     mapMarkers,
   };
 }

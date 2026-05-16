@@ -7,6 +7,12 @@
   margin-top: -3px;
 }
 
+.editor :global(.start-breakpoint),
+.editor :global(.start-snapshot),
+.editor :global(.start-marker-hint) {
+  cursor: pointer;
+}
+
 .editor :global(.start-breakpoint::before) {
   color: red;
   content: '\2022';

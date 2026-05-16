@@ -88,6 +88,14 @@ export class EditorModel {
     }
   }
 
+  markableLines(): readonly number[] {
+    try {
+      return this.parseCurrentSource().markerLineMap.markableLines();
+    } catch {
+      return [];
+    }
+  }
+
   parseProgram(): EditorProgram {
     const { markerLineMap, program } = this.parseCurrentSource();
     return {

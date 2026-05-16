@@ -8,10 +8,7 @@ import styles from './editor.module.css';
 
 function createEditorController(editor: MonacoEditor.ICodeEditor) {
   const decorations = editor.createDecorationsCollection([]);
-  const hintDecorations = editor.createDecorationsCollection([]);
-  const markerLanes = new Set<number>();
   let layoutAnimationFrame: number | null = null;
-  let hintLine: number | null = null;
 
   function scheduleLayout() {
     if (layoutAnimationFrame !== null) {
@@ -30,47 +27,7 @@ function createEditorController(editor: MonacoEditor.ICodeEditor) {
   }
 
   function setDecorations(next: MonacoEditor.IModelDeltaDecoration[]) {
-    markerLanes.clear();
-    for (const decoration of next) {
-      if (decoration.options.glyphMargin?.position === 1) {
-        markerLanes.add(decoration.range.startLineNumber);
-      }
-    }
     decorations.set(next);
-    if (markerLanes.has(hintLine!)) {
-      hintLine = null;
-      hintDecorations.set([]);
-    }
-  }
-
-  function setHintLine(lineNumber: number | null) {
-    const target = markerLanes.has(lineNumber!) ? null : lineNumber;
-    if (target === hintLine) {
-      return;
-    }
-
-    hintLine = target;
-    hintDecorations.set(
-      target === null
-        ? []
-        : [
-            {
-              range: {
-                startLineNumber: target,
-                startColumn: 1,
-                endLineNumber: target,
-                endColumn: 1,
-              },
-              options: {
-                glyphMarginClassName: 'start-marker-hint',
-                glyphMargin: { position: 1, persistLane: true },
-                glyphMarginHoverMessage: {
-                  value: 'Click here to set a breakpoint or snapshot.',
-                },
-              },
-            },
-          ]
-    );
   }
 
   function dispose() {
@@ -80,17 +37,11 @@ function createEditorController(editor: MonacoEditor.ICodeEditor) {
     }
   }
 
-  function hasMarker(lineNumber: number): boolean {
-    return markerLanes.has(lineNumber);
-  }
-
   return {
     dispose,
-    hasMarker,
     revealLine,
     scheduleLayout,
     setDecorations,
-    setHintLine,
   };
 }
 
@@ -114,7 +65,7 @@ export default memo(function Editor({
 }) {
   const {
     highlightedNode,
-    isMarkable,
+    markableLines,
     markers,
     setValue,
     source,
@@ -157,8 +108,11 @@ export default memo(function Editor({
       });
     }
 
+    const markedLines = new Set<number>();
+
     for (const { lineNumber, marker } of markers) {
       const label = marker === 'breakpoint' ? 'Breakpoint' : 'Snapshot';
+      markedLines.add(lineNumber);
       nextDecorations.push({
         range: {
           startLineNumber: lineNumber,
@@ -182,8 +136,29 @@ export default memo(function Editor({
       });
     }
 
+    for (const lineNumber of markableLines()) {
+      if (markedLines.has(lineNumber)) {
+        continue;
+      }
+      nextDecorations.push({
+        range: {
+          startLineNumber: lineNumber,
+          startColumn: 1,
+          endLineNumber: lineNumber,
+          endColumn: 1,
+        },
+        options: {
+          glyphMarginClassName: 'start-marker-hint',
+          glyphMargin: { position: 1, persistLane: true },
+          glyphMarginHoverMessage: {
+            value: 'Click here to set a breakpoint or snapshot.',
+          },
+        },
+      });
+    }
+
     controller.setDecorations(nextDecorations);
-  }, [highlightedNode, markers]);
+  }, [highlightedNode, markableLines, markers, source]);
 
   const onEditorMount: OnMount = useCallback(
     (editor, monaco) => {
@@ -216,34 +191,6 @@ export default memo(function Editor({
           toggleMarker(ev.target.position.lineNumber);
         }
       });
-      let isPointer = false;
-      const setPointer = (nextIsPointer: boolean) => {
-        if (nextIsPointer === isPointer) {
-          return;
-        }
-
-        isPointer = nextIsPointer;
-        const node = editor.getDomNode();
-        if (node) {
-          node.style.cursor = nextIsPointer ? 'pointer' : '';
-        }
-      };
-
-      editor.onMouseMove((ev) => {
-        // 2 = GUTTER_GLYPH_MARGIN
-        const line =
-          ev.target.type === 2 && ev.target.position
-            ? ev.target.position.lineNumber
-            : null;
-        const actionable =
-          line !== null && (isMarkable(line) || controller.hasMarker(line));
-        setPointer(actionable);
-        controller.setHintLine(actionable ? line : null);
-      });
-      editor.onMouseLeave(() => {
-        setPointer(false);
-        controller.setHintLine(null);
-      });
 
       window.requestAnimationFrame(async () => {
         await document.fonts.ready;
@@ -253,7 +200,7 @@ export default memo(function Editor({
         runProgram();
       });
     },
-    [isMarkable, runProgram, toggleMarker, updateDecorations]
+    [runProgram, toggleMarker, updateDecorations]
   );
 
   const onEditorChange = useCallback(
