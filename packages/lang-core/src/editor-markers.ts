@@ -47,12 +47,12 @@ export function buildMarkerLineMap(program: Program): MarkerLineMap {
     claimedLines.add(lineNumber);
   }
 
-  function visit(node: Node, startLine = node.location.start.line) {
+  function visit(node: Node, startLine: number) {
     if (!(node instanceof BlockNode)) {
       return;
     }
 
-    let index = startLine ?? node.location.start.line;
+    let index = startLine;
 
     for (const child of node.elems) {
       const { end } = child.location;
@@ -108,9 +108,9 @@ export function buildMarkerLineMap(program: Program): MarkerLineMap {
 
   // Visit function bodies first so their inner statements claim their own lines.
   for (const fn of Object.values(program.functions)) {
-    visit(fn.body);
+    visit(fn.body, fn.location.start.line + 1);
   }
-  visit(program.main);
+  visit(program.main, 1);
 
   return {
     mapMarkers,
