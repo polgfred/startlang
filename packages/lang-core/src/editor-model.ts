@@ -73,26 +73,18 @@ export class EditorModel {
   }
 
   toggleMarker(lineNumber: number) {
-    if (this.markers[lineNumber]) {
+    if (this.markers[lineNumber] || this.isMarkable(lineNumber)) {
       this.cycleMarker(lineNumber);
       return true;
     }
-
-    const resolvedLineNumber = this.resolveMarkerLine(lineNumber);
-    if (resolvedLineNumber === null) {
-      return false;
-    }
-
-    this.cycleMarker(resolvedLineNumber);
-    return true;
+    return false;
   }
 
-  private resolveMarkerLine(lineNumber: number): number | null {
+  private isMarkable(lineNumber: number): boolean {
     try {
-      const { markerLineMap } = this.parseCurrentSource();
-      return markerLineMap.resolve(lineNumber)?.lineNumber ?? null;
+      return this.parseCurrentSource().markerLineMap.isMarkable(lineNumber);
     } catch {
-      return null;
+      return false;
     }
   }
 

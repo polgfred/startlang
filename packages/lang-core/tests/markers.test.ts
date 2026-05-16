@@ -30,7 +30,7 @@ describe('marker maps', () => {
       end
       `);
 
-    expect(model.toggleMarker(3)).toBe(true);
+    expect(model.toggleMarker(4)).toBe(true);
     expect(model.getSnapshot().markers).toEqual([
       { lineNumber: 4, marker: 'breakpoint' },
     ]);
@@ -124,7 +124,7 @@ describe('marker maps', () => {
     expect(elsePrintNode.location.start.line).toBe(7);
   });
 
-  it('resolves clicked lines to marker owner start lines', () => {
+  it('marks only the first line of each statement as clickable', () => {
     const source = `
       repeat 3 do
 
@@ -136,10 +136,12 @@ describe('marker maps', () => {
     const program = parse(`${source}\n`);
     const lineMap = buildMarkerLineMap(program);
 
-    expect(lineMap.resolve(2)?.lineNumber).toBe(2);
-    expect(lineMap.resolve(3)?.lineNumber).toBe(4);
-    expect(lineMap.resolve(5)?.lineNumber).toBe(2);
-    expect(lineMap.resolve(6)?.lineNumber).toBe(7);
+    expect(lineMap.isMarkable(2)).toBe(true); // repeat
+    expect(lineMap.isMarkable(3)).toBe(false); // blank inside body
+    expect(lineMap.isMarkable(4)).toBe(true); // print "inside"
+    expect(lineMap.isMarkable(5)).toBe(false); // end
+    expect(lineMap.isMarkable(6)).toBe(false); // blank between
+    expect(lineMap.isMarkable(7)).toBe(true); // print "after"
   });
 
   it('maps marker lines inside a top-level function body to the body statements', () => {
@@ -168,32 +170,7 @@ describe('marker maps', () => {
     expect(markerMap(afterPrintNode)).toBeUndefined();
   });
 
-  it('maps blank lines forward to the next child in the current block', () => {
-    const source = `
-      repeat 3 do
-
-        print "inside"
-      end
-
-      print "after"
-      `;
-    const program = parse(`${source}\n`);
-    const repeatNode = program.main.elems[0] as RepeatNode;
-    const insidePrintNode = (repeatNode.body as BlockNode).elems[0];
-    const afterPrintNode = program.main.elems[1];
-    const markers: MarkerType[] = [];
-
-    markers[3] = 'breakpoint';
-    markers[6] = 'snapshot';
-
-    const markerMap = mapMarkers(program, markers);
-
-    expect(markerMap(insidePrintNode)).toBe('breakpoint');
-    expect(markerMap(afterPrintNode)).toBe('snapshot');
-    expect(markerMap(repeatNode)).toBeUndefined();
-  });
-
-  it('maps deeply nested block lines without repeated subtree walks', () => {
+it('maps deeply nested block lines without repeated subtree walks', () => {
     const source = `
       begin render_sieve do
         table do

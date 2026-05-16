@@ -17,45 +17,21 @@ export type MarkerLineLookup = (lineNumber: number) => MarkerType | undefined;
 
 export const emptyMarkerMap: MarkerMap = () => undefined;
 
-export interface MarkerResolution {
-  node: Node;
-  lineNumber: number;
-}
-
 export interface MarkerLineMap {
-  resolve(lineNumber: number): MarkerResolution | null;
+  isMarkable(lineNumber: number): boolean;
   mapMarkers(getMarker: MarkerLineLookup): MarkerMap;
 }
 
 export function buildMarkerLineMap(program: Program): MarkerLineMap {
-  const nodeToLines = new WeakMap<Node, number[]>();
   const lineToNode = new Map<number, Node>();
-  const claimedLines = new Set<number>();
 
-  function addLine(node: Node, lineNumber: number) {
-    if (claimedLines.has(lineNumber)) {
-      return;
-    }
-
-    const lines = nodeToLines.get(node);
-    if (lines) {
-      lines.push(lineNumber);
-    } else {
-      nodeToLines.set(node, [lineNumber]);
-    }
-    lineToNode.set(lineNumber, node);
-    claimedLines.add(lineNumber);
-  }
-
-  function visit(node: Node, startLine: number) {
+  function visit(node: Node) {
     if (!(node instanceof BlockNode)) {
       return;
     }
 
-    let index = startLine;
-
     for (const child of node.elems) {
-      const { end } = child.location;
+      lineToNode.set(child.location.start.line, child);
 
       if (
         (child instanceof CallNode ||
@@ -65,56 +41,37 @@ export function buildMarkerLineMap(program: Program): MarkerLineMap {
           child instanceof RepeatNode) &&
         child.body
       ) {
-        visit(child.body, child.location.start.line + 1);
+        visit(child.body);
       } else if (child instanceof IfNode) {
-        visit(child.thenBody, child.location.start.line + 1);
+        visit(child.thenBody);
         if (child.elseBody) {
-          visit(child.elseBody, child.elseBody.location.start.line);
+          visit(child.elseBody);
         }
-      }
-
-      for (; index <= end.line; ++index) {
-        addLine(child, index);
       }
     }
   }
 
-  function resolve(lineNumber: number): MarkerResolution | null {
-    const markerNode = lineToNode.get(lineNumber);
-
-    if (!markerNode) {
-      return null;
-    }
-
-    return {
-      node: markerNode,
-      lineNumber: markerNode.location.start.line,
-    };
+  function isMarkable(lineNumber: number): boolean {
+    return lineToNode.has(lineNumber);
   }
 
   function mapMarkers(getMarker: MarkerLineLookup): MarkerMap {
     return (node) => {
-      const lines = nodeToLines.get(node);
-      if (lines) {
-        for (const lineNumber of lines) {
-          const marker = getMarker(lineNumber);
-          if (marker) {
-            return marker;
-          }
-        }
+      if (lineToNode.get(node.location.start.line) !== node) {
+        return undefined;
       }
+      return getMarker(node.location.start.line);
     };
   }
 
-  // Visit function bodies first so their inner statements claim their own lines.
   for (const fn of Object.values(program.functions)) {
-    visit(fn.body, fn.location.start.line + 1);
+    visit(fn.body);
   }
-  visit(program.main, 1);
+  visit(program.main);
 
   return {
+    isMarkable,
     mapMarkers,
-    resolve,
   };
 }
 

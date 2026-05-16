@@ -9,6 +9,7 @@ import styles from './editor.module.css';
 function createEditorController(editor: MonacoEditor.ICodeEditor) {
   const decorations = editor.createDecorationsCollection([]);
   const hintDecorations = editor.createDecorationsCollection([]);
+  const markerLanes = new Set<number>();
   let layoutAnimationFrame: number | null = null;
   let hintLine: number | null = null;
 
@@ -29,24 +30,35 @@ function createEditorController(editor: MonacoEditor.ICodeEditor) {
   }
 
   function setDecorations(next: MonacoEditor.IModelDeltaDecoration[]) {
+    markerLanes.clear();
+    for (const decoration of next) {
+      if (decoration.options.glyphMargin?.position === 1) {
+        markerLanes.add(decoration.range.startLineNumber);
+      }
+    }
     decorations.set(next);
+    if (markerLanes.has(hintLine!)) {
+      hintLine = null;
+      hintDecorations.set([]);
+    }
   }
 
   function setHintLine(lineNumber: number | null) {
-    if (lineNumber === hintLine) {
+    const target = markerLanes.has(lineNumber!) ? null : lineNumber;
+    if (target === hintLine) {
       return;
     }
 
-    hintLine = lineNumber;
+    hintLine = target;
     hintDecorations.set(
-      lineNumber === null
+      target === null
         ? []
         : [
             {
               range: {
-                startLineNumber: lineNumber,
+                startLineNumber: target,
                 startColumn: 1,
-                endLineNumber: lineNumber,
+                endLineNumber: target,
                 endColumn: 1,
               },
               options: {
