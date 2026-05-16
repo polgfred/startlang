@@ -78,13 +78,22 @@ export class EditorModel {
       return true;
     }
 
-    const resolvedLineNumber = this.resolveMarkerLineNumber(lineNumber);
+    const resolvedLineNumber = this.resolveMarkerLine(lineNumber);
     if (resolvedLineNumber === null) {
       return false;
     }
 
     this.cycleMarker(resolvedLineNumber);
     return true;
+  }
+
+  resolveMarkerLine(lineNumber: number): number | null {
+    try {
+      const { markerLineMap } = this.parseCurrentSource();
+      return markerLineMap.resolve(lineNumber)?.lineNumber ?? null;
+    } catch {
+      return null;
+    }
   }
 
   parseProgram(): EditorProgram {
@@ -133,11 +142,6 @@ export class EditorModel {
       this.parseCache = { version: this.version, result };
       throw result;
     }
-  }
-
-  private resolveMarkerLineNumber(lineNumber: number) {
-    const { markerLineMap } = this.parseCurrentSource();
-    return markerLineMap.resolve(lineNumber)?.lineNumber ?? null;
   }
 
   private readSnapshot(): EditorSnapshot {

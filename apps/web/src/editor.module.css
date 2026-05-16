@@ -13,6 +13,13 @@
   font-size: 40px;
 }
 
+.editor :global(.start-breakpoint-ghost::before) {
+  color: red;
+  content: '\2022';
+  font-size: 40px;
+  opacity: 0.3;
+}
+
 .editor :global(.start-snapshot::before) {
   color: green;
   content: '\2022';

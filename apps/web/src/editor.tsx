@@ -8,7 +8,9 @@ import styles from './editor.module.css';
 
 function createEditorController(editor: MonacoEditor.ICodeEditor) {
   const decorations = editor.createDecorationsCollection([]);
+  const hoverDecorations = editor.createDecorationsCollection([]);
   let layoutAnimationFrame: number | null = null;
+  let hoveredLine: number | null = null;
 
   function scheduleLayout() {
     if (layoutAnimationFrame !== null) {
@@ -30,6 +32,32 @@ function createEditorController(editor: MonacoEditor.ICodeEditor) {
     decorations.set(next);
   }
 
+  function setHoveredLine(lineNumber: number | null) {
+    if (lineNumber === hoveredLine) {
+      return;
+    }
+
+    hoveredLine = lineNumber;
+    hoverDecorations.set(
+      lineNumber === null
+        ? []
+        : [
+            {
+              range: {
+                startLineNumber: lineNumber,
+                startColumn: 1,
+                endLineNumber: lineNumber,
+                endColumn: 1,
+              },
+              options: {
+                glyphMarginClassName: 'start-breakpoint-ghost',
+                glyphMargin: { position: 1, persistLane: true },
+              },
+            },
+          ]
+    );
+  }
+
   function dispose() {
     if (layoutAnimationFrame !== null) {
       window.cancelAnimationFrame(layoutAnimationFrame);
@@ -37,7 +65,13 @@ function createEditorController(editor: MonacoEditor.ICodeEditor) {
     }
   }
 
-  return { dispose, revealLine, scheduleLayout, setDecorations };
+  return {
+    dispose,
+    revealLine,
+    scheduleLayout,
+    setDecorations,
+    setHoveredLine,
+  };
 }
 
 type EditorController = ReturnType<typeof createEditorController>;
@@ -58,8 +92,14 @@ export default memo(function Editor({
   isReadOnly: boolean;
   layoutSignal: unknown;
 }) {
-  const { highlightedNode, markers, setValue, source, toggleMarker } =
-    useEditor();
+  const {
+    highlightedNode,
+    markers,
+    resolveMarkerLine,
+    setValue,
+    source,
+    toggleMarker,
+  } = useEditor();
   const controllerRef = useRef<EditorController | null>(null);
 
   const onBeforeMount: BeforeMount = useCallback((monaco) => {
@@ -171,10 +211,17 @@ export default memo(function Editor({
 
       editor.onMouseMove((ev) => {
         // 2 = GUTTER_GLYPH_MARGIN
-        setPointer(ev.target.type === 2);
+        const inGutter = ev.target.type === 2;
+        setPointer(inGutter);
+        controller.setHoveredLine(
+          inGutter && ev.target.position
+            ? resolveMarkerLine(ev.target.position.lineNumber)
+            : null
+        );
       });
       editor.onMouseLeave(() => {
         setPointer(false);
+        controller.setHoveredLine(null);
       });
 
       window.requestAnimationFrame(async () => {
@@ -185,7 +232,7 @@ export default memo(function Editor({
         runProgram();
       });
     },
-    [runProgram, toggleMarker, updateDecorations]
+    [resolveMarkerLine, runProgram, toggleMarker, updateDecorations]
   );
 
   const onEditorChange = useCallback(
