@@ -46,8 +46,9 @@
 }
 
 .editor :global(.monaco-editor-overlaymessage),
-.editor :global(.monaco-editor-overlaymessage .message),
-.editor :global(.monaco-editor-overlaymessage .message p) {
+.editor :global(.monaco-editor-overlaymessage *),
+.editor :global(.monaco-hover),
+.editor :global(.monaco-hover *) {
   font-family: var(--font-ui);
   font-size: 14px;
 }
