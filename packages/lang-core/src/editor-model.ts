@@ -80,7 +80,7 @@ export class EditorModel {
     return false;
   }
 
-  private isMarkable(lineNumber: number): boolean {
+  isMarkable(lineNumber: number): boolean {
     try {
       return this.parseCurrentSource().markerLineMap.isMarkable(lineNumber);
     } catch {

@@ -80,8 +80,13 @@ function createEditorController(editor: MonacoEditor.ICodeEditor) {
     }
   }
 
+  function hasMarker(lineNumber: number): boolean {
+    return markerLanes.has(lineNumber);
+  }
+
   return {
     dispose,
+    hasMarker,
     revealLine,
     scheduleLayout,
     setDecorations,
@@ -107,8 +112,14 @@ export default memo(function Editor({
   isReadOnly: boolean;
   layoutSignal: unknown;
 }) {
-  const { highlightedNode, markers, setValue, source, toggleMarker } =
-    useEditor();
+  const {
+    highlightedNode,
+    isMarkable,
+    markers,
+    setValue,
+    source,
+    toggleMarker,
+  } = useEditor();
   const controllerRef = useRef<EditorController | null>(null);
 
   const onBeforeMount: BeforeMount = useCallback((monaco) => {
@@ -220,13 +231,14 @@ export default memo(function Editor({
 
       editor.onMouseMove((ev) => {
         // 2 = GUTTER_GLYPH_MARGIN
-        const inGutter = ev.target.type === 2;
-        setPointer(inGutter);
-        controller.setHintLine(
-          inGutter && ev.target.position
+        const line =
+          ev.target.type === 2 && ev.target.position
             ? ev.target.position.lineNumber
-            : null
-        );
+            : null;
+        const actionable =
+          line !== null && (isMarkable(line) || controller.hasMarker(line));
+        setPointer(actionable);
+        controller.setHintLine(actionable ? line : null);
       });
       editor.onMouseLeave(() => {
         setPointer(false);
@@ -241,7 +253,7 @@ export default memo(function Editor({
         runProgram();
       });
     },
-    [runProgram, toggleMarker, updateDecorations]
+    [isMarkable, runProgram, toggleMarker, updateDecorations]
   );
 
   const onEditorChange = useCallback(
