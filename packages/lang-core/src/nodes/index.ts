@@ -23,6 +23,7 @@ export * from './record.js';
 export * from './repeat.js';
 export * from './return.js';
 export * from './set.js';
+export * from './snapshot.js';
 export * from './template-string.js';
 export * from './unary-op.js';
 export * from './var-index.js';

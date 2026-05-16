@@ -25,6 +25,7 @@
     RepeatNode,
     ReturnNode,
     SetNode,
+    SnapshotNode,
     TemplateStringNode,
     UnaryOpNode,
     VarIndexNode,
@@ -215,6 +216,7 @@ FlowStatement
   / break { return new BreakNode().at(location()); }
   / next { return new NextNode().at(location()); }
   / pause { return new PauseNode().at(location()); }
+  / snapshot { return new SnapshotNode().at(location()); }
   / return result:(__ @Value)? { return new ReturnNode(result).at(location()); }
 
 InputStatement
@@ -491,6 +493,8 @@ input = @"input" WB
 
 pause = @"pause" WB
 
+snapshot = @"snapshot" WB
+
 and = @"and" WB
 
 or = @"or" WB
@@ -524,6 +528,7 @@ Reserved
   / let
   / input
   / pause
+  / snapshot
   / and
   / or
   / not

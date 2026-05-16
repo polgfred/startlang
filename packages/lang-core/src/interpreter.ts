@@ -96,11 +96,6 @@ export class Interpreter {
   constructor() {
     installHandlers(this);
     installBuiltins(this);
-    this.registerGlobals({
-      snapshot(interpreter) {
-        interpreter.setEffect(snapshotEffect);
-      },
-    });
   }
 
   get isPaused() {
