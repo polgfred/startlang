@@ -87,7 +87,7 @@ export class EditorModel {
     return true;
   }
 
-  resolveMarkerLine(lineNumber: number): number | null {
+  private resolveMarkerLine(lineNumber: number): number | null {
     try {
       const { markerLineMap } = this.parseCurrentSource();
       return markerLineMap.resolve(lineNumber)?.lineNumber ?? null;

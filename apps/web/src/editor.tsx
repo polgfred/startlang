@@ -8,9 +8,9 @@ import styles from './editor.module.css';
 
 function createEditorController(editor: MonacoEditor.ICodeEditor) {
   const decorations = editor.createDecorationsCollection([]);
-  const hoverDecorations = editor.createDecorationsCollection([]);
+  const hintDecorations = editor.createDecorationsCollection([]);
   let layoutAnimationFrame: number | null = null;
-  let hoveredLine: number | null = null;
+  let hintLine: number | null = null;
 
   function scheduleLayout() {
     if (layoutAnimationFrame !== null) {
@@ -32,13 +32,13 @@ function createEditorController(editor: MonacoEditor.ICodeEditor) {
     decorations.set(next);
   }
 
-  function setHoveredLine(lineNumber: number | null) {
-    if (lineNumber === hoveredLine) {
+  function setHintLine(lineNumber: number | null) {
+    if (lineNumber === hintLine) {
       return;
     }
 
-    hoveredLine = lineNumber;
-    hoverDecorations.set(
+    hintLine = lineNumber;
+    hintDecorations.set(
       lineNumber === null
         ? []
         : [
@@ -50,8 +50,11 @@ function createEditorController(editor: MonacoEditor.ICodeEditor) {
                 endColumn: 1,
               },
               options: {
-                glyphMarginClassName: 'start-breakpoint-ghost',
+                glyphMarginClassName: 'start-marker-hint',
                 glyphMargin: { position: 1, persistLane: true },
+                glyphMarginHoverMessage: {
+                  value: 'Click here to set a breakpoint or snapshot.',
+                },
               },
             },
           ]
@@ -70,7 +73,7 @@ function createEditorController(editor: MonacoEditor.ICodeEditor) {
     revealLine,
     scheduleLayout,
     setDecorations,
-    setHoveredLine,
+    setHintLine,
   };
 }
 
@@ -92,14 +95,8 @@ export default memo(function Editor({
   isReadOnly: boolean;
   layoutSignal: unknown;
 }) {
-  const {
-    highlightedNode,
-    markers,
-    resolveMarkerLine,
-    setValue,
-    source,
-    toggleMarker,
-  } = useEditor();
+  const { highlightedNode, markers, setValue, source, toggleMarker } =
+    useEditor();
   const controllerRef = useRef<EditorController | null>(null);
 
   const onBeforeMount: BeforeMount = useCallback((monaco) => {
@@ -213,15 +210,15 @@ export default memo(function Editor({
         // 2 = GUTTER_GLYPH_MARGIN
         const inGutter = ev.target.type === 2;
         setPointer(inGutter);
-        controller.setHoveredLine(
+        controller.setHintLine(
           inGutter && ev.target.position
-            ? resolveMarkerLine(ev.target.position.lineNumber)
+            ? ev.target.position.lineNumber
             : null
         );
       });
       editor.onMouseLeave(() => {
         setPointer(false);
-        controller.setHoveredLine(null);
+        controller.setHintLine(null);
       });
 
       window.requestAnimationFrame(async () => {
@@ -232,7 +229,7 @@ export default memo(function Editor({
         runProgram();
       });
     },
-    [resolveMarkerLine, runProgram, toggleMarker, updateDecorations]
+    [runProgram, toggleMarker, updateDecorations]
   );
 
   const onEditorChange = useCallback(

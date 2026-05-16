@@ -35,7 +35,6 @@ interface EditorContextValue {
   parseProgram(): EditorProgram;
   highlightNode(node: Node | null, kind?: EditorHighlightKind): void;
   toggleMarker(lineNumber: number): void;
-  resolveMarkerLine(lineNumber: number): number | null;
   source: string;
   markers: readonly EditorMarker[];
   highlightedNode: EditorHighlight | null;
@@ -223,8 +222,6 @@ function createEditorStore(initialSourceValue: string) {
     getSnapshot: () => model.getSnapshot(),
     getValue: () => model.getSource(),
     parseProgram: () => model.parseProgram(),
-    resolveMarkerLine: (lineNumber: number) =>
-      model.resolveMarkerLine(lineNumber),
     clearMarkers,
     setValue,
     subscribe,
@@ -253,11 +250,6 @@ export function EditorProvider({ children }: { children: ReactNode }) {
     (lineNumber: number) => {
       editorStore.toggleMarker(lineNumber);
     },
-    [editorStore]
-  );
-
-  const resolveMarkerLine = useCallback(
-    (lineNumber: number) => editorStore.resolveMarkerLine(lineNumber),
     [editorStore]
   );
 
@@ -292,7 +284,6 @@ export function EditorProvider({ children }: { children: ReactNode }) {
     parseProgram,
     highlightNode,
     toggleMarker,
-    resolveMarkerLine,
     source,
     markers,
     highlightedNode,

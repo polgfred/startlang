@@ -13,11 +13,11 @@
   font-size: 40px;
 }
 
-.editor :global(.start-breakpoint-ghost::before) {
-  color: red;
-  content: '\2022';
-  font-size: 40px;
-  opacity: 0.3;
+.editor :global(.start-marker-hint::before) {
+  content: '';
+  display: block;
+  width: 14px;
+  height: 14px;
 }
 
 .editor :global(.start-snapshot::before) {
