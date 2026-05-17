@@ -54,6 +54,78 @@ function observeEditorLayout(scheduleLayout: () => void) {
   };
 }
 
+type GutterDecorationKind =
+  | 'current'
+  | 'error'
+  | 'breakpoint'
+  | 'snapshot'
+  | 'hint';
+
+function gutterDecoration(
+  lineNumber: number,
+  kind: GutterDecorationKind
+): MonacoEditor.IModelDeltaDecoration {
+  const range = {
+    startLineNumber: lineNumber,
+    startColumn: 1,
+    endLineNumber: lineNumber,
+    endColumn: 1,
+  };
+  switch (kind) {
+    case 'current':
+      return {
+        range,
+        options: {
+          glyphMarginClassName: 'start-current',
+          glyphMargin: { position: 3, persistLane: true },
+          glyphMarginHoverMessage: { value: 'Paused here.' },
+        },
+      };
+    case 'error':
+      return {
+        range,
+        options: {
+          glyphMarginClassName: 'start-error',
+          glyphMargin: { position: 3, persistLane: true },
+          glyphMarginHoverMessage: { value: 'Error here.' },
+        },
+      };
+    case 'breakpoint':
+      return {
+        range,
+        options: {
+          isWholeLine: true,
+          glyphMarginClassName: 'start-breakpoint',
+          glyphMargin: { position: 1, persistLane: true },
+          glyphMarginHoverMessage: {
+            value: 'Breakpoint: click to change to snapshot.',
+          },
+        },
+      };
+    case 'snapshot':
+      return {
+        range,
+        options: {
+          isWholeLine: true,
+          glyphMarginClassName: 'start-snapshot',
+          glyphMargin: { position: 1, persistLane: true },
+          glyphMarginHoverMessage: { value: 'Snapshot: click to clear.' },
+        },
+      };
+    case 'hint':
+      return {
+        range,
+        options: {
+          glyphMarginClassName: 'start-marker-hint',
+          glyphMargin: { position: 1, persistLane: true },
+          glyphMarginHoverMessage: {
+            value: 'Click here to set a breakpoint or snapshot.',
+          },
+        },
+      };
+  }
+}
+
 export default memo(function Editor({
   runProgram,
   isReadOnly,
@@ -88,77 +160,19 @@ export default memo(function Editor({
     if (highlightedLine) {
       const { kind, lineNumber } = highlightedLine;
       controller.revealLine(lineNumber);
-      nextDecorations.push({
-        range: {
-          startLineNumber: lineNumber,
-          startColumn: 1,
-          endLineNumber: lineNumber,
-          endColumn: 1,
-        },
-        options: {
-          glyphMarginClassName:
-            kind === 'error' ? 'start-error' : 'start-current',
-          glyphMargin: {
-            position: 3,
-            persistLane: true,
-          },
-          glyphMarginHoverMessage: {
-            value: kind === 'error' ? 'Error here.' : 'Paused here.',
-          },
-        },
-      });
+      nextDecorations.push(gutterDecoration(lineNumber, kind));
     }
 
     const markedLines = new Set<number>();
-
     for (const { lineNumber, marker } of markers) {
-      const label = marker === 'breakpoint' ? 'Breakpoint' : 'Snapshot';
       markedLines.add(lineNumber);
-      nextDecorations.push({
-        range: {
-          startLineNumber: lineNumber,
-          startColumn: 1,
-          endLineNumber: lineNumber,
-          endColumn: 1,
-        },
-        options: {
-          isWholeLine: true,
-          glyphMarginClassName: `start-${marker}`,
-          glyphMargin: {
-            position: 1,
-            persistLane: true,
-          },
-          glyphMarginHoverMessage: {
-            value: `${label}: click to ${
-              marker === 'breakpoint' ? 'change to snapshot' : 'clear'
-            }.`,
-          },
-        },
-      });
+      nextDecorations.push(gutterDecoration(lineNumber, marker));
     }
 
     for (const lineNumber of markableLines()) {
-      if (markedLines.has(lineNumber)) {
-        continue;
+      if (!markedLines.has(lineNumber)) {
+        nextDecorations.push(gutterDecoration(lineNumber, 'hint'));
       }
-      nextDecorations.push({
-        range: {
-          startLineNumber: lineNumber,
-          startColumn: 1,
-          endLineNumber: lineNumber,
-          endColumn: 1,
-        },
-        options: {
-          glyphMarginClassName: 'start-marker-hint',
-          glyphMargin: {
-            position: 1,
-            persistLane: true,
-          },
-          glyphMarginHoverMessage: {
-            value: 'Click here to set a breakpoint or snapshot.',
-          },
-        },
-      });
     }
 
     controller.setDecorations(nextDecorations);
