@@ -24,7 +24,7 @@ export class EditorModel {
   private source: string;
   private cachedSnapshot: EditorSnapshot | null = null;
   // Sparse array to track marked lines.
-  private readonly markers: MarkerType[] = [];
+  private markers: MarkerType[] = [];
   private readonly scheduler: ParseScheduler;
   private readonly notify: () => void;
 
@@ -70,7 +70,7 @@ export class EditorModel {
     if (!this.markers.some(Boolean)) {
       return false;
     }
-    this.markers.length = 0;
+    this.markers = [];
     this.publish();
     return true;
   }
@@ -105,10 +105,7 @@ export class EditorModel {
       }
     });
     if (changed) {
-      this.markers.length = 0;
-      next.forEach((marker, lineNumber) => {
-        this.markers[lineNumber] = marker;
-      });
+      this.markers = next;
       this.publish();
     }
   }
