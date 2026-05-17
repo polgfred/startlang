@@ -85,6 +85,7 @@ export class EditorModel {
   }
 
   parseProgram(): EditorProgram {
+    this.scheduler.flush();
     const { markerLineMap, program } = this.scheduler.current();
     return {
       markerMap: markerLineMap.mapMarkers(

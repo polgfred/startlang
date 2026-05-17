@@ -7,12 +7,16 @@ export interface ParseResult {
   readonly markerLineMap: MarkerLineMap;
 }
 
-// Owns the parse cache for an EditorModel. Phase 1 of the async parse pipeline
-// (see docs/async-parse-pipeline.md) — `schedule` runs the parse synchronously;
-// later phases can defer or move the parse off-thread without changing callers.
+const DEBOUNCE_MS = 200;
+
 export class ParseScheduler {
   private version: number;
   private result: ParseResult | Error;
+  private pending: {
+    version: number;
+    source: string;
+    timer: ReturnType<typeof setTimeout>;
+  } | null = null;
 
   constructor(version: number, source: string) {
     this.version = version;
@@ -20,11 +24,24 @@ export class ParseScheduler {
   }
 
   schedule(version: number, source: string): void {
+    if (this.pending !== null) {
+      clearTimeout(this.pending.timer);
+      this.pending = null;
+    }
     if (this.version === version) {
       return;
     }
-    this.version = version;
-    this.result = parseSource(source);
+    const timer = setTimeout(() => {
+      this.commit(version, source);
+    }, DEBOUNCE_MS);
+    this.pending = { version, source, timer };
+  }
+
+  flush(): void {
+    if (this.pending !== null) {
+      clearTimeout(this.pending.timer);
+      this.commit(this.pending.version, this.pending.source);
+    }
   }
 
   current(): ParseResult {
@@ -32,6 +49,12 @@ export class ParseScheduler {
       throw this.result;
     }
     return this.result;
+  }
+
+  private commit(version: number, source: string): void {
+    this.pending = null;
+    this.version = version;
+    this.result = parseSource(source);
   }
 }
 
