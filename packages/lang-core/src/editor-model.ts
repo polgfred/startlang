@@ -15,8 +15,8 @@ export interface EditorSnapshot {
 }
 
 export interface EditorProgram {
-  readonly markerMap: MarkerMap;
   readonly program: Program;
+  readonly markerMap: MarkerMap;
 }
 
 export class EditorModel {
@@ -128,12 +128,12 @@ export class EditorModel {
 
   parseProgram(): EditorProgram {
     this.scheduler.flush();
-    const { markerLineMap, program } = this.scheduler.current();
+    const { program, markerLineMap } = this.scheduler.current();
     return {
+      program,
       markerMap: markerLineMap.mapMarkers(
         (lineNumber) => this.markers[lineNumber]
       ),
-      program,
     };
   }
 
