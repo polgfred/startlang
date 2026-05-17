@@ -4,7 +4,6 @@ import {
   type EditorMarker,
   type EditorProgram,
 } from '@startlang/lang-core/editor-model';
-import type { Node } from '@startlang/lang-core/nodes';
 import type { languages } from 'monaco-editor';
 import {
   createContext,
@@ -26,19 +25,19 @@ export type EditorHighlightKind = 'current' | 'error';
 
 export interface EditorHighlight {
   readonly kind: EditorHighlightKind;
-  readonly node: Node;
+  readonly lineNumber: number;
 }
 
 interface EditorContextValue {
   getValue(): string;
   setValue(value: string, options?: SetEditorValueOptions): void;
   parseProgram(): EditorProgram;
-  highlightNode(node: Node | null, kind?: EditorHighlightKind): void;
+  highlightLine(lineNumber: number | null, kind?: EditorHighlightKind): void;
   toggleMarker(lineNumber: number): void;
   markableLines(): readonly number[];
   source: string;
   markers: readonly EditorMarker[];
-  highlightedNode: EditorHighlight | null;
+  highlightedLine: EditorHighlight | null;
 }
 
 const EditorContext = createContext<EditorContextValue | null>(null);
@@ -240,7 +239,7 @@ export function useEditor() {
 }
 
 export function EditorProvider({ children }: { children: ReactNode }) {
-  const [highlightedNode, setHighlightedNode] =
+  const [highlightedLine, setHighlightedLine] =
     useState<EditorHighlight | null>(null);
   const { current: editorStore } = useRef(createEditorStore(boxScript));
   const { markers, source } = useSyncExternalStore(
@@ -262,9 +261,9 @@ export function EditorProvider({ children }: { children: ReactNode }) {
 
   const getValue = useCallback(() => editorStore.getValue(), [editorStore]);
 
-  const highlightNode = useCallback(
-    (node: Node | null, kind: EditorHighlightKind = 'current') => {
-      setHighlightedNode(node ? { kind, node } : null);
+  const highlightLine = useCallback(
+    (lineNumber: number | null, kind: EditorHighlightKind = 'current') => {
+      setHighlightedLine(lineNumber !== null ? { kind, lineNumber } : null);
     },
     []
   );
@@ -280,7 +279,7 @@ export function EditorProvider({ children }: { children: ReactNode }) {
         editorStore.clearMarkers();
       }
       editorStore.setValue(value);
-      setHighlightedNode(null);
+      setHighlightedLine(null);
     },
     [editorStore]
   );
@@ -289,12 +288,12 @@ export function EditorProvider({ children }: { children: ReactNode }) {
     getValue,
     setValue,
     parseProgram,
-    highlightNode,
+    highlightLine,
     toggleMarker,
     markableLines,
     source,
     markers,
-    highlightedNode,
+    highlightedLine,
   };
 
   return (

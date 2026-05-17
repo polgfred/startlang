@@ -64,7 +64,7 @@ export default memo(function Editor({
   layoutSignal: unknown;
 }) {
   const {
-    highlightedNode,
+    highlightedLine,
     markableLines,
     markers,
     setValue,
@@ -84,14 +84,14 @@ export default memo(function Editor({
     }
 
     const nextDecorations: MonacoEditor.IModelDeltaDecoration[] = [];
-    if (highlightedNode) {
-      const { kind, node } = highlightedNode;
-      controller.revealLine(node.location.start.line);
+    if (highlightedLine) {
+      const { kind, lineNumber } = highlightedLine;
+      controller.revealLine(lineNumber);
       nextDecorations.push({
         range: {
-          startLineNumber: node.location.start.line,
+          startLineNumber: lineNumber,
           startColumn: 1,
-          endLineNumber: node.location.start.line,
+          endLineNumber: lineNumber,
           endColumn: 1,
         },
         options: {
@@ -158,7 +158,7 @@ export default memo(function Editor({
     }
 
     controller.setDecorations(nextDecorations);
-  }, [highlightedNode, markableLines, markers, source]);
+  }, [highlightedLine, markableLines, markers, source]);
 
   const onEditorMount: OnMount = useCallback(
     (editor, monaco) => {

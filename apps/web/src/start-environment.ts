@@ -283,7 +283,7 @@ function deleteInspectorVariable(
 }
 
 export function useStartEnvironment() {
-  const { highlightNode, parseProgram } = useEditor();
+  const { highlightLine, parseProgram } = useEditor();
 
   const [outputTab, setOutputTab] = useState<OutputTab>('graphics');
   const [showInspector, setShowInspector] = useState(false);
@@ -311,11 +311,11 @@ export function useStartEnvironment() {
   const syncHighlight = useCallback(() => {
     const mode = getRuntimeMode(getRuntimeStatus(interpreter, history));
     if (isRuntimeModeEditable(mode)) {
-      highlightNode(interpreter.topFrame.head.node);
+      highlightLine(interpreter.topFrame.head.node.location.start.line);
     } else {
-      highlightNode(null);
+      highlightLine(null);
     }
-  }, [highlightNode, history, interpreter]);
+  }, [highlightLine, history, interpreter]);
 
   const finishInterpreterAction = useCallback(() => {
     syncOutputTab();
@@ -327,13 +327,13 @@ export function useStartEnvironment() {
     (error: Error) => {
       syncOutputTab();
       if (error instanceof RuntimeError) {
-        highlightNode(error.node, 'error');
+        highlightLine(error.node.location.start.line, 'error');
       } else {
         syncHighlight();
       }
       store.publish();
     },
-    [highlightNode, store, syncHighlight, syncOutputTab]
+    [highlightLine, store, syncHighlight, syncOutputTab]
   );
 
   const handleRuntimeEffect = useCallback(
@@ -395,7 +395,7 @@ export function useStartEnvironment() {
     ) => {
       setError(null);
       if (options.clearHighlight ?? true) {
-        highlightNode(null);
+        highlightLine(null);
       }
 
       try {
@@ -415,7 +415,7 @@ export function useStartEnvironment() {
       captureFinalState,
       finishInterpreterAction,
       finishRuntimeError,
-      highlightNode,
+      highlightLine,
       interpreter,
     ]
   );
@@ -465,7 +465,7 @@ export function useStartEnvironment() {
       } catch (err) {
         setError(normalizeError(err));
         setShowInspector(true);
-        highlightNode(null);
+        highlightLine(null);
         return;
       }
 
@@ -478,7 +478,7 @@ export function useStartEnvironment() {
       });
     },
     [
-      highlightNode,
+      highlightLine,
       history,
       host,
       interpreter,
@@ -525,9 +525,9 @@ export function useStartEnvironment() {
     setError(null);
     interpreter.stop();
     history.clear();
-    highlightNode(null);
+    highlightLine(null);
     finishInterpreterAction();
-  }, [finishInterpreterAction, highlightNode, history, interpreter]);
+  }, [finishInterpreterAction, highlightLine, history, interpreter]);
 
   const commitInspectorMutation = useCallback(
     (message: string, mutate: () => void) => {
