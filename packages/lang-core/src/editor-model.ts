@@ -1,9 +1,5 @@
-import {
-  buildMarkerLineMap,
-  type MarkerLineMap,
-  type MarkerMap,
-} from './editor-markers.js';
-import { parse } from './parser.peggy';
+import type { MarkerMap } from './editor-markers.js';
+import { ParseScheduler } from './parse-scheduler.js';
 import { Program } from './program.js';
 import type { MarkerType } from './types.js';
 
@@ -23,24 +19,15 @@ export interface EditorProgram {
   readonly program: Program;
 }
 
-type ParseCacheEntry = {
-  version: number;
-  result:
-    | {
-        markerLineMap: MarkerLineMap;
-        program: Program;
-      }
-    | Error;
-};
-
 export class EditorModel {
   private version = 0;
   private readonly markers: MarkerType[] = [];
   private snapshot: EditorSnapshot;
-  private parseCache: ParseCacheEntry | null = null;
+  private readonly scheduler: ParseScheduler;
 
   constructor(private source: string = '') {
     this.snapshot = this.readSnapshot();
+    this.scheduler = new ParseScheduler(this.version, this.source);
   }
 
   getSnapshot() {
@@ -59,6 +46,7 @@ export class EditorModel {
     this.version += 1;
     this.source = nextValue;
     this.snapshot = this.readSnapshot();
+    this.scheduler.schedule(this.version, this.source);
     return true;
   }
 
@@ -82,7 +70,7 @@ export class EditorModel {
 
   isMarkable(lineNumber: number): boolean {
     try {
-      return this.parseCurrentSource().markerLineMap.isMarkable(lineNumber);
+      return this.scheduler.current().markerLineMap.isMarkable(lineNumber);
     } catch {
       return false;
     }
@@ -90,14 +78,14 @@ export class EditorModel {
 
   markableLines(): readonly number[] {
     try {
-      return this.parseCurrentSource().markerLineMap.markableLines();
+      return this.scheduler.current().markerLineMap.markableLines();
     } catch {
       return [];
     }
   }
 
   parseProgram(): EditorProgram {
-    const { markerLineMap, program } = this.parseCurrentSource();
+    const { markerLineMap, program } = this.scheduler.current();
     return {
       markerMap: markerLineMap.mapMarkers(
         (lineNumber) => this.markers[lineNumber]
@@ -117,31 +105,6 @@ export class EditorModel {
     }
 
     this.snapshot = this.readSnapshot();
-  }
-
-  private parseCurrentSource() {
-    const cached = this.parseCache;
-
-    if (cached?.version === this.version) {
-      if (cached.result instanceof Error) {
-        throw cached.result;
-      }
-      return cached.result;
-    }
-
-    try {
-      const program = parse(this.source + '\n');
-      const result = {
-        markerLineMap: buildMarkerLineMap(program),
-        program,
-      };
-      this.parseCache = { version: this.version, result };
-      return result;
-    } catch (err) {
-      const result = err instanceof Error ? err : new Error(String(err));
-      this.parseCache = { version: this.version, result };
-      throw result;
-    }
   }
 
   private readSnapshot(): EditorSnapshot {
