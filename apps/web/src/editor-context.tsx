@@ -34,6 +34,7 @@ interface EditorContextValue {
   parseProgram(): EditorProgram;
   highlightLine(lineNumber: number | null, kind?: EditorHighlightKind): void;
   toggleMarker(lineNumber: number): void;
+  shiftMarkers(startLine: number, endLine: number, lineDelta: number): void;
   markableLines(): readonly number[];
   source: string;
   markers: readonly EditorMarker[];
@@ -183,7 +184,9 @@ export function setupLanguage(monaco: Monaco) {
 
 function createEditorStore(initialSourceValue: string) {
   const events = new EventTarget();
-  const model = new EditorModel(initialSourceValue);
+  const model = new EditorModel(initialSourceValue, () => {
+    events.dispatchEvent(new Event('change'));
+  });
 
   function subscribe(listener: () => void) {
     events.addEventListener('change', listener);
@@ -192,41 +195,17 @@ function createEditorStore(initialSourceValue: string) {
     };
   }
 
-  function publish() {
-    events.dispatchEvent(new Event('change'));
-  }
-
-  function setValue(nextValue: string) {
-    if (model.setSource(nextValue)) {
-      publish();
-    }
-  }
-
-  function clearMarkers() {
-    if (model.clearMarkers()) {
-      publish();
-    }
-  }
-
-  function toggleMarker(lineNumber: number) {
-    try {
-      if (model.toggleMarker(lineNumber)) {
-        publish();
-      }
-    } catch {
-      // leave invalid source unmarked
-    }
-  }
-
   return {
+    subscribe,
     getSnapshot: () => model.getSnapshot(),
     getValue: () => model.getSource(),
     parseProgram: () => model.parseProgram(),
     markableLines: () => model.markableLines(),
-    clearMarkers,
-    setValue,
-    subscribe,
-    toggleMarker,
+    clearMarkers: () => model.clearMarkers(),
+    setValue: (value: string) => model.setSource(value),
+    shiftMarkers: (startLine: number, endLine: number, lineDelta: number) =>
+      model.shiftMarkers(startLine, endLine, lineDelta),
+    toggleMarker: (lineNumber: number) => model.toggleMarker(lineNumber),
   };
 }
 
@@ -273,6 +252,12 @@ export function EditorProvider({ children }: { children: ReactNode }) {
     [editorStore]
   );
 
+  const shiftMarkers = useCallback(
+    (startLine: number, endLine: number, lineDelta: number) =>
+      editorStore.shiftMarkers(startLine, endLine, lineDelta),
+    [editorStore]
+  );
+
   const setValue = useCallback(
     (value: string, options?: SetEditorValueOptions) => {
       if (options?.clearMarkers) {
@@ -290,6 +275,7 @@ export function EditorProvider({ children }: { children: ReactNode }) {
     parseProgram,
     highlightLine,
     toggleMarker,
+    shiftMarkers,
     markableLines,
     source,
     markers,

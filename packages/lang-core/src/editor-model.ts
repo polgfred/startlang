@@ -21,51 +21,103 @@ export interface EditorProgram {
 
 export class EditorModel {
   private version = 0;
+  private source: string;
   private readonly markers: MarkerType[] = [];
-  private snapshot: EditorSnapshot;
+  private cachedSnapshot: EditorSnapshot | null = null;
   private readonly scheduler: ParseScheduler;
+  private readonly notify: () => void;
 
-  constructor(private source: string = '') {
-    this.snapshot = this.readSnapshot();
-    this.scheduler = new ParseScheduler(this.version, this.source);
+  constructor(source: string = '', notify: () => void = () => {}) {
+    this.source = source;
+    this.notify = notify;
+    this.scheduler = new ParseScheduler(this.version, this.source, () =>
+      this.afterParseCommit()
+    );
   }
 
-  getSnapshot() {
-    return this.snapshot;
+  getSnapshot(): EditorSnapshot {
+    if (this.cachedSnapshot === null) {
+      const markers: EditorMarker[] = [];
+      this.markers.forEach((marker, lineNumber) => {
+        if (marker) {
+          markers.push({ lineNumber, marker });
+        }
+      });
+      this.cachedSnapshot = {
+        version: this.version,
+        source: this.source,
+        markers,
+      };
+    }
+    return this.cachedSnapshot;
   }
 
-  getSource() {
+  getSource(): string {
     return this.source;
   }
 
-  setSource(nextValue: string) {
+  setSource(nextValue: string): boolean {
     if (nextValue === this.source) {
       return false;
     }
-
     this.version += 1;
     this.source = nextValue;
-    this.snapshot = this.readSnapshot();
     this.scheduler.schedule(this.version, this.source);
+    this.publish();
     return true;
   }
 
-  clearMarkers() {
+  clearMarkers(): boolean {
     if (!this.markers.some(Boolean)) {
       return false;
     }
-
     this.markers.length = 0;
-    this.snapshot = this.readSnapshot();
+    this.publish();
     return true;
   }
 
-  toggleMarker(lineNumber: number) {
+  toggleMarker(lineNumber: number): boolean {
     if (this.markers[lineNumber] || this.isMarkable(lineNumber)) {
       this.cycleMarker(lineNumber);
+      this.publish();
       return true;
     }
     return false;
+  }
+
+  // Apply a line-count delta from an editor edit
+  // Best-effort: the parse-time validation in `afterParseCommit` cleans up
+  // anything that ends up on a non-statement line.
+  shiftMarkers(startLine: number, endLine: number, lineDelta: number): void {
+    if (lineDelta === 0) {
+      return;
+    }
+    const next: MarkerType[] = [];
+    let changed = false;
+    this.markers.forEach((marker, lineNumber) => {
+      if (!marker) {
+        return;
+      }
+      if (lineNumber <= startLine) {
+        next[lineNumber] = marker;
+      } else if (lineNumber <= endLine) {
+        // Line is inside the replaced span — drop.
+        changed = true;
+      } else {
+        next[lineNumber + lineDelta] = marker;
+        changed = true;
+      }
+    });
+    if (!changed) {
+      return;
+    }
+    this.markers.length = 0;
+    next.forEach((marker, lineNumber) => {
+      if (marker) {
+        this.markers[lineNumber] = marker;
+      }
+    });
+    this.publish();
   }
 
   isMarkable(lineNumber: number): boolean {
@@ -104,23 +156,29 @@ export class EditorModel {
       // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
       delete this.markers[lineNumber];
     }
-
-    this.snapshot = this.readSnapshot();
   }
 
-  private readSnapshot(): EditorSnapshot {
-    const markers: EditorMarker[] = [];
-
-    this.markers.forEach((marker, lineNumber) => {
-      if (marker) {
-        markers.push({ lineNumber, marker });
+  private afterParseCommit(): void {
+    try {
+      const lineMap = this.scheduler.current().markerLineMap;
+      let changed = false;
+      this.markers.forEach((marker, lineNumber) => {
+        if (marker && !lineMap.isMarkable(lineNumber)) {
+          // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+          delete this.markers[lineNumber];
+          changed = true;
+        }
+      });
+      if (changed) {
+        this.publish();
       }
-    });
+    } catch {
+      return; // current parse failed; don't validate
+    }
+  }
 
-    return {
-      version: this.version,
-      source: this.source,
-      markers,
-    };
+  private publish(): void {
+    this.cachedSnapshot = null;
+    this.notify();
   }
 }

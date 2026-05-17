@@ -17,10 +17,16 @@ export class ParseScheduler {
     source: string;
     timer: ReturnType<typeof setTimeout>;
   } | null = null;
+  private readonly onCommit: () => void;
 
-  constructor(version: number, source: string) {
+  constructor(
+    version: number,
+    source: string,
+    onCommit: () => void = () => {}
+  ) {
     this.version = version;
     this.result = parseSource(source);
+    this.onCommit = onCommit;
   }
 
   schedule(version: number, source: string): void {
@@ -55,6 +61,7 @@ export class ParseScheduler {
     this.pending = null;
     this.version = version;
     this.result = parseSource(source);
+    this.onCommit();
   }
 }
 

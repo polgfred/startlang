@@ -68,6 +68,7 @@ export default memo(function Editor({
     markableLines,
     markers,
     setValue,
+    shiftMarkers,
     source,
     toggleMarker,
   } = useEditor();
@@ -149,7 +150,10 @@ export default memo(function Editor({
         },
         options: {
           glyphMarginClassName: 'start-marker-hint',
-          glyphMargin: { position: 1, persistLane: true },
+          glyphMargin: {
+            position: 1,
+            persistLane: true,
+          },
           glyphMarginHoverMessage: {
             value: 'Click here to set a breakpoint or snapshot.',
           },
@@ -192,6 +196,25 @@ export default memo(function Editor({
         }
       });
 
+      const editorModel = editor.getModel();
+      if (editorModel) {
+        editorModel.onDidChangeContent((event) => {
+          for (const change of event.changes) {
+            const newlineCount = (change.text.match(/\n/g) ?? []).length;
+            const oldLineSpan =
+              change.range.endLineNumber - change.range.startLineNumber;
+            const lineDelta = newlineCount - oldLineSpan;
+            if (lineDelta !== 0) {
+              shiftMarkers(
+                change.range.startLineNumber,
+                change.range.endLineNumber,
+                lineDelta
+              );
+            }
+          }
+        });
+      }
+
       window.requestAnimationFrame(async () => {
         await document.fonts.ready;
         monaco.editor.remeasureFonts();
@@ -200,7 +223,7 @@ export default memo(function Editor({
         runProgram();
       });
     },
-    [runProgram, toggleMarker, updateDecorations]
+    [runProgram, shiftMarkers, toggleMarker, updateDecorations]
   );
 
   const onEditorChange = useCallback(

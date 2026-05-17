@@ -170,7 +170,7 @@ describe('marker maps', () => {
     expect(markerMap(afterPrintNode)).toBeUndefined();
   });
 
-it('maps deeply nested block lines without repeated subtree walks', () => {
+  it('maps deeply nested block lines without repeated subtree walks', () => {
     const source = `
       begin render_sieve do
         table do
