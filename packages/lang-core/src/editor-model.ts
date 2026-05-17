@@ -22,8 +22,9 @@ export interface EditorProgram {
 export class EditorModel {
   private version = 0;
   private source: string;
-  private readonly markers: MarkerType[] = [];
   private cachedSnapshot: EditorSnapshot | null = null;
+  // Sparse array to track marked lines.
+  private readonly markers: MarkerType[] = [];
   private readonly scheduler: ParseScheduler;
   private readonly notify: () => void;
 
@@ -39,9 +40,7 @@ export class EditorModel {
     if (this.cachedSnapshot === null) {
       const markers: EditorMarker[] = [];
       this.markers.forEach((marker, lineNumber) => {
-        if (marker) {
-          markers.push({ lineNumber, marker });
-        }
+        markers.push({ lineNumber, marker });
       });
       this.cachedSnapshot = {
         version: this.version,
@@ -95,9 +94,6 @@ export class EditorModel {
     const next: MarkerType[] = [];
     let changed = false;
     this.markers.forEach((marker, lineNumber) => {
-      if (!marker) {
-        return;
-      }
       if (lineNumber <= startLine) {
         next[lineNumber] = marker;
       } else if (lineNumber <= endLine) {
@@ -108,16 +104,13 @@ export class EditorModel {
         changed = true;
       }
     });
-    if (!changed) {
-      return;
-    }
-    this.markers.length = 0;
-    next.forEach((marker, lineNumber) => {
-      if (marker) {
+    if (changed) {
+      this.markers.length = 0;
+      next.forEach((marker, lineNumber) => {
         this.markers[lineNumber] = marker;
-      }
-    });
-    this.publish();
+      });
+      this.publish();
+    }
   }
 
   isMarkable(lineNumber: number): boolean {
@@ -162,8 +155,8 @@ export class EditorModel {
     try {
       const lineMap = this.scheduler.current().markerLineMap;
       let changed = false;
-      this.markers.forEach((marker, lineNumber) => {
-        if (marker && !lineMap.isMarkable(lineNumber)) {
+      this.markers.forEach((_marker, lineNumber) => {
+        if (!lineMap.isMarkable(lineNumber)) {
           // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
           delete this.markers[lineNumber];
           changed = true;
