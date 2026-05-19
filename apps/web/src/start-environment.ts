@@ -381,7 +381,7 @@ export function useStartEnvironment() {
 
   const captureFinalState = useCallback(
     (result: RunResult) => {
-      if (result.status === 'completed' && history.length > 0) {
+      if (result.status === 'completed') {
         history.push(interpreter.captureState());
       }
     },
