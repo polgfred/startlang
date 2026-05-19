@@ -16,6 +16,7 @@ years = num(years_text)
 ; draw a data table
 table do
   header do
+    set cell.align = "center"
     cell "Years"
     cell "Interest"
     cell "Total"
@@ -23,8 +24,9 @@ table do
 
   ; display a row for year 0
   row do
+    set cell.align = "right"
     cell 0
-    cell 0
+    cell format(0, "currency")
     cell format(principal, "currency")
   end
 
@@ -39,10 +41,13 @@ table do
 
     ; display a row for this year
     row do
+      set cell.align = "right"
       cell year
       cell format(interest, "currency")
       cell format(total, "currency")
     end
+    
+    snapshot
   end
 end
 
