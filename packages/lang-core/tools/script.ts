@@ -187,6 +187,11 @@ async function main() {
       }
     },
   } satisfies RuntimeFunctions);
+  interp.registerEffectHandler((effect) => {
+    if (effect.kind === 'delay') {
+      return new Promise<void>((resolve) => setTimeout(resolve, effect.ms));
+    }
+  });
 
   try {
     await runUntilComplete(interp, question, await interp.run(program));

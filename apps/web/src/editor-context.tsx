@@ -117,6 +117,7 @@ const languageDefinition: languages.IMonarchLanguage = {
     'range',
     'round',
     'sin',
+    'sleep',
     'split',
     'sqrt',
     'tan',

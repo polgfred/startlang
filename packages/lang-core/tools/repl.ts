@@ -64,6 +64,11 @@ async function main() {
       }
     },
   } satisfies RuntimeFunctions);
+  interp.registerEffectHandler((effect) => {
+    if (effect.kind === 'delay') {
+      return new Promise<void>((resolve) => setTimeout(resolve, effect.ms));
+    }
+  });
 
   let lines: string[] = [];
   let pendingInput: RuntimePause | null = null;

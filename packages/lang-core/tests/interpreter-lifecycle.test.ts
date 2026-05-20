@@ -353,4 +353,93 @@ describe('interpreter lifecycle', () => {
     expect(resumed.status).toBe('completed');
     expect(interpreter.getVariable('value')).toBe(2);
   });
+
+  it('emits a delay effect for sleep without actually waiting', async () => {
+    const interpreter = new Interpreter();
+    const delays: number[] = [];
+    interpreter.registerEffectHandler((effect) => {
+      if (effect.kind === 'delay') {
+        delays.push(effect.ms);
+      }
+    });
+
+    const result = await interpreter.run(
+      parseSnippet(`
+      sleep 100
+      sleep 250
+      value = "done"
+      `)
+    );
+
+    expect(result.status).toBe('completed');
+    expect(delays).toEqual([100, 250]);
+    expect(interpreter.getVariable('value')).toBe('done');
+  });
+
+  it('aborts a stale runLoop when stop is called during an awaited effect', async () => {
+    const interpreter = new Interpreter();
+    let release: (() => void) | null = null;
+    interpreter.registerEffectHandler((effect) => {
+      if (effect.kind === 'delay') {
+        return new Promise<void>((resolve) => {
+          release = resolve;
+        });
+      }
+    });
+
+    const runPromise = interpreter.run(
+      parseSnippet(`
+      sleep 1000
+      value = "should not run"
+      `)
+    );
+
+    // Let the runLoop reach the awaited delay.
+    await new Promise((r) => setImmediate(r));
+    expect(release).not.toBeNull();
+
+    interpreter.stop();
+    release!();
+
+    const result = await runPromise;
+    expect(result.status).toBe('aborted');
+    expect(interpreter.getVariable('value')).toBeUndefined();
+  });
+
+  it('aborts the previous runLoop when a new run starts mid-effect', async () => {
+    const interpreter = new Interpreter();
+    let release: (() => void) | null = null;
+    interpreter.registerEffectHandler((effect) => {
+      if (effect.kind === 'delay') {
+        return new Promise<void>((resolve) => {
+          release = resolve;
+        });
+      }
+    });
+
+    const firstRun = interpreter.run(
+      parseSnippet(`
+      sleep 1000
+      value = "first"
+      `)
+    );
+
+    await new Promise((r) => setImmediate(r));
+    expect(release).not.toBeNull();
+    const staleRelease = release!;
+
+    const secondRun = await interpreter.run(
+      parseSnippet(`
+      value = "second"
+      `)
+    );
+    expect(secondRun.status).toBe('completed');
+    expect(interpreter.getVariable('value')).toBe('second');
+
+    // Resolving the stale promise must not corrupt state.
+    staleRelease();
+    const firstResult = await firstRun;
+    expect(firstResult.status).toBe('aborted');
+    expect(interpreter.getVariable('value')).toBe('second');
+  });
 });

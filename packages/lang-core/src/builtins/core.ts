@@ -1,3 +1,4 @@
+import { delayEffect } from '../interpreter.js';
 import type { RuntimeFunctions } from '../types.js';
 import { adjustIndex } from '../utils/index.js';
 
@@ -24,4 +25,8 @@ export const coreFunctions: RuntimeFunctions = {
       }
     }
   ),
+
+  sleep: define([T.number], (interpreter, [ms]) => {
+    interpreter.setEffect(delayEffect(ms));
+  }),
 };

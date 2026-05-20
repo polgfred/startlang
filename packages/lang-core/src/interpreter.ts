@@ -34,11 +34,12 @@ export interface RuntimeState {
   hostSnapshot: unknown;
 }
 
-export type RuntimeEffectKind = 'repaint' | 'snapshot';
+export type RuntimeEffect =
+  | { readonly kind: 'repaint' }
+  | { readonly kind: 'snapshot' }
+  | { readonly kind: 'delay'; readonly ms: number };
 
-export interface RuntimeEffect {
-  readonly kind: RuntimeEffectKind;
-}
+export type RuntimeEffectKind = RuntimeEffect['kind'];
 
 export const repaintEffect: RuntimeEffect = Object.freeze({
   kind: 'repaint',
@@ -47,6 +48,10 @@ export const repaintEffect: RuntimeEffect = Object.freeze({
 export const snapshotEffect: RuntimeEffect = Object.freeze({
   kind: 'snapshot',
 });
+
+export function delayEffect(ms: number): RuntimeEffect {
+  return { kind: 'delay', ms };
+}
 
 export type RuntimeEffectHandler = (
   effect: RuntimeEffect
@@ -58,9 +63,13 @@ export type RuntimePause =
   | { kind: 'pause' }
   | { kind: 'step' };
 
+// `aborted` means a stale runLoop returned because the interpreter's epoch
+// advanced (stop / restart) while it was awaiting an effect. Callers should
+// treat it like `completed` — silently dropped, not surfaced to the user.
 export type RunResult =
   | { status: 'completed' }
-  | { status: 'paused'; pause: RuntimePause };
+  | { status: 'paused'; pause: RuntimePause }
+  | { status: 'aborted' };
 
 export class RuntimeError extends Error {
   constructor(
@@ -92,6 +101,9 @@ export class Interpreter {
   private snapshotHandler: SnapshotHandler | null = null;
   private shouldStepToNextStatement = false;
   private pendingInput: string | null = null;
+  // Bumped on prepareToRun / stop so any in-flight runLoop awaiting an
+  // async effect can detect that its state is stale and bail out cleanly.
+  private epoch = 0;
 
   constructor() {
     installHandlers(this);
@@ -154,6 +166,7 @@ export class Interpreter {
     this.pauseReason = null;
     this.pendingInput = null;
     this.pendingEffects = [];
+    this.epoch++;
   }
 
   private async runStepping(): Promise<RunResult> {
@@ -167,6 +180,7 @@ export class Interpreter {
 
   private async runLoop(): Promise<RunResult> {
     this.isRunning = true;
+    const myEpoch = this.epoch;
     try {
       while (true) {
         if (this.pauseReason) {
@@ -195,6 +209,9 @@ export class Interpreter {
               const result = this.effectHandler(effect);
               if (result instanceof Promise) {
                 await result;
+                if (this.epoch !== myEpoch) {
+                  return { status: 'aborted' };
+                }
               }
             }
           }
@@ -259,6 +276,7 @@ export class Interpreter {
     this.pendingInput = null;
     this.pendingEffects = [];
     this.isRunning = false;
+    this.epoch++;
     this.exit();
   }
 

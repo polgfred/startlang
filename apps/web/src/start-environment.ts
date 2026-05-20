@@ -229,12 +229,6 @@ function chooseOutputTab(
   return current;
 }
 
-function waitForAnimationFrame() {
-  return new Promise<void>((resolve) => {
-    requestAnimationFrame(() => resolve());
-  });
-}
-
 function normalizeError(err: unknown) {
   return err instanceof Error ? err : new Error(String(err));
 }
@@ -346,7 +340,14 @@ export function useStartEnvironment() {
         case 'repaint': {
           syncOutputTab();
           store.publish();
-          return waitForAnimationFrame();
+          return new Promise<void>((resolve) => {
+            requestAnimationFrame(() => resolve());
+          });
+        }
+        case 'delay': {
+          return new Promise<void>((resolve) => {
+            setTimeout(resolve, effect.ms);
+          });
         }
       }
     },
