@@ -2,7 +2,11 @@ import { describe, expect, it } from 'vitest';
 
 import { mapMarkers } from '../src/editor-markers.js';
 
-import { Interpreter, type RunResult } from '@startlang/lang-core/interpreter';
+import {
+  AbortedError,
+  Interpreter,
+  type RunResult,
+} from '@startlang/lang-core/interpreter';
 import type { RuntimePause } from '@startlang/lang-core/interpreter';
 import { parse } from '@startlang/lang-core/parser.peggy';
 import { runtimeGlobals } from '@startlang/lang-core/runtime-globals';
@@ -376,7 +380,7 @@ describe('interpreter lifecycle', () => {
     expect(interpreter.getVariable('value')).toBe('done');
   });
 
-  it('aborts a stale runLoop when stop is called during an awaited effect', async () => {
+  it('throws AbortedError from a stale runLoop when stop is called during an awaited effect', async () => {
     const interpreter = new Interpreter();
     let release: (() => void) | null = null;
     interpreter.registerEffectHandler((effect) => {
@@ -394,19 +398,17 @@ describe('interpreter lifecycle', () => {
       `)
     );
 
-    // Let the runLoop reach the awaited delay.
     await new Promise((r) => setImmediate(r));
     expect(release).not.toBeNull();
 
     interpreter.stop();
     release!();
 
-    const result = await runPromise;
-    expect(result.status).toBe('aborted');
+    await expect(runPromise).rejects.toBeInstanceOf(AbortedError);
     expect(interpreter.getVariable('value')).toBeUndefined();
   });
 
-  it('aborts the previous runLoop when a new run starts mid-effect', async () => {
+  it('throws AbortedError from the previous runLoop when a new run starts mid-effect', async () => {
     const interpreter = new Interpreter();
     let release: (() => void) | null = null;
     interpreter.registerEffectHandler((effect) => {
@@ -436,10 +438,54 @@ describe('interpreter lifecycle', () => {
     expect(secondRun.status).toBe('completed');
     expect(interpreter.getVariable('value')).toBe('second');
 
-    // Resolving the stale promise must not corrupt state.
     staleRelease();
-    const firstResult = await firstRun;
-    expect(firstResult.status).toBe('aborted');
+    await expect(firstRun).rejects.toBeInstanceOf(AbortedError);
     expect(interpreter.getVariable('value')).toBe('second');
+  });
+
+  it('does not clobber the stepping flag when a stale stepping runLoop is aborted', async () => {
+    const interpreter = new Interpreter();
+    const pendingDelays: Array<() => void> = [];
+    interpreter.registerEffectHandler((effect) => {
+      if (effect.kind === 'delay') {
+        return new Promise<void>((resolve) => {
+          pendingDelays.push(resolve);
+        });
+      }
+    });
+
+    const firstPause = await interpreter.runToNextStatement(
+      parseSnippet(`
+      sleep 1000
+      value = "first"
+      `)
+    );
+    expectPauseKind(firstPause, 'step');
+    const stalePending = interpreter.stepToNextStatement();
+    await new Promise((r) => setImmediate(r));
+    expect(pendingDelays).toHaveLength(1);
+    const releaseStale = pendingDelays.shift()!;
+
+    const newPause = await interpreter.runToNextStatement(
+      parseSnippet(`
+      sleep 500
+      value = "new"
+      `)
+    );
+    expectPauseKind(newPause, 'step');
+    const newPending = interpreter.stepToNextStatement();
+    await new Promise((r) => setImmediate(r));
+    expect(pendingDelays).toHaveLength(1);
+    const releaseNew = pendingDelays.shift()!;
+
+    // Stale releases first; its runStepping finally must skip the flag
+    // reset, otherwise the still-awaiting new runLoop will run past its
+    // next statement push without pausing.
+    releaseStale();
+    await expect(stalePending).rejects.toBeInstanceOf(AbortedError);
+
+    releaseNew();
+    expectPauseKind(await newPending, 'step');
+    expect(interpreter.getVariable('value')).toBeUndefined();
   });
 });

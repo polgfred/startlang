@@ -63,13 +63,9 @@ export type RuntimePause =
   | { kind: 'pause' }
   | { kind: 'step' };
 
-// `aborted` means a stale runLoop returned because the interpreter's epoch
-// advanced (stop / restart) while it was awaiting an effect. Callers should
-// treat it like `completed` — silently dropped, not surfaced to the user.
 export type RunResult =
   | { status: 'completed' }
-  | { status: 'paused'; pause: RuntimePause }
-  | { status: 'aborted' };
+  | { status: 'paused'; pause: RuntimePause };
 
 export class RuntimeError extends Error {
   constructor(
@@ -80,6 +76,17 @@ export class RuntimeError extends Error {
       cause: err,
     });
     this.name = 'RuntimeError';
+  }
+}
+
+// Thrown by runLoop when its epoch advances mid-await (stop / restart took
+// over). It is *not* a runtime error — it is a structural signal that the
+// stale call never produced a result. Callers that wrap runLoop must
+// re-throw it past any finalizers; the top-level traffic cop drops it.
+export class AbortedError extends Error {
+  constructor() {
+    super('interpreter run aborted');
+    this.name = 'AbortedError';
   }
 }
 
@@ -171,10 +178,17 @@ export class Interpreter {
 
   private async runStepping(): Promise<RunResult> {
     this.shouldStepToNextStatement = true;
+    let aborted = false;
     try {
       return await this.runLoop();
+    } catch (err) {
+      aborted = err instanceof AbortedError;
+      throw err;
     } finally {
-      this.shouldStepToNextStatement = false;
+      // Don't clear the flag for an aborted result
+      if (!aborted) {
+        this.shouldStepToNextStatement = false;
+      }
     }
   }
 
@@ -210,7 +224,7 @@ export class Interpreter {
               if (result instanceof Promise) {
                 await result;
                 if (this.epoch !== myEpoch) {
-                  return { status: 'aborted' };
+                  throw new AbortedError();
                 }
               }
             }
@@ -218,7 +232,10 @@ export class Interpreter {
         }
       }
     } catch (err) {
-      this.isRunning = false;
+      // Don't clear the flag for an aborted result
+      if (!(err instanceof AbortedError)) {
+        this.isRunning = false;
+      }
       throw err;
     }
   }

@@ -5,6 +5,7 @@ import {
 import { rootCell } from '@startlang/lang-browser/cells';
 import { rootShapeGroup } from '@startlang/lang-browser/shapes';
 import {
+  AbortedError,
   Interpreter,
   RuntimeError,
   type RuntimeEffect,
@@ -404,6 +405,10 @@ export function useStartEnvironment() {
         captureFinalState(result);
         finishInterpreterAction();
       } catch (err) {
+        // Ignore stale continuations
+        if (err instanceof AbortedError) {
+          return;
+        }
         const error = normalizeError(err);
         interpreter.stop();
         captureFinalState({ status: 'completed' });
