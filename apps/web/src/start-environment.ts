@@ -401,7 +401,10 @@ export function useStartEnvironment() {
       }
 
       try {
-        const result = await action();
+        const promise = action();
+        // Update the UI before awaiting
+        store.publish();
+        const result = await promise;
         captureFinalState(result);
         finishInterpreterAction();
       } catch (err) {
@@ -423,6 +426,7 @@ export function useStartEnvironment() {
       finishRuntimeError,
       highlightLine,
       interpreter,
+      store,
     ]
   );
 
