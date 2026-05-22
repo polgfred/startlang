@@ -13,23 +13,11 @@ export class RepeatNode extends Node {
   }
 
   makeFrame() {
-    if (this.times === null) {
-      return new RepeatFrame(this);
-    } else {
-      return new RepeatTimesFrame(this);
-    }
+    return new RepeatFrame(this);
   }
 }
 
 class RepeatFrame extends Frame {
-  declare node: RepeatNode;
-
-  visit(interpreter: Interpreter) {
-    interpreter.pushNode(this.node.body);
-  }
-}
-
-class RepeatTimesFrame extends Frame {
   declare node: RepeatNode;
 
   readonly times: number = 0;
@@ -40,18 +28,26 @@ class RepeatTimesFrame extends Frame {
 
     switch (this.state) {
       case 0: {
-        interpreter.swapFrame(1);
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        interpreter.pushNode(times!);
+        if (!times) {
+          interpreter.swapFrame(1);
+        } else {
+          interpreter.swapFrame(2);
+          interpreter.pushNode(times);
+        }
         break;
       }
       case 1: {
-        interpreter.swapFrame<this>(2, (draft) => {
+        // Repeat forever
+        interpreter.pushNode(this.node.body);
+        break;
+      }
+      case 2: {
+        interpreter.swapFrame<this>(3, (draft) => {
           draft.times = Number(interpreter.lastResult);
         });
         break;
       }
-      case 2: {
+      case 3: {
         if (this.count < this.times) {
           interpreter.swapFrame<this>(null, (draft) => {
             draft.count++;
