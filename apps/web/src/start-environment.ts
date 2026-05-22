@@ -304,8 +304,9 @@ export function useStartEnvironment() {
 
   const syncHighlight = useCallback(() => {
     const mode = getRuntimeMode(getRuntimeStatus(interpreter, history));
-    if (isRuntimeModeEditable(mode)) {
-      highlightLine(interpreter.topFrame.head.node.location.start.line);
+    const topFrame = interpreter.topFrame;
+    if (isRuntimeModeEditable(mode) && topFrame) {
+      highlightLine(topFrame.head.node.location.start.line);
     } else {
       highlightLine(null);
     }

@@ -169,14 +169,14 @@ export default memo(function Editor({
       nextDecorations.push(gutterDecoration(lineNumber, marker));
     }
 
-    for (const lineNumber of markableLines()) {
+    for (const lineNumber of markableLines) {
       if (!markedLines.has(lineNumber)) {
         nextDecorations.push(gutterDecoration(lineNumber, 'hint'));
       }
     }
 
     controller.setDecorations(nextDecorations);
-  }, [highlightedLine, markableLines, markers, source]);
+  }, [highlightedLine, markableLines, markers]);
 
   const onEditorMount: OnMount = useCallback(
     (editor, monaco) => {

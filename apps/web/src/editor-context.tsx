@@ -35,7 +35,7 @@ interface EditorContextValue {
   highlightLine(lineNumber: number | null, kind?: EditorHighlightKind): void;
   toggleMarker(lineNumber: number): void;
   shiftMarkers(startLine: number, endLine: number, lineDelta: number): void;
-  markableLines(): readonly number[];
+  markableLines: readonly number[];
   source: string;
   markers: readonly EditorMarker[];
   highlightedLine: EditorHighlight | null;
@@ -201,7 +201,6 @@ function createEditorStore(initialSourceValue: string) {
     getSnapshot: () => model.getSnapshot(),
     getValue: () => model.getSource(),
     parseProgram: () => model.parseProgram(),
-    markableLines: () => model.markableLines(),
     clearMarkers: () => model.clearMarkers(),
     setValue: (value: string) => model.setSource(value),
     shiftMarkers: (startLine: number, endLine: number, lineDelta: number) =>
@@ -222,7 +221,7 @@ export function EditorProvider({ children }: { children: ReactNode }) {
   const [highlightedLine, setHighlightedLine] =
     useState<EditorHighlight | null>(null);
   const { current: editorStore } = useRef(createEditorStore(boxScript));
-  const { markers, source } = useSyncExternalStore(
+  const { markers, source, markableLines } = useSyncExternalStore(
     editorStore.subscribe,
     editorStore.getSnapshot
   );
@@ -231,11 +230,6 @@ export function EditorProvider({ children }: { children: ReactNode }) {
     (lineNumber: number) => {
       editorStore.toggleMarker(lineNumber);
     },
-    [editorStore]
-  );
-
-  const markableLines = useCallback(
-    () => editorStore.markableLines(),
     [editorStore]
   );
 

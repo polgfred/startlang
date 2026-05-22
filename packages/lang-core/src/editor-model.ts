@@ -12,7 +12,10 @@ export interface EditorSnapshot {
   readonly version: number;
   readonly source: string;
   readonly markers: readonly EditorMarker[];
+  readonly markableLines: readonly number[];
 }
+
+const emptyMarkableLines: readonly number[] = Object.freeze([]);
 
 export interface EditorProgram {
   readonly program: Program;
@@ -22,11 +25,12 @@ export interface EditorProgram {
 export class EditorModel {
   private version = 0;
   private source: string;
-  private cachedSnapshot: EditorSnapshot | null = null;
-  // Sparse array to track marked lines.
-  private markers: MarkerType[] = [];
-  private readonly scheduler: ParseScheduler;
   private readonly notify: () => void;
+  private readonly scheduler: ParseScheduler;
+  // Sparse array to track marked lines
+  private markers: MarkerType[] = [];
+  private cachedSnapshot: EditorSnapshot | null = null;
+  private cachedMarkableLines: readonly number[] | null = null;
 
   constructor(source: string = '', notify: () => void = () => {}) {
     this.source = source;
@@ -46,9 +50,22 @@ export class EditorModel {
         version: this.version,
         source: this.source,
         markers,
+        markableLines: this.getMarkableLines(),
       };
     }
     return this.cachedSnapshot;
+  }
+
+  private getMarkableLines(): readonly number[] {
+    if (this.cachedMarkableLines === null) {
+      try {
+        this.cachedMarkableLines =
+          this.scheduler.current().markerLineMap.markableLines();
+      } catch {
+        this.cachedMarkableLines = emptyMarkableLines;
+      }
+    }
+    return this.cachedMarkableLines;
   }
 
   getSource(): string {
@@ -118,14 +135,6 @@ export class EditorModel {
     }
   }
 
-  markableLines(): readonly number[] {
-    try {
-      return this.scheduler.current().markerLineMap.markableLines();
-    } catch {
-      return [];
-    }
-  }
-
   parseProgram(): EditorProgram {
     this.scheduler.flush();
     const { program, markerLineMap } = this.scheduler.current();
@@ -151,19 +160,16 @@ export class EditorModel {
   private afterParseCommit(): void {
     try {
       const lineMap = this.scheduler.current().markerLineMap;
-      let changed = false;
+      this.cachedMarkableLines = null;
       this.markers.forEach((_marker, lineNumber) => {
         if (!lineMap.isMarkable(lineNumber)) {
           // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
           delete this.markers[lineNumber];
-          changed = true;
         }
       });
-      if (changed) {
-        this.publish();
-      }
+      this.publish();
     } catch {
-      return; // current parse failed; don't validate
+      // parse failed; keep stale markable lines and existing markers
     }
   }
 
