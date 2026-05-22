@@ -1,7 +1,6 @@
 import { immerable } from 'immer';
 
 import { Interpreter } from '../interpreter.js';
-import { Cons } from '../utils/cons.js';
 
 interface SourceOffset {
   offset: number;
@@ -51,17 +50,3 @@ export abstract class Frame {
     return;
   }
 }
-
-class RootNode extends Node {
-  makeFrame() {
-    return new RootFrame(this);
-  }
-}
-
-class RootFrame extends Frame {
-  visit(interpreter: Interpreter) {
-    // this is just here as a sentinel frame
-  }
-}
-
-export const rootFrame: Cons<Frame> = new Cons(new RootNode().makeFrame());

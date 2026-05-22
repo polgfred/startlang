@@ -61,7 +61,7 @@ describe('marker maps', () => {
     const result = await interpreter.run(program);
 
     expect(expectPaused(result).kind).toBe('breakpoint');
-    expect(interpreter.topFrame.head.node.location.start.line).toBe(3);
+    expect(interpreter.topFrame!.head.node.location.start.line).toBe(3);
 
     model.toggleMarker(3);
     model.toggleMarker(3);
@@ -236,20 +236,20 @@ describe('marker maps', () => {
     let result = await interpreter.run(program);
 
     expect(expectPaused(result).kind).toBe('breakpoint');
-    expect(interpreter.topFrame.head.node.location.start.line).toBe(1);
+    expect(interpreter.topFrame!.head.node.location.start.line).toBe(1);
 
     result = await interpreter.resume({ step: true });
 
     expect(expectPaused(result).kind).toBe('step');
-    expect(interpreter.topFrame.head.node.location.start.line).toBe(2);
-    expect(interpreter.topFrame.head.node.isStatement).toBe(true);
+    expect(interpreter.topFrame!.head.node.location.start.line).toBe(2);
+    expect(interpreter.topFrame!.head.node.isStatement).toBe(true);
     expect(interpreter.getVariable('value')).toBe(1);
 
     result = await interpreter.resume({ step: true });
 
     expect(expectPaused(result).kind).toBe('step');
-    expect(interpreter.topFrame.head.node.location.start.line).toBe(3);
-    expect(interpreter.topFrame.head.node.isStatement).toBe(true);
+    expect(interpreter.topFrame!.head.node.location.start.line).toBe(3);
+    expect(interpreter.topFrame!.head.node.isStatement).toBe(true);
     expect(interpreter.getVariable('value')).toBe(9);
 
     result = await interpreter.resume({ step: true });
@@ -266,8 +266,8 @@ describe('marker maps', () => {
     const result = await interpreter.run(program, { step: true });
 
     expect(expectPaused(result).kind).toBe('step');
-    expect(interpreter.topFrame.head.node.location.start.line).toBe(1);
-    expect(interpreter.topFrame.head.node.isStatement).toBe(true);
+    expect(interpreter.topFrame!.head.node.location.start.line).toBe(1);
+    expect(interpreter.topFrame!.head.node.isStatement).toBe(true);
     expect(interpreter.getVariable('value')).toBeUndefined();
   });
 
@@ -291,17 +291,17 @@ describe('marker maps', () => {
     let result = await interpreter.run(program);
 
     expect(expectPaused(result).kind).toBe('breakpoint');
-    expect(interpreter.topFrame.head.node.location.start.line).toBe(2);
+    expect(interpreter.topFrame!.head.node.location.start.line).toBe(2);
 
     result = await interpreter.resume({ step: true });
 
     expect(expectPaused(result).kind).toBe('step');
-    expect(interpreter.topFrame.head.node.location.start.line).toBe(4);
+    expect(interpreter.topFrame!.head.node.location.start.line).toBe(4);
 
     result = await interpreter.resume({ step: true });
 
     expect(expectPaused(result).kind).toBe('step');
-    expect(interpreter.topFrame.head.node.location.start.line).toBe(5);
+    expect(interpreter.topFrame!.head.node.location.start.line).toBe(5);
   });
 
   it('reads marker values from the live marker array', async () => {
@@ -321,7 +321,7 @@ describe('marker maps', () => {
     let result = await interpreter.run(program);
 
     expect(expectPaused(result).kind).toBe('breakpoint');
-    expect(interpreter.topFrame.head.node.location.start.line).toBe(2);
+    expect(interpreter.topFrame!.head.node.location.start.line).toBe(2);
 
     delete markers[2];
     markers[3] = 'breakpoint';
@@ -329,7 +329,7 @@ describe('marker maps', () => {
     result = await interpreter.resume();
 
     expect(expectPaused(result).kind).toBe('breakpoint');
-    expect(interpreter.topFrame.head.node.location.start.line).toBe(3);
+    expect(interpreter.topFrame!.head.node.location.start.line).toBe(3);
     expect(interpreter.getVariable('x')).toBe(0);
 
     delete markers[3];

@@ -77,5 +77,11 @@ export default tseslint.config(
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
     },
+  },
+  {
+    files: ['**/tests/**/*.{ts,tsx}', '**/*.test.{ts,tsx}'],
+    rules: {
+      '@typescript-eslint/no-non-null-assertion': 'off',
+    },
   }
 );

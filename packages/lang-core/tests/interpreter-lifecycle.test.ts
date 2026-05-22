@@ -103,7 +103,7 @@ describe('interpreter lifecycle', () => {
 
     const pause = expectInputPause(expectPaused(result));
     expect(pause.prompt).toBe('Name?');
-    expect(interpreter.topFrame.head.node.location.start.line).toBe(2);
+    expect(interpreter.topFrame!.head.node.location.start.line).toBe(2);
 
     const resumed = await interpreter.resume({ input: 'Grace' });
 
@@ -236,27 +236,27 @@ describe('interpreter lifecycle', () => {
     let result = await interpreter.run(rootNode, { step: true });
 
     expectPauseKind(result, 'step');
-    expect(interpreter.topFrame.head.node.location.start.line).toBe(2);
+    expect(interpreter.topFrame!.head.node.location.start.line).toBe(2);
     expect(history.entries).toHaveLength(1);
     expect(history.current?.globalNamespace.values.value).toBeUndefined();
 
     result = await interpreter.resume({ step: true });
 
     expectPauseKind(result, 'step');
-    expect(interpreter.topFrame.head.node.location.start.line).toBe(3);
+    expect(interpreter.topFrame!.head.node.location.start.line).toBe(3);
     expect(history.entries).toHaveLength(2);
     expect(history.current?.globalNamespace.values.value).toBe(1);
 
     result = await interpreter.resume({ step: true });
 
     expectPauseKind(result, 'step');
-    expect(interpreter.topFrame.head.node.location.start.line).toBe(4);
+    expect(interpreter.topFrame!.head.node.location.start.line).toBe(4);
     expect(history.entries).toHaveLength(3);
     expect(history.current?.globalNamespace.values.value).toBe(2);
 
     interpreter.restoreState(history.moveTo(1));
 
-    expect(interpreter.topFrame.head.node.location.start.line).toBe(3);
+    expect(interpreter.topFrame!.head.node.location.start.line).toBe(3);
     expect(interpreter.getVariable('value')).toBe(1);
     expect(history.isRewound).toBe(true);
   });

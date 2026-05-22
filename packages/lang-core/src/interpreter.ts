@@ -11,7 +11,6 @@ import {
   LiteralNode,
   UnwindSignal,
   VarNode,
-  rootFrame,
 } from './nodes/index.js';
 import { Program } from './program.js';
 import type { IndexType, RuntimeFunction, RuntimeFunctions } from './types.js';
@@ -29,7 +28,7 @@ export interface SnapshotHandler {
 export interface RuntimeState {
   globalNamespace: Namespace;
   localNamespaces: Cons<Namespace> | null;
-  topFrame: Cons<Frame>;
+  topFrame: Cons<Frame> | null;
   lastResult: unknown;
   hostSnapshot: unknown;
 }
@@ -93,7 +92,7 @@ export class AbortedError extends Error {
 export type ConfigurationHandler = (option: string, value: unknown) => void;
 
 export class Interpreter {
-  topFrame = rootFrame;
+  topFrame: Cons<Frame> | null = null;
   lastResult: unknown = null;
   isRunning: boolean = false;
   pauseReason: RuntimePause | null = null;
@@ -122,7 +121,7 @@ export class Interpreter {
   }
 
   get isComplete() {
-    return this.topFrame === rootFrame;
+    return this.topFrame === null;
   }
 
   get globalNamespace() {
@@ -155,7 +154,7 @@ export class Interpreter {
       this.globalFunctions = Object.freeze({ ...program.functions });
       this.namespace.reset();
     }
-    this.topFrame = rootFrame.push(program.main.makeFrame());
+    this.topFrame = new Cons(program.main.makeFrame());
     this.lastResult = null;
     this.pauseReason = null;
     this.pendingInput = null;
@@ -199,7 +198,7 @@ export class Interpreter {
           this.isRunning = false;
           return { status: 'paused', pause: this.pauseReason };
         }
-        if (this.topFrame === rootFrame) {
+        if (this.topFrame === null) {
           this.isRunning = false;
           return { status: 'completed' };
         }
@@ -300,7 +299,7 @@ export class Interpreter {
   }
 
   pushFrame(frame: Frame) {
-    this.topFrame = this.topFrame.push(frame);
+    this.topFrame = new Cons(frame, this.topFrame);
     if (frame.node.isStatement) {
       this.onStatementPush(frame.node);
     }
@@ -311,6 +310,9 @@ export class Interpreter {
     state: number | null,
     producer?: Producer<T>
   ) {
+    if (!this.topFrame) {
+      throw new Error('no top frame to swap');
+    }
     this.topFrame = this.topFrame.swap(
       produce(this.topFrame.head as T, (draft) => {
         if (state !== null) {
@@ -324,14 +326,20 @@ export class Interpreter {
   }
 
   replaceFrame(frame: Frame) {
+    if (!this.topFrame) {
+      throw new Error('no top frame to replace');
+    }
     this.topFrame.head.onExit(this);
     this.topFrame = this.topFrame.swap(frame);
     frame.onEnter(this);
   }
 
   popFrame() {
+    if (!this.topFrame) {
+      throw new Error('no top frame to pop');
+    }
     this.topFrame.head.onExit(this);
-    this.topFrame = this.topFrame.pop();
+    this.topFrame = this.topFrame.popOrNull();
   }
 
   pushNode(node: Node) {
@@ -366,13 +374,13 @@ export class Interpreter {
   }
 
   exit() {
-    while (this.topFrame !== rootFrame) {
+    while (this.topFrame !== null) {
       this.popFrame();
     }
   }
 
   unwind(signal: UnwindSignal) {
-    while (this.topFrame !== rootFrame) {
+    while (this.topFrame !== null) {
       const action = this.topFrame.head.onUnwind(signal);
       if (action === 'stop') {
         return;
@@ -506,7 +514,7 @@ export class Interpreter {
     this.lastResult = state.lastResult;
     this.pauseReason = null;
     this.pendingInput = null;
-    this.topFrame.head.onEnter(this);
+    this.topFrame?.head.onEnter(this);
     this.snapshotHandler?.restoreSnapshot(state.hostSnapshot);
   }
 
