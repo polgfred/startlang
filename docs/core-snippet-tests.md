@@ -8,7 +8,7 @@ Exercise the real language pipeline:
 
 1. Parse a short source snippet.
 2. Run it through `Interpreter`.
-3. Assert final variables, `lastResult`, suspensions, or calls into test globals.
+3. Assert final variables, `lastResult`, pauses, or calls into test globals.
 
 This protects the frame stack, `swapFrame()` transitions, namespace behavior, control flow, runtime dispatch, and parser wiring without tying tests to frame state numbers.
 
@@ -28,7 +28,7 @@ async function runSnippet(
   const result = await interpreter.run(parse(`${source}\n`));
 
   if (result.status !== 'completed') {
-    throw new Error(`unexpected suspension: ${result.suspension.kind}`);
+    throw new Error(`unexpected pause: ${result.pause.kind}`);
   }
 
   return interpreter;
@@ -92,9 +92,9 @@ This is the preferred pattern: a tiny program interacts with a tiny host functio
   - local namespace cleanup after calls
   - nested calls
 
-- Suspensions and resume:
+- Pauses and resume:
   - `input`
-  - breakpoint suspension
+  - breakpoint pause
   - resume into the correct expression/frame
 
 - Snapshots:
