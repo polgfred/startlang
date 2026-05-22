@@ -13,7 +13,6 @@ import {
   type RunResult,
   type RuntimeState,
 } from '@startlang/lang-core/interpreter';
-import type { Program } from '@startlang/lang-core/program';
 import { runtimeGlobals } from '@startlang/lang-core/runtime-globals';
 import { RuntimeHistory } from '@startlang/lang-core/runtime-history';
 import type { IndexType } from '@startlang/lang-core/types';
@@ -432,8 +431,10 @@ export function useStartEnvironment() {
 
   // ---- run / step / continue / stop --------------------------------------
 
-  const startProgram = useCallback(
-    async (runParsedProgram: (program: Program) => Promise<RunResult>) => {
+  // Parses the current editor source and starts a fresh run, clearing
+  // history and host state first.
+  const startFresh = useCallback(
+    async ({ step = false }: { step?: boolean } = {}) => {
       let parsed: ReturnType<typeof parseProgram>;
       try {
         parsed = parseProgram();
@@ -449,7 +450,7 @@ export function useStartEnvironment() {
 
       await performInterpreterAction(() => {
         interpreter.setMarkerMap(parsed.markerMap);
-        return runParsedProgram(parsed.program);
+        return interpreter.run(parsed.program, { step });
       });
     },
     [
@@ -462,55 +463,49 @@ export function useStartEnvironment() {
     ]
   );
 
-  const runProgram = useCallback(async () => {
-    await startProgram((node) => interpreter.run(node));
-  }, [interpreter, startProgram]);
+  // Resumes from the current interpreter state. If the user had rewound
+  // history, the future snapshots are discarded first. Input resumes keep
+  // the current line highlight; other resumes clear it.
+  const resumeCurrent = useCallback(
+    async ({ step, input }: { step?: boolean; input?: string } = {}) => {
+      await performInterpreterAction(
+        () => {
+          if (history.isRewound) {
+            history.truncateAfterCurrent();
+          }
+          return interpreter.resume({ step, input });
+        },
+        { clearHighlight: input === undefined }
+      );
+    },
+    [history, interpreter, performInterpreterAction]
+  );
+
+  const runProgram = useCallback(() => startFresh(), [startFresh]);
 
   const runOrResume = useCallback(() => {
     switch (runtimeMode) {
       case 'breakpoint':
-        return performInterpreterAction(() => interpreter.resume());
       case 'rewound':
       case 'continuable':
-        return performInterpreterAction(() => {
-          history.truncateAfterCurrent();
-          return interpreter.resume();
-        });
+        return resumeCurrent();
       case 'idle':
-      case 'running':
-      case 'input':
-        return runProgram();
+        return startFresh();
     }
-  }, [history, interpreter, performInterpreterAction, runProgram, runtimeMode]);
+  }, [resumeCurrent, runtimeMode, startFresh]);
 
-  const stepToNextStatement = useCallback(async () => {
+  const stepToNextStatement = useCallback(() => {
     switch (runtimeMode) {
       case 'idle':
-        await startProgram((node) => interpreter.run(node, { step: true }));
-        return;
+        return startFresh({ step: true });
       case 'breakpoint':
-        await performInterpreterAction(() =>
-          interpreter.resume({ step: true })
-        );
-        return;
-      case 'continuable':
-      case 'input':
-      case 'rewound':
-      case 'running':
-        return;
+        return resumeCurrent({ step: true });
     }
-  }, [interpreter, performInterpreterAction, runtimeMode, startProgram]);
+  }, [resumeCurrent, runtimeMode, startFresh]);
 
   const resumeInput = useCallback(
-    async (value: string) => {
-      await performInterpreterAction(
-        () => interpreter.resume({ input: value }),
-        {
-          clearHighlight: false,
-        }
-      );
-    },
-    [interpreter, performInterpreterAction]
+    (value: string) => resumeCurrent({ input: value }),
+    [resumeCurrent]
   );
 
   const stopProgram = useCallback(() => {
