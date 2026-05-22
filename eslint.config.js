@@ -82,6 +82,7 @@ export default tseslint.config(
     files: ['**/tests/**/*.{ts,tsx}', '**/*.test.{ts,tsx}'],
     rules: {
       '@typescript-eslint/no-non-null-assertion': 'off',
+      '@typescript-eslint/no-dynamic-delete': 'off',
     },
   }
 );

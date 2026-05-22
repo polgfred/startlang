@@ -37,6 +37,7 @@ export class Namespace {
     return new Namespace(
       this.getHandler,
       produce(this.values, (draft) => {
+        // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
         delete draft[name];
       })
     );

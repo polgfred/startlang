@@ -31,6 +31,7 @@ export class RecordHandler extends DataHandler {
   }
 
   deleteIndex(value: WritableDraft<RecordType>, index: string) {
+    // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
     delete value[index];
   }
 
