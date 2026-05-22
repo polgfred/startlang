@@ -430,42 +430,7 @@ export function useStartEnvironment() {
     ]
   );
 
-  const resumeInput = useCallback(
-    async (value: string) => {
-      await performInterpreterAction(
-        () => interpreter.resume({ input: value }),
-        {
-          clearHighlight: false,
-        }
-      );
-    },
-    [interpreter, performInterpreterAction]
-  );
-
-  const inputState = useMemo(
-    () =>
-      runtimeView.pauseReason?.kind === 'input'
-        ? {
-            prompt: runtimeView.pauseReason.prompt,
-            initial: runtimeView.pauseReason.initial,
-            onInputComplete: resumeInput,
-          }
-        : null,
-    [runtimeView.pauseReason, resumeInput]
-  );
-
-  const { hasGraphicsOutput, hasTextOutput } = getOutputPresence(
-    host,
-    inputState !== null
-  );
-
-  const updateSlider = useCallback(
-    (index: number) => {
-      interpreter.restoreState(history.moveTo(index));
-      finishInterpreterAction();
-    },
-    [finishInterpreterAction, history, interpreter]
-  );
+  // ---- run / step / continue / stop --------------------------------------
 
   const startProgram = useCallback(
     async (runParsedProgram: (program: Program) => Promise<RunResult>) => {
@@ -501,6 +466,23 @@ export function useStartEnvironment() {
     await startProgram((node) => interpreter.run(node));
   }, [interpreter, startProgram]);
 
+  const runOrResume = useCallback(() => {
+    switch (runtimeMode) {
+      case 'breakpoint':
+        return performInterpreterAction(() => interpreter.resume());
+      case 'rewound':
+      case 'continuable':
+        return performInterpreterAction(() => {
+          history.truncateAfterCurrent();
+          return interpreter.resume();
+        });
+      case 'idle':
+      case 'running':
+      case 'input':
+        return runProgram();
+    }
+  }, [history, interpreter, performInterpreterAction, runProgram, runtimeMode]);
+
   const stepToNextStatement = useCallback(async () => {
     switch (runtimeMode) {
       case 'idle':
@@ -519,6 +501,18 @@ export function useStartEnvironment() {
     }
   }, [interpreter, performInterpreterAction, runtimeMode, startProgram]);
 
+  const resumeInput = useCallback(
+    async (value: string) => {
+      await performInterpreterAction(
+        () => interpreter.resume({ input: value }),
+        {
+          clearHighlight: false,
+        }
+      );
+    },
+    [interpreter, performInterpreterAction]
+  );
+
   const stopProgram = useCallback(() => {
     setError(null);
     interpreter.stop();
@@ -526,6 +520,35 @@ export function useStartEnvironment() {
     highlightLine(null);
     finishInterpreterAction();
   }, [finishInterpreterAction, highlightLine, history, interpreter]);
+
+  // ---- derived UI state --------------------------------------------------
+
+  const inputState = useMemo(
+    () =>
+      runtimeView.pauseReason?.kind === 'input'
+        ? {
+            prompt: runtimeView.pauseReason.prompt,
+            initial: runtimeView.pauseReason.initial,
+            onInputComplete: resumeInput,
+          }
+        : null,
+    [runtimeView.pauseReason, resumeInput]
+  );
+
+  const { hasGraphicsOutput, hasTextOutput } = getOutputPresence(
+    host,
+    inputState !== null
+  );
+
+  // ---- history slider & inspector ----------------------------------------
+
+  const updateSlider = useCallback(
+    (index: number) => {
+      interpreter.restoreState(history.moveTo(index));
+      finishInterpreterAction();
+    },
+    [finishInterpreterAction, history, interpreter]
+  );
 
   const commitInspectorMutation = useCallback(
     (message: string, mutate: () => void) => {
@@ -570,23 +593,6 @@ export function useStartEnvironment() {
     },
     [commitInspectorMutation, interpreter]
   );
-
-  const runOrResume = useCallback(() => {
-    switch (runtimeMode) {
-      case 'breakpoint':
-        return performInterpreterAction(() => interpreter.resume());
-      case 'rewound':
-      case 'continuable':
-        return performInterpreterAction(() => {
-          history.truncateAfterCurrent();
-          return interpreter.resume();
-        });
-      case 'idle':
-      case 'running':
-      case 'input':
-        return runProgram();
-    }
-  }, [history, interpreter, performInterpreterAction, runProgram, runtimeMode]);
 
   return {
     error,
