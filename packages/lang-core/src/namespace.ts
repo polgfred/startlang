@@ -37,7 +37,7 @@ export class Namespace {
     return new Namespace(
       this.getHandler,
       produce(this.values, (draft) => {
-        Reflect.deleteProperty(draft, name);
+        delete draft[name];
       })
     );
   }
