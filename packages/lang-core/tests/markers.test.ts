@@ -66,7 +66,7 @@ describe('marker maps', () => {
     model.toggleMarker(3);
     model.toggleMarker(3);
 
-    const resumed = await interpreter.continue();
+    const resumed = await interpreter.resume();
 
     expect(resumed.status).toBe('completed');
     expect(interpreter.getVariable('x')).toBe(3);
@@ -238,21 +238,21 @@ describe('marker maps', () => {
     expect(expectPaused(result).kind).toBe('breakpoint');
     expect(interpreter.topFrame.head.node.location.start.line).toBe(1);
 
-    result = await interpreter.stepToNextStatement();
+    result = await interpreter.resume({ step: true });
 
     expect(expectPaused(result).kind).toBe('step');
     expect(interpreter.topFrame.head.node.location.start.line).toBe(2);
     expect(interpreter.topFrame.head.node.isStatement).toBe(true);
     expect(interpreter.getVariable('value')).toBe(1);
 
-    result = await interpreter.stepToNextStatement();
+    result = await interpreter.resume({ step: true });
 
     expect(expectPaused(result).kind).toBe('step');
     expect(interpreter.topFrame.head.node.location.start.line).toBe(3);
     expect(interpreter.topFrame.head.node.isStatement).toBe(true);
     expect(interpreter.getVariable('value')).toBe(9);
 
-    result = await interpreter.stepToNextStatement();
+    result = await interpreter.resume({ step: true });
 
     expect(result.status).toBe('completed');
     expect(interpreter.getVariable('value')).toBe(10);
@@ -263,7 +263,7 @@ describe('marker maps', () => {
     const program = parse(source);
     const interpreter = new Interpreter();
 
-    const result = await interpreter.runToNextStatement(program);
+    const result = await interpreter.run(program, { step: true });
 
     expect(expectPaused(result).kind).toBe('step');
     expect(interpreter.topFrame.head.node.location.start.line).toBe(1);
@@ -293,12 +293,12 @@ describe('marker maps', () => {
     expect(expectPaused(result).kind).toBe('breakpoint');
     expect(interpreter.topFrame.head.node.location.start.line).toBe(2);
 
-    result = await interpreter.stepToNextStatement();
+    result = await interpreter.resume({ step: true });
 
     expect(expectPaused(result).kind).toBe('step');
     expect(interpreter.topFrame.head.node.location.start.line).toBe(4);
 
-    result = await interpreter.stepToNextStatement();
+    result = await interpreter.resume({ step: true });
 
     expect(expectPaused(result).kind).toBe('step');
     expect(interpreter.topFrame.head.node.location.start.line).toBe(5);
@@ -326,7 +326,7 @@ describe('marker maps', () => {
     delete markers[2];
     markers[3] = 'breakpoint';
 
-    result = await interpreter.continue();
+    result = await interpreter.resume();
 
     expect(expectPaused(result).kind).toBe('breakpoint');
     expect(interpreter.topFrame.head.node.location.start.line).toBe(3);
@@ -334,7 +334,7 @@ describe('marker maps', () => {
 
     delete markers[3];
 
-    result = await interpreter.continue();
+    result = await interpreter.resume();
 
     expect(result.status).toBe('completed');
     expect(interpreter.getVariable('x')).toBe(3);

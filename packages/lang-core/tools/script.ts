@@ -96,9 +96,9 @@ async function runUntilComplete(
     const { pause } = result;
     if (pause.kind === 'input') {
       const answer = await question(pause.prompt || '> ');
-      result = await interp.continueWithInput(answer);
+      result = await interp.resume({ input: answer });
     } else if (isContinuablePause(pause)) {
-      result = await interp.continue();
+      result = await interp.resume();
     } else {
       throw new Error(`unsupported pause: ${pause.kind}`);
     }

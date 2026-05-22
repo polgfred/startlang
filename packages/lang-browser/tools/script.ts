@@ -119,9 +119,9 @@ async function runUntilComplete(
     if (pause.kind === 'input') {
       renderer.flush(host);
       const answer = await question(pause);
-      result = await interp.continueWithInput(answer);
+      result = await interp.resume({ input: answer });
     } else if (pause.kind === 'breakpoint' || pause.kind === 'pause') {
-      result = await interp.continue();
+      result = await interp.resume();
     } else {
       throw new Error(`unsupported pause: ${pause.kind}`);
     }

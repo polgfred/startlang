@@ -433,7 +433,7 @@ export function useStartEnvironment() {
   const resumeInput = useCallback(
     async (value: string) => {
       await performInterpreterAction(
-        () => interpreter.continueWithInput(value),
+        () => interpreter.resume({ input: value }),
         {
           clearHighlight: false,
         }
@@ -501,20 +501,15 @@ export function useStartEnvironment() {
     await startProgram((node) => interpreter.run(node));
   }, [interpreter, startProgram]);
 
-  const stepIntoProgram = useCallback(async () => {
-    await startProgram((node) => interpreter.runToNextStatement(node));
-  }, [interpreter, startProgram]);
-
-  const resumeBreakpoint = useCallback(async () => {
-    await performInterpreterAction(() => interpreter.continue());
-  }, [interpreter, performInterpreterAction]);
-
   const stepToNextStatement = useCallback(async () => {
     switch (runtimeMode) {
       case 'idle':
-        return stepIntoProgram();
+        await startProgram((node) => interpreter.run(node, { step: true }));
+        return;
       case 'breakpoint':
-        await performInterpreterAction(() => interpreter.stepToNextStatement());
+        await performInterpreterAction(() =>
+          interpreter.resume({ step: true })
+        );
         return;
       case 'continuable':
       case 'input':
@@ -522,14 +517,7 @@ export function useStartEnvironment() {
       case 'running':
         return;
     }
-  }, [interpreter, performInterpreterAction, runtimeMode, stepIntoProgram]);
-
-  const continueFromSnapshot = useCallback(async () => {
-    await performInterpreterAction(() => {
-      history.truncateAfterCurrent();
-      return interpreter.continue();
-    });
-  }, [history, interpreter, performInterpreterAction]);
+  }, [interpreter, performInterpreterAction, runtimeMode, startProgram]);
 
   const stopProgram = useCallback(() => {
     setError(null);
@@ -586,16 +574,19 @@ export function useStartEnvironment() {
   const runOrResume = useCallback(() => {
     switch (runtimeMode) {
       case 'breakpoint':
-        return resumeBreakpoint();
+        return performInterpreterAction(() => interpreter.resume());
       case 'rewound':
       case 'continuable':
-        return continueFromSnapshot();
+        return performInterpreterAction(() => {
+          history.truncateAfterCurrent();
+          return interpreter.resume();
+        });
       case 'idle':
       case 'running':
       case 'input':
         return runProgram();
     }
-  }, [continueFromSnapshot, resumeBreakpoint, runProgram, runtimeMode]);
+  }, [history, interpreter, performInterpreterAction, runProgram, runtimeMode]);
 
   return {
     error,

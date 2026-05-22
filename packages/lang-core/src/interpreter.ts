@@ -137,28 +137,15 @@ export class Interpreter {
     return this.namespace.localNamespaces;
   }
 
-  run(program: Program): Promise<RunResult> {
-    this.prepareToRun(program, { incremental: false });
-    return this.runLoop();
-  }
-
-  runToNextStatement(program: Program): Promise<RunResult> {
-    this.prepareToRun(program, { incremental: false });
-    return this.runStepping();
-  }
-
-  // Merges program.functions into the existing global function table
-  // (last-write-wins). Each call is its own compilation unit; existing
-  // definitions from prior calls remain in scope.
-  runIncremental(program: Program): Promise<RunResult> {
-    this.prepareToRun(program, { incremental: true });
-    return this.runLoop();
-  }
-
-  private prepareToRun(
+  // Starts a fresh run from `program.main`.
+  //   incremental: merge program.functions into the existing table instead
+  //                of resetting the namespace (each call is its own
+  //                compilation unit). Used by the REPL.
+  //   step:        pause at the next statement push.
+  run(
     program: Program,
-    { incremental }: { incremental: boolean }
-  ) {
+    { incremental = false, step = false }: { incremental?: boolean; step?: boolean } = {}
+  ): Promise<RunResult> {
     if (incremental) {
       this.globalFunctions = Object.freeze({
         ...this.globalFunctions,
@@ -173,23 +160,34 @@ export class Interpreter {
     this.pauseReason = null;
     this.pendingInput = null;
     this.pendingEffects = [];
+    this.shouldStepToNextStatement = step;
     this.epoch++;
+    return this.runLoop();
   }
 
-  private async runStepping(): Promise<RunResult> {
-    this.shouldStepToNextStatement = true;
-    let aborted = false;
-    try {
-      return await this.runLoop();
-    } catch (err) {
-      aborted = err instanceof AbortedError;
-      throw err;
-    } finally {
-      // Don't clear the flag for an aborted result
-      if (!aborted) {
-        this.shouldStepToNextStatement = false;
+  // Continues from the current state (paused, rewound, or just-restored).
+  //   step:  pause at the next statement push.
+  //   input: supply the value an `input` pause is waiting on.
+  resume(
+    options: { step?: boolean; input?: string } = {}
+  ): Promise<RunResult> {
+    if (this.pauseReason?.kind === 'input') {
+      if (options.step) {
+        throw new Error('cannot step while waiting for input');
       }
+      if (options.input !== undefined) {
+        this.pendingInput = options.input;
+      }
+      if (this.pendingInput === null) {
+        throw new Error('interpreter is waiting for input');
+      }
+    } else if (options.input !== undefined) {
+      throw new Error('interpreter is not waiting for input');
     }
+
+    this.shouldStepToNextStatement = options.step ?? false;
+    this.pauseReason = null;
+    return this.runLoop();
   }
 
   private async runLoop(): Promise<RunResult> {
@@ -240,31 +238,6 @@ export class Interpreter {
     }
   }
 
-  continue() {
-    if (!this.pauseReason) {
-      return this.runLoop();
-    }
-    if (this.pauseReason.kind === 'input' && this.pendingInput === null) {
-      throw new Error('interpreter is waiting for input');
-    }
-
-    this.pauseReason = null;
-    return this.runLoop();
-  }
-
-  continueWithInput(value: string) {
-    this.provideInput(value);
-    return this.continue();
-  }
-
-  provideInput(value: string) {
-    if (this.pauseReason?.kind !== 'input') {
-      throw new Error('interpreter is not waiting for input');
-    }
-
-    this.pendingInput = value;
-  }
-
   consumeInput() {
     if (this.pendingInput === null) {
       throw new Error('input value was not provided');
@@ -273,15 +246,6 @@ export class Interpreter {
     const value = this.pendingInput;
     this.pendingInput = null;
     return value;
-  }
-
-  stepToNextStatement(): Promise<RunResult> {
-    if (!this.pauseReason || this.pauseReason.kind === 'input') {
-      throw new Error('interpreter is not paused at a continuable statement');
-    }
-
-    this.pauseReason = null;
-    return this.runStepping();
   }
 
   setEffect(effect: RuntimeEffect) {

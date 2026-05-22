@@ -61,7 +61,7 @@ describe('interpreter lifecycle', () => {
     expect(pause.prompt).toBe('Name?');
     expect(pause.initial).toBe('Ada');
 
-    const resumed = await interpreter.continueWithInput('Grace');
+    const resumed = await interpreter.resume({ input: 'Grace' });
 
     expect(resumed.status).toBe('completed');
     expect(interpreter.getVariable('name')).toBe('Grace');
@@ -79,8 +79,7 @@ describe('interpreter lifecycle', () => {
 
     expectInputPause(expectPaused(result));
 
-    interpreter.provideInput('Grace');
-    const resumed = await interpreter.continue();
+    const resumed = await interpreter.resume({ input: 'Grace' });
 
     expect(resumed.status).toBe('completed');
     expect(interpreter.getVariable('name')).toBe('Grace');
@@ -106,7 +105,7 @@ describe('interpreter lifecycle', () => {
     expect(pause.prompt).toBe('Name?');
     expect(interpreter.topFrame.head.node.location.start.line).toBe(2);
 
-    const resumed = await interpreter.continueWithInput('Grace');
+    const resumed = await interpreter.resume({ input: 'Grace' });
 
     expect(resumed.status).toBe('completed');
     expect(interpreter.getVariable('name')).toBe('Grace');
@@ -135,7 +134,7 @@ describe('interpreter lifecycle', () => {
     const pause = expectInputPause(interpreter.pauseReason!);
     expect(pause.initial).toBe('Ada');
 
-    const resumed = await interpreter.continueWithInput('Grace');
+    const resumed = await interpreter.resume({ input: 'Grace' });
 
     expect(resumed.status).toBe('completed');
     expect(interpreter.getVariable('name')).toBe('Grace');
@@ -188,7 +187,7 @@ describe('interpreter lifecycle', () => {
     expectPauseKind(result, 'pause');
     expect(interpreter.getVariable('value')).toBe(1);
 
-    const resumed = await interpreter.continue();
+    const resumed = await interpreter.resume();
 
     expect(resumed.status).toBe('completed');
     expect(interpreter.getVariable('value')).toBe(2);
@@ -234,21 +233,21 @@ describe('interpreter lifecycle', () => {
       value = value + 1
       `);
 
-    let result = await interpreter.runToNextStatement(rootNode);
+    let result = await interpreter.run(rootNode, { step: true });
 
     expectPauseKind(result, 'step');
     expect(interpreter.topFrame.head.node.location.start.line).toBe(2);
     expect(history.entries).toHaveLength(1);
     expect(history.current?.globalNamespace.values.value).toBeUndefined();
 
-    result = await interpreter.stepToNextStatement();
+    result = await interpreter.resume({ step: true });
 
     expectPauseKind(result, 'step');
     expect(interpreter.topFrame.head.node.location.start.line).toBe(3);
     expect(history.entries).toHaveLength(2);
     expect(history.current?.globalNamespace.values.value).toBe(1);
 
-    result = await interpreter.stepToNextStatement();
+    result = await interpreter.resume({ step: true });
 
     expectPauseKind(result, 'step');
     expect(interpreter.topFrame.head.node.location.start.line).toBe(4);
@@ -292,7 +291,7 @@ describe('interpreter lifecycle', () => {
     expect(history.isRewound).toBe(true);
 
     history.truncateAfterCurrent();
-    const resumed = await interpreter.continue();
+    const resumed = await interpreter.resume();
 
     expect(resumed.status).toBe('completed');
     expect(interpreter.getVariable('value')).toBe(3);
@@ -352,7 +351,7 @@ describe('interpreter lifecycle', () => {
     expect(history.entries).toHaveLength(2);
     expect(interpreter.getVariable('value')).toBe(1);
 
-    const resumed = await interpreter.continue();
+    const resumed = await interpreter.resume();
 
     expect(resumed.status).toBe('completed');
     expect(interpreter.getVariable('value')).toBe(2);
@@ -454,33 +453,34 @@ describe('interpreter lifecycle', () => {
       }
     });
 
-    const firstPause = await interpreter.runToNextStatement(
+    const firstPause = await interpreter.run(
       parseSnippet(`
       sleep 1000
       value = "first"
-      `)
+      `),
+      { step: true }
     );
     expectPauseKind(firstPause, 'step');
-    const stalePending = interpreter.stepToNextStatement();
+    const stalePending = interpreter.resume({ step: true });
     await new Promise((r) => setImmediate(r));
     expect(pendingDelays).toHaveLength(1);
     const releaseStale = pendingDelays.shift()!;
 
-    const newPause = await interpreter.runToNextStatement(
+    const newPause = await interpreter.run(
       parseSnippet(`
       sleep 500
       value = "new"
-      `)
+      `),
+      { step: true }
     );
     expectPauseKind(newPause, 'step');
-    const newPending = interpreter.stepToNextStatement();
+    const newPending = interpreter.resume({ step: true });
     await new Promise((r) => setImmediate(r));
     expect(pendingDelays).toHaveLength(1);
     const releaseNew = pendingDelays.shift()!;
 
-    // Stale releases first; its runStepping finally must skip the flag
-    // reset, otherwise the still-awaiting new runLoop will run past its
-    // next statement push without pausing.
+    // Stale releases first; the new run already set its own step flag via
+    // prepareToRun, so the stale loop's abort must not clobber it.
     releaseStale();
     await expect(stalePending).rejects.toBeInstanceOf(AbortedError);
 

@@ -35,7 +35,7 @@ async function runUntilComplete(
     const { pause } = result;
 
     if (pause.kind === 'input') {
-      result = await interpreter.continueWithInput(pause.initial);
+      result = await interpreter.resume({ input: pause.initial });
       continue;
     }
 
@@ -135,7 +135,7 @@ async function playNumguessWithBinarySearch() {
     const guess = Math.floor((lo + hi) / 2);
     guesses.push(guess);
     lastGuess = guess;
-    result = await interpreter.continueWithInput(String(guess));
+    result = await interpreter.resume({ input: String(guess) });
   }
 
   return { guesses, host, interpreter };

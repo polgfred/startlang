@@ -24,7 +24,7 @@ async function runUntilComplete(
       rl.prompt();
       return pause;
     } else if (pause.kind === 'breakpoint' || pause.kind === 'pause') {
-      result = await interp.continue();
+      result = await interp.resume();
     } else {
       throw new Error(`unsupported pause: ${pause.kind}`);
     }
@@ -77,7 +77,7 @@ async function main() {
   for await (const line of rl) {
     if (pendingInput) {
       try {
-        const result = await interp.continueWithInput(line);
+        const result = await interp.resume({ input: line });
         pendingInput = await runUntilComplete(interp, rl, result);
       } catch (err) {
         console.error(formatError(err));
@@ -111,7 +111,7 @@ async function main() {
       pendingInput = await runUntilComplete(
         interp,
         rl,
-        await interp.runIncremental(node)
+        await interp.run(node, { incremental: true })
       );
     } catch (err) {
       if (err instanceof SyntaxError) {
