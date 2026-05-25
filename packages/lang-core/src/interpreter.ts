@@ -150,6 +150,7 @@ export class Interpreter {
       this.globalFunctions = Object.freeze({ ...program.functions });
       this.namespace.reset();
     }
+
     this.topFrame = new Cons(program.main.makeFrame());
     this.lastResult = null;
     this.pauseReason = null;
@@ -188,12 +189,14 @@ export class Interpreter {
   private async runLoop(): Promise<RunResult> {
     this.isRunning = true;
     const myEpoch = this.epoch;
+
     try {
       while (true) {
         if (this.pauseReason) {
           this.isRunning = false;
           return { status: 'paused', pause: this.pauseReason };
         }
+
         if (this.topFrame === null) {
           this.isRunning = false;
           return { status: 'completed' };
