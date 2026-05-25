@@ -181,6 +181,9 @@ function createRuntimeEnvironment(): RuntimeEnvironment {
   interpreter.registerGlobals(buildBrowserGlobals(host));
   interpreter.registerGlobals(runtimeGlobals);
   interpreter.registerSnapshotHandler(host);
+  interpreter.registerSnapshotListener(() => {
+    history.push(interpreter.captureState());
+  });
   interpreter.registerConfigurationHandler((option, value) =>
     host.setConfiguration(option, value)
   );
@@ -351,18 +354,12 @@ export function useStartEnvironment() {
     [store, syncOutputTab]
   );
 
-  const handleSnapshot = useCallback(() => {
-    history.push(interpreter.captureState());
-  }, [history, interpreter]);
-
   useEffect(() => {
     interpreter.registerEffectHandler(handleRuntimeEffect);
-    interpreter.registerSnapshotListener(handleSnapshot);
     return () => {
       interpreter.registerEffectHandler(null);
-      interpreter.registerSnapshotListener(null);
     };
-  }, [handleRuntimeEffect, handleSnapshot, interpreter]);
+  }, [handleRuntimeEffect, interpreter]);
 
   useEffect(() => {
     const handleAppError = (event: PromiseRejectionEvent) => {

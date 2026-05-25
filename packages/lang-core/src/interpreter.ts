@@ -290,16 +290,16 @@ export class Interpreter {
     this.effectHandler = handler;
   }
 
+  registerSnapshotHandler(handler: SnapshotHandler) {
+    this.snapshotHandler = handler;
+  }
+
   registerSnapshotListener(listener: SnapshotListener | null) {
     this.snapshotListener = listener;
   }
 
   takeSnapshot() {
     this.snapshotListener?.();
-  }
-
-  registerSnapshotHandler(handler: SnapshotHandler) {
-    this.snapshotHandler = handler;
   }
 
   pushFrame(frame: Frame) {
