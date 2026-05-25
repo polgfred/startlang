@@ -18,10 +18,8 @@ function parseSnippet(source: string) {
 }
 
 function recordSnapshots(interpreter: Interpreter, history: RuntimeHistory) {
-  interpreter.registerEffectHandler((effect) => {
-    if (effect.kind === 'snapshot') {
-      history.push(interpreter.captureState());
-    }
+  interpreter.registerSnapshotListener(() => {
+    history.push(interpreter.captureState());
   });
 }
 
@@ -298,6 +296,41 @@ describe('interpreter lifecycle', () => {
     expect(history.entries).toHaveLength(2);
     expect(history.index).toBe(1);
     expect(history.isRewound).toBe(false);
+  });
+
+  it('does not accumulate snapshot effects when restoring repeatedly', async () => {
+    const interpreter = new Interpreter();
+    const history = new RuntimeHistory();
+    recordSnapshots(interpreter, history);
+
+    const result = await interpreter.run(
+      parseSnippet(`
+      value = 0
+      snapshot
+      value = 1
+      snapshot
+      value = 2
+      snapshot
+      `)
+    );
+
+    expect(result.status).toBe('completed');
+    expect(history.entries).toHaveLength(3);
+
+    // Simulate the UI dragging the slider through several positions: each
+    // move calls restoreState, which used to leave a snapshotEffect queued
+    // via SnapshotFrame.onEnter. They would accumulate and all fire on the
+    // next resume, multiplying the number of new history entries.
+    interpreter.restoreState(history.moveTo(2));
+    interpreter.restoreState(history.moveTo(1));
+    interpreter.restoreState(history.moveTo(0));
+
+    history.truncateAfterCurrent();
+    const resumed = await interpreter.resume();
+
+    expect(resumed.status).toBe('completed');
+    expect(interpreter.getVariable('value')).toBe(2);
+    expect(history.entries).toHaveLength(3);
   });
 
   it('replaces a restored snapshot and discards future history', async () => {

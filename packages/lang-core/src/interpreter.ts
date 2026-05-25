@@ -30,22 +30,18 @@ export interface RuntimeState {
   localNamespaces: Cons<Namespace> | null;
   topFrame: Cons<Frame> | null;
   lastResult: unknown;
+  pauseReason: RuntimePause | null;
   hostSnapshot: unknown;
 }
 
 export type RuntimeEffect =
   | { readonly kind: 'repaint' }
-  | { readonly kind: 'snapshot' }
   | { readonly kind: 'delay'; readonly ms: number };
 
 export type RuntimeEffectKind = RuntimeEffect['kind'];
 
 export const repaintEffect: RuntimeEffect = Object.freeze({
   kind: 'repaint',
-});
-
-export const snapshotEffect: RuntimeEffect = Object.freeze({
-  kind: 'snapshot',
 });
 
 export function delayEffect(ms: number): RuntimeEffect {
@@ -55,6 +51,8 @@ export function delayEffect(ms: number): RuntimeEffect {
 export type RuntimeEffectHandler = (
   effect: RuntimeEffect
 ) => void | Promise<void>;
+
+export type SnapshotListener = () => void;
 
 export type RuntimePause =
   | { kind: 'breakpoint' }
@@ -78,10 +76,7 @@ export class RuntimeError extends Error {
   }
 }
 
-// Thrown by runLoop when its epoch advances mid-await (stop / restart took
-// over). It is *not* a runtime error — it is a structural signal that the
-// stale call never produced a result. Callers that wrap runLoop must
-// re-throw it past any finalizers; the top-level traffic cop drops it.
+// Thrown by runLoop when its epoch advances mid-await
 export class AbortedError extends Error {
   constructor() {
     super('interpreter run aborted');
@@ -103,6 +98,7 @@ export class Interpreter {
   private markersMap: MarkerMap = emptyMarkerMap;
   private pendingEffects: RuntimeEffect[] = [];
   private effectHandler: RuntimeEffectHandler | null = null;
+  private snapshotListener: SnapshotListener | null = null;
   private configurationHandler: ConfigurationHandler | null = null;
   private snapshotHandler: SnapshotHandler | null = null;
   private shouldStepToNextStatement = false;
@@ -294,16 +290,24 @@ export class Interpreter {
     this.effectHandler = handler;
   }
 
+  registerSnapshotListener(listener: SnapshotListener | null) {
+    this.snapshotListener = listener;
+  }
+
+  takeSnapshot() {
+    this.snapshotListener?.();
+  }
+
   registerSnapshotHandler(handler: SnapshotHandler) {
     this.snapshotHandler = handler;
   }
 
   pushFrame(frame: Frame) {
     this.topFrame = new Cons(frame, this.topFrame);
+    frame.onEnter(this);
     if (frame.node.isStatement) {
       this.onStatementPush(frame.node);
     }
-    frame.onEnter(this);
   }
 
   swapFrame<T extends Frame = Frame>(
@@ -354,12 +358,16 @@ export class Interpreter {
 
   onStatementPush(node: Node) {
     const marker = this.markersMap(node);
-    // pushNode is the interpreter's node-entry point, so this catches the next
-    // statement without re-pausing when expression frames return to their
-    // enclosing statement.
     const shouldPauseForStep = this.shouldStepToNextStatement;
     if (marker || shouldPauseForStep) {
-      this.setEffect(snapshotEffect);
+      this.takeSnapshot();
+    }
+
+    // onEnter ran first (e.g. InputFrame setting pauseReason='input'); a
+    // hard pause from the frame itself takes precedence over a step or
+    // breakpoint pause attached to the same line.
+    if (this.pauseReason) {
+      return;
     }
 
     if (shouldPauseForStep) {
@@ -504,6 +512,7 @@ export class Interpreter {
       localNamespaces: this.localNamespaces,
       topFrame: this.topFrame,
       lastResult: this.lastResult,
+      pauseReason: this.pauseReason,
       hostSnapshot: this.snapshotHandler?.takeSnapshot(),
     };
   }
@@ -512,9 +521,9 @@ export class Interpreter {
     this.namespace.restore(state.globalNamespace, state.localNamespaces);
     this.topFrame = state.topFrame;
     this.lastResult = state.lastResult;
-    this.pauseReason = null;
+    this.pauseReason = state.pauseReason;
     this.pendingInput = null;
-    this.topFrame?.head.onEnter(this);
+    this.pendingEffects = [];
     this.snapshotHandler?.restoreSnapshot(state.hostSnapshot);
   }
 

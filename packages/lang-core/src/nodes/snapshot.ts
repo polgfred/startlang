@@ -1,4 +1,4 @@
-import { Interpreter, snapshotEffect } from '../interpreter.js';
+import { Interpreter } from '../interpreter.js';
 
 import { Frame, Node } from './base.js';
 
@@ -12,7 +12,7 @@ export class SnapshotNode extends Node {
 
 class SnapshotFrame extends Frame {
   override onEnter(interpreter: Interpreter) {
-    interpreter.setEffect(snapshotEffect);
+    interpreter.takeSnapshot();
   }
 
   visit(interpreter: Interpreter) {

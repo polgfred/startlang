@@ -334,10 +334,6 @@ export function useStartEnvironment() {
   const handleRuntimeEffect = useCallback(
     (effect: RuntimeEffect) => {
       switch (effect.kind) {
-        case 'snapshot': {
-          history.push(interpreter.captureState());
-          return;
-        }
         case 'repaint': {
           syncOutputTab();
           store.publish();
@@ -352,15 +348,21 @@ export function useStartEnvironment() {
         }
       }
     },
-    [history, interpreter, store, syncOutputTab]
+    [store, syncOutputTab]
   );
+
+  const handleSnapshot = useCallback(() => {
+    history.push(interpreter.captureState());
+  }, [history, interpreter]);
 
   useEffect(() => {
     interpreter.registerEffectHandler(handleRuntimeEffect);
+    interpreter.registerSnapshotListener(handleSnapshot);
     return () => {
       interpreter.registerEffectHandler(null);
+      interpreter.registerSnapshotListener(null);
     };
-  }, [handleRuntimeEffect, interpreter]);
+  }, [handleRuntimeEffect, handleSnapshot, interpreter]);
 
   useEffect(() => {
     const handleAppError = (event: PromiseRejectionEvent) => {
