@@ -19,7 +19,6 @@ describe('marker maps', () => {
     if (result.status !== 'paused') {
       throw new Error(`expected pause, got ${result.status}`);
     }
-    return result.pause;
   }
 
   it('keeps editor-owned markers behind a run-ready marker map', () => {
@@ -60,7 +59,7 @@ describe('marker maps', () => {
 
     const result = await interpreter.run(program);
 
-    expect(expectPaused(result).kind).toBe('breakpoint');
+    expectPaused(result);
     expect(interpreter.topFrame!.head.node.location.start.line).toBe(3);
 
     model.toggleMarker(3);
@@ -235,19 +234,19 @@ describe('marker maps', () => {
 
     let result = await interpreter.run(program);
 
-    expect(expectPaused(result).kind).toBe('breakpoint');
+    expectPaused(result);
     expect(interpreter.topFrame!.head.node.location.start.line).toBe(1);
 
     result = await interpreter.resume({ step: true });
 
-    expect(expectPaused(result).kind).toBe('step');
+    expectPaused(result);
     expect(interpreter.topFrame!.head.node.location.start.line).toBe(2);
     expect(interpreter.topFrame!.head.node.isStatement).toBe(true);
     expect(interpreter.getVariable('value')).toBe(1);
 
     result = await interpreter.resume({ step: true });
 
-    expect(expectPaused(result).kind).toBe('step');
+    expectPaused(result);
     expect(interpreter.topFrame!.head.node.location.start.line).toBe(3);
     expect(interpreter.topFrame!.head.node.isStatement).toBe(true);
     expect(interpreter.getVariable('value')).toBe(9);
@@ -265,7 +264,7 @@ describe('marker maps', () => {
 
     const result = await interpreter.run(program, { step: true });
 
-    expect(expectPaused(result).kind).toBe('step');
+    expectPaused(result);
     expect(interpreter.topFrame!.head.node.location.start.line).toBe(1);
     expect(interpreter.topFrame!.head.node.isStatement).toBe(true);
     expect(interpreter.getVariable('value')).toBeUndefined();
@@ -290,17 +289,17 @@ describe('marker maps', () => {
 
     let result = await interpreter.run(program);
 
-    expect(expectPaused(result).kind).toBe('breakpoint');
+    expectPaused(result);
     expect(interpreter.topFrame!.head.node.location.start.line).toBe(2);
 
     result = await interpreter.resume({ step: true });
 
-    expect(expectPaused(result).kind).toBe('step');
+    expectPaused(result);
     expect(interpreter.topFrame!.head.node.location.start.line).toBe(4);
 
     result = await interpreter.resume({ step: true });
 
-    expect(expectPaused(result).kind).toBe('step');
+    expectPaused(result);
     expect(interpreter.topFrame!.head.node.location.start.line).toBe(5);
   });
 
@@ -320,7 +319,7 @@ describe('marker maps', () => {
 
     let result = await interpreter.run(program);
 
-    expect(expectPaused(result).kind).toBe('breakpoint');
+    expectPaused(result);
     expect(interpreter.topFrame!.head.node.location.start.line).toBe(2);
 
     delete markers[2];
@@ -328,7 +327,7 @@ describe('marker maps', () => {
 
     result = await interpreter.resume();
 
-    expect(expectPaused(result).kind).toBe('breakpoint');
+    expectPaused(result);
     expect(interpreter.topFrame!.head.node.location.start.line).toBe(3);
     expect(interpreter.getVariable('x')).toBe(0);
 

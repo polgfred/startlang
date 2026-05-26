@@ -8,8 +8,8 @@ import {
   AbortedError,
   Interpreter,
   RuntimeError,
+  type InputPause,
   type RuntimeEffect,
-  type RuntimePause,
   type RunResult,
   type RuntimeState,
 } from '@startlang/lang-core/interpreter';
@@ -34,14 +34,14 @@ interface RuntimeStatus {
   isComplete: boolean;
   isRunning: boolean;
   isRewound: boolean;
-  pauseReason: RuntimePause | null;
+  isPaused: boolean;
+  inputPause: InputPause | null;
 }
 
 interface RuntimeView extends RuntimeState, RuntimeStatus {
   version: number;
   historyLength: number;
   historyIndex: number;
-  isPaused: boolean;
 }
 
 export type RuntimeMode =
@@ -76,9 +76,9 @@ interface RuntimeControls {
 function getRuntimeMode(status: RuntimeStatus): RuntimeMode {
   if (status.isRunning) {
     return 'running';
-  } else if (status.pauseReason?.kind === 'input') {
+  } else if (status.inputPause) {
     return 'input';
-  } else if (status.pauseReason) {
+  } else if (status.isPaused) {
     return 'breakpoint';
   } else if (status.isRewound) {
     return 'rewound';
@@ -126,7 +126,8 @@ function getRuntimeStatus(
     isComplete: interpreter.isComplete,
     isRunning: interpreter.isRunning,
     isRewound: history.isRewound,
-    pauseReason: interpreter.pauseReason,
+    isPaused: interpreter.isPaused,
+    inputPause: interpreter.inputPause,
   };
 }
 
@@ -147,7 +148,7 @@ function createInterpreterStore(
       isRunning: interpreter.isRunning,
       isPaused: interpreter.isPaused,
       isRewound: history.isRewound,
-      pauseReason: interpreter.pauseReason,
+      inputPause: interpreter.inputPause,
     };
   }
 
@@ -297,7 +298,7 @@ export function useStartEnvironment() {
   const syncOutputTab = useCallback(() => {
     const { hasGraphicsOutput, hasTextOutput } = getOutputPresence(
       host,
-      interpreter.pauseReason?.kind === 'input'
+      interpreter.inputPause !== null
     );
 
     setOutputTab((current) =>
@@ -520,14 +521,14 @@ export function useStartEnvironment() {
 
   const inputState = useMemo(
     () =>
-      runtimeView.pauseReason?.kind === 'input'
+      runtimeView.inputPause
         ? {
-            prompt: runtimeView.pauseReason.prompt,
-            initial: runtimeView.pauseReason.initial,
+            prompt: runtimeView.inputPause.prompt,
+            initial: runtimeView.inputPause.initial,
             onInputComplete: resumeInput,
           }
         : null,
-    [runtimeView.pauseReason, resumeInput]
+    [runtimeView.inputPause, resumeInput]
   );
 
   const { hasGraphicsOutput, hasTextOutput } = getOutputPresence(

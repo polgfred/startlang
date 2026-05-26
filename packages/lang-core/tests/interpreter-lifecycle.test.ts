@@ -5,9 +5,9 @@ import { mapMarkers } from '../src/editor-markers.js';
 import {
   AbortedError,
   Interpreter,
+  type InputPause,
   type RunResult,
 } from '@startlang/lang-core/interpreter';
-import type { RuntimePause } from '@startlang/lang-core/interpreter';
 import { parse } from '@startlang/lang-core/parser.peggy';
 import { runtimeGlobals } from '@startlang/lang-core/runtime-globals';
 import { RuntimeHistory } from '@startlang/lang-core/runtime-history';
@@ -23,24 +23,16 @@ function recordSnapshots(interpreter: Interpreter, history: RuntimeHistory) {
   });
 }
 
-function expectPaused(result: RunResult): RuntimePause {
+function expectPaused(result: RunResult) {
   expect(result.status).toBe('paused');
-  if (result.status !== 'paused') {
-    throw new Error('expected pause');
-  }
-  return result.pause;
 }
 
-function expectInputPause(pause: RuntimePause) {
-  expect(pause.kind).toBe('input');
-  if (pause.kind !== 'input') {
+function expectInputPause(result: RunResult): InputPause {
+  expect(result.status).toBe('awaiting-input');
+  if (result.status !== 'awaiting-input') {
     throw new Error('expected input pause');
   }
-  return pause;
-}
-
-function expectPauseKind(result: RunResult, kind: RuntimePause['kind']) {
-  expect(expectPaused(result).kind).toBe(kind);
+  return result.pause;
 }
 
 describe('interpreter lifecycle', () => {
@@ -55,7 +47,7 @@ describe('interpreter lifecycle', () => {
       `)
     );
 
-    const pause = expectInputPause(expectPaused(result));
+    const pause = expectInputPause(result);
     expect(pause.prompt).toBe('Name?');
     expect(pause.initial).toBe('Ada');
 
@@ -75,7 +67,7 @@ describe('interpreter lifecycle', () => {
       `)
     );
 
-    expectInputPause(expectPaused(result));
+    expectInputPause(result);
 
     const resumed = await interpreter.resume({ input: 'Grace' });
 
@@ -99,7 +91,7 @@ describe('interpreter lifecycle', () => {
 
     const result = await interpreter.run(rootNode);
 
-    const pause = expectInputPause(expectPaused(result));
+    const pause = expectInputPause(result);
     expect(pause.prompt).toBe('Name?');
     expect(interpreter.topFrame!.head.node.location.start.line).toBe(2);
 
@@ -123,14 +115,14 @@ describe('interpreter lifecycle', () => {
 
     const result = await interpreter.run(rootNode);
 
-    expectInputPause(expectPaused(result));
+    expectInputPause(result);
     expect(history.entries).toHaveLength(1);
 
     interpreter.stop();
     interpreter.restoreState(history.moveTo(0));
 
-    const pause = expectInputPause(interpreter.pauseReason!);
-    expect(pause.initial).toBe('Ada');
+    expect(interpreter.inputPause).not.toBeNull();
+    expect(interpreter.inputPause!.initial).toBe('Ada');
 
     const resumed = await interpreter.resume({ input: 'Grace' });
 
@@ -182,7 +174,7 @@ describe('interpreter lifecycle', () => {
       `)
     );
 
-    expectPauseKind(result, 'pause');
+    expectPaused(result);
     expect(interpreter.getVariable('value')).toBe(1);
 
     const resumed = await interpreter.resume();
@@ -202,13 +194,14 @@ describe('interpreter lifecycle', () => {
       `)
     );
 
-    expectPauseKind(result, 'pause');
+    expectPaused(result);
     expect(interpreter.getVariable('value')).toBe(1);
 
     interpreter.stop();
 
     expect(interpreter.isComplete).toBe(true);
-    expect(interpreter.pauseReason).toBeNull();
+    expect(interpreter.isPaused).toBe(false);
+    expect(interpreter.inputPause).toBeNull();
 
     const rerun = await interpreter.run(
       parseSnippet(`
@@ -233,21 +226,21 @@ describe('interpreter lifecycle', () => {
 
     let result = await interpreter.run(rootNode, { step: true });
 
-    expectPauseKind(result, 'step');
+    expectPaused(result);
     expect(interpreter.topFrame!.head.node.location.start.line).toBe(2);
     expect(history.entries).toHaveLength(1);
     expect(history.current?.globalNamespace.values.value).toBeUndefined();
 
     result = await interpreter.resume({ step: true });
 
-    expectPauseKind(result, 'step');
+    expectPaused(result);
     expect(interpreter.topFrame!.head.node.location.start.line).toBe(3);
     expect(history.entries).toHaveLength(2);
     expect(history.current?.globalNamespace.values.value).toBe(1);
 
     result = await interpreter.resume({ step: true });
 
-    expectPauseKind(result, 'step');
+    expectPaused(result);
     expect(interpreter.topFrame!.head.node.location.start.line).toBe(4);
     expect(history.entries).toHaveLength(3);
     expect(history.current?.globalNamespace.values.value).toBe(2);
@@ -380,7 +373,7 @@ describe('interpreter lifecycle', () => {
 
     const result = await interpreter.run(rootNode);
 
-    expectPauseKind(result, 'breakpoint');
+    expectPaused(result);
     expect(history.entries).toHaveLength(2);
     expect(interpreter.getVariable('value')).toBe(1);
 
@@ -493,7 +486,7 @@ describe('interpreter lifecycle', () => {
       `),
       { step: true }
     );
-    expectPauseKind(firstPause, 'step');
+    expectPaused(firstPause);
     const stalePending = interpreter.resume({ step: true });
     await new Promise((r) => setImmediate(r));
     expect(pendingDelays).toHaveLength(1);
@@ -506,7 +499,7 @@ describe('interpreter lifecycle', () => {
       `),
       { step: true }
     );
-    expectPauseKind(newPause, 'step');
+    expectPaused(newPause);
     const newPending = interpreter.resume({ step: true });
     await new Promise((r) => setImmediate(r));
     expect(pendingDelays).toHaveLength(1);
@@ -518,7 +511,7 @@ describe('interpreter lifecycle', () => {
     await expect(stalePending).rejects.toBeInstanceOf(AbortedError);
 
     releaseNew();
-    expectPauseKind(await newPending, 'step');
+    expectPaused(await newPending);
     expect(interpreter.getVariable('value')).toBeUndefined();
   });
 });

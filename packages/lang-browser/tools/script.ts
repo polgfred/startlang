@@ -8,8 +8,8 @@ import { inspect, parseArgs } from 'node:util';
 
 import {
   Interpreter,
+  type InputPause,
   type RunResult,
-  type RuntimePause,
 } from '@startlang/lang-core/interpreter';
 import { parse, type ParseOptions } from '@startlang/lang-core/parser.peggy';
 import type { Program } from '@startlang/lang-core/program';
@@ -33,9 +33,7 @@ interface ScriptOptions {
   ns?: boolean;
 }
 
-type PauseQuestion = (
-  pause: Extract<RuntimePause, { kind: 'input' }>
-) => Promise<string>;
+type PauseQuestion = (pause: InputPause) => Promise<string>;
 
 function output(obj: unknown) {
   console.log(inspect(obj, { colors: true, depth: null }));
@@ -114,16 +112,13 @@ async function runUntilComplete(
   question: PauseQuestion,
   result: RunResult
 ) {
-  while (result.status === 'paused') {
-    const { pause } = result;
-    if (pause.kind === 'input') {
+  while (result.status !== 'completed') {
+    if (result.status === 'awaiting-input') {
       renderer.flush(host);
-      const answer = await question(pause);
+      const answer = await question(result.pause);
       result = await interp.resume({ input: answer });
-    } else if (pause.kind === 'breakpoint' || pause.kind === 'pause') {
-      result = await interp.resume();
     } else {
-      throw new Error(`unsupported pause: ${pause.kind}`);
+      result = await interp.resume();
     }
   }
 

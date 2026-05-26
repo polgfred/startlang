@@ -30,7 +30,7 @@ export interface RuntimeState {
   localNamespaces: Cons<Namespace> | null;
   topFrame: Cons<Frame> | null;
   lastResult: unknown;
-  pauseReason: RuntimePause | null;
+  inputPause: InputPause | null;
   hostSnapshot: unknown;
 }
 
@@ -54,15 +54,15 @@ export type RuntimeEffectHandler = (
 
 export type SnapshotListener = () => void;
 
-export type RuntimePause =
-  | { kind: 'breakpoint' }
-  | { kind: 'input'; prompt: string; initial: string }
-  | { kind: 'pause' }
-  | { kind: 'step' };
+export interface InputPause {
+  prompt: string;
+  initial: string;
+}
 
 export type RunResult =
   | { status: 'completed' }
-  | { status: 'paused'; pause: RuntimePause };
+  | { status: 'paused' }
+  | { status: 'awaiting-input'; pause: InputPause };
 
 export class RuntimeError extends Error {
   constructor(
@@ -90,7 +90,8 @@ export class Interpreter {
   topFrame: Cons<Frame> | null = null;
   lastResult: unknown = null;
   isRunning: boolean = false;
-  pauseReason: RuntimePause | null = null;
+  isPaused: boolean = false;
+  inputPause: InputPause | null = null;
   private namespace = new RuntimeNamespace((value) => this.getHandler(value));
   private runtimeFunctions: RuntimeFunctions = emptyObject;
   private globalFunctions: GlobalFunctions = emptyObject;
@@ -110,10 +111,6 @@ export class Interpreter {
   constructor() {
     installHandlers(this);
     installBuiltins(this);
-  }
-
-  get isPaused() {
-    return this.pauseReason !== null;
   }
 
   get isComplete() {
@@ -153,7 +150,8 @@ export class Interpreter {
 
     this.topFrame = new Cons(program.main.makeFrame());
     this.lastResult = null;
-    this.pauseReason = null;
+    this.isPaused = false;
+    this.inputPause = null;
     this.pendingInput = null;
     this.pendingEffects = [];
     this.shouldStepToNextStatement = step;
@@ -167,7 +165,7 @@ export class Interpreter {
   resume(
     options: { step?: boolean; input?: string } = {}
   ): Promise<RunResult> {
-    if (this.pauseReason?.kind === 'input') {
+    if (this.inputPause) {
       if (options.step) {
         throw new Error('cannot step while waiting for input');
       }
@@ -177,12 +175,13 @@ export class Interpreter {
       if (this.pendingInput === null) {
         throw new Error('interpreter is waiting for input');
       }
+      this.inputPause = null;
     } else if (options.input !== undefined) {
       throw new Error('interpreter is not waiting for input');
     }
 
     this.shouldStepToNextStatement = options.step ?? false;
-    this.pauseReason = null;
+    this.isPaused = false;
     return this.runLoop();
   }
 
@@ -192,9 +191,12 @@ export class Interpreter {
 
     try {
       while (true) {
-        if (this.pauseReason) {
+        if (this.inputPause) {
           this.isRunning = false;
-          return { status: 'paused', pause: this.pauseReason };
+          return { status: 'awaiting-input', pause: this.inputPause };
+        } else if (this.isPaused) {
+          this.isRunning = false;
+          return { status: 'paused' };
         }
 
         if (this.topFrame === null) {
@@ -251,7 +253,8 @@ export class Interpreter {
   }
 
   stop() {
-    this.pauseReason = null;
+    this.isPaused = false;
+    this.inputPause = null;
     this.pendingInput = null;
     this.pendingEffects = [];
     this.isRunning = false;
@@ -365,23 +368,17 @@ export class Interpreter {
     if (marker || shouldPauseForStep) {
       this.takeSnapshot();
     }
-
-    // onEnter ran first (e.g. InputFrame setting pauseReason='input'); a
-    // hard pause from the frame itself takes precedence over a step or
-    // breakpoint pause attached to the same line.
-    if (this.pauseReason) {
-      return;
-    }
-
-    if (shouldPauseForStep) {
-      this.pauseReason = { kind: 'step' };
-    } else if (marker === 'breakpoint') {
-      this.pauseReason = { kind: 'breakpoint' };
+    if (shouldPauseForStep || marker === 'breakpoint') {
+      this.isPaused = true;
     }
   }
 
-  pauseAtNode(pause: RuntimePause) {
-    this.pauseReason = pause;
+  pause() {
+    this.isPaused = true;
+  }
+
+  pauseForInput(pause: InputPause) {
+    this.inputPause = pause;
   }
 
   exit() {
@@ -515,7 +512,7 @@ export class Interpreter {
       localNamespaces: this.localNamespaces,
       topFrame: this.topFrame,
       lastResult: this.lastResult,
-      pauseReason: this.pauseReason,
+      inputPause: this.inputPause,
       hostSnapshot: this.snapshotHandler?.takeSnapshot(),
     };
   }
@@ -524,7 +521,8 @@ export class Interpreter {
     this.namespace.restore(state.globalNamespace, state.localNamespaces);
     this.topFrame = state.topFrame;
     this.lastResult = state.lastResult;
-    this.pauseReason = state.pauseReason;
+    this.isPaused = false;
+    this.inputPause = state.inputPause;
     this.pendingInput = null;
     this.pendingEffects = [];
     this.snapshotHandler?.restoreSnapshot(state.hostSnapshot);

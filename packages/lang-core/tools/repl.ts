@@ -5,8 +5,8 @@ import { inspect } from 'node:util';
 
 import {
   Interpreter,
+  type InputPause,
   type RunResult,
-  type RuntimePause,
 } from '@startlang/lang-core/interpreter';
 import { parse, SyntaxError } from '@startlang/lang-core/parser.peggy';
 import { runtimeGlobals } from '@startlang/lang-core/runtime-globals';
@@ -16,18 +16,14 @@ async function runUntilComplete(
   interp: Interpreter,
   rl: readline.Interface,
   result: RunResult
-) {
-  while (result.status === 'paused') {
-    const { pause } = result;
-    if (pause.kind === 'input') {
-      rl.setPrompt(pause.prompt || '> ');
+): Promise<InputPause | null> {
+  while (result.status !== 'completed') {
+    if (result.status === 'awaiting-input') {
+      rl.setPrompt(result.pause.prompt || '> ');
       rl.prompt();
-      return pause;
-    } else if (pause.kind === 'breakpoint' || pause.kind === 'pause') {
-      result = await interp.resume();
-    } else {
-      throw new Error(`unsupported pause: ${pause.kind}`);
+      return result.pause;
     }
+    result = await interp.resume();
   }
   return null;
 }
@@ -71,7 +67,7 @@ async function main() {
   });
 
   let lines: string[] = [];
-  let pendingInput: RuntimePause | null = null;
+  let pendingInput: InputPause | null = null;
 
   promptForCommand();
   for await (const line of rl) {

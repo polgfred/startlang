@@ -1,4 +1,4 @@
-import { Interpreter, type RuntimePause } from '../interpreter.js';
+import { Interpreter } from '../interpreter.js';
 
 import { Frame, Node } from './base.js';
 
@@ -22,19 +22,14 @@ class InputFrame extends Frame {
   declare node: InputNode;
 
   override onEnter(interpreter: Interpreter) {
-    interpreter.pauseAtNode(this.makePause());
+    interpreter.pauseForInput({
+      prompt: this.node.prompt,
+      initial: this.node.initial,
+    });
   }
 
   visit(interpreter: Interpreter) {
     interpreter.setVariable(this.node.name, interpreter.consumeInput());
     interpreter.popFrame();
-  }
-
-  private makePause(): RuntimePause {
-    return {
-      kind: 'input',
-      prompt: this.node.prompt,
-      initial: this.node.initial,
-    };
   }
 }

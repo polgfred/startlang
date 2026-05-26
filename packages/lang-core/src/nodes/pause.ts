@@ -12,7 +12,7 @@ export class PauseNode extends Node {
 
 class PauseFrame extends Frame {
   override onEnter(interpreter: Interpreter) {
-    interpreter.pauseAtNode({ kind: 'pause' });
+    interpreter.pause();
   }
 
   visit(interpreter: Interpreter) {

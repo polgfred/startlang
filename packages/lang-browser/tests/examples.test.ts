@@ -31,15 +31,13 @@ async function runUntilComplete(
   interpreter: Interpreter,
   result: RunResult
 ): Promise<void> {
-  while (result.status === 'paused') {
-    const { pause } = result;
-
-    if (pause.kind === 'input') {
-      result = await interpreter.resume({ input: pause.initial });
+  while (result.status !== 'completed') {
+    if (result.status === 'awaiting-input') {
+      result = await interpreter.resume({ input: result.pause.initial });
       continue;
     }
 
-    throw new Error(`unsupported pause: ${pause.kind}`);
+    throw new Error('unsupported observer pause in examples');
   }
 }
 
@@ -116,9 +114,9 @@ async function playNumguessWithBinarySearch() {
   let lastGuess: number | null = null;
   let result = await interpreter.run(parse(source));
 
-  while (result.status === 'paused') {
-    if (result.pause.kind !== 'input') {
-      throw new Error(`unsupported pause: ${result.pause.kind}`);
+  while (result.status !== 'completed') {
+    if (result.status !== 'awaiting-input') {
+      throw new Error('unsupported observer pause in numguess');
     }
 
     if (lastGuess !== null) {

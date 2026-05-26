@@ -8,7 +8,6 @@ import { inspect, parseArgs } from 'node:util';
 import {
   Interpreter,
   type RunResult,
-  type RuntimePause,
 } from '@startlang/lang-core/interpreter';
 import { parse, type ParseOptions } from '@startlang/lang-core/parser.peggy';
 import type { Program } from '@startlang/lang-core/program';
@@ -92,21 +91,14 @@ async function runUntilComplete(
   question: Question,
   result: RunResult
 ) {
-  while (result.status === 'paused') {
-    const { pause } = result;
-    if (pause.kind === 'input') {
-      const answer = await question(pause.prompt || '> ');
+  while (result.status !== 'completed') {
+    if (result.status === 'awaiting-input') {
+      const answer = await question(result.pause.prompt || '> ');
       result = await interp.resume({ input: answer });
-    } else if (isContinuablePause(pause)) {
-      result = await interp.resume();
     } else {
-      throw new Error(`unsupported pause: ${pause.kind}`);
+      result = await interp.resume();
     }
   }
-}
-
-function isContinuablePause(pause: RuntimePause) {
-  return pause.kind === 'breakpoint' || pause.kind === 'pause';
 }
 
 function isNodeError(err: unknown): err is NodeJS.ErrnoException {
