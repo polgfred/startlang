@@ -143,9 +143,11 @@ export default memo(function Editor({
   layoutSignal: unknown;
 }) {
   const {
+    editorReady,
     highlightedLine,
     markableLines,
     markers,
+    setEditorReady,
     setValue,
     shiftMarkers,
     source,
@@ -193,8 +195,7 @@ export default memo(function Editor({
       );
       const syntaxValidator = createStartSyntaxValidator(editor, monaco);
       controllerRef.current = controller;
-
-      updateDecorations();
+      setEditorReady(true);
 
       editor.onDidDispose(() => {
         syntaxValidator.dispose();
@@ -222,10 +223,9 @@ export default memo(function Editor({
         monaco.editor.remeasureFonts();
         editor.layout();
         editor.focus();
-        runProgram();
       });
     },
-    [runProgram, toggleMarker, updateDecorations]
+    [runProgram, setEditorReady, toggleMarker]
   );
 
   const onEditorChange = useCallback(
@@ -252,10 +252,10 @@ export default memo(function Editor({
     [setValue, shiftMarkers]
   );
 
-  // apply our decorations after monaco's value sync runs
+  // apply decorations when the editor finishes mounting and on source changes
   useEffect(() => {
     updateDecorations();
-  }, [source, updateDecorations]);
+  }, [editorReady, source, updateDecorations]);
 
   useLayoutEffect(() => {
     controllerRef.current?.scheduleLayout();

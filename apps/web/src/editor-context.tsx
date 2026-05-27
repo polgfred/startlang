@@ -15,8 +15,6 @@ import {
   type ReactNode,
 } from 'react';
 
-import boxScript from '../tests/box.start';
-
 interface SetEditorValueOptions {
   markers?: readonly EditorMarker[];
 }
@@ -35,6 +33,8 @@ interface EditorContextValue {
   highlightLine(lineNumber: number | null, kind?: EditorHighlightKind): void;
   toggleMarker(lineNumber: number): void;
   shiftMarkers(startLine: number, endLine: number, lineDelta: number): void;
+  setEditorReady(ready: boolean): void;
+  editorReady: boolean;
   markableLines: readonly number[];
   source: string;
   markers: readonly EditorMarker[];
@@ -220,7 +220,8 @@ export function useEditor() {
 export function EditorProvider({ children }: { children: ReactNode }) {
   const [highlightedLine, setHighlightedLine] =
     useState<EditorHighlight | null>(null);
-  const { current: editorStore } = useRef(createEditorStore(boxScript));
+  const [editorReady, setEditorReady] = useState(false);
+  const { current: editorStore } = useRef(createEditorStore(''));
   const { markers, source, markableLines } = useSyncExternalStore(
     editorStore.subscribe,
     editorStore.getSnapshot
@@ -268,6 +269,8 @@ export function EditorProvider({ children }: { children: ReactNode }) {
     highlightLine,
     toggleMarker,
     shiftMarkers,
+    setEditorReady,
+    editorReady,
     markableLines,
     source,
     markers,

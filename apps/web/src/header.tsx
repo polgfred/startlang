@@ -2,7 +2,7 @@ import { Button } from '@base-ui/react/button';
 import { Menu } from '@base-ui/react/menu';
 import type { EditorMarker } from '@startlang/lang-core/editor-model';
 import clsx from 'clsx';
-import { memo, useCallback } from 'react';
+import { memo, useCallback, useEffect } from 'react';
 
 import boxScript from '../tests/box.start';
 import investScript from '../tests/invest.start';
@@ -155,7 +155,7 @@ const CodeMenu = memo(function CodeMenu({
 }: {
   runProgram: () => void;
 }) {
-  const { setValue } = useEditor();
+  const { editorReady, setValue } = useEditor();
 
   const loadScript = useCallback(
     (script: string, markers: readonly EditorMarker[]) => {
@@ -164,6 +164,14 @@ const CodeMenu = memo(function CodeMenu({
     },
     [runProgram, setValue]
   );
+
+  // load the first example when the editor mounts
+  useEffect(() => {
+    if (editorReady) {
+      const [defaultExample] = exampleScripts;
+      loadScript(defaultExample.script, defaultExample.markers ?? []);
+    }
+  }, [editorReady, loadScript]);
 
   return (
     <Menu.Root>
