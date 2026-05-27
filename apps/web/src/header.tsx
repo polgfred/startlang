@@ -1,5 +1,6 @@
 import { Button } from '@base-ui/react/button';
 import { Menu } from '@base-ui/react/menu';
+import type { EditorMarker } from '@startlang/lang-core/editor-model';
 import clsx from 'clsx';
 import { memo, useCallback } from 'react';
 
@@ -97,6 +98,7 @@ const exampleScripts = [
   {
     name: 'Stacking Boxes',
     script: boxScript,
+    markers: [{ lineNumber: 25, marker: 'snapshot' }]
   },
   {
     name: 'Compound Interest Calculator',
@@ -126,7 +128,11 @@ const exampleScripts = [
     name: 'Table Cell Layout',
     script: tableCellsScript,
   },
-];
+] satisfies {
+  name: string;
+  script: string;
+  markers?: readonly EditorMarker[],
+}[];
 
 function getRuntimeStatusLabel(runtimeMode: RuntimeMode) {
   switch (runtimeMode) {
@@ -152,8 +158,8 @@ const CodeMenu = memo(function CodeMenu({
   const { setValue } = useEditor();
 
   const loadScript = useCallback(
-    (script: string) => {
-      setValue(script, { clearMarkers: true });
+    (script: string, markers: readonly EditorMarker[]) => {
+      setValue(script, { markers });
       runProgram();
     },
     [runProgram, setValue]
@@ -173,12 +179,12 @@ const CodeMenu = memo(function CodeMenu({
       <Menu.Portal>
         <Menu.Positioner className={styles.menuPositioner} sideOffset={8}>
           <Menu.Popup className={controls.menu}>
-            {exampleScripts.map(({ name, script }) => (
+            {exampleScripts.map(({ name, script, markers }) => (
               <Menu.Item
                 key={name}
                 className={controls.menuItem}
                 onClick={() => {
-                  loadScript(script);
+                  loadScript(script, markers ?? []);
                 }}
               >
                 {name}
@@ -188,7 +194,7 @@ const CodeMenu = memo(function CodeMenu({
             <Menu.Item
               className={controls.menuItem}
               onClick={() => {
-                setValue('', { clearMarkers: true });
+                setValue('', { markers: [] });
               }}
             >
               New

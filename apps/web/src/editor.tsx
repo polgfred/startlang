@@ -1,6 +1,13 @@
 import Monaco, { type BeforeMount, type OnMount } from '@monaco-editor/react';
 import type { editor as MonacoEditor } from 'monaco-editor';
-import { memo, useCallback, useLayoutEffect, useMemo, useRef } from 'react';
+import {
+  memo,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+} from 'react';
 
 import { setupLanguage, useEditor } from './editor-context.jsx';
 import { createStartSyntaxValidator } from './editor-diagnostics.js';
@@ -210,25 +217,6 @@ export default memo(function Editor({
         }
       });
 
-      const editorModel = editor.getModel();
-      if (editorModel) {
-        editorModel.onDidChangeContent((event) => {
-          for (const change of event.changes) {
-            const newlineCount = (change.text.match(/\n/g) ?? []).length;
-            const oldLineSpan =
-              change.range.endLineNumber - change.range.startLineNumber;
-            const lineDelta = newlineCount - oldLineSpan;
-            if (lineDelta !== 0) {
-              shiftMarkers(
-                change.range.startLineNumber,
-                change.range.endLineNumber,
-                lineDelta
-              );
-            }
-          }
-        });
-      }
-
       window.requestAnimationFrame(async () => {
         await document.fonts.ready;
         monaco.editor.remeasureFonts();
@@ -237,19 +225,37 @@ export default memo(function Editor({
         runProgram();
       });
     },
-    [runProgram, shiftMarkers, toggleMarker, updateDecorations]
+    [runProgram, toggleMarker, updateDecorations]
   );
 
   const onEditorChange = useCallback(
-    (value?: string) => {
+    (value: string | undefined, event: MonacoEditor.IModelContentChangedEvent) => {
+      if (event.isFlush) {
+        // editor is completely reset, we don't have any markers to shift
+        return;
+      }
+      for (const change of event.changes) {
+        const newlineCount = (change.text.match(/\n/g) ?? []).length;
+        const oldLineSpan =
+          change.range.endLineNumber - change.range.startLineNumber;
+        const lineDelta = newlineCount - oldLineSpan;
+        if (lineDelta !== 0) {
+          shiftMarkers(
+            change.range.startLineNumber,
+            change.range.endLineNumber,
+            lineDelta
+          );
+        }
+      }
       setValue(value ?? '');
     },
-    [setValue]
+    [setValue, shiftMarkers]
   );
 
-  useLayoutEffect(() => {
+  // apply our decorations after monaco's value sync runs
+  useEffect(() => {
     updateDecorations();
-  }, [updateDecorations]);
+  }, [source, updateDecorations]);
 
   useLayoutEffect(() => {
     controllerRef.current?.scheduleLayout();

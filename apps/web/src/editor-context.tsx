@@ -18,7 +18,7 @@ import {
 import boxScript from '../tests/box.start';
 
 interface SetEditorValueOptions {
-  clearMarkers?: boolean;
+  markers?: readonly EditorMarker[];
 }
 
 export type EditorHighlightKind = 'current' | 'error';
@@ -201,8 +201,8 @@ function createEditorStore(initialSourceValue: string) {
     getSnapshot: () => model.getSnapshot(),
     getValue: () => model.getSource(),
     parseProgram: () => model.parseProgram(),
-    clearMarkers: () => model.clearMarkers(),
-    setValue: (value: string) => model.setSource(value),
+    setValue: (value: string, options?: SetEditorValueOptions) =>
+      model.setSource(value, options),
     shiftMarkers: (startLine: number, endLine: number, lineDelta: number) =>
       model.shiftMarkers(startLine, endLine, lineDelta),
     toggleMarker: (lineNumber: number) => model.toggleMarker(lineNumber),
@@ -255,10 +255,7 @@ export function EditorProvider({ children }: { children: ReactNode }) {
 
   const setValue = useCallback(
     (value: string, options?: SetEditorValueOptions) => {
-      if (options?.clearMarkers) {
-        editorStore.clearMarkers();
-      }
-      editorStore.setValue(value);
+      editorStore.setValue(value, options);
       setHighlightedLine(null);
     },
     [editorStore]

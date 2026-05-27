@@ -72,22 +72,32 @@ export class EditorModel {
     return this.source;
   }
 
-  setSource(nextValue: string): boolean {
-    if (nextValue === this.source) {
+  setSource(
+    nextValue: string,
+    options?: { markers?: readonly EditorMarker[] }
+  ): boolean {
+    const sourceChanged = nextValue !== this.source;
+    const markers = options?.markers;
+    if (!sourceChanged && markers === undefined) {
       return false;
     }
-    this.version += 1;
-    this.source = nextValue;
-    this.scheduler.schedule(this.version, this.source);
-    this.publish();
-    return true;
-  }
-
-  clearMarkers(): boolean {
-    if (!this.markers.some(Boolean)) {
-      return false;
+    if (sourceChanged) {
+      this.version += 1;
+      this.source = nextValue;
+      this.scheduler.schedule(this.version, this.source);
     }
-    this.markers = [];
+    if (markers !== undefined) {
+      this.markers = [];
+      // Validate marker lines against the *new* source's parse.
+      if (sourceChanged) {
+        this.scheduler.flush();
+      }
+      for (const { lineNumber, marker } of markers) {
+        if (this.isMarkable(lineNumber)) {
+          this.markers[lineNumber] = marker;
+        }
+      }
+    }
     this.publish();
     return true;
   }
