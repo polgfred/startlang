@@ -374,10 +374,6 @@ export class Interpreter {
     }
   }
 
-  pause() {
-    this.isPaused = true;
-  }
-
   pauseForInput(pause: InputPause) {
     this.inputPause = pause;
   }

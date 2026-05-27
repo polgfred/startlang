@@ -20,12 +20,10 @@
     LogicalOpNode,
     LogicalNotNode,
     NextNode,
-    PauseNode,
     RecordNode,
     RepeatNode,
     ReturnNode,
     SetNode,
-    SnapshotNode,
     TemplateStringNode,
     UnaryOpNode,
     VarIndexNode,
@@ -215,8 +213,6 @@ FlowStatement
   = exit { return new ExitNode().at(location()); }
   / break { return new BreakNode().at(location()); }
   / next { return new NextNode().at(location()); }
-  / pause { return new PauseNode().at(location()); }
-  / snapshot { return new SnapshotNode().at(location()); }
   / return result:(__ @Value)? { return new ReturnNode(result).at(location()); }
 
 InputStatement
@@ -491,10 +487,6 @@ let = @"let" WB
 
 input = @"input" WB
 
-pause = @"pause" WB
-
-snapshot = @"snapshot" WB
-
 and = @"and" WB
 
 or = @"or" WB
@@ -527,8 +519,6 @@ Reserved
   / delete
   / let
   / input
-  / pause
-  / snapshot
   / and
   / or
   / not
