@@ -9,7 +9,6 @@ import {
   type RunResult,
 } from '@startlang/lang-core/interpreter';
 import { parse, SyntaxError } from '@startlang/lang-core/parser.peggy';
-import { runtimeGlobals } from '@startlang/lang-core/runtime-globals';
 import type { RuntimeFunctions } from '@startlang/lang-core/types';
 
 async function runUntilComplete(
@@ -47,7 +46,6 @@ async function main() {
   };
 
   const interp = new Interpreter();
-  interp.registerGlobals(runtimeGlobals);
   interp.registerGlobals({
     print(interp, values) {
       if (values.length > 0) {

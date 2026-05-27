@@ -10,7 +10,6 @@ import {
   type RunResult,
 } from '@startlang/lang-core/interpreter';
 import { parse } from '@startlang/lang-core/parser.peggy';
-import { runtimeGlobals } from '@startlang/lang-core/runtime-globals';
 import { RuntimeHistory } from '@startlang/lang-core/runtime-history';
 import type { MarkerType } from '@startlang/lang-core/types';
 
@@ -57,7 +56,6 @@ function expectInputPause(result: RunResult): InputPause {
 describe('interpreter lifecycle', () => {
   it('pauses for input and continues with the provided value', async () => {
     const interpreter = new Interpreter();
-    interpreter.registerGlobals(runtimeGlobals);
 
     const result = await interpreter.run(
       parseSnippet(`

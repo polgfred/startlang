@@ -2,12 +2,10 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { Interpreter, RuntimeError } from '@startlang/lang-core/interpreter';
 import { parse } from '@startlang/lang-core/parser.peggy';
-import { runtimeGlobals } from '@startlang/lang-core/runtime-globals';
 import type { ArgsType, RuntimeFunctions } from '@startlang/lang-core/types';
 
 async function runSnippet(source: string, globals: RuntimeFunctions = {}) {
   const interpreter = new Interpreter();
-  interpreter.registerGlobals(runtimeGlobals);
   interpreter.registerGlobals(globals);
 
   const result = await interpreter.run(parse(`${source}\n`));

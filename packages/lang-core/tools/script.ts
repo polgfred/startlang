@@ -8,7 +8,6 @@ import { inspect, parseArgs } from 'node:util';
 import { Interpreter, type RunResult } from '@startlang/lang-core/interpreter';
 import { parse, type ParseOptions } from '@startlang/lang-core/parser.peggy';
 import type { Program } from '@startlang/lang-core/program';
-import { runtimeGlobals } from '@startlang/lang-core/runtime-globals';
 import type { RuntimeFunctions } from '@startlang/lang-core/types';
 
 interface ScriptOptions {
@@ -163,7 +162,6 @@ async function main() {
   const question = createQuestioner(rl);
 
   const interp = new Interpreter();
-  interp.registerGlobals(runtimeGlobals);
   interp.registerGlobals({
     print(interp, values) {
       if (values.length > 0) {

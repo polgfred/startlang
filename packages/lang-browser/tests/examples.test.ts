@@ -3,7 +3,6 @@ import path from 'node:path';
 
 import { Interpreter, type RunResult } from '@startlang/lang-core/interpreter';
 import { parse } from '@startlang/lang-core/parser.peggy';
-import { runtimeGlobals } from '@startlang/lang-core/runtime-globals';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -50,7 +49,6 @@ async function runSource(source: string): Promise<ExampleResult> {
   const host = new BrowserPresentationHost();
   const interpreter = new Interpreter();
 
-  interpreter.registerGlobals(runtimeGlobals);
   interpreter.registerGlobals(buildBrowserGlobals(host));
   interpreter.registerConfigurationHandler((option, value) =>
     host.setConfiguration(option, value)
@@ -102,7 +100,6 @@ async function playNumguessWithBinarySearch() {
   const interpreter = new Interpreter();
   const guesses: number[] = [];
 
-  interpreter.registerGlobals(runtimeGlobals);
   interpreter.registerGlobals(buildBrowserGlobals(host));
   interpreter.registerConfigurationHandler((option, value) =>
     host.setConfiguration(option, value)

@@ -13,7 +13,6 @@ import {
   type RunResult,
   type RuntimeState,
 } from '@startlang/lang-core/interpreter';
-import { runtimeGlobals } from '@startlang/lang-core/runtime-globals';
 import { RuntimeHistory } from '@startlang/lang-core/runtime-history';
 import type { IndexType } from '@startlang/lang-core/types';
 import {
@@ -180,7 +179,6 @@ function createRuntimeEnvironment(): RuntimeEnvironment {
   const history = new RuntimeHistory();
 
   interpreter.registerGlobals(buildBrowserGlobals(host));
-  interpreter.registerGlobals(runtimeGlobals);
   interpreter.registerSnapshotHandler(host);
   interpreter.registerSnapshotListener(() => {
     history.push(interpreter.captureState());

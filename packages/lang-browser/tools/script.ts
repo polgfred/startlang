@@ -13,7 +13,6 @@ import {
 } from '@startlang/lang-core/interpreter';
 import { parse, type ParseOptions } from '@startlang/lang-core/parser.peggy';
 import type { Program } from '@startlang/lang-core/program';
-import { runtimeGlobals } from '@startlang/lang-core/runtime-globals';
 
 import {
   BrowserPresentationHost,
@@ -311,7 +310,6 @@ export async function main() {
   const host = new BrowserPresentationHost();
   const renderer = new ConsoleOutputRenderer();
   const interp = new Interpreter();
-  interp.registerGlobals(runtimeGlobals);
   interp.registerGlobals(buildBrowserGlobals(host));
   interp.registerConfigurationHandler((option, value) =>
     host.setConfiguration(option, value)
