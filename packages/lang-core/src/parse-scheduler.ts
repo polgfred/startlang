@@ -1,6 +1,6 @@
 import { buildMarkerLineMap, type MarkerLineMap } from './editor-markers.js';
 import { parse } from './parser.peggy';
-import { Program } from './program.js';
+import type { Program } from './program.js';
 
 export interface ParseResult {
   readonly program: Program;

@@ -1,6 +1,6 @@
 import type { MarkerMap } from './editor-markers.js';
 import { ParseScheduler } from './parse-scheduler.js';
-import { Program } from './program.js';
+import type { Program } from './program.js';
 import type { MarkerType } from './types.js';
 
 export interface EditorMarker {

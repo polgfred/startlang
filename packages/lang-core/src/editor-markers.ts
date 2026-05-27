@@ -8,7 +8,7 @@ import {
   RepeatNode,
   WhileNode,
 } from './nodes/index.js';
-import { Program } from './program.js';
+import type { Program } from './program.js';
 import type { MarkerType } from './types.js';
 
 export type MarkerMap = (node: Node) => MarkerType | undefined;

@@ -1,5 +1,5 @@
 declare module '*.peggy' {
-  import { Program } from '@startlang/lang-core/program';
+  import type { Program } from '@startlang/lang-core/program';
   export function parse(source: string): Program;
 }
 

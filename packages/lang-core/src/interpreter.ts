@@ -12,7 +12,7 @@ import {
   UnwindSignal,
   VarNode,
 } from './nodes/index.js';
-import { Program } from './program.js';
+import type { Program } from './program.js';
 import type { IndexType, RuntimeFunction, RuntimeFunctions } from './types.js';
 import { Cons } from './utils/cons.js';
 
