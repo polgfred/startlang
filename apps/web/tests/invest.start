@@ -46,8 +46,6 @@ table do
       cell format(interest, "currency")
       cell format(total, "currency")
     end
-    
-    snapshot
   end
 end
 

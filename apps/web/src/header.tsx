@@ -98,11 +98,17 @@ const exampleScripts = [
   {
     name: 'Stacking Boxes',
     script: boxScript,
-    markers: [{ lineNumber: 25, marker: 'snapshot' }]
+    markers: [{ lineNumber: 25, marker: 'snapshot' }],
   },
   {
     name: 'Compound Interest Calculator',
     script: investScript,
+    markers: [
+      { lineNumber: 19, marker: 'snapshot' },
+      { lineNumber: 27, marker: 'snapshot' },
+      { lineNumber: 39, marker: 'snapshot' },
+      { lineNumber: 44, marker: 'snapshot' },
+    ],
   },
   {
     name: 'Number Guessing Game',
@@ -115,23 +121,48 @@ const exampleScripts = [
   {
     name: 'Sine Curve Plot',
     script: sineScript,
+    markers: [
+      { lineNumber: 12, marker: 'snapshot' },
+      { lineNumber: 22, marker: 'snapshot' },
+    ]
   },
   {
     name: 'Victor Wireframe Plot',
     script: victorScript,
+    markers: [
+      { lineNumber: 11, marker: 'snapshot' },
+      { lineNumber: 17, marker: 'snapshot' },
+    ]
   },
   {
     name: 'Nested Group Rosette',
     script: rosetteScript,
+    markers: [
+      { lineNumber: 14, marker: 'snapshot' },
+      { lineNumber: 21, marker: 'snapshot' },
+      { lineNumber: 28, marker: 'snapshot' },
+      { lineNumber: 35, marker: 'snapshot' },
+      { lineNumber: 42, marker: 'snapshot' },
+      { lineNumber: 46, marker: 'snapshot' },
+    ],
   },
   {
     name: 'Table Cell Layout',
     script: tableCellsScript,
+    markers: [
+      { lineNumber: 8, marker: 'snapshot' },
+      { lineNumber: 39, marker: 'snapshot' },
+      { lineNumber: 45, marker: 'snapshot' },
+      { lineNumber: 51, marker: 'snapshot' },
+      { lineNumber: 58, marker: 'snapshot' },
+      { lineNumber: 68, marker: 'snapshot' },
+      { lineNumber: 83, marker: 'snapshot' },
+    ]
   },
 ] satisfies {
   name: string;
   script: string;
-  markers?: readonly EditorMarker[],
+  markers?: readonly EditorMarker[];
 }[];
 
 function getRuntimeStatusLabel(runtimeMode: RuntimeMode) {

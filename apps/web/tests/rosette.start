@@ -35,8 +35,6 @@ group { translate.x = 300, translate.y = 300 } do
       set opacity = 0.86
       set fill.color = "gold"
       circle 0, -248, 13
-
-      snapshot
     end
   end
 
