@@ -1,8 +1,6 @@
 import { Frame, Node } from './base.js';
 
 export class BeginNode extends Node {
-  override readonly isStatement = true;
-
   constructor(
     public readonly name: string,
     public readonly params: readonly string[],
