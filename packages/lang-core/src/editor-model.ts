@@ -59,8 +59,9 @@ export class EditorModel {
   private getMarkableLines(): readonly number[] {
     if (this.cachedMarkableLines === null) {
       try {
-        this.cachedMarkableLines =
-          this.scheduler.current().markerLineMap.markableLines();
+        this.cachedMarkableLines = this.scheduler
+          .current()
+          .markerLineMap.markableLines();
       } catch {
         this.cachedMarkableLines = emptyMarkableLines;
       }

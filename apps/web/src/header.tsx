@@ -124,7 +124,7 @@ const exampleScripts = [
     markers: [
       { lineNumber: 12, marker: 'snapshot' },
       { lineNumber: 22, marker: 'snapshot' },
-    ]
+    ],
   },
   {
     name: 'Victor Wireframe Plot',
@@ -132,7 +132,7 @@ const exampleScripts = [
     markers: [
       { lineNumber: 11, marker: 'snapshot' },
       { lineNumber: 17, marker: 'snapshot' },
-    ]
+    ],
   },
   {
     name: 'Nested Group Rosette',
@@ -157,7 +157,7 @@ const exampleScripts = [
       { lineNumber: 58, marker: 'snapshot' },
       { lineNumber: 68, marker: 'snapshot' },
       { lineNumber: 83, marker: 'snapshot' },
-    ]
+    ],
   },
 ] satisfies {
   name: string;

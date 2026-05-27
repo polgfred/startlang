@@ -136,7 +136,10 @@ export class Interpreter {
   //   step:        pause at the next statement push.
   run(
     program: Program,
-    { incremental = false, step = false }: { incremental?: boolean; step?: boolean } = {}
+    {
+      incremental = false,
+      step = false,
+    }: { incremental?: boolean; step?: boolean } = {}
   ): Promise<RunResult> {
     if (incremental) {
       this.globalFunctions = Object.freeze({
@@ -162,9 +165,7 @@ export class Interpreter {
   // Continues from the current state (paused, rewound, or just-restored).
   //   step:  pause at the next statement push.
   //   input: supply the value an `input` pause is waiting on.
-  resume(
-    options: { step?: boolean; input?: string } = {}
-  ): Promise<RunResult> {
+  resume(options: { step?: boolean; input?: string } = {}): Promise<RunResult> {
     if (this.inputPause) {
       if (options.step) {
         throw new Error('cannot step while waiting for input');

@@ -5,10 +5,7 @@ import process from 'node:process';
 import readline from 'node:readline';
 import { inspect, parseArgs } from 'node:util';
 
-import {
-  Interpreter,
-  type RunResult,
-} from '@startlang/lang-core/interpreter';
+import { Interpreter, type RunResult } from '@startlang/lang-core/interpreter';
 import { parse, type ParseOptions } from '@startlang/lang-core/parser.peggy';
 import type { Program } from '@startlang/lang-core/program';
 import { runtimeGlobals } from '@startlang/lang-core/runtime-globals';

@@ -229,7 +229,10 @@ export default memo(function Editor({
   );
 
   const onEditorChange = useCallback(
-    (value: string | undefined, event: MonacoEditor.IModelContentChangedEvent) => {
+    (
+      value: string | undefined,
+      event: MonacoEditor.IModelContentChangedEvent
+    ) => {
       if (event.isFlush) {
         // editor is completely reset, we don't have any markers to shift
         return;
