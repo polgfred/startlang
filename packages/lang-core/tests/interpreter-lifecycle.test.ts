@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { mapMarkers } from '../src/editor-markers.js';
 
+import type { EditorMarker } from '@startlang/lang-core/editor-model';
 import {
   AbortedError,
   Interpreter,
@@ -14,7 +15,26 @@ import { RuntimeHistory } from '@startlang/lang-core/runtime-history';
 import type { MarkerType } from '@startlang/lang-core/types';
 
 function parseSnippet(source: string) {
-  return parse(`${source}\n`);
+  // strip leading whitepace, and make sure there is a newline at the end
+  source = source.replace(/^\s*/, '');
+  source = source.replace(/\s*$/, '\n');
+  return parse(source);
+}
+
+// parse a multiline snippet and apply the given markers to the interpreter
+function parseSnippetWithMarkers(
+  interpreter: Interpreter,
+  source: string,
+  markers: readonly EditorMarker[]
+) {
+  // const rootNode = parseSnippet(source.replace(/^\n/, ''));
+  const rootNode = parseSnippet(source);
+  const markerArray: MarkerType[] = [];
+  for (const { lineNumber, marker } of markers) {
+    markerArray[lineNumber] = marker;
+  }
+  interpreter.setMarkerMap(mapMarkers(rootNode, markerArray));
+  return rootNode;
 }
 
 function recordSnapshots(interpreter: Interpreter, history: RuntimeHistory) {
@@ -131,7 +151,7 @@ describe('interpreter lifecycle', () => {
     expect(interpreter.getVariable('value')).toBe(1);
   });
 
-  it('takes explicit snapshots and restores interpreter and host state', async () => {
+  it('takes snapshots at marked statements and restores interpreter and host state', async () => {
     const restored: unknown[] = [];
     const interpreter = new Interpreter();
     interpreter.registerSnapshotHandler({
@@ -145,13 +165,15 @@ describe('interpreter lifecycle', () => {
     const history = new RuntimeHistory();
     recordSnapshots(interpreter, history);
 
-    const result = await interpreter.run(
-      parseSnippet(`
+    const rootNode = parseSnippetWithMarkers(
+      interpreter,
+      `
       value = 1
-      snapshot
       value = 2
-      `)
+      `,
+      [{ lineNumber: 2, marker: 'snapshot' }]
     );
+    const result = await interpreter.run(rootNode);
 
     expect(result.status).toBe('completed');
     expect(interpreter.getVariable('value')).toBe(2);
@@ -163,16 +185,18 @@ describe('interpreter lifecycle', () => {
     expect(restored).toEqual([{ saved: true }]);
   });
 
-  it('pauses execution until resumed', async () => {
+  it('pauses execution at a breakpoint marker until resumed', async () => {
     const interpreter = new Interpreter();
 
-    const result = await interpreter.run(
-      parseSnippet(`
+    const rootNode = parseSnippetWithMarkers(
+      interpreter,
+      `
       value = 1
-      pause
       value = 2
-      `)
+      `,
+      [{ lineNumber: 2, marker: 'breakpoint' }]
     );
+    const result = await interpreter.run(rootNode);
 
     expectPaused(result);
     expect(interpreter.getVariable('value')).toBe(1);
@@ -186,13 +210,15 @@ describe('interpreter lifecycle', () => {
   it('stops a paused program and starts cleanly on the next run', async () => {
     const interpreter = new Interpreter();
 
-    const result = await interpreter.run(
-      parseSnippet(`
+    const rootNode = parseSnippetWithMarkers(
+      interpreter,
+      `
       value = 1
-      pause
       value = 2
-      `)
+      `,
+      [{ lineNumber: 2, marker: 'breakpoint' }]
     );
+    const result = await interpreter.run(rootNode);
 
     expectPaused(result);
     expect(interpreter.getVariable('value')).toBe(1);
@@ -227,27 +253,27 @@ describe('interpreter lifecycle', () => {
     let result = await interpreter.run(rootNode, { step: true });
 
     expectPaused(result);
-    expect(interpreter.topFrame!.head.node.location.start.line).toBe(2);
+    expect(interpreter.topFrame!.head.node.location.start.line).toBe(1);
     expect(history.entries).toHaveLength(1);
     expect(history.current?.globalNamespace.values.value).toBeUndefined();
 
     result = await interpreter.resume({ step: true });
 
     expectPaused(result);
-    expect(interpreter.topFrame!.head.node.location.start.line).toBe(3);
+    expect(interpreter.topFrame!.head.node.location.start.line).toBe(2);
     expect(history.entries).toHaveLength(2);
     expect(history.current?.globalNamespace.values.value).toBe(1);
 
     result = await interpreter.resume({ step: true });
 
     expectPaused(result);
-    expect(interpreter.topFrame!.head.node.location.start.line).toBe(4);
+    expect(interpreter.topFrame!.head.node.location.start.line).toBe(3);
     expect(history.entries).toHaveLength(3);
     expect(history.current?.globalNamespace.values.value).toBe(2);
 
     interpreter.restoreState(history.moveTo(1));
 
-    expect(interpreter.topFrame!.head.node.location.start.line).toBe(3);
+    expect(interpreter.topFrame!.head.node.location.start.line).toBe(2);
     expect(interpreter.getVariable('value')).toBe(1);
     expect(history.isRewound).toBe(true);
   });
@@ -296,24 +322,27 @@ describe('interpreter lifecycle', () => {
     const history = new RuntimeHistory();
     recordSnapshots(interpreter, history);
 
-    const result = await interpreter.run(
-      parseSnippet(`
+    const rootNode = parseSnippetWithMarkers(
+      interpreter,
+      `
       value = 0
-      snapshot
       value = 1
-      snapshot
       value = 2
-      snapshot
-      `)
+      `,
+      [
+        { lineNumber: 1, marker: 'snapshot' },
+        { lineNumber: 2, marker: 'snapshot' },
+        { lineNumber: 3, marker: 'snapshot' },
+      ]
     );
+    const result = await interpreter.run(rootNode);
 
     expect(result.status).toBe('completed');
     expect(history.entries).toHaveLength(3);
 
     // Simulate the UI dragging the slider through several positions: each
-    // move calls restoreState, which used to leave a snapshotEffect queued
-    // via SnapshotFrame.onEnter. They would accumulate and all fire on the
-    // next resume, multiplying the number of new history entries.
+    // move calls restoreState. Restoring repeatedly must not leave queued
+    // snapshot effects that would multiply on the next resume.
     interpreter.restoreState(history.moveTo(2));
     interpreter.restoreState(history.moveTo(1));
     interpreter.restoreState(history.moveTo(0));
@@ -331,15 +360,19 @@ describe('interpreter lifecycle', () => {
     const history = new RuntimeHistory();
     recordSnapshots(interpreter, history);
 
-    const result = await interpreter.run(
-      parseSnippet(`
+    const rootNode = parseSnippetWithMarkers(
+      interpreter,
+      `
       value = 0
-      snapshot
       value = 1
-      snapshot
       value = 2
-      `)
+      `,
+      [
+        { lineNumber: 2, marker: 'snapshot' },
+        { lineNumber: 3, marker: 'snapshot' },
+      ]
     );
+    const result = await interpreter.run(rootNode);
 
     expect(result.status).toBe('completed');
     expect(history.entries).toHaveLength(2);
