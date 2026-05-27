@@ -27,7 +27,6 @@ function parseSnippetWithMarkers(
   source: string,
   markers: readonly EditorMarker[]
 ) {
-  // const rootNode = parseSnippet(source.replace(/^\n/, ''));
   const rootNode = parseSnippet(source);
   const markerArray: MarkerType[] = [];
   for (const { lineNumber, marker } of markers) {
@@ -96,18 +95,16 @@ describe('interpreter lifecycle', () => {
   });
 
   it('does not stop twice when an input statement has a breakpoint', async () => {
-    const markers: MarkerType[] = [];
-    const source = [
-      'value = 1',
-      'input name "Name?" "Ada"',
-      'value = 2',
-      '',
-    ].join('\n');
-    const rootNode = parse(source);
     const interpreter = new Interpreter();
-
-    markers[2] = 'breakpoint';
-    interpreter.setMarkerMap(mapMarkers(rootNode, markers));
+    const rootNode = parseSnippetWithMarkers(
+      interpreter,
+      `
+      value = 1
+      input name "Name?" "Ada"
+      value = 2
+      `,
+      [{ lineNumber: 2, marker: 'breakpoint' }]
+    );
 
     const result = await interpreter.run(rootNode);
 
@@ -123,15 +120,18 @@ describe('interpreter lifecycle', () => {
   });
 
   it('restores intrinsic input pauses from the current node', async () => {
-    const markers: MarkerType[] = [];
-    const source = ['input name "Name?" "Ada"', 'value = 1', ''].join('\n');
-    const rootNode = parse(source);
     const interpreter = new Interpreter();
     const history = new RuntimeHistory();
     recordSnapshots(interpreter, history);
 
-    markers[1] = 'snapshot';
-    interpreter.setMarkerMap(mapMarkers(rootNode, markers));
+    const rootNode = parseSnippetWithMarkers(
+      interpreter,
+      `
+      input name "Name?" "Ada"
+      value = 1
+      `,
+      [{ lineNumber: 1, marker: 'snapshot' }]
+    );
 
     const result = await interpreter.run(rootNode);
 
@@ -279,22 +279,23 @@ describe('interpreter lifecycle', () => {
   });
 
   it('continues from a restored marker snapshot and discards future history', async () => {
-    const markers: MarkerType[] = [];
-    const source = [
-      'value = 0',
-      'value = value + 1',
-      'value = value + 1',
-      'value = value + 1',
-      '',
-    ].join('\n');
-    const rootNode = parse(source);
     const interpreter = new Interpreter();
     const history = new RuntimeHistory();
     recordSnapshots(interpreter, history);
 
-    markers[2] = 'snapshot';
-    markers[3] = 'snapshot';
-    interpreter.setMarkerMap(mapMarkers(rootNode, markers));
+    const rootNode = parseSnippetWithMarkers(
+      interpreter,
+      `
+      value = 0
+      value = value + 1
+      value = value + 1
+      value = value + 1
+      `,
+      [
+        { lineNumber: 2, marker: 'snapshot' },
+        { lineNumber: 3, marker: 'snapshot' },
+      ]
+    );
 
     const result = await interpreter.run(rootNode);
 
@@ -388,21 +389,22 @@ describe('interpreter lifecycle', () => {
   });
 
   it('takes marker snapshots and breakpoint pauses at node entry', async () => {
-    const markers: MarkerType[] = [];
-    const source = [
-      'value = 0',
-      'value = value + 1',
-      'value = value + 1',
-      '',
-    ].join('\n');
-    const rootNode = parse(source);
     const interpreter = new Interpreter();
     const history = new RuntimeHistory();
     recordSnapshots(interpreter, history);
 
-    markers[2] = 'snapshot';
-    markers[3] = 'breakpoint';
-    interpreter.setMarkerMap(mapMarkers(rootNode, markers));
+    const rootNode = parseSnippetWithMarkers(
+      interpreter,
+      `
+      value = 0
+      value = value + 1
+      value = value + 1
+      `,
+      [
+        { lineNumber: 2, marker: 'snapshot' },
+        { lineNumber: 3, marker: 'breakpoint' },
+      ]
+    );
 
     const result = await interpreter.run(rootNode);
 
